@@ -1,0 +1,120 @@
+#*
+#*  Copyright (c) 2013, 2014
+#*      NES <nes.open.switch@gmail.com>
+#*
+#*  All rights reserved. This source file is the sole property of NES, and
+#*  contain proprietary and confidential information related to NES.
+#*
+#*  Licensed under the NES PROF License, Version 1.0 (the "License"); you may
+#*  not use this file except in compliance with the License. You may obtain a
+#*  copy of the License bundled along with this file. Any kind of reproduction
+#*  or duplication of any part of this file which conflicts with the License
+#*  without prior written consent from NES is strictly prohibited.
+#*
+#*  Unless required by applicable law and agreed to in writing, software
+#*  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#*  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#*  License for the specific language governing permissions and limitations
+#*  under the License.
+#*
+
+RANLIB := ranlib
+#MAKE := ${MAKE} --no-print-directory
+MAKE := ${MAKE}
+OBJ_EXT := .b
+
+
+.PHONY: all clean rebuild depend check_module_tree
+.DEFAULT_GOAL := all
+
+
+# all: depend
+
+clean:
+	${RM} `find -L . -name '*.[oa]' -type f` && ${RM} `find -L . -name '*${OBJ_EXT}' -type f` && ${RM} `find -L . -type f -perm /u+x,g+x,o+x`
+
+rebuild: clean all
+
+# depend:
+# 	touch make.dep && makedepend -f make.dep -Y ${DEFINES} ${INCLUDES} -- ${CFLAGS} -- ${SRC} 2>/dev/null
+# 
+# -include make.dep
+
+
+# Build macros
+#********************************************************************************
+# MODULE_INC
+#********************************************************************************
+define MODULE_INC
+_$(1)_MODULE_PATH := $${MODULE_PATH}
+_$(1)_MODULE_TREE := $${MODULE_TREE}
+
+MODULE_TREE := $2
+MODULE_PATH := $${_$(1)_MODULE_PATH}/$1
+PROJECT_OBJS += $${MODULE_PATH}/$${MODULE_BIN}
+#INCLUDES += -I$${MODULE_PATH}/include
+
+ifneq ($2,)
+include $$(addsuffix /Makefile,$$(addprefix $${MODULE_PATH}/,$${MODULE_TREE}))
+endif
+
+MODULE_TREE := $${_$(1)_MODULE_TREE}
+MODULE_PATH := $${_$(1)_MODULE_PATH}
+endef	# MODULE_INC
+
+
+#********************************************************************************
+# CHK_MODULE_TREE
+#********************************************************************************
+define CHK_MODULE_TREE
+check_module_tree:;
+	@for obj in $1; do $${MAKE} -C $$$$(dirname $$$$obj) $$$$(basename $$$$obj); done
+endef	# MK_MODULE_TREE
+
+
+#********************************************************************************
+# MK_MODULE
+#********************************************************************************
+define MK_MODULE
+$1:
+	$${MAKE} -C $(dir $1) $(notdir $1);
+endef	# MK_MODULE
+
+
+#********************************************************************************
+# MK_MODULE_TREE
+#********************************************************************************
+define MK_MODULE_TREE
+$(foreach obj,$1,$(eval $(call MK_MODULE,${obj})))
+endef	# MK_MODULE_TREE
+
+
+#********************************************************************************
+# MODULE_DEP
+#********************************************************************************
+define MODULE_DEP
+__d := $(shell makedepend -f- -Y $(3) -- $(2) -- $(1) 1>make.dep 2>/dev/null || echo 'MAKEDEP failed');
+endef	# MODULE_DEP
+
+
+#********************************************************************************
+# Make rules
+# 
+# %.a:
+# 	${RM} -f $@ && ${AR} rc $@ $(filter %.o,$^) && ${RANLIB} $@
+# 
+# %: %.a
+# 	${CC} -o $@ ${LDFLAGS} $(filter %.a,$^)
+
+%${OBJ_EXT}:
+	@echo '[LD] $@ <- $^'; ${LD} -r -o $@ $(filter %.o,$^)
+
+%:%.o
+	@echo '[CL] $@ <- $^'; ${CC} -o $@ ${LDFLAGS} $^ ${LOADLIBES} ${LDLIBS}
+
+%: %${OBJ_EXT}
+	@echo '[CC] $@ <- $^'; ${CC} -o $@ ${LDFLAGS} $(filter %${OBJ_EXT},$^) ${LOADLIBES} ${LDLIBS}
+
+%.o: %.c
+	@echo '[CC] $(filter %.c,$^)'; ${CC} -c -o $@ $(filter %.c,$^) ${DEFINES} ${CFLAGS} ${INCLUDES}
+#********************************************************************************
