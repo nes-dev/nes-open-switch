@@ -32,7 +32,7 @@ include ${MK_COMMON}
 CFLAGS +=
 
 SNMP_SRC :=
-MODULE_SRC := binaryTree.c list.c buffer.c sync.c thread.c ${SNMP_SRC}
+MODULE_SRC := number.c binaryTree.c list.c buffer.c sync.c thread.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
 

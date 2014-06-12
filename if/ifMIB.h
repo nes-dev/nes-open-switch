@@ -30,6 +30,8 @@ extern "C" {
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+
 #define TOBE_REPLACED 1
 
 
@@ -77,6 +79,10 @@ Netsnmp_Node_Handler ifMIBObjects_mapper;
 /**
  *	table mapper(s)
  */
+struct neIfEntry_t;
+struct ifEntry_t;
+struct ifXEntry_t;
+
 /**
  *	table ifTable definitions
  */
@@ -397,12 +403,12 @@ typedef struct ifEntry_t
 	uint32_t u32Index;
 	
 	/* Column values */
-	uint8_t au8Descr[255];
+	uint8_t au8Descr[32];
 	size_t u16Descr_len;	/* # of uint8_t elements */
 	int32_t i32Type;
 	int32_t i32Mtu;
 	uint32_t u32Speed;
-	uint8_t au8PhysAddress[/* TODO: PhysAddress, PhysAddress, "" */ TOBE_REPLACED];
+	uint8_t au8PhysAddress[8];
 	size_t u16PhysAddress_len;	/* # of uint8_t elements */
 	int32_t i32AdminStatus;
 	int32_t i32OperStatus;
@@ -416,6 +422,8 @@ typedef struct ifEntry_t
 	uint32_t u32OutUcastPkts;
 	uint32_t u32OutDiscards;
 	uint32_t u32OutErrors;
+	
+	uint32_t u32NumReferences;
 	
 	xBTree_Node_t oBTreeNode;
 } ifEntry_t;
@@ -431,6 +439,11 @@ ifEntry_t * ifTable_getByIndex (
 ifEntry_t * ifTable_getNextIndex (
 	uint32_t u32Index);
 void ifTable_removeEntry (ifEntry_t *poEntry);
+ifEntry_t * ifTable_createExt (
+	uint32_t u32Index);
+bool ifTable_removeExt (ifEntry_t *poEntry);
+bool ifTable_createHier (ifEntry_t *poEntry);
+bool ifTable_removeHier (ifEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ifTable_getFirst;
 Netsnmp_Next_Data_Point ifTable_getNext;
@@ -484,7 +497,7 @@ typedef struct ifXEntry_t
 	uint32_t u32Index;
 	
 	/* Column values */
-	uint8_t au8Name[255];
+	uint8_t au8Name[32];
 	size_t u16Name_len;	/* # of uint8_t elements */
 	uint32_t u32InMulticastPkts;
 	uint32_t u32InBroadcastPkts;
@@ -557,9 +570,11 @@ typedef struct ifStackEntry_t
 	int32_t i32Status;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oLToH_BTreeNode;
 } ifStackEntry_t;
 
 extern xBTree_t oIfStackTable_BTree;
+extern xBTree_t oIfStackTable_LToH_BTree;
 
 /* ifStackTable table mapper */
 void ifStackTable_init (void);
@@ -572,7 +587,16 @@ ifStackEntry_t * ifStackTable_getByIndex (
 ifStackEntry_t * ifStackTable_getNextIndex (
 	uint32_t u32HigherLayer,
 	uint32_t u32LowerLayer);
+ifStackEntry_t * ifStackTable_LToH_getNextIndex (
+	uint32_t u32HigherLayer,
+	uint32_t u32LowerLayer);
 void ifStackTable_removeEntry (ifStackEntry_t *poEntry);
+ifStackEntry_t * ifStackTable_createExt (
+	uint32_t u32HigherLayer,
+	uint32_t u32LowerLayer);
+bool ifStackTable_removeExt (ifStackEntry_t *poEntry);
+bool ifStackTable_createHier (ifStackEntry_t *poEntry);
+bool ifStackTable_removeHier (ifStackEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ifStackTable_getFirst;
 Netsnmp_Next_Data_Point ifStackTable_getNext;
@@ -952,9 +976,9 @@ typedef struct neIfEntry_t
 	uint32_t u32IfIndex;
 	
 	/* Column values */
-	uint8_t au8Name[255];
+	uint8_t au8Name[32];
 	size_t u16Name_len;	/* # of uint8_t elements */
-	uint8_t au8Descr[255];
+	uint8_t au8Descr[32];
 	size_t u16Descr_len;	/* # of uint8_t elements */
 	int32_t i32Type;
 	int32_t i32Mtu;
@@ -979,6 +1003,14 @@ neIfEntry_t * neIfTable_getByIndex (
 neIfEntry_t * neIfTable_getNextIndex (
 	uint32_t u32IfIndex);
 void neIfTable_removeEntry (neIfEntry_t *poEntry);
+neIfEntry_t * neIfTable_createExt (
+	uint32_t u32IfIndex);
+bool neIfTable_removeExt (neIfEntry_t *poEntry);
+bool neIfTable_createHier (neIfEntry_t *poEntry);
+bool neIfTable_removeHier (neIfEntry_t *poEntry);
+bool neIfRowStatus_handler (
+	neIfEntry_t *poEntry,
+	int32_t i32RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neIfTable_getFirst;
 Netsnmp_Next_Data_Point neIfTable_getNext;

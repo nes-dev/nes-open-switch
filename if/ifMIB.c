@@ -25,9 +25,12 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "ifMIB.h"
 
+#include "lib/number.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
+
+#include <stdbool.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
@@ -254,6 +257,9 @@ ifTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->i32AdminStatus = ifAdminStatus_down_c;
+	poEntry->i32OperStatus = ifOperStatus_down_c;
+	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfTable_BTree);
 	return poEntry;
 }
@@ -317,6 +323,137 @@ ifTable_removeEntry (ifEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ifEntry_t *
+ifTable_createExt (
+	uint32_t u32Index)
+{
+	ifEntry_t *poEntry = NULL;
+	
+	poEntry = ifTable_createEntry (
+		u32Index);
+	if (poEntry == NULL)
+	{
+		goto ifTable_createExt_cleanup;
+	}
+	
+	if (!ifTable_createHier (poEntry))
+	{
+		ifTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto ifTable_createExt_cleanup;
+	}
+	
+	
+ifTable_createExt_cleanup:
+	return poEntry;
+}
+
+bool
+ifTable_removeExt (ifEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!ifTable_removeHier (poEntry))
+	{
+		goto ifTable_removeExt_cleanup;
+	}
+	ifTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+	
+ifTable_removeExt_cleanup:
+	return bRetCode;
+}
+
+bool
+ifTable_createHier (
+	ifEntry_t *poEntry)
+{
+	register ifStackEntry_t *poLowerStackEntry = NULL;
+	register ifStackEntry_t *poUpperStackEntry = NULL;
+	
+	if (ifXTable_getByIndex (poEntry->u32Index) == NULL &&
+		ifXTable_createEntry (poEntry->u32Index) == NULL)
+	{
+		goto ifTable_createHier_cleanup;
+	}
+	
+	if ((poLowerStackEntry = ifStackTable_getByIndex (poEntry->u32Index, 0)) == NULL &&
+		(poLowerStackEntry = ifStackTable_getNextIndex (poEntry->u32Index, 0)) != NULL &&
+		poLowerStackEntry->u32HigherLayer != poEntry->u32Index)
+	{
+		if ((poLowerStackEntry = ifStackTable_createExt (poEntry->u32Index, 0)) == NULL)
+		{
+			goto ifTable_createHier_cleanup;
+		}
+		
+		poLowerStackEntry->i32Status = ifStackStatus_active_c;
+	}
+	
+	if ((poUpperStackEntry = ifStackTable_getByIndex (0, poEntry->u32Index)) == NULL &&
+		(poUpperStackEntry = ifStackTable_LToH_getNextIndex (0, poEntry->u32Index)) != NULL &&
+		poUpperStackEntry->u32LowerLayer != poEntry->u32Index)
+	{
+		if ((poUpperStackEntry = ifStackTable_createExt (0, poEntry->u32Index)) == NULL)
+		{
+			goto ifTable_createHier_cleanup;
+		}
+		
+		poUpperStackEntry->i32Status = ifStackStatus_active_c;
+	}
+	
+	return true;
+	
+	
+ifTable_createHier_cleanup:
+	
+	ifTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+ifTable_removeHier (
+	ifEntry_t *poEntry)
+{
+	register uint32_t u32Index = 0;
+	register ifXEntry_t *poIfXEntry = NULL;
+	register ifStackEntry_t *poLowerStackEntry = NULL;
+	register ifStackEntry_t *poUpperStackEntry = NULL;
+	
+	if ((poUpperStackEntry = ifStackTable_getByIndex (0, poEntry->u32Index)) != NULL)
+	{
+		ifStackTable_removeExt (poUpperStackEntry);
+	}
+	u32Index = 0;
+	while (
+		(poUpperStackEntry = ifStackTable_LToH_getNextIndex (u32Index, poEntry->u32Index)) != NULL &&
+		poUpperStackEntry->u32LowerLayer == poEntry->u32Index)
+	{
+		u32Index = poUpperStackEntry->u32HigherLayer;
+		ifStackTable_removeExt (poUpperStackEntry);
+	}
+	
+	if ((poLowerStackEntry = ifStackTable_getByIndex (poEntry->u32Index, 0)) != NULL)
+	{
+		ifStackTable_removeExt (poLowerStackEntry);
+	}
+	u32Index = 0;
+	while (
+		(poLowerStackEntry = ifStackTable_getNextIndex (poEntry->u32Index, u32Index)) != NULL &&
+		poLowerStackEntry->u32HigherLayer == poEntry->u32Index)
+	{
+		u32Index = poLowerStackEntry->u32LowerLayer;
+		ifStackTable_removeExt (poLowerStackEntry);
+	}
+	
+	if ((poIfXEntry = ifXTable_getByIndex (poEntry->u32Index)) != NULL)
+	{
+		ifXTable_removeEntry (poIfXEntry);
+	}
+	
+	return true;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -626,6 +763,10 @@ ifXTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_disabled_c;
+	poEntry->i32PromiscuousMode = ifPromiscuousMode_false_c;
+	poEntry->i32ConnectorPresent = ifConnectorPresent_false_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfXTable_BTree);
 	return poEntry;
@@ -1039,7 +1180,21 @@ ifStackTable_BTreeNodeCmp (
 		(pEntry1->u32HigherLayer == pEntry2->u32HigherLayer && pEntry1->u32LowerLayer == pEntry2->u32LowerLayer) ? 0: 1;
 }
 
+static int8_t
+ifStackTable_LToH_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ifStackEntry_t *pEntry1 = xBTree_entry (pNode1, ifStackEntry_t, oLToH_BTreeNode);
+	register ifStackEntry_t *pEntry2 = xBTree_entry (pNode2, ifStackEntry_t, oLToH_BTreeNode);
+	
+	return
+		(pEntry1->u32LowerLayer < pEntry2->u32LowerLayer) ||
+		(pEntry1->u32LowerLayer == pEntry2->u32LowerLayer && pEntry1->u32HigherLayer < pEntry2->u32HigherLayer) ? -1:
+		(pEntry1->u32LowerLayer == pEntry2->u32LowerLayer && pEntry1->u32HigherLayer == pEntry2->u32HigherLayer) ? 0: 1;
+}
+
 xBTree_t oIfStackTable_BTree = xBTree_initInline (&ifStackTable_BTreeNodeCmp);
+xBTree_t oIfStackTable_LToH_BTree = xBTree_initInline (&ifStackTable_LToH_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 ifStackEntry_t *
@@ -1062,7 +1217,10 @@ ifStackTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->i32Status = ifStackStatus_notInService_c;
+	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfStackTable_BTree);
+	xBTree_nodeAdd (&poEntry->oLToH_BTreeNode, &oIfStackTable_LToH_BTree);
 	return poEntry;
 }
 
@@ -1116,6 +1274,31 @@ ifStackTable_getNextIndex (
 	return xBTree_entry (poNode, ifStackEntry_t, oBTreeNode);
 }
 
+ifStackEntry_t *
+ifStackTable_LToH_getNextIndex (
+	uint32_t u32HigherLayer,
+	uint32_t u32LowerLayer)
+{
+	register ifStackEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ifStackEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32HigherLayer = u32HigherLayer;
+	poTmpEntry->u32LowerLayer = u32LowerLayer;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oLToH_BTreeNode, &oIfStackTable_LToH_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ifStackEntry_t, oLToH_BTreeNode);
+}
+
 /* remove a row from the table */
 void
 ifStackTable_removeEntry (ifStackEntry_t *poEntry)
@@ -1127,8 +1310,107 @@ ifStackTable_removeEntry (ifStackEntry_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfStackTable_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfStackTable_LToH_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ifStackEntry_t *
+ifStackTable_createExt (
+	uint32_t u32HigherLayer,
+	uint32_t u32LowerLayer)
+{
+	ifStackEntry_t *poEntry = NULL;
+	
+	poEntry = ifStackTable_createEntry (
+		u32HigherLayer,
+		u32LowerLayer);
+	if (poEntry == NULL)
+	{
+		goto ifStackTable_createExt_cleanup;
+	}
+	
+	if (!ifStackTable_createHier (poEntry))
+	{
+		ifStackTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto ifStackTable_createExt_cleanup;
+	}
+	
+	
+ifStackTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+ifStackTable_removeExt (ifStackEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!ifStackTable_removeHier (poEntry))
+	{
+		goto ifStackTable_removeExt_cleanup;
+	}
+	ifStackTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+	
+ifStackTable_removeExt_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ifStackTable_createHier (
+	ifStackEntry_t *poEntry)
+{
+	register ifStackEntry_t *poLowerStackEntry = NULL;
+	register ifStackEntry_t *poUpperStackEntry = NULL;
+	
+	if (poEntry->u32HigherLayer == 0 || poEntry->u32LowerLayer == 0)
+	{
+		return true;
+	}
+	
+	if ((poUpperStackEntry = ifStackTable_getByIndex (poEntry->u32HigherLayer, 0)) != NULL)
+	{
+		ifStackTable_removeEntry (poUpperStackEntry);
+	}
+	
+	if ((poLowerStackEntry = ifStackTable_getByIndex (0, poEntry->u32LowerLayer)) != NULL)
+	{
+		ifStackTable_removeEntry (poLowerStackEntry);
+	}
+	
+	return true;
+}
+
+bool
+ifStackTable_removeHier (
+	ifStackEntry_t *poEntry)
+{
+	register ifStackEntry_t *poLowerStackEntry = NULL;
+	register ifStackEntry_t *poUpperStackEntry = NULL;
+	
+	if (poEntry->u32HigherLayer == 0 || poEntry->u32LowerLayer == 0)
+	{
+		return true;
+	}
+	
+	if ((poLowerStackEntry = ifStackTable_LToH_getNextIndex (poEntry->u32LowerLayer, 0)) == NULL ||
+		poLowerStackEntry->u32LowerLayer != poEntry->u32LowerLayer)
+	{
+		ifStackTable_createEntry (0, poEntry->u32LowerLayer);
+	}
+	
+	if ((poUpperStackEntry = ifStackTable_getNextIndex (poEntry->u32HigherLayer, 0)) == NULL ||
+		poUpperStackEntry->u32HigherLayer != poEntry->u32HigherLayer)
+	{
+		ifStackTable_createEntry (poEntry->u32HigherLayer, 0);
+	}
+	
+	return true;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -1269,13 +1551,14 @@ ifStackTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					if ((*idx1->val.integer != 0 && ifTable_getByIndex (*idx1->val.integer) == NULL) ||
+						(*idx2->val.integer != 0 && ifTable_getByIndex (*idx2->val.integer) == NULL))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
 					}
 					
-					table_entry = ifStackTable_createEntry (
+					table_entry = ifStackTable_createExt (
 						*idx1->val.integer,
 						*idx2->val.integer);
 					if (table_entry != NULL)
@@ -1326,7 +1609,7 @@ ifStackTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ifStackTable_removeEntry (table_entry);
+					ifStackTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -1387,7 +1670,7 @@ ifStackTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ifStackTable_removeEntry (table_entry);
+					ifStackTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -1420,7 +1703,7 @@ ifStackTable_mapper (
 					break;
 					
 				case RS_DESTROY:
-					ifStackTable_removeEntry (table_entry);
+					ifStackTable_removeExt (table_entry);
 					break;
 				}
 			}
@@ -2041,6 +2324,110 @@ neIfTable_removeEntry (neIfEntry_t *poEntry)
 	return;
 }
 
+neIfEntry_t *
+neIfTable_createExt (
+	uint32_t u32IfIndex)
+{
+	neIfEntry_t *poEntry = NULL;
+	
+	poEntry = neIfTable_createEntry (
+		u32IfIndex);
+	if (poEntry == NULL)
+	{
+		goto neIfTable_createExt_cleanup;
+	}
+	
+	if (!neIfTable_createHier (poEntry))
+	{
+		neIfTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto neIfTable_createExt_cleanup;
+	}
+	
+	
+neIfTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+neIfTable_removeExt (neIfEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!neIfTable_removeHier (poEntry))
+	{
+		goto neIfTable_removeExt_cleanup;
+	}
+	neIfTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+	
+neIfTable_removeExt_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+neIfTable_createHier (
+	neIfEntry_t *poEntry)
+{
+	if (ifTable_getByIndex (poEntry->u32IfIndex) == NULL &&
+		ifTable_createExt (poEntry->u32IfIndex) == NULL)
+	{
+		goto neIfTable_createHier_cleanup;
+	}
+	
+	return true;
+	
+	
+neIfTable_createHier_cleanup:
+	
+	neIfTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+neIfTable_removeHier (
+	neIfEntry_t *poEntry)
+{
+	register ifEntry_t *poIfEntry = NULL;
+	
+	if ((poIfEntry = ifTable_getByIndex (poEntry->u32IfIndex)) != NULL && poIfEntry->u32NumReferences == 0)
+	{
+		ifTable_removeExt (poIfEntry);
+	}
+	
+	return true;
+}
+
+bool
+neIfRowStatus_handler (
+	neIfEntry_t *poEntry,
+	int32_t i32RowStatus)
+{
+	if (poEntry->i32RowStatus != RS_ACTIVE && i32RowStatus == RS_ACTIVE)
+	{
+		register ifEntry_t *poIfEntry = NULL;
+		register ifXEntry_t *poIfXEntry = NULL;
+		
+		if ((poIfEntry = ifTable_getByIndex (poEntry->u32IfIndex)) == NULL ||
+			(poIfXEntry = ifXTable_getByIndex (poEntry->u32IfIndex)) == NULL)
+		{
+			return false;
+		}
+		
+		poIfEntry->i32Type = poEntry->i32Type;
+		poIfEntry->i32Mtu = poEntry->i32Mtu;
+		poIfEntry->u32Speed = 0;
+		xNumber_toUint32 (poEntry->au8Speed, sizeof (poEntry->au8Speed), 4, 7, &poIfEntry->u32Speed);
+		poIfXEntry->u32HighSpeed = 0;
+		xNumber_toUint32 (poEntry->au8Speed, sizeof (poEntry->au8Speed), 0, 3, &poIfXEntry->u32HighSpeed);
+	}
+	
+	return true;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 neIfTable_getFirst (
@@ -2243,6 +2630,7 @@ neIfTable_mapper (
 			table_entry = (neIfEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
+			register ifEntry_t *poIfEntry = NULL;
 			
 			switch (table_info->colnum)
 			{
@@ -2257,7 +2645,7 @@ neIfTable_mapper (
 						return SNMP_ERR_NOERROR;
 					}
 					
-					table_entry = neIfTable_createEntry (
+					table_entry = neIfTable_createExt (
 						*idx1->val.integer);
 					if (table_entry != NULL)
 					{
@@ -2272,7 +2660,7 @@ neIfTable_mapper (
 					break;
 					
 				case RS_DESTROY:
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					if ((poIfEntry = ifTable_getByIndex (table_entry->u32IfIndex)) != NULL && poIfEntry->u32NumReferences != 0)
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -2307,7 +2695,7 @@ neIfTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					neIfTable_removeEntry (table_entry);
+					neIfTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -2453,7 +2841,7 @@ neIfTable_mapper (
 				{
 				case RS_ACTIVE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int neIfTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					if (!neIfRowStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -2504,7 +2892,7 @@ neIfTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					neIfTable_removeEntry (table_entry);
+					neIfTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -2529,18 +2917,27 @@ neIfTable_mapper (
 				{
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					
+					table_entry->i32StorageType = neIfStorageType_nonVolatile_c;
+					oInterfaces.i32IfNumber++;
+					
 				case RS_ACTIVE:
 					table_entry->i32RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					
+					table_entry->i32StorageType = neIfStorageType_nonVolatile_c;
+					oInterfaces.i32IfNumber++;
+					
 				case RS_NOTINSERVICE:
 					table_entry->i32RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
-					neIfTable_removeEntry (table_entry);
+					neIfTable_removeExt (table_entry);
+					oInterfaces.i32IfNumber--;
 					break;
 				}
 			}
