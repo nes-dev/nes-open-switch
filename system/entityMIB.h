@@ -108,14 +108,14 @@ enum
 typedef struct entPhysicalEntry_t
 {
 	/* Index values */
-	int32_t i32Index;
+	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8Descr[255];
 	size_t u16Descr_len;	/* # of uint8_t elements */
 	xOid_t aoVendorType[128];
 	size_t u16VendorType_len;	/* # of xOid_t elements */
-	int32_t i32ContainedIn;
+	uint32_t u32ContainedIn;
 	int32_t i32Class;
 	int32_t i32ParentRelPos;
 	uint8_t au8Name[255];
@@ -143,19 +143,29 @@ typedef struct entPhysicalEntry_t
 	size_t u16Uris_len;	/* # of uint8_t elements */
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oSerialNum_BTreeNode;
 } entPhysicalEntry_t;
 
 extern xBTree_t oEntPhysicalTable_BTree;
+extern xBTree_t oEntPhysicalTable_SerialNum_BTree;
 
 /* entPhysicalTable table mapper */
 void entPhysicalTable_init (void);
 entPhysicalEntry_t * entPhysicalTable_createEntry (
-	int32_t i32Index);
+	uint32_t u32Index);
 entPhysicalEntry_t * entPhysicalTable_getByIndex (
-	int32_t i32Index);
+	uint32_t u32Index);
+entPhysicalEntry_t * entPhysicalTable_getBySerialNum (
+	uint8_t pu8SerialNum, size_t u16SerialNum_len);
 entPhysicalEntry_t * entPhysicalTable_getNextIndex (
-	int32_t i32Index);
+	uint32_t u32Index);
 void entPhysicalTable_removeEntry (entPhysicalEntry_t *poEntry);
+bool entPhysicalTable_createEntity (
+	uint32_t u32Index,
+	int32_t i32Class,
+	uint32_t u32ContainedIn);
+bool entPhysicalTable_removeEntity (
+	uint32_t u32Index);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point entPhysicalTable_getFirst;
 Netsnmp_Next_Data_Point entPhysicalTable_getNext;
@@ -180,7 +190,7 @@ Netsnmp_Node_Handler entPhysicalTable_mapper;
 typedef struct entLogicalEntry_t
 {
 	/* Index values */
-	int32_t i32Index;
+	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8Descr[255];
@@ -206,11 +216,11 @@ extern xBTree_t oEntLogicalTable_BTree;
 /* entLogicalTable table mapper */
 void entLogicalTable_init (void);
 entLogicalEntry_t * entLogicalTable_createEntry (
-	int32_t i32Index);
+	uint32_t u32Index);
 entLogicalEntry_t * entLogicalTable_getByIndex (
-	int32_t i32Index);
+	uint32_t u32Index);
 entLogicalEntry_t * entLogicalTable_getNextIndex (
-	int32_t i32Index);
+	uint32_t u32Index);
 void entLogicalTable_removeEntry (entLogicalEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point entLogicalTable_getFirst;
@@ -229,8 +239,8 @@ Netsnmp_Node_Handler entLogicalTable_mapper;
 typedef struct entLPMappingEntry_t
 {
 	/* Index values */
-	int32_t i32LogicalIndex;
-	int32_t i32LPPhysicalIndex;
+	uint32_t u32LogicalIndex;
+	uint32_t u32LPPhysicalIndex;
 	
 	/* Column values */
 	
@@ -242,14 +252,14 @@ extern xBTree_t oEntLPMappingTable_BTree;
 /* entLPMappingTable table mapper */
 void entLPMappingTable_init (void);
 entLPMappingEntry_t * entLPMappingTable_createEntry (
-	int32_t i32LogicalIndex,
-	int32_t i32LPPhysicalIndex);
+	uint32_t u32LogicalIndex,
+	uint32_t u32LPPhysicalIndex);
 entLPMappingEntry_t * entLPMappingTable_getByIndex (
-	int32_t i32LogicalIndex,
-	int32_t i32LPPhysicalIndex);
+	uint32_t u32LogicalIndex,
+	uint32_t u32LPPhysicalIndex);
 entLPMappingEntry_t * entLPMappingTable_getNextIndex (
-	int32_t i32LogicalIndex,
-	int32_t i32LPPhysicalIndex);
+	uint32_t u32LogicalIndex,
+	uint32_t u32LPPhysicalIndex);
 void entLPMappingTable_removeEntry (entLPMappingEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point entLPMappingTable_getFirst;
@@ -269,8 +279,8 @@ Netsnmp_Node_Handler entLPMappingTable_mapper;
 typedef struct entAliasMappingEntry_t
 {
 	/* Index values */
-	int32_t i32PhysicalIndex;
-	int32_t i32AliasLogicalIndexOrZero;
+	uint32_t u32PhysicalIndex;
+	uint32_t u32AliasLogicalIndexOrZero;
 	
 	/* Column values */
 	xOid_t aoIdentifier[128];
@@ -284,14 +294,14 @@ extern xBTree_t oEntAliasMappingTable_BTree;
 /* entAliasMappingTable table mapper */
 void entAliasMappingTable_init (void);
 entAliasMappingEntry_t * entAliasMappingTable_createEntry (
-	int32_t i32PhysicalIndex,
-	int32_t i32AliasLogicalIndexOrZero);
+	uint32_t u32PhysicalIndex,
+	uint32_t u32AliasLogicalIndexOrZero);
 entAliasMappingEntry_t * entAliasMappingTable_getByIndex (
-	int32_t i32PhysicalIndex,
-	int32_t i32AliasLogicalIndexOrZero);
+	uint32_t u32PhysicalIndex,
+	uint32_t u32AliasLogicalIndexOrZero);
 entAliasMappingEntry_t * entAliasMappingTable_getNextIndex (
-	int32_t i32PhysicalIndex,
-	int32_t i32AliasLogicalIndexOrZero);
+	uint32_t u32PhysicalIndex,
+	uint32_t u32AliasLogicalIndexOrZero);
 void entAliasMappingTable_removeEntry (entAliasMappingEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point entAliasMappingTable_getFirst;
@@ -310,8 +320,8 @@ Netsnmp_Node_Handler entAliasMappingTable_mapper;
 typedef struct entPhysicalContainsEntry_t
 {
 	/* Index values */
-	int32_t i32Index;
-	int32_t i32ChildIndex;
+	uint32_t u32Index;
+	uint32_t u32ChildIndex;
 	
 	/* Column values */
 	
@@ -323,20 +333,316 @@ extern xBTree_t oEntPhysicalContainsTable_BTree;
 /* entPhysicalContainsTable table mapper */
 void entPhysicalContainsTable_init (void);
 entPhysicalContainsEntry_t * entPhysicalContainsTable_createEntry (
-	int32_t i32Index,
-	int32_t i32ChildIndex);
+	uint32_t u32Index,
+	uint32_t u32ChildIndex);
 entPhysicalContainsEntry_t * entPhysicalContainsTable_getByIndex (
-	int32_t i32Index,
-	int32_t i32ChildIndex);
+	uint32_t u32Index,
+	uint32_t u32ChildIndex);
 entPhysicalContainsEntry_t * entPhysicalContainsTable_getNextIndex (
-	int32_t i32Index,
-	int32_t i32ChildIndex);
+	uint32_t u32Index,
+	uint32_t u32ChildIndex);
 void entPhysicalContainsTable_removeEntry (entPhysicalContainsEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point entPhysicalContainsTable_getFirst;
 Netsnmp_Next_Data_Point entPhysicalContainsTable_getNext;
 Netsnmp_Get_Data_Point entPhysicalContainsTable_get;
 Netsnmp_Node_Handler entPhysicalContainsTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table neEntPhysicalTable definitions
+ */
+#define NEENTPHYSICALCONTAINEDIN 1
+#define NEENTPHYSICALCLASS 2
+#define NEENTPHYSICALROWSTATUS 3
+#define NEENTPHYSICALSTORAGETYPE 4
+
+enum
+{
+	/* enums for column neEntPhysicalClass */
+	neEntPhysicalClass_other_c = 1,
+	neEntPhysicalClass_unknown_c = 2,
+	neEntPhysicalClass_chassis_c = 3,
+	neEntPhysicalClass_backplane_c = 4,
+	neEntPhysicalClass_container_c = 5,
+	neEntPhysicalClass_powerSupply_c = 6,
+	neEntPhysicalClass_fan_c = 7,
+	neEntPhysicalClass_sensor_c = 8,
+	neEntPhysicalClass_module_c = 9,
+	neEntPhysicalClass_port_c = 10,
+	neEntPhysicalClass_stack_c = 11,
+	neEntPhysicalClass_cpu_c = 12,
+
+	/* enums for column neEntPhysicalRowStatus */
+	neEntPhysicalRowStatus_active_c = 1,
+	neEntPhysicalRowStatus_notInService_c = 2,
+	neEntPhysicalRowStatus_notReady_c = 3,
+	neEntPhysicalRowStatus_createAndGo_c = 4,
+	neEntPhysicalRowStatus_createAndWait_c = 5,
+	neEntPhysicalRowStatus_destroy_c = 6,
+
+	/* enums for column neEntPhysicalStorageType */
+	neEntPhysicalStorageType_other_c = 1,
+	neEntPhysicalStorageType_volatile_c = 2,
+	neEntPhysicalStorageType_nonVolatile_c = 3,
+	neEntPhysicalStorageType_permanent_c = 4,
+	neEntPhysicalStorageType_readOnly_c = 5,
+};
+
+/* table neEntPhysicalTable row entry data structure */
+typedef struct neEntPhysicalEntry_t
+{
+	/* Index values */
+	uint32_t u32EntPhysicalIndex;
+	
+	/* Column values */
+	uint32_t u32ContainedIn;
+	int32_t i32Class;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	
+	xBTree_Node_t oBTreeNode;
+} neEntPhysicalEntry_t;
+
+extern xBTree_t oNeEntPhysicalTable_BTree;
+
+/* neEntPhysicalTable table mapper */
+void neEntPhysicalTable_init (void);
+neEntPhysicalEntry_t * neEntPhysicalTable_createEntry (
+	uint32_t u32EntPhysicalIndex);
+neEntPhysicalEntry_t * neEntPhysicalTable_getByIndex (
+	uint32_t u32EntPhysicalIndex);
+neEntPhysicalEntry_t * neEntPhysicalTable_getNextIndex (
+	uint32_t u32EntPhysicalIndex);
+void neEntPhysicalTable_removeEntry (neEntPhysicalEntry_t *poEntry);
+neEntPhysicalEntry_t * neEntPhysicalTable_createExt (
+	uint32_t u32EntPhysicalIndex);
+bool neEntPhysicalTable_removeExt (neEntPhysicalEntry_t *poEntry);
+bool neEntPhysicalTable_createHier (neEntPhysicalEntry_t *poEntry);
+bool neEntPhysicalTable_removeHier (neEntPhysicalEntry_t *poEntry);
+bool neEntPhysicalRowStatus_handler (
+	neEntPhysicalEntry_t *poEntry,
+	uint8_t u8RowStatus);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neEntPhysicalTable_getFirst;
+Netsnmp_Next_Data_Point neEntPhysicalTable_getNext;
+Netsnmp_Get_Data_Point neEntPhysicalTable_get;
+Netsnmp_Node_Handler neEntPhysicalTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table neEntLogicalTable definitions
+ */
+#define NEENTLOGICALROWSTATUS 1
+#define NEENTLOGICALSTORAGETYPE 2
+
+enum
+{
+	/* enums for column neEntLogicalRowStatus */
+	neEntLogicalRowStatus_active_c = 1,
+	neEntLogicalRowStatus_notInService_c = 2,
+	neEntLogicalRowStatus_notReady_c = 3,
+	neEntLogicalRowStatus_createAndGo_c = 4,
+	neEntLogicalRowStatus_createAndWait_c = 5,
+	neEntLogicalRowStatus_destroy_c = 6,
+
+	/* enums for column neEntLogicalStorageType */
+	neEntLogicalStorageType_other_c = 1,
+	neEntLogicalStorageType_volatile_c = 2,
+	neEntLogicalStorageType_nonVolatile_c = 3,
+	neEntLogicalStorageType_permanent_c = 4,
+	neEntLogicalStorageType_readOnly_c = 5,
+};
+
+/* table neEntLogicalTable row entry data structure */
+typedef struct neEntLogicalEntry_t
+{
+	/* Index values */
+	uint32_t u32EntLogicalIndex;
+	
+	/* Column values */
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	
+	xBTree_Node_t oBTreeNode;
+} neEntLogicalEntry_t;
+
+extern xBTree_t oNeEntLogicalTable_BTree;
+
+/* neEntLogicalTable table mapper */
+void neEntLogicalTable_init (void);
+neEntLogicalEntry_t * neEntLogicalTable_createEntry (
+	uint32_t u32EntLogicalIndex);
+neEntLogicalEntry_t * neEntLogicalTable_getByIndex (
+	uint32_t u32EntLogicalIndex);
+neEntLogicalEntry_t * neEntLogicalTable_getNextIndex (
+	uint32_t u32EntLogicalIndex);
+void neEntLogicalTable_removeEntry (neEntLogicalEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neEntLogicalTable_getFirst;
+Netsnmp_Next_Data_Point neEntLogicalTable_getNext;
+Netsnmp_Get_Data_Point neEntLogicalTable_get;
+Netsnmp_Node_Handler neEntLogicalTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table neEntLPMappingTable definitions
+ */
+#define NEENTLPMAPPINGROWSTATUS 1
+#define NEENTLPMAPPINGSTORAGETYPE 2
+
+enum
+{
+	/* enums for column neEntLPMappingRowStatus */
+	neEntLPMappingRowStatus_active_c = 1,
+	neEntLPMappingRowStatus_notInService_c = 2,
+	neEntLPMappingRowStatus_notReady_c = 3,
+	neEntLPMappingRowStatus_createAndGo_c = 4,
+	neEntLPMappingRowStatus_createAndWait_c = 5,
+	neEntLPMappingRowStatus_destroy_c = 6,
+
+	/* enums for column neEntLPMappingStorageType */
+	neEntLPMappingStorageType_other_c = 1,
+	neEntLPMappingStorageType_volatile_c = 2,
+	neEntLPMappingStorageType_nonVolatile_c = 3,
+	neEntLPMappingStorageType_permanent_c = 4,
+	neEntLPMappingStorageType_readOnly_c = 5,
+};
+
+/* table neEntLPMappingTable row entry data structure */
+typedef struct neEntLPMappingEntry_t
+{
+	/* Index values */
+	uint32_t u32EntLogicalIndex;
+	uint32_t u32EntLPPhysicalIndex;
+	
+	/* Column values */
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	
+	xBTree_Node_t oBTreeNode;
+} neEntLPMappingEntry_t;
+
+extern xBTree_t oNeEntLPMappingTable_BTree;
+
+/* neEntLPMappingTable table mapper */
+void neEntLPMappingTable_init (void);
+neEntLPMappingEntry_t * neEntLPMappingTable_createEntry (
+	uint32_t u32EntLogicalIndex,
+	uint32_t u32EntLPPhysicalIndex);
+neEntLPMappingEntry_t * neEntLPMappingTable_getByIndex (
+	uint32_t u32EntLogicalIndex,
+	uint32_t u32EntLPPhysicalIndex);
+neEntLPMappingEntry_t * neEntLPMappingTable_getNextIndex (
+	uint32_t u32EntLogicalIndex,
+	uint32_t u32EntLPPhysicalIndex);
+void neEntLPMappingTable_removeEntry (neEntLPMappingEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neEntLPMappingTable_getFirst;
+Netsnmp_Next_Data_Point neEntLPMappingTable_getNext;
+Netsnmp_Get_Data_Point neEntLPMappingTable_get;
+Netsnmp_Node_Handler neEntLPMappingTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table neEntPortTable definitions
+ */
+#define NEENTPORTCHASSISID 1
+#define NEENTPORTMODULEID 2
+#define NEENTPORTID 3
+#define NEENTPORTIFINDEX 4
+#define NEENTPORTROWSTATUS 5
+
+enum
+{
+	/* enums for column neEntPortRowStatus */
+	neEntPortRowStatus_active_c = 1,
+	neEntPortRowStatus_notInService_c = 2,
+	neEntPortRowStatus_notReady_c = 3,
+	neEntPortRowStatus_createAndGo_c = 4,
+	neEntPortRowStatus_createAndWait_c = 5,
+	neEntPortRowStatus_destroy_c = 6,
+};
+
+/* table neEntPortTable row entry data structure */
+typedef struct neEntPortEntry_t
+{
+	/* Index values */
+	uint32_t u32EntPhysicalIndex;
+	
+	/* Column values */
+	uint32_t u32ChassisId;
+	uint32_t u32ModuleId;
+	uint32_t u32Id;
+	uint32_t u32IfIndex;
+	uint8_t u8RowStatus;
+	
+	xBTree_Node_t oBTreeNode;
+} neEntPortEntry_t;
+
+extern xBTree_t oNeEntPortTable_BTree;
+
+/* neEntPortTable table mapper */
+void neEntPortTable_init (void);
+neEntPortEntry_t * neEntPortTable_createEntry (
+	uint32_t u32EntPhysicalIndex);
+neEntPortEntry_t * neEntPortTable_getByIndex (
+	uint32_t u32EntPhysicalIndex);
+neEntPortEntry_t * neEntPortTable_getNextIndex (
+	uint32_t u32EntPhysicalIndex);
+void neEntPortTable_removeEntry (neEntPortEntry_t *poEntry);
+bool neEntPortRowStatus_handler (
+	neEntPortEntry_t *poEntry,
+	uint8_t u8RowStatus);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neEntPortTable_getFirst;
+Netsnmp_Next_Data_Point neEntPortTable_getNext;
+Netsnmp_Get_Data_Point neEntPortTable_get;
+Netsnmp_Node_Handler neEntPortTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table neEntChassisPortTable definitions
+ */
+#define NEENTCHASSISPORTCHASSISINDEX 1
+#define NEENTCHASSISPORTINDEX 2
+
+/* table neEntChassisPortTable row entry data structure */
+typedef struct neEntChassisPortEntry_t
+{
+	/* Index values */
+	uint32_t u32ChassisIndex;
+	uint32_t u32Index;
+	
+	/* Column values */
+	
+	xBTree_Node_t oBTreeNode;
+} neEntChassisPortEntry_t;
+
+extern xBTree_t oNeEntChassisPortTable_BTree;
+
+/* neEntChassisPortTable table mapper */
+void neEntChassisPortTable_init (void);
+neEntChassisPortEntry_t * neEntChassisPortTable_createEntry (
+	uint32_t u32ChassisIndex,
+	uint32_t u32Index);
+neEntChassisPortEntry_t * neEntChassisPortTable_getByIndex (
+	uint32_t u32ChassisIndex,
+	uint32_t u32Index);
+neEntChassisPortEntry_t * neEntChassisPortTable_getNextIndex (
+	uint32_t u32ChassisIndex,
+	uint32_t u32Index);
+void neEntChassisPortTable_removeEntry (neEntChassisPortEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neEntChassisPortTable_getFirst;
+Netsnmp_Next_Data_Point neEntChassisPortTable_getNext;
+Netsnmp_Get_Data_Point neEntChassisPortTable_get;
+Netsnmp_Node_Handler neEntChassisPortTable_mapper;
 #endif	/* SNMP_SRC */
 
 

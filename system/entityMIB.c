@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "if/ifMIB.h"
 #include "entityMIB.h"
 
 #include "lib/binaryTree.h"
@@ -41,10 +42,20 @@ static oid entLogicalTable_oid[] = {1,3,6,1,2,1,47,1,2,1};
 static oid entLPMappingTable_oid[] = {1,3,6,1,2,1,47,1,3,1};
 static oid entAliasMappingTable_oid[] = {1,3,6,1,2,1,47,1,3,2};
 static oid entPhysicalContainsTable_oid[] = {1,3,6,1,2,1,47,1,3,3};
+static oid neEntPhysicalTable_oid[] = {1,3,6,1,4,1,36969,70,1,1};
+static oid neEntLogicalTable_oid[] = {1,3,6,1,4,1,36969,70,1,2};
+static oid neEntLPMappingTable_oid[] = {1,3,6,1,4,1,36969,70,1,3};
+static oid neEntPortTable_oid[] = {1,3,6,1,4,1,36969,70,1,4};
+static oid neEntChassisPortTable_oid[] = {1,3,6,1,4,1,36969,70,1,5};
 
 static oid snmptrap_oid[] = {1,3,6,1,6,3,1,1,4,1,0};
 
 static oid entConfigChange_oid[] = {1,3,6,1,2,1,47,2,0,1};
+
+
+static bool entPhysicalTable_getChassis (
+	entPhysicalEntry_t *poEntry,
+	uint32_t *pu32ChassisIndex);
 
 
 
@@ -76,6 +87,11 @@ entityMIB_init (void)
 	entLPMappingTable_init ();
 	entAliasMappingTable_init ();
 	entPhysicalContainsTable_init ();
+	neEntPhysicalTable_init ();
+	neEntLogicalTable_init ();
+	neEntLPMappingTable_init ();
+	neEntPortTable_init ();
+	neEntChassisPortTable_init ();
 }
 
 
@@ -145,7 +161,7 @@ entPhysicalTable_init (void)
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
-		ASN_INTEGER /* index: entPhysicalIndex */,
+		ASN_UNSIGNED /* index: entPhysicalIndex */,
 		0);
 	table_info->min_column = ENTPHYSICALDESCR;
 	table_info->max_column = ENTPHYSICALURIS;
@@ -170,16 +186,29 @@ entPhysicalTable_BTreeNodeCmp (
 	register entPhysicalEntry_t *pEntry2 = xBTree_entry (pNode2, entPhysicalEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->i32Index < pEntry2->i32Index) ? -1:
-		(pEntry1->i32Index == pEntry2->i32Index) ? 0: 1;
+		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+static int8_t
+entPhysicalTable_SerialNum_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register entPhysicalEntry_t *pEntry1 = xBTree_entry (pNode1, entPhysicalEntry_t, oBTreeNode);
+	register entPhysicalEntry_t *pEntry2 = xBTree_entry (pNode2, entPhysicalEntry_t, oBTreeNode);
+	
+	return
+		(xBinCmp (pEntry1->au8SerialNum, pEntry2->au8SerialNum, pEntry1->u16SerialNum_len, pEntry2->u16SerialNum_len) == -1) ? -1:
+		(xBinCmp (pEntry1->au8SerialNum, pEntry2->au8SerialNum, pEntry1->u16SerialNum_len, pEntry2->u16SerialNum_len) == 0) ? 0: 1;
 }
 
 xBTree_t oEntPhysicalTable_BTree = xBTree_initInline (&entPhysicalTable_BTreeNodeCmp);
+xBTree_t oEntPhysicalTable_SerialNum_BTree = xBTree_initInline (&entPhysicalTable_SerialNum_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 entPhysicalEntry_t *
 entPhysicalTable_createEntry (
-	int32_t i32Index)
+	uint32_t u32Index)
 {
 	entPhysicalEntry_t *poEntry = NULL;
 	
@@ -188,7 +217,7 @@ entPhysicalTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32Index = i32Index;
+	poEntry->u32Index = u32Index;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oEntPhysicalTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -201,7 +230,7 @@ entPhysicalTable_createEntry (
 
 entPhysicalEntry_t *
 entPhysicalTable_getByIndex (
-	int32_t i32Index)
+	uint32_t u32Index)
 {
 	register entPhysicalEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -211,7 +240,7 @@ entPhysicalTable_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32Index = i32Index;
+	poTmpEntry->u32Index = u32Index;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oEntPhysicalTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -224,7 +253,7 @@ entPhysicalTable_getByIndex (
 
 entPhysicalEntry_t *
 entPhysicalTable_getNextIndex (
-	int32_t i32Index)
+	uint32_t u32Index)
 {
 	register entPhysicalEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -234,7 +263,7 @@ entPhysicalTable_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32Index = i32Index;
+	poTmpEntry->u32Index = u32Index;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oEntPhysicalTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -258,6 +287,119 @@ entPhysicalTable_removeEntry (entPhysicalEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oEntPhysicalTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+bool
+entPhysicalTable_getChassis (
+	entPhysicalEntry_t *poEntry,
+	uint32_t *pu32ChassisIndex)
+{
+	if (poEntry->i32Class == entPhysicalClass_stack_c ||
+		poEntry->i32Class == entPhysicalClass_chassis_c ||
+		poEntry->u32ContainedIn == 0)
+	{
+		return false;
+	}
+	
+	register entPhysicalEntry_t *poContainerEntry = NULL;
+	uint32_t u32ContainedIn = poEntry->u32ContainedIn;
+	
+	while (
+		u32ContainedIn != 0 &&
+		(poContainerEntry = entPhysicalTable_getByIndex (u32ContainedIn)) != NULL &&
+		poContainerEntry->i32Class != entPhysicalClass_chassis_c)
+	{
+		u32ContainedIn = poContainerEntry->u32ContainedIn;
+	}
+		
+	if (poContainerEntry == NULL || poContainerEntry->i32Class != entPhysicalClass_chassis_c)
+	{
+		return false;
+	}
+	
+	*pu32ChassisIndex = poContainerEntry->u32Index;
+	return true;
+}
+
+bool
+entPhysicalTable_createEntity (
+	uint32_t u32Index,
+	int32_t i32Class,
+	uint32_t u32ContainedIn)
+{
+	register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
+	register neEntPhysicalEntry_t *poNeEntPhysicalEntry = NULL;
+	
+	if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (u32Index)) != NULL)
+	{
+		if (i32Class != 0 && poEntPhysicalEntry->i32Class != 0 && poEntPhysicalEntry->i32Class != i32Class)
+		{
+			goto entPhysicalTable_createEntity_cleanup;
+		}
+		if ((poNeEntPhysicalEntry = neEntPhysicalTable_getByIndex (u32Index)) == NULL)
+		{
+			goto entPhysicalTable_createEntity_cleanup;
+		}
+	}
+	else
+	{
+		if ((poNeEntPhysicalEntry = neEntPhysicalTable_createExt (u32Index)) == NULL)
+		{
+			goto entPhysicalTable_createEntity_cleanup;
+		}
+		if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (u32Index)) == NULL)
+		{
+			goto entPhysicalTable_createEntity_cleanup;
+		}
+	}
+	
+	i32Class != 0 ? (poNeEntPhysicalEntry->i32Class = i32Class): false;
+	u32ContainedIn != 0 ? (poNeEntPhysicalEntry->u32ContainedIn = u32ContainedIn): false;
+	
+	if (!neEntPhysicalRowStatus_handler (poNeEntPhysicalEntry, xRowStatus_active_c))
+	{
+		goto entPhysicalTable_createEntity_cleanup;
+	}
+	
+	return true;
+	
+	
+entPhysicalTable_createEntity_cleanup:
+	
+	entPhysicalTable_removeEntity (u32Index);
+	return false;
+}
+
+bool
+entPhysicalTable_removeEntity (
+	uint32_t u32Index)
+{
+	register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
+	register neEntPhysicalEntry_t *poNeEntPhysicalEntry = NULL;
+	
+	if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (u32Index)) == NULL ||
+		(poNeEntPhysicalEntry = neEntPhysicalTable_getByIndex (u32Index)) == NULL)
+	{
+		goto entPhysicalTable_removeEntity_success;
+	}
+	
+	if (!neEntPhysicalRowStatus_handler (poNeEntPhysicalEntry, xRowStatus_notInService_c))
+	{
+		goto entPhysicalTable_removeEntity_cleanup;
+	}
+	if (!neEntPhysicalTable_removeExt (poNeEntPhysicalEntry))
+	{
+		goto entPhysicalTable_removeEntity_cleanup;
+	}
+	
+entPhysicalTable_removeEntity_success:
+	
+	return true;
+	
+	
+entPhysicalTable_removeEntity_cleanup:
+	
+	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -284,7 +426,7 @@ entPhysicalTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, entPhysicalEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32Index);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oEntPhysicalTable_BTree);
 	return put_index_data;
@@ -348,7 +490,7 @@ entPhysicalTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoVendorType, table_entry->u16VendorType_len);
 				break;
 			case ENTPHYSICALCONTAINEDIN:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ContainedIn);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ContainedIn);
 				break;
 			case ENTPHYSICALCLASS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Class);
@@ -610,7 +752,7 @@ entLogicalTable_init (void)
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
-		ASN_INTEGER /* index: entLogicalIndex */,
+		ASN_UNSIGNED /* index: entLogicalIndex */,
 		0);
 	table_info->min_column = ENTLOGICALDESCR;
 	table_info->max_column = ENTLOGICALCONTEXTNAME;
@@ -635,8 +777,8 @@ entLogicalTable_BTreeNodeCmp (
 	register entLogicalEntry_t *pEntry2 = xBTree_entry (pNode2, entLogicalEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->i32Index < pEntry2->i32Index) ? -1:
-		(pEntry1->i32Index == pEntry2->i32Index) ? 0: 1;
+		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
 }
 
 xBTree_t oEntLogicalTable_BTree = xBTree_initInline (&entLogicalTable_BTreeNodeCmp);
@@ -644,7 +786,7 @@ xBTree_t oEntLogicalTable_BTree = xBTree_initInline (&entLogicalTable_BTreeNodeC
 /* create a new row in the (unsorted) table */
 entLogicalEntry_t *
 entLogicalTable_createEntry (
-	int32_t i32Index)
+	uint32_t u32Index)
 {
 	entLogicalEntry_t *poEntry = NULL;
 	
@@ -653,7 +795,7 @@ entLogicalTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32Index = i32Index;
+	poEntry->u32Index = u32Index;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oEntLogicalTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -666,7 +808,7 @@ entLogicalTable_createEntry (
 
 entLogicalEntry_t *
 entLogicalTable_getByIndex (
-	int32_t i32Index)
+	uint32_t u32Index)
 {
 	register entLogicalEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -676,7 +818,7 @@ entLogicalTable_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32Index = i32Index;
+	poTmpEntry->u32Index = u32Index;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oEntLogicalTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -689,7 +831,7 @@ entLogicalTable_getByIndex (
 
 entLogicalEntry_t *
 entLogicalTable_getNextIndex (
-	int32_t i32Index)
+	uint32_t u32Index)
 {
 	register entLogicalEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -699,7 +841,7 @@ entLogicalTable_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32Index = i32Index;
+	poTmpEntry->u32Index = u32Index;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oEntLogicalTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -749,7 +891,7 @@ entLogicalTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, entLogicalEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32Index);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oEntLogicalTable_BTree);
 	return put_index_data;
@@ -855,8 +997,8 @@ entLPMappingTable_init (void)
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
-		ASN_INTEGER /* index: entLogicalIndex */,
-		ASN_INTEGER /* index: entLPPhysicalIndex */,
+		ASN_UNSIGNED /* index: entLogicalIndex */,
+		ASN_UNSIGNED /* index: entLPPhysicalIndex */,
 		0);
 	table_info->min_column = ENTLPPHYSICALINDEX;
 	table_info->max_column = ENTLPPHYSICALINDEX;
@@ -881,9 +1023,9 @@ entLPMappingTable_BTreeNodeCmp (
 	register entLPMappingEntry_t *pEntry2 = xBTree_entry (pNode2, entLPMappingEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->i32LogicalIndex < pEntry2->i32LogicalIndex) ||
-		(pEntry1->i32LogicalIndex == pEntry2->i32LogicalIndex && pEntry1->i32LPPhysicalIndex < pEntry2->i32LPPhysicalIndex) ? -1:
-		(pEntry1->i32LogicalIndex == pEntry2->i32LogicalIndex && pEntry1->i32LPPhysicalIndex == pEntry2->i32LPPhysicalIndex) ? 0: 1;
+		(pEntry1->u32LogicalIndex < pEntry2->u32LogicalIndex) ||
+		(pEntry1->u32LogicalIndex == pEntry2->u32LogicalIndex && pEntry1->u32LPPhysicalIndex < pEntry2->u32LPPhysicalIndex) ? -1:
+		(pEntry1->u32LogicalIndex == pEntry2->u32LogicalIndex && pEntry1->u32LPPhysicalIndex == pEntry2->u32LPPhysicalIndex) ? 0: 1;
 }
 
 xBTree_t oEntLPMappingTable_BTree = xBTree_initInline (&entLPMappingTable_BTreeNodeCmp);
@@ -891,8 +1033,8 @@ xBTree_t oEntLPMappingTable_BTree = xBTree_initInline (&entLPMappingTable_BTreeN
 /* create a new row in the (unsorted) table */
 entLPMappingEntry_t *
 entLPMappingTable_createEntry (
-	int32_t i32LogicalIndex,
-	int32_t i32LPPhysicalIndex)
+	uint32_t u32LogicalIndex,
+	uint32_t u32LPPhysicalIndex)
 {
 	entLPMappingEntry_t *poEntry = NULL;
 	
@@ -901,8 +1043,8 @@ entLPMappingTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32LogicalIndex = i32LogicalIndex;
-	poEntry->i32LPPhysicalIndex = i32LPPhysicalIndex;
+	poEntry->u32LogicalIndex = u32LogicalIndex;
+	poEntry->u32LPPhysicalIndex = u32LPPhysicalIndex;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oEntLPMappingTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -915,8 +1057,8 @@ entLPMappingTable_createEntry (
 
 entLPMappingEntry_t *
 entLPMappingTable_getByIndex (
-	int32_t i32LogicalIndex,
-	int32_t i32LPPhysicalIndex)
+	uint32_t u32LogicalIndex,
+	uint32_t u32LPPhysicalIndex)
 {
 	register entLPMappingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -926,8 +1068,8 @@ entLPMappingTable_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32LogicalIndex = i32LogicalIndex;
-	poTmpEntry->i32LPPhysicalIndex = i32LPPhysicalIndex;
+	poTmpEntry->u32LogicalIndex = u32LogicalIndex;
+	poTmpEntry->u32LPPhysicalIndex = u32LPPhysicalIndex;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oEntLPMappingTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -940,8 +1082,8 @@ entLPMappingTable_getByIndex (
 
 entLPMappingEntry_t *
 entLPMappingTable_getNextIndex (
-	int32_t i32LogicalIndex,
-	int32_t i32LPPhysicalIndex)
+	uint32_t u32LogicalIndex,
+	uint32_t u32LPPhysicalIndex)
 {
 	register entLPMappingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -951,8 +1093,8 @@ entLPMappingTable_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32LogicalIndex = i32LogicalIndex;
-	poTmpEntry->i32LPPhysicalIndex = i32LPPhysicalIndex;
+	poTmpEntry->u32LogicalIndex = u32LogicalIndex;
+	poTmpEntry->u32LPPhysicalIndex = u32LPPhysicalIndex;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oEntLPMappingTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -1002,9 +1144,9 @@ entLPMappingTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, entLPMappingEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32LogicalIndex);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32LogicalIndex);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32LPPhysicalIndex);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32LPPhysicalIndex);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oEntLPMappingTable_BTree);
 	return put_index_data;
@@ -1062,7 +1204,7 @@ entLPMappingTable_mapper (
 			switch (table_info->colnum)
 			{
 			case ENTLPPHYSICALINDEX:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LPPhysicalIndex);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32LPPhysicalIndex);
 				break;
 				
 			default:
@@ -1094,8 +1236,8 @@ entAliasMappingTable_init (void)
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
-		ASN_INTEGER /* index: entPhysicalIndex */,
-		ASN_INTEGER /* index: entAliasLogicalIndexOrZero */,
+		ASN_UNSIGNED /* index: entPhysicalIndex */,
+		ASN_UNSIGNED /* index: entAliasLogicalIndexOrZero */,
 		0);
 	table_info->min_column = ENTALIASMAPPINGIDENTIFIER;
 	table_info->max_column = ENTALIASMAPPINGIDENTIFIER;
@@ -1120,9 +1262,9 @@ entAliasMappingTable_BTreeNodeCmp (
 	register entAliasMappingEntry_t *pEntry2 = xBTree_entry (pNode2, entAliasMappingEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->i32PhysicalIndex < pEntry2->i32PhysicalIndex) ||
-		(pEntry1->i32PhysicalIndex == pEntry2->i32PhysicalIndex && pEntry1->i32AliasLogicalIndexOrZero < pEntry2->i32AliasLogicalIndexOrZero) ? -1:
-		(pEntry1->i32PhysicalIndex == pEntry2->i32PhysicalIndex && pEntry1->i32AliasLogicalIndexOrZero == pEntry2->i32AliasLogicalIndexOrZero) ? 0: 1;
+		(pEntry1->u32PhysicalIndex < pEntry2->u32PhysicalIndex) ||
+		(pEntry1->u32PhysicalIndex == pEntry2->u32PhysicalIndex && pEntry1->u32AliasLogicalIndexOrZero < pEntry2->u32AliasLogicalIndexOrZero) ? -1:
+		(pEntry1->u32PhysicalIndex == pEntry2->u32PhysicalIndex && pEntry1->u32AliasLogicalIndexOrZero == pEntry2->u32AliasLogicalIndexOrZero) ? 0: 1;
 }
 
 xBTree_t oEntAliasMappingTable_BTree = xBTree_initInline (&entAliasMappingTable_BTreeNodeCmp);
@@ -1130,8 +1272,8 @@ xBTree_t oEntAliasMappingTable_BTree = xBTree_initInline (&entAliasMappingTable_
 /* create a new row in the (unsorted) table */
 entAliasMappingEntry_t *
 entAliasMappingTable_createEntry (
-	int32_t i32PhysicalIndex,
-	int32_t i32AliasLogicalIndexOrZero)
+	uint32_t u32PhysicalIndex,
+	uint32_t u32AliasLogicalIndexOrZero)
 {
 	entAliasMappingEntry_t *poEntry = NULL;
 	
@@ -1140,8 +1282,8 @@ entAliasMappingTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32PhysicalIndex = i32PhysicalIndex;
-	poEntry->i32AliasLogicalIndexOrZero = i32AliasLogicalIndexOrZero;
+	poEntry->u32PhysicalIndex = u32PhysicalIndex;
+	poEntry->u32AliasLogicalIndexOrZero = u32AliasLogicalIndexOrZero;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oEntAliasMappingTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -1154,8 +1296,8 @@ entAliasMappingTable_createEntry (
 
 entAliasMappingEntry_t *
 entAliasMappingTable_getByIndex (
-	int32_t i32PhysicalIndex,
-	int32_t i32AliasLogicalIndexOrZero)
+	uint32_t u32PhysicalIndex,
+	uint32_t u32AliasLogicalIndexOrZero)
 {
 	register entAliasMappingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -1165,8 +1307,8 @@ entAliasMappingTable_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32PhysicalIndex = i32PhysicalIndex;
-	poTmpEntry->i32AliasLogicalIndexOrZero = i32AliasLogicalIndexOrZero;
+	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
+	poTmpEntry->u32AliasLogicalIndexOrZero = u32AliasLogicalIndexOrZero;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oEntAliasMappingTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -1179,8 +1321,8 @@ entAliasMappingTable_getByIndex (
 
 entAliasMappingEntry_t *
 entAliasMappingTable_getNextIndex (
-	int32_t i32PhysicalIndex,
-	int32_t i32AliasLogicalIndexOrZero)
+	uint32_t u32PhysicalIndex,
+	uint32_t u32AliasLogicalIndexOrZero)
 {
 	register entAliasMappingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -1190,8 +1332,8 @@ entAliasMappingTable_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32PhysicalIndex = i32PhysicalIndex;
-	poTmpEntry->i32AliasLogicalIndexOrZero = i32AliasLogicalIndexOrZero;
+	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
+	poTmpEntry->u32AliasLogicalIndexOrZero = u32AliasLogicalIndexOrZero;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oEntAliasMappingTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -1241,9 +1383,9 @@ entAliasMappingTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, entAliasMappingEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32PhysicalIndex);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PhysicalIndex);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32AliasLogicalIndexOrZero);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32AliasLogicalIndexOrZero);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oEntAliasMappingTable_BTree);
 	return put_index_data;
@@ -1333,8 +1475,8 @@ entPhysicalContainsTable_init (void)
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
-		ASN_INTEGER /* index: entPhysicalIndex */,
-		ASN_INTEGER /* index: entPhysicalChildIndex */,
+		ASN_UNSIGNED /* index: entPhysicalIndex */,
+		ASN_UNSIGNED /* index: entPhysicalChildIndex */,
 		0);
 	table_info->min_column = ENTPHYSICALCHILDINDEX;
 	table_info->max_column = ENTPHYSICALCHILDINDEX;
@@ -1359,9 +1501,9 @@ entPhysicalContainsTable_BTreeNodeCmp (
 	register entPhysicalContainsEntry_t *pEntry2 = xBTree_entry (pNode2, entPhysicalContainsEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->i32Index < pEntry2->i32Index) ||
-		(pEntry1->i32Index == pEntry2->i32Index && pEntry1->i32ChildIndex < pEntry2->i32ChildIndex) ? -1:
-		(pEntry1->i32Index == pEntry2->i32Index && pEntry1->i32ChildIndex == pEntry2->i32ChildIndex) ? 0: 1;
+		(pEntry1->u32Index < pEntry2->u32Index) ||
+		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32ChildIndex < pEntry2->u32ChildIndex) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32ChildIndex == pEntry2->u32ChildIndex) ? 0: 1;
 }
 
 xBTree_t oEntPhysicalContainsTable_BTree = xBTree_initInline (&entPhysicalContainsTable_BTreeNodeCmp);
@@ -1369,8 +1511,8 @@ xBTree_t oEntPhysicalContainsTable_BTree = xBTree_initInline (&entPhysicalContai
 /* create a new row in the (unsorted) table */
 entPhysicalContainsEntry_t *
 entPhysicalContainsTable_createEntry (
-	int32_t i32Index,
-	int32_t i32ChildIndex)
+	uint32_t u32Index,
+	uint32_t u32ChildIndex)
 {
 	entPhysicalContainsEntry_t *poEntry = NULL;
 	
@@ -1379,8 +1521,8 @@ entPhysicalContainsTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32Index = i32Index;
-	poEntry->i32ChildIndex = i32ChildIndex;
+	poEntry->u32Index = u32Index;
+	poEntry->u32ChildIndex = u32ChildIndex;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oEntPhysicalContainsTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -1393,8 +1535,8 @@ entPhysicalContainsTable_createEntry (
 
 entPhysicalContainsEntry_t *
 entPhysicalContainsTable_getByIndex (
-	int32_t i32Index,
-	int32_t i32ChildIndex)
+	uint32_t u32Index,
+	uint32_t u32ChildIndex)
 {
 	register entPhysicalContainsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -1404,8 +1546,8 @@ entPhysicalContainsTable_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32Index = i32Index;
-	poTmpEntry->i32ChildIndex = i32ChildIndex;
+	poTmpEntry->u32Index = u32Index;
+	poTmpEntry->u32ChildIndex = u32ChildIndex;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oEntPhysicalContainsTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -1418,8 +1560,8 @@ entPhysicalContainsTable_getByIndex (
 
 entPhysicalContainsEntry_t *
 entPhysicalContainsTable_getNextIndex (
-	int32_t i32Index,
-	int32_t i32ChildIndex)
+	uint32_t u32Index,
+	uint32_t u32ChildIndex)
 {
 	register entPhysicalContainsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -1429,8 +1571,8 @@ entPhysicalContainsTable_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32Index = i32Index;
-	poTmpEntry->i32ChildIndex = i32ChildIndex;
+	poTmpEntry->u32Index = u32Index;
+	poTmpEntry->u32ChildIndex = u32ChildIndex;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oEntPhysicalContainsTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -1480,9 +1622,9 @@ entPhysicalContainsTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, entPhysicalContainsEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32Index);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32ChildIndex);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ChildIndex);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oEntPhysicalContainsTable_BTree);
 	return put_index_data;
@@ -1540,7 +1682,2493 @@ entPhysicalContainsTable_mapper (
 			switch (table_info->colnum)
 			{
 			case ENTPHYSICALCHILDINDEX:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ChildIndex);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ChildIndex);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neEntPhysicalTable table mapper **/
+void
+neEntPhysicalTable_init (void)
+{
+	extern oid neEntPhysicalTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neEntPhysicalTable", &neEntPhysicalTable_mapper,
+		neEntPhysicalTable_oid, OID_LENGTH (neEntPhysicalTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_UNSIGNED /* index: entPhysicalIndex */,
+		0);
+	table_info->min_column = NEENTPHYSICALCONTAINEDIN;
+	table_info->max_column = NEENTPHYSICALSTORAGETYPE;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neEntPhysicalTable_getFirst;
+	iinfo->get_next_data_point = &neEntPhysicalTable_getNext;
+	iinfo->get_data_point = &neEntPhysicalTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neEntPhysicalTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntPhysicalEntry_t *pEntry1 = xBTree_entry (pNode1, neEntPhysicalEntry_t, oBTreeNode);
+	register neEntPhysicalEntry_t *pEntry2 = xBTree_entry (pNode2, neEntPhysicalEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32EntPhysicalIndex < pEntry2->u32EntPhysicalIndex) ? -1:
+		(pEntry1->u32EntPhysicalIndex == pEntry2->u32EntPhysicalIndex) ? 0: 1;
+}
+
+xBTree_t oNeEntPhysicalTable_BTree = xBTree_initInline (&neEntPhysicalTable_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+neEntPhysicalEntry_t *
+neEntPhysicalTable_createEntry (
+	uint32_t u32EntPhysicalIndex)
+{
+	neEntPhysicalEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (neEntPhysicalEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPhysicalTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neEntPhysicalStorageType_nonVolatile_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntPhysicalTable_BTree);
+	return poEntry;
+}
+
+neEntPhysicalEntry_t *
+neEntPhysicalTable_getByIndex (
+	uint32_t u32EntPhysicalIndex)
+{
+	register neEntPhysicalEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntPhysicalEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntPhysicalTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPhysicalEntry_t, oBTreeNode);
+}
+
+neEntPhysicalEntry_t *
+neEntPhysicalTable_getNextIndex (
+	uint32_t u32EntPhysicalIndex)
+{
+	register neEntPhysicalEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntPhysicalEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntPhysicalTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPhysicalEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neEntPhysicalTable_removeEntry (neEntPhysicalEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPhysicalTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntPhysicalTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+neEntPhysicalEntry_t *
+neEntPhysicalTable_createExt (
+	uint32_t u32EntPhysicalIndex)
+{
+	neEntPhysicalEntry_t *poEntry = NULL;
+	
+	poEntry = neEntPhysicalTable_createEntry (
+		u32EntPhysicalIndex);
+	if (poEntry == NULL)
+	{
+		goto neEntPhysicalTable_createExt_cleanup;
+	}
+	
+	if (!neEntPhysicalTable_createHier (poEntry))
+	{
+		neEntPhysicalTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto neEntPhysicalTable_createExt_cleanup;
+	}
+	
+	oEntityGeneral.u32LastChangeTime++;	/* TODO */
+	
+	
+neEntPhysicalTable_createExt_cleanup:
+	return poEntry;
+}
+
+bool
+neEntPhysicalTable_removeExt (neEntPhysicalEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!neEntPhysicalTable_removeHier (poEntry))
+	{
+		goto neEntPhysicalTable_removeExt_cleanup;
+	}
+	neEntPhysicalTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+	oEntityGeneral.u32LastChangeTime--;	/* TODO */
+	
+	
+neEntPhysicalTable_removeExt_cleanup:
+	return bRetCode;
+}
+
+bool
+neEntPhysicalTable_createHier (
+	neEntPhysicalEntry_t *poEntry)
+{
+	if (entPhysicalTable_getByIndex (poEntry->u32EntPhysicalIndex) == NULL &&
+		entPhysicalTable_createEntry (poEntry->u32EntPhysicalIndex) == NULL)
+	{
+		goto neEntPhysicalTable_createHier_cleanup;
+	}
+	
+	return true;
+	
+	
+neEntPhysicalTable_createHier_cleanup:
+	
+	neEntPhysicalTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+neEntPhysicalTable_removeHier (
+	neEntPhysicalEntry_t *poEntry)
+{
+	register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
+	
+	if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL)
+	{
+		entPhysicalTable_removeEntry (poEntPhysicalEntry);
+	}
+	
+	return true;
+}
+
+bool
+neEntPhysicalRowStatus_handler (
+	neEntPhysicalEntry_t *poEntry,
+	uint8_t u8RowStatus)
+{
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+	{
+		if (poEntry->u8RowStatus == xRowStatus_active_c)
+		{
+			break;
+		}
+		
+		register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
+		
+		if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (poEntry->u32EntPhysicalIndex)) == NULL)
+		{
+			return false;
+		}
+		
+		if (poEntry->u32ContainedIn != 0 &&
+			entPhysicalContainsTable_createEntry (poEntry->u32ContainedIn, poEntry->u32EntPhysicalIndex) == NULL)
+		{
+			return false;
+		}
+		
+		if (poEntry->i32Class == neEntPhysicalClass_port_c &&
+			neEntPortTable_createEntry (poEntry->u32EntPhysicalIndex) == NULL)
+		{
+			return false;
+		}
+		
+		if (poEntry->i32Class == neEntPhysicalClass_port_c && poEntry->u32ContainedIn != 0)
+		{
+			uint32_t u32ChassisIndex = 0;
+			
+			if (entPhysicalTable_getChassis (poEntPhysicalEntry, &u32ChassisIndex) &&
+				neEntChassisPortTable_createEntry (u32ChassisIndex, poEntry->u32EntPhysicalIndex) == NULL)
+			{
+				return false;
+			}
+		}
+		
+		/* TODO */
+		poEntPhysicalEntry->u32ContainedIn = poEntry->u32ContainedIn;
+		poEntPhysicalEntry->i32Class = poEntry->i32Class;
+		
+		poEntry->u8RowStatus = xRowStatus_active_c;
+		break;
+	}
+	
+	case xRowStatus_notInService_c:
+		if (poEntry->u8RowStatus != xRowStatus_notInService_c)
+		{
+			break;
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		poEntry->u8RowStatus = xRowStatus_notReady_c;
+		break;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+	{
+		register neEntPortEntry_t *poNeEntPortEntry = NULL;
+		register entPhysicalContainsEntry_t *poEntPhysicalContainsEntry = NULL;
+		
+		if (poEntry->i32Class == neEntPhysicalClass_port_c && poEntry->u32ContainedIn != 0)
+		{
+			uint32_t u32ChassisIndex = 0;
+			register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
+			register neEntChassisPortEntry_t *poNeEntChassisPortEntry = NULL;
+			
+			if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (poEntry->u32EntPhysicalIndex)) == NULL)
+			{
+				return false;
+			}
+			
+			if (entPhysicalTable_getChassis (poEntPhysicalEntry, &u32ChassisIndex) &&
+				(poNeEntChassisPortEntry = neEntChassisPortTable_getByIndex (u32ChassisIndex, poEntry->u32EntPhysicalIndex)) != NULL)
+			{
+				neEntChassisPortTable_removeEntry (poNeEntChassisPortEntry);
+			}
+		}
+		
+		if (poEntry->i32Class == neEntPhysicalClass_port_c &&
+			(poNeEntPortEntry = neEntPortTable_createEntry (poEntry->u32EntPhysicalIndex)) != NULL)
+		{
+			neEntPortTable_removeEntry (poNeEntPortEntry);
+		}
+		
+		if (poEntry->u32ContainedIn != 0 &&
+			(poEntPhysicalContainsEntry = entPhysicalContainsTable_getByIndex (poEntry->u32ContainedIn, poEntry->u32EntPhysicalIndex)) != NULL)
+		{
+			entPhysicalContainsTable_removeEntry (poEntPhysicalContainsEntry);
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	}
+	
+	return true;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neEntPhysicalTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeEntPhysicalTable_BTree);
+	return neEntPhysicalTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neEntPhysicalTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neEntPhysicalEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neEntPhysicalEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32EntPhysicalIndex);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntPhysicalTable_BTree);
+	return put_index_data;
+}
+
+bool
+neEntPhysicalTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neEntPhysicalEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	
+	poEntry = neEntPhysicalTable_getByIndex (
+		*idx1->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neEntPhysicalTable table mapper */
+int
+neEntPhysicalTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neEntPhysicalEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntPhysicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPHYSICALCONTAINEDIN:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ContainedIn);
+				break;
+			case NEENTPHYSICALCLASS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Class);
+				break;
+			case NEENTPHYSICALROWSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
+				break;
+			case NEENTPHYSICALSTORAGETYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntPhysicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPHYSICALCONTAINEDIN:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTPHYSICALCLASS:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTPHYSICALROWSTATUS:
+				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTPHYSICALSTORAGETYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntPhysicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPHYSICALROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = neEntPhysicalTable_createExt (
+						*idx1->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+					
+				case RS_DESTROY:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntPhysicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPHYSICALROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neEntPhysicalTable_removeExt (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntPhysicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPHYSICALCONTAINEDIN:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ContainedIn))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32ContainedIn, sizeof (table_entry->u32ContainedIn));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32ContainedIn = *request->requestvb->val.integer;
+				break;
+			case NEENTPHYSICALCLASS:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Class))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32Class, sizeof (table_entry->i32Class));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32Class = *request->requestvb->val.integer;
+				break;
+			case NEENTPHYSICALSTORAGETYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8StorageType = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		/* Check the internal consistency of an active row */
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntPhysicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPHYSICALROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
+					if (!neEntPhysicalRowStatus_handler (table_entry, *request->requestvb->val.integer))
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntPhysicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPHYSICALCONTAINEDIN:
+				memcpy (&table_entry->u32ContainedIn, pvOldDdata, sizeof (table_entry->u32ContainedIn));
+				break;
+			case NEENTPHYSICALCLASS:
+				memcpy (&table_entry->i32Class, pvOldDdata, sizeof (table_entry->i32Class));
+				break;
+			case NEENTPHYSICALROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neEntPhysicalTable_removeExt (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+				break;
+			case NEENTPHYSICALSTORAGETYPE:
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntPhysicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPHYSICALROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_ACTIVE:
+					table_entry->u8RowStatus = RS_ACTIVE;
+					break;
+					
+				case RS_CREATEANDWAIT:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_NOTINSERVICE:
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
+					break;
+					
+				case RS_DESTROY:
+					neEntPhysicalTable_removeExt (table_entry);
+					break;
+				}
+			}
+		}
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neEntLogicalTable table mapper **/
+void
+neEntLogicalTable_init (void)
+{
+	extern oid neEntLogicalTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neEntLogicalTable", &neEntLogicalTable_mapper,
+		neEntLogicalTable_oid, OID_LENGTH (neEntLogicalTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_UNSIGNED /* index: entLogicalIndex */,
+		0);
+	table_info->min_column = NEENTLOGICALROWSTATUS;
+	table_info->max_column = NEENTLOGICALSTORAGETYPE;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neEntLogicalTable_getFirst;
+	iinfo->get_next_data_point = &neEntLogicalTable_getNext;
+	iinfo->get_data_point = &neEntLogicalTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neEntLogicalTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntLogicalEntry_t *pEntry1 = xBTree_entry (pNode1, neEntLogicalEntry_t, oBTreeNode);
+	register neEntLogicalEntry_t *pEntry2 = xBTree_entry (pNode2, neEntLogicalEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32EntLogicalIndex < pEntry2->u32EntLogicalIndex) ? -1:
+		(pEntry1->u32EntLogicalIndex == pEntry2->u32EntLogicalIndex) ? 0: 1;
+}
+
+xBTree_t oNeEntLogicalTable_BTree = xBTree_initInline (&neEntLogicalTable_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+neEntLogicalEntry_t *
+neEntLogicalTable_createEntry (
+	uint32_t u32EntLogicalIndex)
+{
+	neEntLogicalEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (neEntLogicalEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32EntLogicalIndex = u32EntLogicalIndex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntLogicalTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neEntLogicalStorageType_nonVolatile_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntLogicalTable_BTree);
+	return poEntry;
+}
+
+neEntLogicalEntry_t *
+neEntLogicalTable_getByIndex (
+	uint32_t u32EntLogicalIndex)
+{
+	register neEntLogicalEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntLogicalEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32EntLogicalIndex = u32EntLogicalIndex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntLogicalTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntLogicalEntry_t, oBTreeNode);
+}
+
+neEntLogicalEntry_t *
+neEntLogicalTable_getNextIndex (
+	uint32_t u32EntLogicalIndex)
+{
+	register neEntLogicalEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntLogicalEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32EntLogicalIndex = u32EntLogicalIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntLogicalTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntLogicalEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neEntLogicalTable_removeEntry (neEntLogicalEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntLogicalTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntLogicalTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neEntLogicalTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeEntLogicalTable_BTree);
+	return neEntLogicalTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neEntLogicalTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neEntLogicalEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neEntLogicalEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32EntLogicalIndex);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntLogicalTable_BTree);
+	return put_index_data;
+}
+
+bool
+neEntLogicalTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neEntLogicalEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	
+	poEntry = neEntLogicalTable_getByIndex (
+		*idx1->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neEntLogicalTable table mapper */
+int
+neEntLogicalTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neEntLogicalEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntLogicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLOGICALROWSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
+				break;
+			case NEENTLOGICALSTORAGETYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntLogicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLOGICALROWSTATUS:
+				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTLOGICALSTORAGETYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntLogicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLOGICALROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = neEntLogicalTable_createEntry (
+						*idx1->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+					
+				case RS_DESTROY:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntLogicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLOGICALROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neEntLogicalTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntLogicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLOGICALSTORAGETYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8StorageType = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		/* Check the internal consistency of an active row */
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntLogicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLOGICALROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_ACTIVE:
+				case RS_CREATEANDGO:
+					if (/* TODO : int neEntLogicalTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntLogicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLOGICALROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neEntLogicalTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+				break;
+			case NEENTLOGICALSTORAGETYPE:
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntLogicalEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLOGICALROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_ACTIVE:
+					table_entry->u8RowStatus = RS_ACTIVE;
+					break;
+					
+				case RS_CREATEANDWAIT:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_NOTINSERVICE:
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
+					break;
+					
+				case RS_DESTROY:
+					neEntLogicalTable_removeEntry (table_entry);
+					break;
+				}
+			}
+		}
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neEntLPMappingTable table mapper **/
+void
+neEntLPMappingTable_init (void)
+{
+	extern oid neEntLPMappingTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neEntLPMappingTable", &neEntLPMappingTable_mapper,
+		neEntLPMappingTable_oid, OID_LENGTH (neEntLPMappingTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_UNSIGNED /* index: entLogicalIndex */,
+		ASN_UNSIGNED /* index: entLPPhysicalIndex */,
+		0);
+	table_info->min_column = NEENTLPMAPPINGROWSTATUS;
+	table_info->max_column = NEENTLPMAPPINGSTORAGETYPE;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neEntLPMappingTable_getFirst;
+	iinfo->get_next_data_point = &neEntLPMappingTable_getNext;
+	iinfo->get_data_point = &neEntLPMappingTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neEntLPMappingTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntLPMappingEntry_t *pEntry1 = xBTree_entry (pNode1, neEntLPMappingEntry_t, oBTreeNode);
+	register neEntLPMappingEntry_t *pEntry2 = xBTree_entry (pNode2, neEntLPMappingEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32EntLogicalIndex < pEntry2->u32EntLogicalIndex) ||
+		(pEntry1->u32EntLogicalIndex == pEntry2->u32EntLogicalIndex && pEntry1->u32EntLPPhysicalIndex < pEntry2->u32EntLPPhysicalIndex) ? -1:
+		(pEntry1->u32EntLogicalIndex == pEntry2->u32EntLogicalIndex && pEntry1->u32EntLPPhysicalIndex == pEntry2->u32EntLPPhysicalIndex) ? 0: 1;
+}
+
+xBTree_t oNeEntLPMappingTable_BTree = xBTree_initInline (&neEntLPMappingTable_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+neEntLPMappingEntry_t *
+neEntLPMappingTable_createEntry (
+	uint32_t u32EntLogicalIndex,
+	uint32_t u32EntLPPhysicalIndex)
+{
+	neEntLPMappingEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (neEntLPMappingEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32EntLogicalIndex = u32EntLogicalIndex;
+	poEntry->u32EntLPPhysicalIndex = u32EntLPPhysicalIndex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neEntLPMappingStorageType_nonVolatile_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree);
+	return poEntry;
+}
+
+neEntLPMappingEntry_t *
+neEntLPMappingTable_getByIndex (
+	uint32_t u32EntLogicalIndex,
+	uint32_t u32EntLPPhysicalIndex)
+{
+	register neEntLPMappingEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntLPMappingEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32EntLogicalIndex = u32EntLogicalIndex;
+	poTmpEntry->u32EntLPPhysicalIndex = u32EntLPPhysicalIndex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntLPMappingTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntLPMappingEntry_t, oBTreeNode);
+}
+
+neEntLPMappingEntry_t *
+neEntLPMappingTable_getNextIndex (
+	uint32_t u32EntLogicalIndex,
+	uint32_t u32EntLPPhysicalIndex)
+{
+	register neEntLPMappingEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntLPMappingEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32EntLogicalIndex = u32EntLogicalIndex;
+	poTmpEntry->u32EntLPPhysicalIndex = u32EntLPPhysicalIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntLPMappingTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntLPMappingEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neEntLPMappingTable_removeEntry (neEntLPMappingEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neEntLPMappingTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeEntLPMappingTable_BTree);
+	return neEntLPMappingTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neEntLPMappingTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neEntLPMappingEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neEntLPMappingEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32EntLogicalIndex);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32EntLPPhysicalIndex);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree);
+	return put_index_data;
+}
+
+bool
+neEntLPMappingTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neEntLPMappingEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	
+	poEntry = neEntLPMappingTable_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neEntLPMappingTable table mapper */
+int
+neEntLPMappingTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neEntLPMappingEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntLPMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLPMAPPINGROWSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
+				break;
+			case NEENTLPMAPPINGSTORAGETYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntLPMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLPMAPPINGROWSTATUS:
+				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTLPMAPPINGSTORAGETYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntLPMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			register netsnmp_variable_list *idx2 = idx1->next_variable;
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLPMAPPINGROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = neEntLPMappingTable_createEntry (
+						*idx1->val.integer,
+						*idx2->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+					
+				case RS_DESTROY:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntLPMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLPMAPPINGROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neEntLPMappingTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntLPMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLPMAPPINGSTORAGETYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8StorageType = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		/* Check the internal consistency of an active row */
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntLPMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLPMAPPINGROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_ACTIVE:
+				case RS_CREATEANDGO:
+					if (/* TODO : int neEntLPMappingTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntLPMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLPMAPPINGROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neEntLPMappingTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+				break;
+			case NEENTLPMAPPINGSTORAGETYPE:
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntLPMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTLPMAPPINGROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_ACTIVE:
+					table_entry->u8RowStatus = RS_ACTIVE;
+					break;
+					
+				case RS_CREATEANDWAIT:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_NOTINSERVICE:
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
+					break;
+					
+				case RS_DESTROY:
+					neEntLPMappingTable_removeEntry (table_entry);
+					break;
+				}
+			}
+		}
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neEntPortTable table mapper **/
+void
+neEntPortTable_init (void)
+{
+	extern oid neEntPortTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neEntPortTable", &neEntPortTable_mapper,
+		neEntPortTable_oid, OID_LENGTH (neEntPortTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_UNSIGNED /* index: entPhysicalIndex */,
+		0);
+	table_info->min_column = NEENTPORTCHASSISID;
+	table_info->max_column = NEENTPORTROWSTATUS;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neEntPortTable_getFirst;
+	iinfo->get_next_data_point = &neEntPortTable_getNext;
+	iinfo->get_data_point = &neEntPortTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neEntPortTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntPortEntry_t *pEntry1 = xBTree_entry (pNode1, neEntPortEntry_t, oBTreeNode);
+	register neEntPortEntry_t *pEntry2 = xBTree_entry (pNode2, neEntPortEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32EntPhysicalIndex < pEntry2->u32EntPhysicalIndex) ? -1:
+		(pEntry1->u32EntPhysicalIndex == pEntry2->u32EntPhysicalIndex) ? 0: 1;
+}
+
+xBTree_t oNeEntPortTable_BTree = xBTree_initInline (&neEntPortTable_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+neEntPortEntry_t *
+neEntPortTable_createEntry (
+	uint32_t u32EntPhysicalIndex)
+{
+	neEntPortEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (neEntPortEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->u32ChassisId = 0;
+	poEntry->u32ModuleId = 0;
+	poEntry->u32Id = 0;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntPortTable_BTree);
+	return poEntry;
+}
+
+neEntPortEntry_t *
+neEntPortTable_getByIndex (
+	uint32_t u32EntPhysicalIndex)
+{
+	register neEntPortEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntPortEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntPortTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPortEntry_t, oBTreeNode);
+}
+
+neEntPortEntry_t *
+neEntPortTable_getNextIndex (
+	uint32_t u32EntPhysicalIndex)
+{
+	register neEntPortEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntPortEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntPortTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPortEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neEntPortTable_removeEntry (neEntPortEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntPortTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+bool
+neEntPortRowStatus_handler (
+	neEntPortEntry_t *poEntry,
+	uint8_t u8RowStatus)
+{
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (poEntry->u8RowStatus == xRowStatus_active_c)
+		{
+			break;
+		}
+		if (poEntry->u32IfIndex == 0 || poEntry->u32Id == 0)
+		{
+			return false;
+		}
+		
+		if (!ifTable_createReference (poEntry->u32IfIndex, 0, false, true, true))
+		{
+			return false;
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_active_c;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (poEntry->u8RowStatus == xRowStatus_notInService_c)
+		{
+			break;
+		}
+		
+		if (poEntry->u32IfIndex != 0 && !ifTable_removeReference (poEntry->u32IfIndex, 0, false, true, true))
+		{
+			return false;
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		poEntry->u8RowStatus = xRowStatus_notReady_c;
+		break;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (poEntry->u8RowStatus == xRowStatus_active_c &&
+			!ifTable_removeReference (poEntry->u32IfIndex, 0, false, true, true))
+		{
+			return false;
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+	return true;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neEntPortTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeEntPortTable_BTree);
+	return neEntPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neEntPortTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neEntPortEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neEntPortEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32EntPhysicalIndex);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntPortTable_BTree);
+	return put_index_data;
+}
+
+bool
+neEntPortTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neEntPortEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	
+	poEntry = neEntPortTable_getByIndex (
+		*idx1->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neEntPortTable table mapper */
+int
+neEntPortTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neEntPortEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPORTCHASSISID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ChassisId);
+				break;
+			case NEENTPORTMODULEID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ModuleId);
+				break;
+			case NEENTPORTID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Id);
+				break;
+			case NEENTPORTIFINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32IfIndex);
+				break;
+			case NEENTPORTROWSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPORTCHASSISID:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTPORTMODULEID:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTPORTID:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTPORTIFINDEX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTPORTROWSTATUS:
+				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPORTROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = neEntPortTable_createEntry (
+						*idx1->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+					
+				case RS_DESTROY:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPORTROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neEntPortTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPORTCHASSISID:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ChassisId))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32ChassisId, sizeof (table_entry->u32ChassisId));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32ChassisId = *request->requestvb->val.integer;
+				break;
+			case NEENTPORTMODULEID:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ModuleId))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32ModuleId, sizeof (table_entry->u32ModuleId));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32ModuleId = *request->requestvb->val.integer;
+				break;
+			case NEENTPORTID:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32Id))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32Id, sizeof (table_entry->u32Id));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32Id = *request->requestvb->val.integer;
+				break;
+			case NEENTPORTIFINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32IfIndex))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32IfIndex, sizeof (table_entry->u32IfIndex));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32IfIndex = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		/* Check the internal consistency of an active row */
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPORTROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
+					if (!neEntPortRowStatus_handler (table_entry, *request->requestvb->val.integer))
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neEntPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPORTCHASSISID:
+				memcpy (&table_entry->u32ChassisId, pvOldDdata, sizeof (table_entry->u32ChassisId));
+				break;
+			case NEENTPORTMODULEID:
+				memcpy (&table_entry->u32ModuleId, pvOldDdata, sizeof (table_entry->u32ModuleId));
+				break;
+			case NEENTPORTID:
+				memcpy (&table_entry->u32Id, pvOldDdata, sizeof (table_entry->u32Id));
+				break;
+			case NEENTPORTIFINDEX:
+				memcpy (&table_entry->u32IfIndex, pvOldDdata, sizeof (table_entry->u32IfIndex));
+				break;
+			case NEENTPORTROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neEntPortTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPORTROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_ACTIVE:
+					table_entry->u8RowStatus = RS_ACTIVE;
+					break;
+					
+				case RS_CREATEANDWAIT:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_NOTINSERVICE:
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
+					break;
+					
+				case RS_DESTROY:
+					neEntPortTable_removeEntry (table_entry);
+					break;
+				}
+			}
+		}
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neEntChassisPortTable table mapper **/
+void
+neEntChassisPortTable_init (void)
+{
+	extern oid neEntChassisPortTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neEntChassisPortTable", &neEntChassisPortTable_mapper,
+		neEntChassisPortTable_oid, OID_LENGTH (neEntChassisPortTable_oid),
+		HANDLER_CAN_RONLY
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_UNSIGNED /* index: neEntChassisPortChassisIndex */,
+		ASN_UNSIGNED /* index: neEntChassisPortIndex */,
+		0);
+	table_info->min_column = NEENTCHASSISPORTINDEX;
+	table_info->max_column = NEENTCHASSISPORTINDEX;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neEntChassisPortTable_getFirst;
+	iinfo->get_next_data_point = &neEntChassisPortTable_getNext;
+	iinfo->get_data_point = &neEntChassisPortTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neEntChassisPortTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntChassisPortEntry_t *pEntry1 = xBTree_entry (pNode1, neEntChassisPortEntry_t, oBTreeNode);
+	register neEntChassisPortEntry_t *pEntry2 = xBTree_entry (pNode2, neEntChassisPortEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32ChassisIndex < pEntry2->u32ChassisIndex) ||
+		(pEntry1->u32ChassisIndex == pEntry2->u32ChassisIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32ChassisIndex == pEntry2->u32ChassisIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+xBTree_t oNeEntChassisPortTable_BTree = xBTree_initInline (&neEntChassisPortTable_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+neEntChassisPortEntry_t *
+neEntChassisPortTable_createEntry (
+	uint32_t u32ChassisIndex,
+	uint32_t u32Index)
+{
+	neEntChassisPortEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (neEntChassisPortEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32ChassisIndex = u32ChassisIndex;
+	poEntry->u32Index = u32Index;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntChassisPortTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntChassisPortTable_BTree);
+	return poEntry;
+}
+
+neEntChassisPortEntry_t *
+neEntChassisPortTable_getByIndex (
+	uint32_t u32ChassisIndex,
+	uint32_t u32Index)
+{
+	register neEntChassisPortEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntChassisPortEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32ChassisIndex = u32ChassisIndex;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntChassisPortTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntChassisPortEntry_t, oBTreeNode);
+}
+
+neEntChassisPortEntry_t *
+neEntChassisPortTable_getNextIndex (
+	uint32_t u32ChassisIndex,
+	uint32_t u32Index)
+{
+	register neEntChassisPortEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntChassisPortEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32ChassisIndex = u32ChassisIndex;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntChassisPortTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntChassisPortEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neEntChassisPortTable_removeEntry (neEntChassisPortEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntChassisPortTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntChassisPortTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neEntChassisPortTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeEntChassisPortTable_BTree);
+	return neEntChassisPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neEntChassisPortTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neEntChassisPortEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neEntChassisPortEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ChassisIndex);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntChassisPortTable_BTree);
+	return put_index_data;
+}
+
+bool
+neEntChassisPortTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neEntChassisPortEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	
+	poEntry = neEntChassisPortTable_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neEntChassisPortTable table mapper */
+int
+neEntChassisPortTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neEntChassisPortEntry_t *table_entry;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neEntChassisPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTCHASSISPORTINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Index);
 				break;
 				
 			default:

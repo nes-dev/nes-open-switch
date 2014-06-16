@@ -439,6 +439,14 @@ ifEntry_t * ifTable_getByIndex (
 ifEntry_t * ifTable_getNextIndex (
 	uint32_t u32Index);
 void ifTable_removeEntry (ifEntry_t *poEntry);
+bool ifTable_createReference (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	bool bCreate, bool bReference, bool bActivate);
+bool ifTable_removeReference (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	bool bCreate, bool bReference, bool bActivate);
 ifEntry_t * ifTable_createExt (
 	uint32_t u32Index);
 bool ifTable_removeExt (ifEntry_t *poEntry);

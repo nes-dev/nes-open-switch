@@ -31,6 +31,24 @@ extern "C" {
 #include <stdint.h>
 
 
+enum
+{
+	/* enums for column xRowStatus */
+	xRowStatus_active_c = 1,
+	xRowStatus_notInService_c = 2,
+	xRowStatus_notReady_c = 3,
+	xRowStatus_createAndGo_c = 4,
+	xRowStatus_createAndWait_c = 5,
+	xRowStatus_destroy_c = 6,
+
+	/* enums for column xStorageType */
+	xStorageType_other_c = 1,
+	xStorageType_volatile_c = 2,
+	xStorageType_nonVolatile_c = 3,
+	xStorageType_permanent_c = 4,
+	xStorageType_readOnly_c = 5,
+};
+
 typedef unsigned long xOid_t;
 
 typedef struct xObjectId_t

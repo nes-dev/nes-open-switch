@@ -325,6 +325,25 @@ ifTable_removeEntry (ifEntry_t *poEntry)
 	return;
 }
 
+
+bool
+ifTable_createReference (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	bool bCreate, bool bReference, bool bActivate)
+{
+	return false;
+}
+
+bool
+ifTable_removeReference (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	bool bCreate, bool bReference, bool bActivate)
+{
+	return false;
+}
+
 ifEntry_t *
 ifTable_createExt (
 	uint32_t u32Index)
@@ -345,6 +364,9 @@ ifTable_createExt (
 		goto ifTable_createExt_cleanup;
 	}
 	
+	oInterfaces.i32IfNumber++;
+	oIfMIBObjects.u32TableLastChange++;	/* TODO */
+	
 	
 ifTable_createExt_cleanup:
 	return poEntry;
@@ -361,6 +383,9 @@ ifTable_removeExt (ifEntry_t *poEntry)
 	}
 	ifTable_removeEntry (poEntry);
 	bRetCode = true;
+	
+	oInterfaces.i32IfNumber--;
+	oIfMIBObjects.u32TableLastChange--;	/* TODO */
 	
 	
 ifTable_removeExt_cleanup:
@@ -1337,6 +1362,8 @@ ifStackTable_createExt (
 		goto ifStackTable_createExt_cleanup;
 	}
 	
+	oIfMIBObjects.u32StackLastChange++;	/* TODO */
+	
 	
 ifStackTable_createExt_cleanup:
 	
@@ -1354,6 +1381,8 @@ ifStackTable_removeExt (ifStackEntry_t *poEntry)
 	}
 	ifStackTable_removeEntry (poEntry);
 	bRetCode = true;
+	
+	oIfMIBObjects.u32StackLastChange--;	/* TODO */
 	
 	
 ifStackTable_removeExt_cleanup:
@@ -2917,27 +2946,18 @@ neIfTable_mapper (
 				{
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-					
-					table_entry->i32StorageType = neIfStorageType_nonVolatile_c;
-					oInterfaces.i32IfNumber++;
-					
 				case RS_ACTIVE:
 					table_entry->i32RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-					
-					table_entry->i32StorageType = neIfStorageType_nonVolatile_c;
-					oInterfaces.i32IfNumber++;
-					
 				case RS_NOTINSERVICE:
 					table_entry->i32RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
 					neIfTable_removeExt (table_entry);
-					oInterfaces.i32IfNumber--;
 					break;
 				}
 			}
