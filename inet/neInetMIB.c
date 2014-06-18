@@ -1748,7 +1748,8 @@ neIpUnNumTable_createEntry (
 	poEntry->i32AddressType = neIpUnNumAddressType_ipv4_c;
 	poEntry->u32RemoteId = 0;
 	/*poEntry->au8DestPhysAddress = 0*/;
-	poEntry->i32StorageType = neIpUnNumStorageType_volatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neIpUnNumStorageType_volatile_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeIpUnNumTable_BTree);
 	return poEntry;
@@ -1918,10 +1919,10 @@ neIpUnNumTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8DestPhysAddress, table_entry->u16DestPhysAddress_len);
 				break;
 			case NEIPUNNUMROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 			case NEIPUNNUMSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 				
 			default:
@@ -2198,18 +2199,18 @@ neIpUnNumTable_mapper (
 				table_entry->u16DestPhysAddress_len = request->requestvb->val_len;
 				break;
 			case NEIPUNNUMSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -2282,7 +2283,7 @@ neIpUnNumTable_mapper (
 				}
 				break;
 			case NEIPUNNUMSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			}
 		}
@@ -2302,13 +2303,13 @@ neIpUnNumTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -2403,7 +2404,8 @@ neIpAsNodeTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32StorageType = neIpAsNodeStorageType_volatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neIpAsNodeStorageType_volatile_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeIpAsNodeTable_BTree);
 	return poEntry;
@@ -2584,10 +2586,10 @@ neIpAsNodeTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Info, table_entry->u16Info_len);
 				break;
 			case NEIPASNODEROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 			case NEIPASNODESTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 				
 			default:
@@ -2726,18 +2728,18 @@ neIpAsNodeTable_mapper (
 			switch (table_info->colnum)
 			{
 			case NEIPASNODESTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -2789,7 +2791,7 @@ neIpAsNodeTable_mapper (
 				}
 				break;
 			case NEIPASNODESTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			}
 		}
@@ -2809,13 +2811,13 @@ neIpAsNodeTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

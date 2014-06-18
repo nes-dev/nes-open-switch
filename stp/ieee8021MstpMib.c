@@ -473,6 +473,8 @@ ieee8021MstpTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021MstpTable_BTree);
 	return poEntry;
 }
@@ -664,7 +666,7 @@ ieee8021MstpTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Vids3, table_entry->u16Vids3_len);
 				break;
 			case IEEE8021MSTPROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -882,13 +884,13 @@ ieee8021MstpTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

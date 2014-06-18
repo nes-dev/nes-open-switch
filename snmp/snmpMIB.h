@@ -180,8 +180,8 @@ typedef struct snmpTargetAddrEntry_t
 	size_t u16TagList_len;	/* # of uint8_t elements */
 	uint8_t au8Params[32];
 	size_t u16Params_len;	/* # of uint8_t elements */
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } snmpTargetAddrEntry_t;
@@ -252,8 +252,8 @@ typedef struct snmpTargetParamsEntry_t
 	uint8_t au8SecurityName[255];
 	size_t u16SecurityName_len;	/* # of uint8_t elements */
 	int32_t i32SecurityLevel;
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } snmpTargetParamsEntry_t;
@@ -319,8 +319,8 @@ typedef struct snmpNotifyEntry_t
 	uint8_t au8Tag[255];
 	size_t u16Tag_len;	/* # of uint8_t elements */
 	int32_t i32Type;
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } snmpNotifyEntry_t;
@@ -379,8 +379,8 @@ typedef struct snmpNotifyFilterProfileEntry_t
 	/* Column values */
 	uint8_t au8Name[32];
 	size_t u16Name_len;	/* # of uint8_t elements */
-	int32_t i32StorType;
-	int32_t i32RowStatus;
+	uint8_t u8StorType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } snmpNotifyFilterProfileEntry_t;
@@ -448,8 +448,8 @@ typedef struct snmpNotifyFilterEntry_t
 	uint8_t au8Mask[16];
 	size_t u16Mask_len;	/* # of uint8_t elements */
 	int32_t i32Type;
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } snmpNotifyFilterEntry_t;
@@ -539,8 +539,8 @@ typedef struct usmUserEntry_t
 	size_t u16OwnPrivKeyChange_len;	/* # of uint8_t elements */
 	uint8_t au8Public[32];
 	size_t u16Public_len;	/* # of uint8_t elements */
-	int32_t i32StorageType;
-	int32_t i32Status;
+	uint8_t u8StorageType;
+	uint8_t u8Status;
 	
 	xBTree_Node_t oBTreeNode;
 } usmUserEntry_t;
@@ -641,8 +641,8 @@ typedef struct vacmSecurityToGroupEntry_t
 	/* Column values */
 	uint8_t au8GroupName[32];
 	size_t u16GroupName_len;	/* # of uint8_t elements */
-	int32_t i32StorageType;
-	int32_t i32Status;
+	uint8_t u8StorageType;
+	uint8_t u8Status;
 	
 	xBTree_Node_t oBTreeNode;
 } vacmSecurityToGroupEntry_t;
@@ -728,8 +728,8 @@ typedef struct vacmAccessEntry_t
 	size_t u16WriteViewName_len;	/* # of uint8_t elements */
 	uint8_t au8NotifyViewName[32];
 	size_t u16NotifyViewName_len;	/* # of uint8_t elements */
-	int32_t i32StorageType;
-	int32_t i32Status;
+	uint8_t u8StorageType;
+	uint8_t u8Status;
 	
 	xBTree_Node_t oBTreeNode;
 } vacmAccessEntry_t;
@@ -807,8 +807,8 @@ typedef struct vacmViewTreeFamilyEntry_t
 	uint8_t au8Mask[16];
 	size_t u16Mask_len;	/* # of uint8_t elements */
 	int32_t i32Type;
-	int32_t i32StorageType;
-	int32_t i32Status;
+	uint8_t u8StorageType;
+	uint8_t u8Status;
 	
 	xBTree_Node_t oBTreeNode;
 } vacmViewTreeFamilyEntry_t;
@@ -883,8 +883,8 @@ typedef struct snmpCommunityEntry_t
 	size_t u16ContextName_len;	/* # of uint8_t elements */
 	uint8_t au8TransportTag[255];
 	size_t u16TransportTag_len;	/* # of uint8_t elements */
-	int32_t i32StorageType;
-	int32_t i32Status;
+	uint8_t u8StorageType;
+	uint8_t u8Status;
 	
 	xBTree_Node_t oBTreeNode;
 } snmpCommunityEntry_t;

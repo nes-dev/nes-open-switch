@@ -561,6 +561,8 @@ ieee8021QBridgeCVlanPortTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeCVlanPortTable_BTree);
 	return poEntry;
 }
@@ -716,7 +718,7 @@ ieee8021QBridgeCVlanPortTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGECVLANPORTROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -909,13 +911,13 @@ ieee8021QBridgeCVlanPortTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -2616,7 +2618,8 @@ ieee8021QBridgeStaticUnicastTable_createEntry (
 	
 	/*poEntry->au8StaticEgressPorts = 0*/;
 	/*poEntry->au8ForbiddenEgressPorts = 0*/;
-	poEntry->i32StorageType = ieee8021QBridgeStaticUnicastStorageType_nonVolatile_c;
+	poEntry->u8StorageType = ieee8021QBridgeStaticUnicastStorageType_nonVolatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeStaticUnicastTable_BTree);
 	return poEntry;
@@ -2797,10 +2800,10 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ForbiddenEgressPorts, table_entry->u16ForbiddenEgressPorts_len);
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -2991,18 +2994,18 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 				table_entry->u16ForbiddenEgressPorts_len = request->requestvb->val_len;
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -3052,7 +3055,7 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 				table_entry->u16ForbiddenEgressPorts_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -3082,13 +3085,13 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -3185,7 +3188,8 @@ ieee8021QBridgeStaticMulticastTable_createEntry (
 	
 	/*poEntry->au8StaticEgressPorts = 0*/;
 	/*poEntry->au8ForbiddenEgressPorts = 0*/;
-	poEntry->i32StorageType = ieee8021QBridgeStaticMulticastStorageType_nonVolatile_c;
+	poEntry->u8StorageType = ieee8021QBridgeStaticMulticastStorageType_nonVolatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeStaticMulticastTable_BTree);
 	return poEntry;
@@ -3366,10 +3370,10 @@ ieee8021QBridgeStaticMulticastTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ForbiddenEgressPorts, table_entry->u16ForbiddenEgressPorts_len);
 				break;
 			case IEEE8021QBRIDGESTATICMULTICASTSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case IEEE8021QBRIDGESTATICMULTICASTROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -3560,18 +3564,18 @@ ieee8021QBridgeStaticMulticastTable_mapper (
 				table_entry->u16ForbiddenEgressPorts_len = request->requestvb->val_len;
 				break;
 			case IEEE8021QBRIDGESTATICMULTICASTSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -3621,7 +3625,7 @@ ieee8021QBridgeStaticMulticastTable_mapper (
 				table_entry->u16ForbiddenEgressPorts_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case IEEE8021QBRIDGESTATICMULTICASTSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case IEEE8021QBRIDGESTATICMULTICASTROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -3651,13 +3655,13 @@ ieee8021QBridgeStaticMulticastTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -4006,6 +4010,7 @@ ieee8021QBridgeVlanStaticTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeVlanStaticTable_BTree);
 	return poEntry;
 }
@@ -4173,7 +4178,7 @@ ieee8021QBridgeVlanStaticTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8UntaggedPorts, table_entry->u16UntaggedPorts_len);
 				break;
 			case IEEE8021QBRIDGEVLANSTATICROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -4486,13 +4491,13 @@ ieee8021QBridgeVlanStaticTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -5524,6 +5529,9 @@ ieee8021QBridgeLearningConstraintsTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->i32Type = ieee8021QBridgeLearningConstraintsType_shared_c;
+	poEntry->u8Status = xRowStatus_notInService_c;
+	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeLearningConstraintsTable_BTree);
 	return poEntry;
 }
@@ -5690,7 +5698,7 @@ ieee8021QBridgeLearningConstraintsTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
 				break;
 			case IEEE8021QBRIDGELEARNINGCONSTRAINTSSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Status);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Status);
 				break;
 				
 			default:
@@ -5910,13 +5918,13 @@ ieee8021QBridgeLearningConstraintsTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32Status = RS_ACTIVE;
+					table_entry->u8Status = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32Status = RS_NOTINSERVICE;
+					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -5997,6 +6005,8 @@ ieee8021QBridgeLearningConstraintDefaultsTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->i32Type = ieee8021QBridgeLearningConstraintDefaultsType_shared_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeLearningConstraintDefaultsTable_BTree);
 	return poEntry;
@@ -6357,6 +6367,8 @@ ieee8021QBridgeProtocolGroupTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeProtocolGroupTable_BTree);
 	return poEntry;
 }
@@ -6525,7 +6537,7 @@ ieee8021QBridgeProtocolGroupTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Id);
 				break;
 			case IEEE8021QBRIDGEPROTOCOLGROUPROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -6745,13 +6757,13 @@ ieee8021QBridgeProtocolGroupTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -6840,6 +6852,8 @@ ieee8021QBridgeProtocolPortTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeProtocolPortTable_BTree);
 	return poEntry;
@@ -7007,7 +7021,7 @@ ieee8021QBridgeProtocolPortTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32GroupVid);
 				break;
 			case IEEE8021QBRIDGEPROTOCOLPORTROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -7227,13 +7241,13 @@ ieee8021QBridgeProtocolPortTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -7322,6 +7336,8 @@ ieee8021QBridgeVIDXTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeVIDXTable_BTree);
 	return poEntry;
@@ -7489,7 +7505,7 @@ ieee8021QBridgeVIDXTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RelayVid);
 				break;
 			case IEEE8021QBRIDGEVIDXROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -7709,13 +7725,13 @@ ieee8021QBridgeVIDXTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -7804,6 +7820,8 @@ ieee8021QBridgeEgressVidXTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeEgressVidXTable_BTree);
 	return poEntry;
@@ -7971,7 +7989,7 @@ ieee8021QBridgeEgressVidXTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LocalVid);
 				break;
 			case IEEE8021QBRIDGEEGRESSVIDXROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -8191,13 +8209,13 @@ ieee8021QBridgeEgressVidXTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

@@ -419,8 +419,8 @@ typedef struct neIpUnNumEntry_t
 	uint32_t u32RemoteId;
 	uint8_t au8DestPhysAddress[/* TODO: PhysAddress, PhysAddress, "" */ TOBE_REPLACED];
 	size_t u16DestPhysAddress_len;	/* # of uint8_t elements */
-	int32_t i32RowStatus;
-	int32_t i32StorageType;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
 } neIpUnNumEntry_t;
@@ -504,8 +504,8 @@ typedef struct neIpAsNodeEntry_t
 	uint32_t u32RouterId;
 	uint8_t au8Info[1];
 	size_t u16Info_len;	/* # of uint8_t elements */
-	int32_t i32RowStatus;
-	int32_t i32StorageType;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
 } neIpAsNodeEntry_t;

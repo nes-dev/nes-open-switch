@@ -2169,7 +2169,8 @@ ipAddressTable_createEntry (
 	poEntry->i32Type = ipAddressType_unicast_c;
 	/*poEntry->aoPrefix = zeroDotZero*/;
 	poEntry->i32Status = ipAddressStatus_preferred_c;
-	poEntry->i32StorageType = ipAddressStorageType_volatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = ipAddressStorageType_volatile_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIpAddressTable_BTree);
 	return poEntry;
@@ -2349,10 +2350,10 @@ ipAddressTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, table_entry->u32LastChanged);
 				break;
 			case IPADDRESSROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 			case IPADDRESSSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 				
 			default:
@@ -2553,18 +2554,18 @@ ipAddressTable_mapper (
 				table_entry->i32Status = *request->requestvb->val.integer;
 				break;
 			case IPADDRESSSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -2625,7 +2626,7 @@ ipAddressTable_mapper (
 				}
 				break;
 			case IPADDRESSSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			}
 		}
@@ -2645,13 +2646,13 @@ ipAddressTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -2743,6 +2744,7 @@ ipNetToPhysicalTable_createEntry (
 	}
 	
 	poEntry->i32Type = ipNetToPhysicalType_static_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIpNetToPhysicalTable_BTree);
 	return poEntry;
@@ -2921,7 +2923,7 @@ ipNetToPhysicalTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32State);
 				break;
 			case IPNETTOPHYSICALROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -3171,13 +3173,13 @@ ipNetToPhysicalTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -3783,6 +3785,7 @@ ipv6RouterAdvertTable_createEntry (
 	poEntry->u32LinkMTU = 0;
 	poEntry->u32ReachableTime = 0;
 	poEntry->u32RetransmitTime = 0;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIpv6RouterAdvertTable_BTree);
 	return poEntry;
@@ -3961,7 +3964,7 @@ ipv6RouterAdvertTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32DefaultLifetime);
 				break;
 			case IPV6ROUTERADVERTROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -4402,13 +4405,13 @@ ipv6RouterAdvertTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

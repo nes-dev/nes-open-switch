@@ -330,7 +330,8 @@ bool
 ifTable_createReference (
 	uint32_t u32IfIndex,
 	int32_t i32Type,
-	bool bCreate, bool bReference, bool bActivate)
+	bool bCreate, bool bReference, bool bActivate,
+	ifEntry_t **ppoIfEntry)
 {
 	return false;
 }
@@ -338,7 +339,6 @@ ifTable_createReference (
 bool
 ifTable_removeReference (
 	uint32_t u32IfIndex,
-	int32_t i32Type,
 	bool bCreate, bool bReference, bool bActivate)
 {
 	return false;
@@ -414,7 +414,7 @@ ifTable_createHier (
 			goto ifTable_createHier_cleanup;
 		}
 		
-		poLowerStackEntry->i32Status = ifStackStatus_active_c;
+		poLowerStackEntry->u8Status = ifStackStatus_active_c;
 	}
 	
 	if ((poUpperStackEntry = ifStackTable_getByIndex (0, poEntry->u32Index)) == NULL &&
@@ -426,7 +426,7 @@ ifTable_createHier (
 			goto ifTable_createHier_cleanup;
 		}
 		
-		poUpperStackEntry->i32Status = ifStackStatus_active_c;
+		poUpperStackEntry->u8Status = ifStackStatus_active_c;
 	}
 	
 	return true;
@@ -1242,8 +1242,7 @@ ifStackTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32Status = ifStackStatus_notInService_c;
-	
+	poEntry->u8Status = xRowStatus_notInService_c;
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfStackTable_BTree);
 	xBTree_nodeAdd (&poEntry->oLToH_BTreeNode, &oIfStackTable_LToH_BTree);
 	return poEntry;
@@ -1528,7 +1527,7 @@ ifStackTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IFSTACKSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Status);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Status);
 				break;
 				
 			default:
@@ -1722,13 +1721,13 @@ ifStackTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32Status = RS_ACTIVE;
+					table_entry->u8Status = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32Status = RS_NOTINSERVICE;
+					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -1815,6 +1814,7 @@ ifRcvAddressTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->u8Status = xRowStatus_notInService_c;
 	poEntry->i32Type = ifRcvAddressType_volatile_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfRcvAddressTable_BTree);
@@ -1974,7 +1974,7 @@ ifRcvAddressTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IFRCVADDRESSSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Status);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Status);
 				break;
 			case IFRCVADDRESSTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
@@ -2195,13 +2195,13 @@ ifRcvAddressTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32Status = RS_ACTIVE;
+					table_entry->u8Status = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32Status = RS_NOTINSERVICE;
+					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -2286,7 +2286,8 @@ neIfTable_createEntry (
 	/*poEntry->au8Name = ""*/;
 	/*poEntry->au8Descr = ""*/;
 	/*poEntry->au8PhysAddress = 0*/;
-	poEntry->i32StorageType = neIfStorageType_volatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neIfStorageType_volatile_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeIfTable_BTree);
 	return poEntry;
@@ -2433,10 +2434,17 @@ neIfTable_removeHier (
 bool
 neIfRowStatus_handler (
 	neIfEntry_t *poEntry,
-	int32_t i32RowStatus)
+	uint8_t u8RowStatus)
 {
-	if (poEntry->i32RowStatus != RS_ACTIVE && i32RowStatus == RS_ACTIVE)
+	switch (u8RowStatus)
 	{
+	case xRowStatus_active_c:
+	{
+		if (poEntry->u8RowStatus == xRowStatus_active_c)
+		{
+			break;
+		}
+		
 		register ifEntry_t *poIfEntry = NULL;
 		register ifXEntry_t *poIfXEntry = NULL;
 		
@@ -2452,6 +2460,34 @@ neIfRowStatus_handler (
 		xNumber_toUint32 (poEntry->au8Speed, sizeof (poEntry->au8Speed), 4, 7, &poIfEntry->u32Speed);
 		poIfXEntry->u32HighSpeed = 0;
 		xNumber_toUint32 (poEntry->au8Speed, sizeof (poEntry->au8Speed), 0, 3, &poIfXEntry->u32HighSpeed);
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_active_c;
+		break;
+	}
+	
+	case xRowStatus_notInService_c:
+		if (poEntry->u8RowStatus != xRowStatus_notInService_c)
+		{
+			break;
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		poEntry->u8RowStatus = xRowStatus_notReady_c;
+		break;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
 	}
 	
 	return true;
@@ -2557,10 +2593,10 @@ neIfTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PhysAddress, table_entry->u16PhysAddress_len);
 				break;
 			case NEIFROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 			case NEIFSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 				
 			default:
@@ -2842,18 +2878,18 @@ neIfTable_mapper (
 				table_entry->u16PhysAddress_len = request->requestvb->val_len;
 				break;
 			case NEIFSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -2869,7 +2905,10 @@ neIfTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
 				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
 					if (!neIfRowStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
@@ -2927,7 +2966,7 @@ neIfTable_mapper (
 				}
 				break;
 			case NEIFSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			}
 		}
@@ -2947,13 +2986,11 @@ neIfTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

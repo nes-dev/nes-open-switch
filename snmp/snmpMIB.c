@@ -732,7 +732,8 @@ snmpTargetAddrTable_createEntry (
 	poEntry->i32Timeout = 1500;
 	poEntry->i32RetryCount = 3;
 	/*poEntry->au8TagList = ""*/;
-	poEntry->i32StorageType = snmpTargetAddrStorageType_nonVolatile_c;
+	poEntry->u8StorageType = snmpTargetAddrStorageType_nonVolatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oSnmpTargetAddrTable_BTree);
 	return poEntry;
@@ -901,10 +902,10 @@ snmpTargetAddrTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Params, table_entry->u16Params_len);
 				break;
 			case SNMPTARGETADDRSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case SNMPTARGETADDRROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -1185,18 +1186,18 @@ snmpTargetAddrTable_mapper (
 				table_entry->u16Params_len = request->requestvb->val_len;
 				break;
 			case SNMPTARGETADDRSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -1260,7 +1261,7 @@ snmpTargetAddrTable_mapper (
 				table_entry->u16Params_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case SNMPTARGETADDRSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case SNMPTARGETADDRROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -1290,13 +1291,13 @@ snmpTargetAddrTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -1379,7 +1380,8 @@ snmpTargetParamsTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32StorageType = snmpTargetParamsStorageType_nonVolatile_c;
+	poEntry->u8StorageType = snmpTargetParamsStorageType_nonVolatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oSnmpTargetParamsTable_BTree);
 	return poEntry;
@@ -1542,10 +1544,10 @@ snmpTargetParamsTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SecurityLevel);
 				break;
 			case SNMPTARGETPARAMSSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case SNMPTARGETPARAMSROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -1770,18 +1772,18 @@ snmpTargetParamsTable_mapper (
 				table_entry->i32SecurityLevel = *request->requestvb->val.integer;
 				break;
 			case SNMPTARGETPARAMSSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -1836,7 +1838,7 @@ snmpTargetParamsTable_mapper (
 				memcpy (&table_entry->i32SecurityLevel, pvOldDdata, sizeof (table_entry->i32SecurityLevel));
 				break;
 			case SNMPTARGETPARAMSSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case SNMPTARGETPARAMSROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -1866,13 +1868,13 @@ snmpTargetParamsTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -1957,7 +1959,8 @@ snmpNotifyTable_createEntry (
 	
 	/*poEntry->au8Tag = ""*/;
 	poEntry->i32Type = snmpNotifyType_trap_c;
-	poEntry->i32StorageType = snmpNotifyStorageType_nonVolatile_c;
+	poEntry->u8StorageType = snmpNotifyStorageType_nonVolatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oSnmpNotifyTable_BTree);
 	return poEntry;
@@ -2114,10 +2117,10 @@ snmpNotifyTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
 				break;
 			case SNMPNOTIFYSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case SNMPNOTIFYROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -2298,18 +2301,18 @@ snmpNotifyTable_mapper (
 				table_entry->i32Type = *request->requestvb->val.integer;
 				break;
 			case SNMPNOTIFYSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -2358,7 +2361,7 @@ snmpNotifyTable_mapper (
 				memcpy (&table_entry->i32Type, pvOldDdata, sizeof (table_entry->i32Type));
 				break;
 			case SNMPNOTIFYSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case SNMPNOTIFYROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -2388,13 +2391,13 @@ snmpNotifyTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -2477,7 +2480,8 @@ snmpNotifyFilterProfileTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32StorType = snmpNotifyFilterProfileStorType_nonVolatile_c;
+	poEntry->u8StorType = snmpNotifyFilterProfileStorType_nonVolatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oSnmpNotifyFilterProfileTable_BTree);
 	return poEntry;
@@ -2631,10 +2635,10 @@ snmpNotifyFilterProfileTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Name, table_entry->u16Name_len);
 				break;
 			case SNMPNOTIFYFILTERPROFILESTORTYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorType);
 				break;
 			case SNMPNOTIFYFILTERPROFILEROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -2793,18 +2797,18 @@ snmpNotifyFilterProfileTable_mapper (
 				table_entry->u16Name_len = request->requestvb->val_len;
 				break;
 			case SNMPNOTIFYFILTERPROFILESTORTYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorType, sizeof (table_entry->i32StorType));
+					memcpy (pvOldDdata, &table_entry->u8StorType, sizeof (table_entry->u8StorType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorType = *request->requestvb->val.integer;
+				table_entry->u8StorType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -2850,7 +2854,7 @@ snmpNotifyFilterProfileTable_mapper (
 				table_entry->u16Name_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case SNMPNOTIFYFILTERPROFILESTORTYPE:
-				memcpy (&table_entry->i32StorType, pvOldDdata, sizeof (table_entry->i32StorType));
+				memcpy (&table_entry->u8StorType, pvOldDdata, sizeof (table_entry->u8StorType));
 				break;
 			case SNMPNOTIFYFILTERPROFILEROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -2880,13 +2884,13 @@ snmpNotifyFilterProfileTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -2976,7 +2980,8 @@ snmpNotifyFilterTable_createEntry (
 	
 	/*poEntry->au8Mask = 0*/;
 	poEntry->i32Type = snmpNotifyFilterType_included_c;
-	poEntry->i32StorageType = snmpNotifyFilterStorageType_nonVolatile_c;
+	poEntry->u8StorageType = snmpNotifyFilterStorageType_nonVolatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oSnmpNotifyFilterTable_BTree);
 	return poEntry;
@@ -3143,10 +3148,10 @@ snmpNotifyFilterTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
 				break;
 			case SNMPNOTIFYFILTERSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case SNMPNOTIFYFILTERROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -3329,18 +3334,18 @@ snmpNotifyFilterTable_mapper (
 				table_entry->i32Type = *request->requestvb->val.integer;
 				break;
 			case SNMPNOTIFYFILTERSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -3389,7 +3394,7 @@ snmpNotifyFilterTable_mapper (
 				memcpy (&table_entry->i32Type, pvOldDdata, sizeof (table_entry->i32Type));
 				break;
 			case SNMPNOTIFYFILTERSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case SNMPNOTIFYFILTERROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -3419,13 +3424,13 @@ snmpNotifyFilterTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -3520,7 +3525,8 @@ usmUserTable_createEntry (
 	/*poEntry->au8PrivKeyChange = 0*/;
 	/*poEntry->au8OwnPrivKeyChange = 0*/;
 	/*poEntry->au8Public = 0*/;
-	poEntry->i32StorageType = usmUserStorageType_nonVolatile_c;
+	poEntry->u8StorageType = usmUserStorageType_nonVolatile_c;
+	poEntry->u8Status = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oUsmUserTable_BTree);
 	return poEntry;
@@ -3708,10 +3714,10 @@ usmUserTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Public, table_entry->u16Public_len);
 				break;
 			case USMUSERSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case USMUSERSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Status);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Status);
 				break;
 				
 			default:
@@ -4054,18 +4060,18 @@ usmUserTable_mapper (
 				table_entry->u16Public_len = request->requestvb->val_len;
 				break;
 			case USMUSERSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -4139,7 +4145,7 @@ usmUserTable_mapper (
 				table_entry->u16Public_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case USMUSERSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case USMUSERSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -4169,13 +4175,13 @@ usmUserTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32Status = RS_ACTIVE;
+					table_entry->u8Status = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32Status = RS_NOTINSERVICE;
+					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -4492,7 +4498,8 @@ vacmSecurityToGroupTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32StorageType = vacmSecurityToGroupStorageType_nonVolatile_c;
+	poEntry->u8StorageType = vacmSecurityToGroupStorageType_nonVolatile_c;
+	poEntry->u8Status = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oVacmSecurityToGroupTable_BTree);
 	return poEntry;
@@ -4654,10 +4661,10 @@ vacmSecurityToGroupTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8GroupName, table_entry->u16GroupName_len);
 				break;
 			case VACMSECURITYTOGROUPSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case VACMSECURITYTOGROUPSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Status);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Status);
 				break;
 				
 			default:
@@ -4818,18 +4825,18 @@ vacmSecurityToGroupTable_mapper (
 				table_entry->u16GroupName_len = request->requestvb->val_len;
 				break;
 			case VACMSECURITYTOGROUPSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -4875,7 +4882,7 @@ vacmSecurityToGroupTable_mapper (
 				table_entry->u16GroupName_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case VACMSECURITYTOGROUPSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case VACMSECURITYTOGROUPSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -4905,13 +4912,13 @@ vacmSecurityToGroupTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32Status = RS_ACTIVE;
+					table_entry->u8Status = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32Status = RS_NOTINSERVICE;
+					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -5011,7 +5018,8 @@ vacmAccessTable_createEntry (
 	/*poEntry->au8ReadViewName = 0*/;
 	/*poEntry->au8WriteViewName = 0*/;
 	/*poEntry->au8NotifyViewName = 0*/;
-	poEntry->i32StorageType = vacmAccessStorageType_nonVolatile_c;
+	poEntry->u8StorageType = vacmAccessStorageType_nonVolatile_c;
+	poEntry->u8Status = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oVacmAccessTable_BTree);
 	return poEntry;
@@ -5200,10 +5208,10 @@ vacmAccessTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8NotifyViewName, table_entry->u16NotifyViewName_len);
 				break;
 			case VACMACCESSSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case VACMACCESSSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Status);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Status);
 				break;
 				
 			default:
@@ -5442,18 +5450,18 @@ vacmAccessTable_mapper (
 				table_entry->u16NotifyViewName_len = request->requestvb->val_len;
 				break;
 			case VACMACCESSSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -5510,7 +5518,7 @@ vacmAccessTable_mapper (
 				table_entry->u16NotifyViewName_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case VACMACCESSSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case VACMACCESSSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -5540,13 +5548,13 @@ vacmAccessTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32Status = RS_ACTIVE;
+					table_entry->u8Status = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32Status = RS_NOTINSERVICE;
+					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -5636,7 +5644,8 @@ vacmViewTreeFamilyTable_createEntry (
 	
 	/*poEntry->au8Mask = 0*/;
 	poEntry->i32Type = vacmViewTreeFamilyType_included_c;
-	poEntry->i32StorageType = vacmViewTreeFamilyStorageType_nonVolatile_c;
+	poEntry->u8StorageType = vacmViewTreeFamilyStorageType_nonVolatile_c;
+	poEntry->u8Status = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oVacmViewTreeFamilyTable_BTree);
 	return poEntry;
@@ -5803,10 +5812,10 @@ vacmViewTreeFamilyTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
 				break;
 			case VACMVIEWTREEFAMILYSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case VACMVIEWTREEFAMILYSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Status);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Status);
 				break;
 				
 			default:
@@ -5989,18 +5998,18 @@ vacmViewTreeFamilyTable_mapper (
 				table_entry->i32Type = *request->requestvb->val.integer;
 				break;
 			case VACMVIEWTREEFAMILYSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -6049,7 +6058,7 @@ vacmViewTreeFamilyTable_mapper (
 				memcpy (&table_entry->i32Type, pvOldDdata, sizeof (table_entry->i32Type));
 				break;
 			case VACMVIEWTREEFAMILYSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case VACMVIEWTREEFAMILYSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -6079,13 +6088,13 @@ vacmViewTreeFamilyTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32Status = RS_ACTIVE;
+					table_entry->u8Status = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32Status = RS_NOTINSERVICE;
+					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -6170,6 +6179,7 @@ snmpCommunityTable_createEntry (
 	
 	/*poEntry->au8ContextName = 0*/;
 	/*poEntry->au8TransportTag = 0*/;
+	poEntry->u8Status = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oSnmpCommunityTable_BTree);
 	return poEntry;
@@ -6335,10 +6345,10 @@ snmpCommunityTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8TransportTag, table_entry->u16TransportTag_len);
 				break;
 			case SNMPCOMMUNITYSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case SNMPCOMMUNITYSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Status);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Status);
 				break;
 				
 			default:
@@ -6601,18 +6611,18 @@ snmpCommunityTable_mapper (
 				table_entry->u16TransportTag_len = request->requestvb->val_len;
 				break;
 			case SNMPCOMMUNITYSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -6674,7 +6684,7 @@ snmpCommunityTable_mapper (
 				table_entry->u16TransportTag_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case SNMPCOMMUNITYSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case SNMPCOMMUNITYSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -6704,13 +6714,13 @@ snmpCommunityTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32Status = RS_ACTIVE;
+					table_entry->u8Status = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32Status = RS_NOTINSERVICE;
+					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

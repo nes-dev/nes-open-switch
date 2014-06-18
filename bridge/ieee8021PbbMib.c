@@ -293,6 +293,7 @@ ieee8021PbbVipTable_createEntry (
 	poEntry->u32ISid = 1;
 	/*poEntry->au8DefaultDstBMAC = 131046834177*/;
 	/*poEntry->au8Type = ieee8021PbbVipType_{ egress , ingress }_c*/;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->i32EnableConnectionId = ieee8021PbbVipEnableConnectionId_true_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbVipTable_BTree);
@@ -462,7 +463,7 @@ ieee8021PbbVipTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Type, table_entry->u16Type_len);
 				break;
 			case IEEE8021PBBVIPROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 			case IEEE8021PBBVIPENABLECONNECTIONID:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32EnableConnectionId);
@@ -738,13 +739,13 @@ ieee8021PbbVipTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -1062,6 +1063,7 @@ ieee8021PbbPipTable_createEntry (
 	/*poEntry->au8VipMap2 = 0*/;
 	/*poEntry->au8VipMap3 = 0*/;
 	/*poEntry->au8VipMap4 = 0*/;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbPipTable_BTree);
 	return poEntry;
@@ -1234,7 +1236,7 @@ ieee8021PbbPipTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8VipMap4, table_entry->u16VipMap4_len);
 				break;
 			case IEEE8021PBBPIPROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -1635,13 +1637,13 @@ ieee8021PbbPipTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -2839,6 +2841,8 @@ ieee8021PbbVipToPipMappingTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbVipToPipMappingTable_BTree);
 	return poEntry;
 }
@@ -2997,10 +3001,10 @@ ieee8021PbbVipToPipMappingTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32PipIfIndex);
 				break;
 			case IEEE8021PBBVIPTOPIPMAPPINGSTORAGETYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32StorageType);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 			case IEEE8021PBBVIPTOPIPMAPPINGROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -3157,18 +3161,18 @@ ieee8021PbbVipToPipMappingTable_mapper (
 				table_entry->u32PipIfIndex = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBBVIPTOPIPMAPPINGSTORAGETYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32StorageType))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32StorageType, sizeof (table_entry->i32StorageType));
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32StorageType = *request->requestvb->val.integer;
+				table_entry->u8StorageType = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -3213,7 +3217,7 @@ ieee8021PbbVipToPipMappingTable_mapper (
 				memcpy (&table_entry->u32PipIfIndex, pvOldDdata, sizeof (table_entry->u32PipIfIndex));
 				break;
 			case IEEE8021PBBVIPTOPIPMAPPINGSTORAGETYPE:
-				memcpy (&table_entry->i32StorageType, pvOldDdata, sizeof (table_entry->i32StorageType));
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			case IEEE8021PBBVIPTOPIPMAPPINGROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -3243,13 +3247,13 @@ ieee8021PbbVipToPipMappingTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -3340,6 +3344,7 @@ ieee8021PbbCBPServiceMappingTable_createEntry (
 	}
 	
 	poEntry->u32LocalSid = 1;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbCBPServiceMappingTable_BTree);
 	return poEntry;
@@ -3516,7 +3521,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32LocalSid);
 				break;
 			case IEEE8021PBBCBPSERVICEMAPPINGROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -3821,13 +3826,13 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -3912,6 +3917,8 @@ ieee8021PbbCbpTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbCbpTable_BTree);
 	return poEntry;
@@ -4068,7 +4075,7 @@ ieee8021PbbCbpTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021PBBCBPROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -4261,13 +4268,13 @@ ieee8021PbbCbpTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

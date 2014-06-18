@@ -153,6 +153,7 @@ ieee8021BridgeBaseTable_createEntry (
 	
 	poEntry->i32TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_true_c;
 	poEntry->i32MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_true_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021BridgeBaseTable_BTree);
 	return poEntry;
@@ -319,7 +320,7 @@ ieee8021BridgeBaseTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32MmrpEnabledStatus);
 				break;
 			case IEEE8021BRIDGEBASEROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -645,13 +646,13 @@ ieee8021BridgeBaseTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -5121,6 +5122,7 @@ ieee8021BridgeILanIfTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021BridgeILanIfTable_BTree);
 	return poEntry;
 }
@@ -5268,7 +5270,7 @@ ieee8021BridgeILanIfTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEILANIFROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -5459,13 +5461,13 @@ ieee8021BridgeILanIfTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -5551,6 +5553,7 @@ ieee8021BridgeDot1dPortTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021BridgeDot1dPortTable_BTree);
 	return poEntry;
 }
@@ -5706,7 +5709,7 @@ ieee8021BridgeDot1dPortTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEDOT1DPORTROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -5899,13 +5902,13 @@ ieee8021BridgeDot1dPortTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

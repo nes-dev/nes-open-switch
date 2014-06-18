@@ -1964,7 +1964,7 @@ neEntPhysicalRowStatus_handler (
 	}
 	
 	case xRowStatus_notInService_c:
-		if (poEntry->u8RowStatus != xRowStatus_notInService_c)
+		if (poEntry->u8RowStatus == xRowStatus_notInService_c)
 		{
 			break;
 		}
@@ -3479,6 +3479,9 @@ neEntPortRowStatus_handler (
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
+	{
+		ifEntry_t *poIfEntry = NULL;
+		
 		if (poEntry->u8RowStatus == xRowStatus_active_c)
 		{
 			break;
@@ -3488,7 +3491,7 @@ neEntPortRowStatus_handler (
 			return false;
 		}
 		
-		if (!ifTable_createReference (poEntry->u32IfIndex, 0, false, true, true))
+		if (!ifTable_createReference (poEntry->u32IfIndex, 0, false, true, true, &poIfEntry))
 		{
 			return false;
 		}
@@ -3496,14 +3499,15 @@ neEntPortRowStatus_handler (
 		/* TODO */
 		poEntry->u8RowStatus = xRowStatus_active_c;
 		break;
-		
+	}
+	
 	case xRowStatus_notInService_c:
 		if (poEntry->u8RowStatus == xRowStatus_notInService_c)
 		{
 			break;
 		}
 		
-		if (poEntry->u32IfIndex != 0 && !ifTable_removeReference (poEntry->u32IfIndex, 0, false, true, true))
+		if (poEntry->u32IfIndex != 0 && !ifTable_removeReference (poEntry->u32IfIndex, false, true, true))
 		{
 			return false;
 		}
@@ -3522,7 +3526,7 @@ neEntPortRowStatus_handler (
 		
 	case xRowStatus_destroy_c:
 		if (poEntry->u8RowStatus == xRowStatus_active_c &&
-			!ifTable_removeReference (poEntry->u32IfIndex, 0, false, true, true))
+			!ifTable_removeReference (poEntry->u32IfIndex, false, true, true))
 		{
 			return false;
 		}

@@ -116,7 +116,7 @@ typedef struct ieee8021PbbVipEntry_t
 	size_t u16DefaultDstBMAC_len;	/* # of uint8_t elements */
 	uint8_t au8Type[1];
 	size_t u16Type_len;	/* # of uint8_t elements */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	int32_t i32EnableConnectionId;
 	
 	xBTree_Node_t oBTreeNode;
@@ -230,7 +230,7 @@ typedef struct ieee8021PbbPipEntry_t
 	size_t u16VipMap3_len;	/* # of uint8_t elements */
 	uint8_t au8VipMap4[1537];
 	size_t u16VipMap4_len;	/* # of uint8_t elements */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbPipEntry_t;
@@ -470,8 +470,8 @@ typedef struct ieee8021PbbVipToPipMappingEntry_t
 	
 	/* Column values */
 	uint32_t u32PipIfIndex;
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbVipToPipMappingEntry_t;
@@ -538,7 +538,7 @@ typedef struct ieee8021PbbCBPServiceMappingEntry_t
 	uint8_t au8Type[1];
 	size_t u16Type_len;	/* # of uint8_t elements */
 	uint32_t u32LocalSid;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbCBPServiceMappingEntry_t;
@@ -592,7 +592,7 @@ typedef struct ieee8021PbbCbpEntry_t
 	uint32_t u32BridgeBasePort;
 	
 	/* Column values */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbCbpEntry_t;

@@ -646,8 +646,8 @@ typedef struct ipAddressEntry_t
 	int32_t i32Status;
 	uint32_t u32Created;
 	uint32_t u32LastChanged;
-	int32_t i32RowStatus;
-	int32_t i32StorageType;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
 } ipAddressEntry_t;
@@ -736,7 +736,7 @@ typedef struct ipNetToPhysicalEntry_t
 	uint32_t u32LastUpdated;
 	int32_t i32Type;
 	int32_t i32State;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ipNetToPhysicalEntry_t;
@@ -948,7 +948,7 @@ typedef struct ipv6RouterAdvertEntry_t
 	uint32_t u32RetransmitTime;
 	uint32_t u32CurHopLimit;
 	uint32_t u32DefaultLifetime;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ipv6RouterAdvertEntry_t;

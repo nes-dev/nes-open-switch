@@ -143,13 +143,13 @@ typedef struct inetCidrRouteEntry_t
 {
 	/* Index values */
 	int32_t i32DestType;
-	uint8_t au8Dest[16];
+	uint8_t au8Dest[255];
 	size_t u16Dest_len;	/* # of uint8_t elements */
 	uint32_t u32PfxLen;
 	xOid_t aoPolicy[128];
 	size_t u16Policy_len;	/* # of xOid_t elements */
 	int32_t i32NextHopType;
-	uint8_t au8NextHop[16];
+	uint8_t au8NextHop[255];
 	size_t u16NextHop_len;	/* # of uint8_t elements */
 	
 	/* Column values */
@@ -163,7 +163,7 @@ typedef struct inetCidrRouteEntry_t
 	int32_t i32Metric3;
 	int32_t i32Metric4;
 	int32_t i32Metric5;
-	int32_t i32Status;
+	uint8_t u8Status;
 	
 	xBTree_Node_t oBTreeNode;
 } inetCidrRouteEntry_t;

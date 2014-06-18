@@ -581,10 +581,14 @@ typedef struct neEntPortEntry_t
 	uint32_t u32IfIndex;
 	uint8_t u8RowStatus;
 	
+	int32_t i32Type;
+	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oIf_BTreeNode;
 } neEntPortEntry_t;
 
 extern xBTree_t oNeEntPortTable_BTree;
+extern xBTree_t oNeEntPortTable_If_BTree;
 
 /* neEntPortTable table mapper */
 void neEntPortTable_init (void);

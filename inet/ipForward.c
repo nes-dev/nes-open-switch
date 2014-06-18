@@ -215,6 +215,7 @@ inetCidrRouteTable_createEntry (
 	poEntry->i32Metric3 = -1;
 	poEntry->i32Metric4 = -1;
 	poEntry->i32Metric5 = -1;
+	poEntry->u8Status = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oInetCidrRouteTable_BTree);
 	return poEntry;
@@ -439,7 +440,7 @@ inetCidrRouteTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Metric5);
 				break;
 			case INETCIDRROUTESTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Status);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Status);
 				break;
 				
 			default:
@@ -840,13 +841,13 @@ inetCidrRouteTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32Status = RS_ACTIVE;
+					table_entry->u8Status = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32Status = RS_NOTINSERVICE;
+					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

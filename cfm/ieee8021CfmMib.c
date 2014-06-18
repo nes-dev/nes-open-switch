@@ -378,6 +378,7 @@ dot1agCfmMdTable_createEntry (
 	poEntry->i32MdLevel = 0;
 	poEntry->i32MhfCreation = dot1agCfmMdMhfCreation_defMHFnone_c;
 	poEntry->i32MhfIdPermission = dot1agCfmMdMhfIdPermission_sendIdNone_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot1agCfmMdTable_BTree);
 	return poEntry;
@@ -544,7 +545,7 @@ dot1agCfmMdTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32MaNextIndex);
 				break;
 			case DOT1AGCFMMDROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -865,13 +866,13 @@ dot1agCfmMdTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -958,6 +959,7 @@ dot1agCfmMaNetTable_createEntry (
 	}
 	
 	poEntry->i32CcmInterval = dot1agCfmMaNetCcmInterval_interval1s_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot1agCfmMaNetTable_BTree);
 	return poEntry;
@@ -1123,7 +1125,7 @@ dot1agCfmMaNetTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32CcmInterval);
 				break;
 			case DOT1AGCFMMANETROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -1396,13 +1398,13 @@ dot1agCfmMaNetTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -1491,6 +1493,8 @@ dot1agCfmMaMepListTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot1agCfmMaMepListTable_BTree);
 	return poEntry;
@@ -1655,7 +1659,7 @@ dot1agCfmMaMepListTable_mapper (
 			switch (table_info->colnum)
 			{
 			case DOT1AGCFMMAMEPLISTROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
 			default:
@@ -1850,13 +1854,13 @@ dot1agCfmMaMepListTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -1961,6 +1965,7 @@ dot1agCfmMepTable_createEntry (
 	/*poEntry->au8TransmitLtmFlags = dot1agCfmMepTransmitLtmFlags_{ useFDBonly }_c*/;
 	poEntry->u32TransmitLtmTtl = 64;
 	poEntry->i32TransmitLtmResult = dot1agCfmMepTransmitLtmResult_true_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->i32PbbTeCanReportPbbTePresence = dot1agCfmMepPbbTeCanReportPbbTePresence_false_c;
 	poEntry->i32PbbTeMismatchAlarm = dot1agCfmMepPbbTeMismatchAlarm_false_c;
 	
@@ -2256,7 +2261,7 @@ dot1agCfmMepTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8TransmitLtmEgressIdentifier, table_entry->u16TransmitLtmEgressIdentifier_len);
 				break;
 			case DOT1AGCFMMEPROWSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RowStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 			case DOT1AGCFMMEPPBBTECANREPORTPBBTEPRESENCE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PbbTeCanReportPbbTePresence);
@@ -3169,13 +3174,13 @@ dot1agCfmMepTable_mapper (
 				case RS_CREATEANDGO:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_ACTIVE:
-					table_entry->i32RowStatus = RS_ACTIVE;
+					table_entry->u8RowStatus = RS_ACTIVE;
 					break;
 					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				case RS_NOTINSERVICE:
-					table_entry->i32RowStatus = RS_NOTINSERVICE;
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

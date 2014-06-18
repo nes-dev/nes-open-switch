@@ -156,7 +156,7 @@ typedef struct ieee8021MstpEntry_t
 	size_t u16Vids2_len;	/* # of uint8_t elements */
 	uint8_t au8Vids3[128];
 	size_t u16Vids3_len;	/* # of uint8_t elements */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021MstpEntry_t;

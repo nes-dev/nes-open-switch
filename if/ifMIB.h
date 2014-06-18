@@ -442,10 +442,10 @@ void ifTable_removeEntry (ifEntry_t *poEntry);
 bool ifTable_createReference (
 	uint32_t u32IfIndex,
 	int32_t i32Type,
-	bool bCreate, bool bReference, bool bActivate);
+	bool bCreate, bool bReference, bool bActivate,
+	ifEntry_t **ppoIfEntry);
 bool ifTable_removeReference (
 	uint32_t u32IfIndex,
-	int32_t i32Type,
 	bool bCreate, bool bReference, bool bActivate);
 ifEntry_t * ifTable_createExt (
 	uint32_t u32Index);
@@ -575,7 +575,7 @@ typedef struct ifStackEntry_t
 	uint32_t u32LowerLayer;
 	
 	/* Column values */
-	int32_t i32Status;
+	uint8_t u8Status;
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oLToH_BTreeNode;
@@ -645,7 +645,7 @@ typedef struct ifRcvAddressEntry_t
 	size_t u16Address_len;	/* # of uint8_t elements */
 	
 	/* Column values */
-	int32_t i32Status;
+	uint8_t u8Status;
 	int32_t i32Type;
 	
 	xBTree_Node_t oBTreeNode;
@@ -994,8 +994,8 @@ typedef struct neIfEntry_t
 	size_t u16Speed_len;	/* # of uint8_t elements */
 	uint8_t au8PhysAddress[8];
 	size_t u16PhysAddress_len;	/* # of uint8_t elements */
-	int32_t i32RowStatus;
-	int32_t i32StorageType;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
 } neIfEntry_t;
@@ -1018,7 +1018,7 @@ bool neIfTable_createHier (neIfEntry_t *poEntry);
 bool neIfTable_removeHier (neIfEntry_t *poEntry);
 bool neIfRowStatus_handler (
 	neIfEntry_t *poEntry,
-	int32_t i32RowStatus);
+	uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neIfTable_getFirst;
 Netsnmp_Next_Data_Point neIfTable_getNext;

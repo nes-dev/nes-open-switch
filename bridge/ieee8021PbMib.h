@@ -82,7 +82,7 @@ typedef struct ieee8021PbCVidRegistrationEntry_t
 	int32_t i32SVid;
 	int32_t i32UntaggedPep;
 	int32_t i32UntaggedCep;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbCVidRegistrationEntry_t;
@@ -253,7 +253,7 @@ typedef struct ieee8021PbCnpEntry_t
 	/* Column values */
 	uint32_t u32CComponentId;
 	int32_t i32SVid;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbCnpEntry_t;
@@ -304,7 +304,7 @@ typedef struct ieee8021PbPnpEntry_t
 	uint32_t u32BridgeBasePort;
 	
 	/* Column values */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbPnpEntry_t;
@@ -359,7 +359,7 @@ typedef struct ieee8021PbCepEntry_t
 	/* Column values */
 	uint32_t u32CComponentId;
 	uint32_t u32CepPortNumber;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbCepEntry_t;
@@ -414,7 +414,7 @@ typedef struct ieee8021PbRcapEntry_t
 	/* Column values */
 	uint32_t u32SComponentId;
 	uint32_t u32RcapPortNumber;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbRcapEntry_t;
@@ -487,7 +487,7 @@ typedef struct ieee8021PbInternalInterfaceEntry_t
 	uint32_t u32PbIiInternalPortNumber;
 	int32_t i32PbIiInternalPortType;
 	int32_t i32PbIiInternalSVid;
-	int32_t i32PbIiRowStatus;
+	uint8_t u8PbIiRowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbInternalInterfaceEntry_t;

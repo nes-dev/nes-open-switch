@@ -107,7 +107,7 @@ typedef struct ieee8021BridgeBaseEntry_t
 	size_t u16DeviceCapabilities_len;	/* # of uint8_t elements */
 	int32_t i32TrafficClassesEnabled;
 	int32_t i32MmrpEnabledStatus;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeBaseEntry_t;
@@ -886,7 +886,7 @@ typedef struct ieee8021BridgeILanIfEntry_t
 	uint32_t u32IfIndex;
 	
 	/* Column values */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeILanIfEntry_t;
@@ -934,7 +934,7 @@ typedef struct ieee8021BridgeDot1dPortEntry_t
 	uint32_t u32BasePort;
 	
 	/* Column values */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeDot1dPortEntry_t;

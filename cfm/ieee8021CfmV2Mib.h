@@ -226,7 +226,7 @@ typedef struct ieee8021CfmVlanEntry_t
 	
 	/* Column values */
 	uint32_t u32PrimarySelector;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021CfmVlanEntry_t;
@@ -371,7 +371,7 @@ typedef struct ieee8021CfmMaCompEntry_t
 	int32_t i32MhfCreation;
 	int32_t i32IdPermission;
 	uint32_t u32NumberOfVids;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021CfmMaCompEntry_t;

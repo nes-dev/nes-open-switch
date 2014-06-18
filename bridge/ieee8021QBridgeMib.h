@@ -143,7 +143,7 @@ typedef struct ieee8021QBridgeCVlanPortEntry_t
 	uint32_t u32Number;
 	
 	/* Column values */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeCVlanPortEntry_t;
@@ -465,8 +465,8 @@ typedef struct ieee8021QBridgeStaticUnicastEntry_t
 	size_t u16StaticEgressPorts_len;	/* # of uint8_t elements */
 	uint8_t au8ForbiddenEgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
 	size_t u16ForbiddenEgressPorts_len;	/* # of uint8_t elements */
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeStaticUnicastEntry_t;
@@ -542,8 +542,8 @@ typedef struct ieee8021QBridgeStaticMulticastEntry_t
 	size_t u16StaticEgressPorts_len;	/* # of uint8_t elements */
 	uint8_t au8ForbiddenEgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
 	size_t u16ForbiddenEgressPorts_len;	/* # of uint8_t elements */
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeStaticMulticastEntry_t;
@@ -679,7 +679,7 @@ typedef struct ieee8021QBridgeVlanStaticEntry_t
 	size_t u16ForbiddenEgressPorts_len;	/* # of uint8_t elements */
 	uint8_t au8UntaggedPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
 	size_t u16UntaggedPorts_len;	/* # of uint8_t elements */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeVlanStaticEntry_t;
@@ -898,7 +898,7 @@ typedef struct ieee8021QBridgeLearningConstraintsEntry_t
 	
 	/* Column values */
 	int32_t i32Type;
-	int32_t i32Status;
+	uint8_t u8Status;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeLearningConstraintsEntry_t;
@@ -1012,7 +1012,7 @@ typedef struct ieee8021QBridgeProtocolGroupEntry_t
 	
 	/* Column values */
 	int32_t i32Id;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeProtocolGroupEntry_t;
@@ -1070,7 +1070,7 @@ typedef struct ieee8021QBridgeProtocolPortEntry_t
 	
 	/* Column values */
 	int32_t i32GroupVid;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeProtocolPortEntry_t;
@@ -1128,7 +1128,7 @@ typedef struct ieee8021QBridgeVIDXEntry_t
 	
 	/* Column values */
 	int32_t i32RelayVid;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeVIDXEntry_t;
@@ -1186,7 +1186,7 @@ typedef struct ieee8021QBridgeEgressVidXEntry_t
 	
 	/* Column values */
 	int32_t i32LocalVid;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeEgressVidXEntry_t;

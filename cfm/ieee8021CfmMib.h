@@ -147,7 +147,7 @@ typedef struct dot1agCfmMdEntry_t
 	int32_t i32MhfCreation;
 	int32_t i32MhfIdPermission;
 	uint32_t u32MaNextIndex;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } dot1agCfmMdEntry_t;
@@ -220,7 +220,7 @@ typedef struct dot1agCfmMaNetEntry_t
 	uint8_t au8Name[45];
 	size_t u16Name_len;	/* # of uint8_t elements */
 	int32_t i32CcmInterval;
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } dot1agCfmMaNetEntry_t;
@@ -273,7 +273,7 @@ typedef struct dot1agCfmMaMepListEntry_t
 	uint32_t u32Identifier;
 	
 	/* Column values */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } dot1agCfmMaMepListEntry_t;
@@ -523,7 +523,7 @@ typedef struct dot1agCfmMepEntry_t
 	uint32_t u32TransmitLtmSeqNumber;
 	uint8_t au8TransmitLtmEgressIdentifier[8];
 	size_t u16TransmitLtmEgressIdentifier_len;	/* # of uint8_t elements */
-	int32_t i32RowStatus;
+	uint8_t u8RowStatus;
 	int32_t i32PbbTeCanReportPbbTePresence;
 	int32_t i32PbbTeTrafficMismatchDefect;
 	uint32_t u32PbbTransmitLbmLtmReverseVid;

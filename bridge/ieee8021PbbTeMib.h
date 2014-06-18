@@ -81,8 +81,8 @@ typedef struct ieee8021PbbTeProtectionGroupListEntry_t
 	uint32_t u32MD;
 	uint32_t u32WorkingMA;
 	uint32_t u32ProtectionMA;
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbTeProtectionGroupListEntry_t;
@@ -190,8 +190,8 @@ typedef struct ieee8021PbbTeTesiEntry_t
 	/* Column values */
 	uint32_t u32Component;
 	uint32_t u32BridgePort;
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbTeTesiEntry_t;
@@ -251,8 +251,8 @@ typedef struct ieee8021PbbTeTeSiEspEntry_t
 	/* Column values */
 	uint8_t au8Esp[14];
 	size_t u16Esp_len;	/* # of uint8_t elements */
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbTeTeSiEspEntry_t;
@@ -358,7 +358,7 @@ typedef struct ieee8021PbbTeProtectionGroupConfigEntry_t
 	uint32_t u32WTR;
 	uint32_t u32HoldOff;
 	int32_t i32NotifyEnable;
-	int32_t i32StorageType;
+	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbTeProtectionGroupConfigEntry_t;
@@ -421,8 +421,8 @@ typedef struct ieee8021PbbTeProtectionGroupISidEntry_t
 	/* Column values */
 	uint32_t u32ComponentId;
 	uint32_t u32GroupId;
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbTeProtectionGroupISidEntry_t;
@@ -485,8 +485,8 @@ typedef struct ieee8021PbbTeBridgeStaticForwardAnyUnicastEntry_t
 	size_t u16EgressPorts_len;	/* # of uint8_t elements */
 	uint8_t au8ForbiddenPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
 	size_t u16ForbiddenPorts_len;	/* # of uint8_t elements */
-	int32_t i32StorageType;
-	int32_t i32RowStatus;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbTeBridgeStaticForwardAnyUnicastEntry_t;
