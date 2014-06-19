@@ -260,6 +260,8 @@ typedef struct ieee8021BridgeBaseIfToPortEntry_t
 	uint32_t u32IndexComponentId;
 	uint32_t u32IndexPort;
 	
+	uint32_t u32Port;
+	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeBaseIfToPortEntry_t;
 

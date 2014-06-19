@@ -24,6 +24,7 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "ieee8021BridgeMib.h"
+#include "if/ifMIB.h"
 
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
@@ -811,6 +812,74 @@ ieee8021BridgeBasePortTable_removeEntry (ieee8021BridgeBasePortEntry_t *poEntry)
 	return;
 }
 
+bool
+ieee8021BridgeBasePortIfIndex_handler (
+	ieee8021BridgeBasePortEntry_t *poEntry,
+	uint32_t u32IfIndex)
+{
+	register ieee8021BridgeBaseIfToPortEntry_t *poIeee8021BridgeBaseIfToPortEntry = NULL;
+	register ieee8021BridgePhyPortEntry_t *poIeee8021BridgePhyPortEntry = NULL;
+	
+	
+	if (poEntry->u32IfIndex == u32IfIndex)
+	{
+		return true;
+	}
+	
+	if (poEntry->u32IfIndex == 0)
+	{
+		goto ieee8021BridgeBasePortIfIndex_handler_newIfIndex;
+	}
+	
+	if ((poIeee8021BridgeBaseIfToPortEntry = ieee8021BridgeBaseIfToPortTable_getByIndex (poEntry->u32IfIndex)) == NULL ||
+		(poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_getByIndex (poIeee8021BridgeBaseIfToPortEntry->u32Port)) == NULL)
+	{
+		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
+	}
+	poIeee8021BridgeBaseIfToPortEntry->u32IndexComponentId = 0;
+	poIeee8021BridgeBaseIfToPortEntry->u32IndexPort = 0;
+	poIeee8021BridgePhyPortEntry->u32ToComponentId = 0;
+	poIeee8021BridgePhyPortEntry->u32ToInternalPort = 0;
+	
+	if (!ifTable_removeReference (poEntry->u32IfIndex, false, true, false))
+	{
+		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
+	}
+	
+	
+ieee8021BridgeBasePortIfIndex_handler_newIfIndex:
+	
+	if (u32IfIndex == 0)
+	{
+		goto ieee8021BridgeBasePortIfIndex_handler_success;
+	}
+	
+	if ((poIeee8021BridgeBaseIfToPortEntry = ieee8021BridgeBaseIfToPortTable_getByIndex (u32IfIndex)) == NULL ||
+		(poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_getByIndex (poIeee8021BridgeBaseIfToPortEntry->u32Port)) == NULL)
+	{
+		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
+	}
+	poIeee8021BridgeBaseIfToPortEntry->u32IndexComponentId = poEntry->u32ComponentId;
+	poIeee8021BridgeBaseIfToPortEntry->u32IndexPort = poEntry->u32Port;
+	poIeee8021BridgePhyPortEntry->u32ToComponentId = poEntry->u32ComponentId;
+	poIeee8021BridgePhyPortEntry->u32ToInternalPort = poEntry->u32Port;
+	
+	if (!ifTable_createReference (u32IfIndex, 0, false, true, false, NULL))
+	{
+		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
+	}
+	
+ieee8021BridgeBasePortIfIndex_handler_success:
+	
+	poEntry->u32IfIndex = u32IfIndex;
+	return true;
+	
+	
+ieee8021BridgeBasePortIfIndex_handler_cleanup:
+	
+	return false;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021BridgeBasePortTable_getFirst (
@@ -980,6 +1049,17 @@ ieee8021BridgeBasePortTable_mapper (
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			
+			switch (table_info->colnum)
+			{
+			case IEEE8021BRIDGEBASEPORTIFINDEX:
+				if (ifTable_getByIndex (*request->requestvb->val.integer) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_WRONGVALUE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			}
 		}
 		break;
 		
@@ -1007,7 +1087,11 @@ ieee8021BridgeBasePortTable_mapper (
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->u32IfIndex = *request->requestvb->val.integer;
+				if (!ieee8021BridgeBasePortIfIndex_handler (table_entry, *request->requestvb->val.integer))
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
 				break;
 			case IEEE8021BRIDGEBASEPORTADMINPOINTTOPOINT:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32AdminPointToPoint))) == NULL)
@@ -1426,7 +1510,8 @@ ieee8021BridgePhyPortTable_createExt (
 {
 	ieee8021BridgePhyPortEntry_t *poEntry = NULL;
 	
-	if (u32IfIndex == 0)
+	if (u32IfIndex == 0 ||
+		!ifTable_createReference (u32IfIndex, 0, false, true, false, NULL))
 	{
 		goto ieee8021BridgePhyPortTable_createExt_cleanup;
 	}
@@ -1439,6 +1524,7 @@ ieee8021BridgePhyPortTable_createExt (
 	}
 	
 	poEntry->u32IfIndex = u32IfIndex;
+	
 	if (!ieee8021BridgePhyPortTable_createHier (poEntry))
 	{
 		ieee8021BridgePhyPortTable_removeEntry (poEntry);
@@ -1461,6 +1547,13 @@ ieee8021BridgePhyPortTable_removeExt (ieee8021BridgePhyPortEntry_t *poEntry)
 	{
 		goto ieee8021BridgePhyPortTable_removeExt_cleanup;
 	}
+	
+	if (poEntry->u32IfIndex != 0 &&
+		!ifTable_removeReference (poEntry->u32IfIndex, false, true, false))
+	{
+		goto ieee8021BridgePhyPortTable_removeExt_cleanup;
+	}
+	
 	ieee8021BridgePhyPortTable_removeEntry (poEntry);
 	bRetCode = true;
 	
@@ -1474,11 +1567,14 @@ bool
 ieee8021BridgePhyPortTable_createHier (
 	ieee8021BridgePhyPortEntry_t *poEntry)
 {
-	if (ieee8021BridgeBaseIfToPortTable_getByIndex (poEntry->u32IfIndex) == NULL &&
-		ieee8021BridgeBaseIfToPortTable_createEntry (poEntry->u32IfIndex) == NULL)
+	register ieee8021BridgeBaseIfToPortEntry_t *poIeee8021BridgeBaseIfToPortEntry = NULL;
+	
+	if ((poIeee8021BridgeBaseIfToPortEntry = ieee8021BridgeBaseIfToPortTable_getByIndex (poEntry->u32IfIndex)) == NULL &&
+		(poIeee8021BridgeBaseIfToPortEntry = ieee8021BridgeBaseIfToPortTable_createEntry (poEntry->u32IfIndex)) == NULL)
 	{
 		goto ieee8021BridgePhyPortTable_createHier_cleanup;
 	}
+	poIeee8021BridgeBaseIfToPortEntry->u32Port = poEntry->u32Port;
 	
 	return true;
 	
