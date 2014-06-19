@@ -33,6 +33,28 @@ extern "C" {
 
 enum
 {
+	/* enums for column xAdminStatus */
+	xAdminStatus_up_c = 1,
+	xAdminStatus_down_c = 2,
+	xAdminStatus_testing_c = 3,
+	
+	xAdminStatus_mask_c = 0x07,
+	xAdminStatus_fromChild_c = 0x08,
+	xAdminStatus_fromParent_c = 0x10,
+	
+	/* enums for column xOperStatus */
+	xOperStatus_up_c = 1,
+	xOperStatus_down_c = 2,
+	xOperStatus_testing_c = 3,
+	xOperStatus_unknown_c = 4,
+	xOperStatus_dormant_c = 5,
+	xOperStatus_notPresent_c = 6,
+	xOperStatus_lowerLayerDown_c = 7,
+	
+	xOperStatus_mask_c = 0x07,
+	xOperStatus_fromChild_c = 0x08,
+	xOperStatus_fromParent_c = 0x10,
+	
 	/* enums for column xRowStatus */
 	xRowStatus_active_c = 1,
 	xRowStatus_notInService_c = 2,
@@ -40,7 +62,11 @@ enum
 	xRowStatus_createAndGo_c = 4,
 	xRowStatus_createAndWait_c = 5,
 	xRowStatus_destroy_c = 6,
-
+	
+	xRowStatus_mask_c = 0x07,
+	xRowStatus_fromChild_c = 0x08,
+	xRowStatus_fromParent_c = 0x10,
+	
 	/* enums for column xStorageType */
 	xStorageType_other_c = 1,
 	xStorageType_volatile_c = 2,

@@ -30,6 +30,8 @@ extern "C" {
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+
 #define TOBE_REPLACED 1
 
 
@@ -585,10 +587,12 @@ typedef struct neEntPortEntry_t
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oIf_BTreeNode;
+	xBTree_Node_t oId_BTreeNode;
 } neEntPortEntry_t;
 
 extern xBTree_t oNeEntPortTable_BTree;
 extern xBTree_t oNeEntPortTable_If_BTree;
+extern xBTree_t oNeEntPortTable_Id_BTree;
 
 /* neEntPortTable table mapper */
 void neEntPortTable_init (void);

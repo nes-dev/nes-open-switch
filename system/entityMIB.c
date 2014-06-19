@@ -25,10 +25,13 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "if/ifMIB.h"
 #include "entityMIB.h"
+#include "systemUtils.h"
 
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
+
+#include <stdbool.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
@@ -1916,16 +1919,15 @@ neEntPhysicalRowStatus_handler (
 	neEntPhysicalEntry_t *poEntry,
 	uint8_t u8RowStatus)
 {
+	register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
+	
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
-	{
 		if (poEntry->u8RowStatus == xRowStatus_active_c)
 		{
 			break;
 		}
-		
-		register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
 		
 		if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (poEntry->u32EntPhysicalIndex)) == NULL)
 		{
@@ -1934,12 +1936,6 @@ neEntPhysicalRowStatus_handler (
 		
 		if (poEntry->u32ContainedIn != 0 &&
 			entPhysicalContainsTable_createEntry (poEntry->u32ContainedIn, poEntry->u32EntPhysicalIndex) == NULL)
-		{
-			return false;
-		}
-		
-		if (poEntry->i32Class == neEntPhysicalClass_port_c &&
-			neEntPortTable_createEntry (poEntry->u32EntPhysicalIndex) == NULL)
 		{
 			return false;
 		}
@@ -1955,18 +1951,45 @@ neEntPhysicalRowStatus_handler (
 			}
 		}
 		
+		if (poEntry->i32Class == neEntPhysicalClass_port_c)
+		{
+			register neEntPortEntry_t *poNeEntPortEntry = NULL;
+			
+			if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL &&
+				!neEntPortRowStatus_handler (poNeEntPortEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				return false;
+			}
+			
+			if (poNeEntPortEntry == NULL &&
+				neEntPortTable_createEntry (poEntry->u32EntPhysicalIndex) == NULL)
+			{
+				return false;
+			}
+		}
+		
 		/* TODO */
 		poEntPhysicalEntry->u32ContainedIn = poEntry->u32ContainedIn;
 		poEntPhysicalEntry->i32Class = poEntry->i32Class;
 		
 		poEntry->u8RowStatus = xRowStatus_active_c;
 		break;
-	}
-	
+		
 	case xRowStatus_notInService_c:
 		if (poEntry->u8RowStatus == xRowStatus_notInService_c)
 		{
 			break;
+		}
+		
+		if (poEntry->i32Class == neEntPhysicalClass_port_c)
+		{
+			register neEntPortEntry_t *poNeEntPortEntry = NULL;
+			
+			if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL &&
+				!neEntPortRowStatus_handler (poNeEntPortEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				return false;
+			}
 		}
 		
 		/* TODO */
@@ -1982,14 +2005,25 @@ neEntPhysicalRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-	{
-		register neEntPortEntry_t *poNeEntPortEntry = NULL;
-		register entPhysicalContainsEntry_t *poEntPhysicalContainsEntry = NULL;
+		if (poEntry->i32Class == neEntPhysicalClass_port_c)
+		{
+			register neEntPortEntry_t *poNeEntPortEntry = NULL;
+			
+			if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL &&
+				!neEntPortRowStatus_handler (poNeEntPortEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				return false;
+			}
+			
+			if (poNeEntPortEntry != NULL)
+			{
+				neEntPortTable_removeEntry (poNeEntPortEntry);
+			}
+		}
 		
 		if (poEntry->i32Class == neEntPhysicalClass_port_c && poEntry->u32ContainedIn != 0)
 		{
 			uint32_t u32ChassisIndex = 0;
-			register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
 			register neEntChassisPortEntry_t *poNeEntChassisPortEntry = NULL;
 			
 			if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (poEntry->u32EntPhysicalIndex)) == NULL)
@@ -2004,22 +2038,19 @@ neEntPhysicalRowStatus_handler (
 			}
 		}
 		
-		if (poEntry->i32Class == neEntPhysicalClass_port_c &&
-			(poNeEntPortEntry = neEntPortTable_createEntry (poEntry->u32EntPhysicalIndex)) != NULL)
+		if (poEntry->u32ContainedIn != 0)
 		{
-			neEntPortTable_removeEntry (poNeEntPortEntry);
-		}
-		
-		if (poEntry->u32ContainedIn != 0 &&
-			(poEntPhysicalContainsEntry = entPhysicalContainsTable_getByIndex (poEntry->u32ContainedIn, poEntry->u32EntPhysicalIndex)) != NULL)
-		{
-			entPhysicalContainsTable_removeEntry (poEntPhysicalContainsEntry);
+			register entPhysicalContainsEntry_t *poEntPhysicalContainsEntry = NULL;
+			
+			if ((poEntPhysicalContainsEntry = entPhysicalContainsTable_getByIndex (poEntry->u32ContainedIn, poEntry->u32EntPhysicalIndex)) != NULL)
+			{
+				entPhysicalContainsTable_removeEntry (poEntPhysicalContainsEntry);
+			}
 		}
 		
 		/* TODO */
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		break;
-	}
 	}
 	
 	return true;
@@ -3479,21 +3510,32 @@ neEntPortRowStatus_handler (
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
+	case xRowStatus_active_c | xRowStatus_fromParent_c:
 	{
-		ifEntry_t *poIfEntry = NULL;
-		
-		if (poEntry->u8RowStatus == xRowStatus_active_c)
+		if (poEntry->u8RowStatus == xRowStatus_active_c ||
+			(u8RowStatus & xRowStatus_fromParent_c && (poEntry->u8RowStatus != xRowStatus_notReady_c)))
 		{
-			break;
+			goto neEntPortRowStatus_handler_success;
 		}
-		if (poEntry->u32IfIndex == 0 || poEntry->u32Id == 0)
+		if (poEntry->u32IfIndex == 0)
 		{
-			return false;
+			if (u8RowStatus & xRowStatus_fromParent_c)
+				goto neEntPortRowStatus_handler_success;
+			else
+				goto neEntPortRowStatus_handler_cleanup;
 		}
 		
-		if (!ifTable_createReference (poEntry->u32IfIndex, 0, false, true, true, &poIfEntry))
+		ifInfo_t oIfInfo = ifInfo_initInline (ifInfo_ifEntry_c);
+		
+		if (!ifTable_createReference (poEntry->u32IfIndex, 0, false, true, true, &oIfInfo))
 		{
-			return false;
+			goto neEntPortRowStatus_handler_cleanup;
+		}
+		poEntry->i32Type = oIfInfo.poIfEntry->i32Type;
+		
+		if (!neEntPortRowStatus_update (poEntry, u8RowStatus))
+		{
+			goto neEntPortRowStatus_handler_cleanup;
 		}
 		
 		/* TODO */
@@ -3502,18 +3544,24 @@ neEntPortRowStatus_handler (
 	}
 	
 	case xRowStatus_notInService_c:
+	case xRowStatus_notInService_c | xRowStatus_fromParent_c:
 		if (poEntry->u8RowStatus == xRowStatus_notInService_c)
 		{
-			break;
+			goto neEntPortRowStatus_handler_success;
+		}
+		if (u8RowStatus & xRowStatus_fromParent_c && (poEntry->u8RowStatus != xRowStatus_active_c))
+		{
+			goto neEntPortRowStatus_handler_success;
 		}
 		
 		if (poEntry->u32IfIndex != 0 && !ifTable_removeReference (poEntry->u32IfIndex, false, true, true))
 		{
-			return false;
+			goto neEntPortRowStatus_handler_cleanup;
 		}
 		
 		/* TODO */
-		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		u8RowStatus & xRowStatus_fromParent_c && (poEntry->u8RowStatus == xRowStatus_active_c) ?
+			(poEntry->u8RowStatus = xRowStatus_notReady_c): (poEntry->u8RowStatus = xRowStatus_notInService_c);
 		break;
 		
 	case xRowStatus_createAndGo_c:
@@ -3525,10 +3573,11 @@ neEntPortRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
+	case xRowStatus_destroy_c | xRowStatus_fromParent_c:
 		if (poEntry->u8RowStatus == xRowStatus_active_c &&
 			!ifTable_removeReference (poEntry->u32IfIndex, false, true, true))
 		{
-			return false;
+			goto neEntPortRowStatus_handler_cleanup;
 		}
 		
 		/* TODO */
@@ -3536,7 +3585,12 @@ neEntPortRowStatus_handler (
 		break;
 	}
 	
+neEntPortRowStatus_handler_success:
 	return true;
+	
+	
+neEntPortRowStatus_handler_cleanup:
+	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -3708,6 +3762,20 @@ neEntPortTable_mapper (
 			table_entry = (neEntPortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPORTCHASSISID:
+			case NEENTPORTMODULEID:
+			case NEENTPORTID:
+			case NEENTPORTIFINDEX:
+				if (table_entry->u8RowStatus == RS_ACTIVE)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			}
 			
 			switch (table_info->colnum)
 			{
@@ -3925,15 +3993,8 @@ neEntPortTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_ACTIVE:
-					table_entry->u8RowStatus = RS_ACTIVE;
-					break;
-					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_NOTINSERVICE:
-					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

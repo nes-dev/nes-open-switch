@@ -83,6 +83,24 @@ struct neIfEntry_t;
 struct ifEntry_t;
 struct ifXEntry_t;
 
+enum
+{
+	ifInfo_neIfEntry_c = 0x01,
+	ifInfo_ifEntry_c = 0x02,
+	ifInfo_ifXEntry_c = 0x04,
+	ifInfo_all_c = 0x07,
+};
+
+typedef struct ifInfo_t
+{
+	uint8_t u8Flags;
+	struct neIfEntry_t *poNeIfEntry;
+	struct ifEntry_t *poIfEntry;
+	struct ifXEntry_t *poIfXEntry;
+} ifInfo_t;
+
+#define ifInfo_initInline(_u8Flags) {.u8Flags = _u8Flags, .poNeIfEntry = NULL, .poIfEntry = NULL, .poIfXEntry = NULL}
+
 /**
  *	table ifTable definitions
  */
@@ -443,7 +461,7 @@ bool ifTable_createReference (
 	uint32_t u32IfIndex,
 	int32_t i32Type,
 	bool bCreate, bool bReference, bool bActivate,
-	ifEntry_t **ppoIfEntry);
+	ifInfo_t *poIfInfo);
 bool ifTable_removeReference (
 	uint32_t u32IfIndex,
 	bool bCreate, bool bReference, bool bActivate);

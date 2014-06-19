@@ -331,7 +331,7 @@ ifTable_createReference (
 	uint32_t u32IfIndex,
 	int32_t i32Type,
 	bool bCreate, bool bReference, bool bActivate,
-	ifEntry_t **ppoIfEntry)
+	ifInfo_t *poIfInfo)
 {
 	return false;
 }
@@ -1243,6 +1243,7 @@ ifStackTable_createEntry (
 	}
 	
 	poEntry->u8Status = xRowStatus_notInService_c;
+	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfStackTable_BTree);
 	xBTree_nodeAdd (&poEntry->oLToH_BTreeNode, &oIfStackTable_LToH_BTree);
 	return poEntry;

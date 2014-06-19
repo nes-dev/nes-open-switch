@@ -29,6 +29,8 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
@@ -1415,6 +1417,90 @@ ieee8021BridgePhyPortTable_removeEntry (ieee8021BridgePhyPortEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021BridgePhyPortTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ieee8021BridgePhyPortEntry_t *
+ieee8021BridgePhyPortTable_createExt (
+	uint32_t u32Port,
+	uint32_t u32IfIndex)
+{
+	ieee8021BridgePhyPortEntry_t *poEntry = NULL;
+	
+	if (u32IfIndex == 0)
+	{
+		goto ieee8021BridgePhyPortTable_createExt_cleanup;
+	}
+	
+	poEntry = ieee8021BridgePhyPortTable_createEntry (
+		u32Port);
+	if (poEntry == NULL)
+	{
+		goto ieee8021BridgePhyPortTable_createExt_cleanup;
+	}
+	
+	poEntry->u32IfIndex = u32IfIndex;
+	if (!ieee8021BridgePhyPortTable_createHier (poEntry))
+	{
+		ieee8021BridgePhyPortTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto ieee8021BridgePhyPortTable_createExt_cleanup;
+	}
+	
+	
+ieee8021BridgePhyPortTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+ieee8021BridgePhyPortTable_removeExt (ieee8021BridgePhyPortEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!ieee8021BridgePhyPortTable_removeHier (poEntry))
+	{
+		goto ieee8021BridgePhyPortTable_removeExt_cleanup;
+	}
+	ieee8021BridgePhyPortTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+	
+ieee8021BridgePhyPortTable_removeExt_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgePhyPortTable_createHier (
+	ieee8021BridgePhyPortEntry_t *poEntry)
+{
+	if (ieee8021BridgeBaseIfToPortTable_getByIndex (poEntry->u32IfIndex) == NULL &&
+		ieee8021BridgeBaseIfToPortTable_createEntry (poEntry->u32IfIndex) == NULL)
+	{
+		goto ieee8021BridgePhyPortTable_createHier_cleanup;
+	}
+	
+	return true;
+	
+	
+ieee8021BridgePhyPortTable_createHier_cleanup:
+	
+	ieee8021BridgePhyPortTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+ieee8021BridgePhyPortTable_removeHier (
+	ieee8021BridgePhyPortEntry_t *poEntry)
+{
+	register ieee8021BridgeBaseIfToPortEntry_t *poIeee8021BridgeBaseIfToPortEntry = NULL;
+	
+	if ((poIeee8021BridgeBaseIfToPortEntry = ieee8021BridgeBaseIfToPortTable_getByIndex (poEntry->u32IfIndex)) != NULL)
+	{
+		ieee8021BridgeBaseIfToPortTable_removeEntry (poIeee8021BridgeBaseIfToPortEntry);
+	}
+	
+	return true;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
