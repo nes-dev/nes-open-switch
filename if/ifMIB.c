@@ -258,7 +258,7 @@ ifTable_createEntry (
 	}
 	
 	poEntry->i32AdminStatus = ifAdminStatus_down_c;
-	poEntry->i32OperStatus = ifOperStatus_down_c;
+	poEntry->i32OperStatus = xOperStatus_notPresent_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfTable_BTree);
 	return poEntry;
@@ -325,6 +325,13 @@ ifTable_removeEntry (ifEntry_t *poEntry)
 	return;
 }
 
+bool
+ifInfo_getByIndexExt (
+	uint32_t u32Index,
+	ifInfo_t *poIfInfo, bool bWrLock)
+{
+	return false;
+}
 
 bool
 ifTable_createReference (
@@ -2443,7 +2450,7 @@ neIfRowStatus_handler (
 	{
 		if (poEntry->u8RowStatus == xRowStatus_active_c)
 		{
-			break;
+			goto neIfRowStatus_handler_success;
 		}
 		
 		register ifEntry_t *poIfEntry = NULL;
@@ -2452,7 +2459,7 @@ neIfRowStatus_handler (
 		if ((poIfEntry = ifTable_getByIndex (poEntry->u32IfIndex)) == NULL ||
 			(poIfXEntry = ifXTable_getByIndex (poEntry->u32IfIndex)) == NULL)
 		{
-			return false;
+			goto neIfRowStatus_handler_cleanup;
 		}
 		
 		poIfEntry->i32Type = poEntry->i32Type;
@@ -2468,9 +2475,9 @@ neIfRowStatus_handler (
 	}
 	
 	case xRowStatus_notInService_c:
-		if (poEntry->u8RowStatus != xRowStatus_notInService_c)
+		if (poEntry->u8RowStatus == xRowStatus_notInService_c)
 		{
-			break;
+			goto neIfRowStatus_handler_success;
 		}
 		
 		/* TODO */
@@ -2491,7 +2498,12 @@ neIfRowStatus_handler (
 		break;
 	}
 	
+neIfRowStatus_handler_success:
 	return true;
+	
+	
+neIfRowStatus_handler_cleanup:
+	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -2985,13 +2997,8 @@ neIfTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_ACTIVE:
-					break;
-					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_NOTINSERVICE:
 					break;
 					
 				case RS_DESTROY:

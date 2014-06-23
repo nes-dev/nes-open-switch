@@ -99,8 +99,12 @@ typedef struct ifInfo_t
 	struct ifXEntry_t *poIfXEntry;
 } ifInfo_t;
 
-#define ifInfo_initInline(_u8Flags) {.u8Flags = _u8Flags, .poNeIfEntry = NULL, .poIfEntry = NULL, .poIfXEntry = NULL}
+#define ifInfo_initInline(_u8Flags) {.u8Flags = (_u8Flags), .poNeIfEntry = NULL, .poIfEntry = NULL, .poIfXEntry = NULL}
 
+bool ifInfo_getByIndexExt (
+	uint32_t u32Index,
+	ifInfo_t *poIfInfo, bool bWrLock);
+	
 /**
  *	table ifTable definitions
  */

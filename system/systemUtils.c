@@ -40,81 +40,66 @@ neEntPortRowStatus_update (
 	neEntPortEntry_t *poEntry,
 	uint8_t u8RowStatus)
 {
-	switch (u8RowStatus)
+	register bool bRetCode = false;
+	
+	switch (poEntry->i32Type)
 	{
-	case xRowStatus_active_c:
-		switch (poEntry->i32Type)
+	default:
+		goto neEntPortRowStatus_update_cleanup;
+		
+	case ifType_ethernetCsmacd_c:
+	{
+		register ieee8021BridgePhyPortEntry_t *poIeee8021BridgePhyPortEntry = NULL;
+		
+		ieee8021BridgePhyPortInfo_wrLock ();
+		
+		switch (u8RowStatus)
 		{
-		case ifType_ethernetCsmacd_c:
-		{
-			register ieee8021BridgePhyPortEntry_t *poIeee8021BridgePhyPortEntry = NULL;
+		case xRowStatus_active_c:
 			
 			if ((poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) == NULL &&
 				(poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_createExt (poEntry->u32EntPhysicalIndex, poEntry->u32IfIndex)) == NULL)
 			{
-				goto neEntPortRowStatus_update_cleanup;
+				goto neEntPortRowStatus_updateEthernet_unlock;
 			}
+			
+			/* TODO */
 			break;
-		}
-		case ifType_sonet_c:
+			
+		case xRowStatus_notInService_c:
+			/* TODO */
 			break;
-		case ifType_opticalTransport_c:
-			break;
-		}
-		
-		/* TODO */
-		break;
-		
-	case xRowStatus_notInService_c:
-		/* TODO */
-		
-		switch (poEntry->i32Type)
-		{
-		case ifType_ethernetCsmacd_c:
-			break;
-		case ifType_sonet_c:
-			break;
-		case ifType_opticalTransport_c:
-			break;
-		}
-		break;
-		
-	case xRowStatus_createAndGo_c:
-		break;
-		
-	case xRowStatus_createAndWait_c:
-		break;
-		
-	case xRowStatus_destroy_c:
-		/* TODO */
-		
-		switch (poEntry->i32Type)
-		{
-		case ifType_ethernetCsmacd_c:
-		{
-			register ieee8021BridgePhyPortEntry_t *poIeee8021BridgePhyPortEntry = NULL;
+			
+		case xRowStatus_destroy_c:
 			
 			if ((poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL &&
 				!ieee8021BridgePhyPortTable_removeExt (poIeee8021BridgePhyPortEntry))
 			{
-				goto neEntPortRowStatus_update_cleanup;
+				goto neEntPortRowStatus_updateEthernet_unlock;
 			}
+			
+			/* TODO */
 			break;
 		}
-		case ifType_sonet_c:
-			break;
-		case ifType_opticalTransport_c:
-			break;
-		}
+		
+		bRetCode = true;
+		
+neEntPortRowStatus_updateEthernet_unlock:
+		ieee8021BridgePhyPortInfo_unLock ();
 		break;
 	}
 	
-	return true;
+	case ifType_sonet_c:
+		break;
+		
+	case ifType_opticalTransport_c:
+		break;
+	}
 	
 	
 neEntPortRowStatus_update_cleanup:
 	
-	return false;
+	return bRetCode;
 }
 
 

@@ -28,6 +28,7 @@ extern "C" {
 
 
 #include "lib/binaryTree.h"
+#include "lib/sync.h"
 #include "lib/snmp.h"
 
 #include <stdbool.h>
@@ -39,6 +40,14 @@ extern "C" {
  *	agent MIB function
  */
 void ieee8021BridgeMib_init (void);
+
+
+typedef struct ieee8021Bridge_t
+{
+	xRwLock_t oPhyPortLock;
+} ieee8021Bridge_t;
+
+extern ieee8021Bridge_t oBridge;
 
 
 /**
@@ -244,6 +253,34 @@ Netsnmp_Node_Handler ieee8021BridgeBasePortTable_mapper;
 #endif	/* SNMP_SRC */
 
 
+struct ieee8021BridgeBaseIfToPortEntry_t;
+struct ieee8021BridgePhyPortEntry_t;
+
+enum
+{
+	ieee8021BridgePhyPortInfo_ifToPortEntry_c = 0x01,
+	ieee8021BridgePhyPortInfo_phyPortEntry_c = 0x02,
+	ieee8021BridgePhyPortInfo_all_c = 0x03,
+};
+
+typedef struct ieee8021BridgePhyPortInfo_t
+{
+	uint8_t u8Flags;
+	struct ieee8021BridgeBaseIfToPortEntry_t *poIfToPortEntry;
+	struct ieee8021BridgePhyPortEntry_t *poPhyPortEntry;
+} ieee8021BridgePhyPortInfo_t;
+
+#define ieee8021BridgePhyPortInfo_initInline(_u8Flags) {.u8Flags = (_u8Flags), .poIfToPortEntry = NULL, .poPhyPortEntry = NULL}
+
+bool ieee8021BridgePhyPortInfo_getByIfIndex (
+	uint32_t u32IfIndex,
+	ieee8021BridgePhyPortInfo_t *poPhyPortInfo);
+	
+#define ieee8021BridgePhyPortInfo_wrLock() (xRwLock_wrLock (&oBridge.oPhyPortLock))
+#define ieee8021BridgePhyPortInfo_rdLock() (xRwLock_rdLock (&oBridge.oPhyPortLock))
+#define ieee8021BridgePhyPortInfo_unLock() (xRwLock_unlock (&oBridge.oPhyPortLock))
+
+
 /**
  *	table ieee8021BridgeBaseIfToPortTable definitions
  */
@@ -276,6 +313,11 @@ ieee8021BridgeBaseIfToPortEntry_t * ieee8021BridgeBaseIfToPortTable_getByIndex (
 ieee8021BridgeBaseIfToPortEntry_t * ieee8021BridgeBaseIfToPortTable_getNextIndex (
 	uint32_t u32IfIndex);
 void ieee8021BridgeBaseIfToPortTable_removeEntry (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
+ieee8021BridgeBaseIfToPortEntry_t *ieee8021BridgeBaseIfToPortTable_createExt (
+	uint32_t u32IfIndex);
+bool ieee8021BridgeBaseIfToPortTable_removeExt (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
+bool ieee8021BridgeBaseIfToPortTable_createHier (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
+bool ieee8021BridgeBaseIfToPortTable_removeHier (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgeBaseIfToPortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgeBaseIfToPortTable_getNext;
