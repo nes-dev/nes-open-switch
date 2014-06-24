@@ -57,7 +57,7 @@ static oid entConfigChange_oid[] = {1,3,6,1,2,1,47,2,0,1};
 
 
 static bool entPhysicalTable_getChassis (
-	entPhysicalEntry_t *poEntry,
+	uint32_t u32EntPhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
 	uint32_t *pu32ChassisIndex);
 
 
@@ -101,7 +101,10 @@ entityMIB_init (void)
 /**
  *	scalar mapper(s)
  */
-entityGeneral_t oEntityGeneral;
+entityGeneral_t oEntityGeneral =
+{
+	.oLock = xRwLock_initInline (),
+};
 
 /** entityGeneral scalar mapper **/
 int
@@ -294,18 +297,17 @@ entPhysicalTable_removeEntry (entPhysicalEntry_t *poEntry)
 
 bool
 entPhysicalTable_getChassis (
-	entPhysicalEntry_t *poEntry,
+	uint32_t u32EntPhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
 	uint32_t *pu32ChassisIndex)
 {
-	if (poEntry->i32Class == entPhysicalClass_stack_c ||
-		poEntry->i32Class == entPhysicalClass_chassis_c ||
-		poEntry->u32ContainedIn == 0)
+	if (i32Class == entPhysicalClass_stack_c ||
+		i32Class == entPhysicalClass_chassis_c ||
+		u32ContainedIn == 0)
 	{
 		return false;
 	}
 	
 	register entPhysicalEntry_t *poContainerEntry = NULL;
-	uint32_t u32ContainedIn = poEntry->u32ContainedIn;
 	
 	while (
 		u32ContainedIn != 0 &&
@@ -332,6 +334,8 @@ entPhysicalTable_createEntity (
 {
 	register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
 	register neEntPhysicalEntry_t *poNeEntPhysicalEntry = NULL;
+	
+	xRwLock_wrLock (&oEntityGeneral.oLock);
 	
 	if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (u32Index)) != NULL)
 	{
@@ -364,11 +368,13 @@ entPhysicalTable_createEntity (
 		goto entPhysicalTable_createEntity_cleanup;
 	}
 	
+	xRwLock_unlock (&oEntityGeneral.oLock);
 	return true;
 	
 	
 entPhysicalTable_createEntity_cleanup:
 	
+	xRwLock_unlock (&oEntityGeneral.oLock);
 	entPhysicalTable_removeEntity (u32Index);
 	return false;
 }
@@ -379,6 +385,8 @@ entPhysicalTable_removeEntity (
 {
 	register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
 	register neEntPhysicalEntry_t *poNeEntPhysicalEntry = NULL;
+	
+	xRwLock_wrLock (&oEntityGeneral.oLock);
 	
 	if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (u32Index)) == NULL ||
 		(poNeEntPhysicalEntry = neEntPhysicalTable_getByIndex (u32Index)) == NULL)
@@ -397,11 +405,13 @@ entPhysicalTable_removeEntity (
 	
 entPhysicalTable_removeEntity_success:
 	
+	xRwLock_unlock (&oEntityGeneral.oLock);
 	return true;
 	
 	
 entPhysicalTable_removeEntity_cleanup:
 	
+	xRwLock_unlock (&oEntityGeneral.oLock);
 	return false;
 }
 
@@ -1931,24 +1941,67 @@ neEntPhysicalRowStatus_handler (
 		
 		if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (poEntry->u32EntPhysicalIndex)) == NULL)
 		{
-			return false;
+			goto neEntPhysicalRowStatus_handler_cleanup;
+		}
+		
+		if (poEntry->pOldEntry != NULL)
+		{
+			if (poEntry->pOldEntry->i32Class == neEntPhysicalClass_port_c && poEntry->pOldEntry->i32Class != poEntry->i32Class)
+			{
+				register neEntPortEntry_t *poNeEntPortEntry = NULL;
+				
+				if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL &&
+					!neEntPortRowStatus_handler (poNeEntPortEntry, xRowStatus_destroy_c | xRowStatus_fromParent_c))
+				{
+					goto neEntPhysicalRowStatus_handler_cleanup;
+				}
+				
+				if (poNeEntPortEntry != NULL)
+				{
+					neEntPortTable_removeEntry (poNeEntPortEntry);
+				}
+			}
+			
+			if (poEntry->pOldEntry->u32ContainedIn != 0 && poEntry->pOldEntry->u32ContainedIn != poEntry->u32ContainedIn)
+			{
+				if (poEntry->pOldEntry->i32Class == neEntPhysicalClass_port_c)
+				{
+					register neEntChassisPortEntry_t *poNeEntChassisPortEntry = NULL;
+					
+					if ((poNeEntChassisPortEntry = neEntChassisPortTable_getByIndex (poEntry->pOldEntry->u32ChassisIndex, poEntry->u32EntPhysicalIndex)) != NULL)
+					{
+						neEntChassisPortTable_removeEntry (poNeEntChassisPortEntry);
+					}
+				}
+				
+				register entPhysicalContainsEntry_t *poEntPhysicalContainsEntry = NULL;
+				
+				if ((poEntPhysicalContainsEntry = entPhysicalContainsTable_getByIndex (poEntry->pOldEntry->u32ContainedIn, poEntry->u32EntPhysicalIndex)) != NULL)
+				{
+					entPhysicalContainsTable_removeEntry (poEntPhysicalContainsEntry);
+				}
+			}
+			
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
 		}
 		
 		if (poEntry->u32ContainedIn != 0 &&
 			entPhysicalContainsTable_createEntry (poEntry->u32ContainedIn, poEntry->u32EntPhysicalIndex) == NULL)
 		{
-			return false;
+			goto neEntPhysicalRowStatus_handler_cleanup;
 		}
 		
 		if (poEntry->i32Class == neEntPhysicalClass_port_c && poEntry->u32ContainedIn != 0)
 		{
 			uint32_t u32ChassisIndex = 0;
 			
-			if (entPhysicalTable_getChassis (poEntPhysicalEntry, &u32ChassisIndex) &&
+			if (entPhysicalTable_getChassis (poEntry->u32EntPhysicalIndex, poEntry->u32ContainedIn, poEntry->i32Class, &u32ChassisIndex) &&
 				neEntChassisPortTable_createEntry (u32ChassisIndex, poEntry->u32EntPhysicalIndex) == NULL)
 			{
-				return false;
+				goto neEntPhysicalRowStatus_handler_cleanup;
 			}
+			poEntry->u32ChassisIndex = u32ChassisIndex;
 		}
 		
 		if (poEntry->i32Class == neEntPhysicalClass_port_c)
@@ -1958,13 +2011,13 @@ neEntPhysicalRowStatus_handler (
 			if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL &&
 				!neEntPortRowStatus_handler (poNeEntPortEntry, u8RowStatus | xRowStatus_fromParent_c))
 			{
-				return false;
+				goto neEntPhysicalRowStatus_handler_cleanup;
 			}
 			
 			if (poNeEntPortEntry == NULL &&
 				neEntPortTable_createEntry (poEntry->u32EntPhysicalIndex) == NULL)
 			{
-				return false;
+				goto neEntPhysicalRowStatus_handler_cleanup;
 			}
 		}
 		
@@ -1988,11 +2041,19 @@ neEntPhysicalRowStatus_handler (
 			if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL &&
 				!neEntPortRowStatus_handler (poNeEntPortEntry, u8RowStatus | xRowStatus_fromParent_c))
 			{
-				return false;
+				goto neEntPhysicalRowStatus_handler_cleanup;
 			}
 		}
 		
 		/* TODO */
+		
+		if (poEntry->pOldEntry == NULL &&
+			(poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+		{
+			goto neEntPhysicalRowStatus_handler_cleanup;
+		}
+		memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
+		
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		break;
 		
@@ -2005,6 +2066,12 @@ neEntPhysicalRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
+		
 		if (poEntry->i32Class == neEntPhysicalClass_port_c)
 		{
 			register neEntPortEntry_t *poNeEntPortEntry = NULL;
@@ -2012,7 +2079,7 @@ neEntPhysicalRowStatus_handler (
 			if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL &&
 				!neEntPortRowStatus_handler (poNeEntPortEntry, u8RowStatus | xRowStatus_fromParent_c))
 			{
-				return false;
+				goto neEntPhysicalRowStatus_handler_cleanup;
 			}
 			
 			if (poNeEntPortEntry != NULL)
@@ -2023,16 +2090,10 @@ neEntPhysicalRowStatus_handler (
 		
 		if (poEntry->i32Class == neEntPhysicalClass_port_c && poEntry->u32ContainedIn != 0)
 		{
-			uint32_t u32ChassisIndex = 0;
 			register neEntChassisPortEntry_t *poNeEntChassisPortEntry = NULL;
 			
-			if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (poEntry->u32EntPhysicalIndex)) == NULL)
-			{
-				return false;
-			}
-			
-			if (entPhysicalTable_getChassis (poEntPhysicalEntry, &u32ChassisIndex) &&
-				(poNeEntChassisPortEntry = neEntChassisPortTable_getByIndex (u32ChassisIndex, poEntry->u32EntPhysicalIndex)) != NULL)
+			if (poEntry->u32ChassisIndex != 0 &&
+				(poNeEntChassisPortEntry = neEntChassisPortTable_getByIndex (poEntry->u32ChassisIndex, poEntry->u32EntPhysicalIndex)) != NULL)
 			{
 				neEntChassisPortTable_removeEntry (poNeEntChassisPortEntry);
 			}
@@ -2053,7 +2114,14 @@ neEntPhysicalRowStatus_handler (
 		break;
 	}
 	
+// neEntPhysicalRowStatus_handler_success:
+	
 	return true;
+	
+	
+neEntPhysicalRowStatus_handler_cleanup:
+	
+	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -3411,7 +3479,20 @@ neEntPortTable_BTreeNodeCmp (
 		(pEntry1->u32EntPhysicalIndex == pEntry2->u32EntPhysicalIndex) ? 0: 1;
 }
 
+static int8_t
+neEntPortTable_If_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntPortEntry_t *pEntry1 = xBTree_entry (pNode1, neEntPortEntry_t, oBTreeNode);
+	register neEntPortEntry_t *pEntry2 = xBTree_entry (pNode2, neEntPortEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ? -1:
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
+}
+
 xBTree_t oNeEntPortTable_BTree = xBTree_initInline (&neEntPortTable_BTreeNodeCmp);
+xBTree_t oNeEntPortTable_If_BTree = xBTree_initInline (&neEntPortTable_If_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 neEntPortEntry_t *
@@ -3434,7 +3515,7 @@ neEntPortTable_createEntry (
 	
 	poEntry->u32ChassisId = 0;
 	poEntry->u32ModuleId = 0;
-	poEntry->u32Id = 0;
+	poEntry->u32PortId = 0;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntPortTable_BTree);
@@ -3512,61 +3593,91 @@ neEntPortRowStatus_handler (
 	case xRowStatus_active_c:
 	case xRowStatus_active_c | xRowStatus_fromParent_c:
 	{
-		if (poEntry->u8RowStatus == xRowStatus_active_c ||
-			(u8RowStatus & xRowStatus_fromParent_c && (poEntry->u8RowStatus != xRowStatus_notReady_c)))
+		if (poEntry->u8RowStatus == xRowStatus_active_c || u8RowStatus & xRowStatus_fromParent_c)
 		{
 			goto neEntPortRowStatus_handler_success;
 		}
 		if (poEntry->u32IfIndex == 0)
 		{
 			if (u8RowStatus & xRowStatus_fromParent_c)
+			{
 				goto neEntPortRowStatus_handler_success;
+			}
 			else
+			{
 				goto neEntPortRowStatus_handler_cleanup;
+			}
+		}
+		
+		if (poEntry->pOldEntry != NULL &&
+			poEntry->pOldEntry->u32IfIndex != 0 && poEntry->pOldEntry->u32IfIndex != poEntry->u32IfIndex)
+		{
+			if (!neEntPortRowStatus_update (poEntry->pOldEntry, xRowStatus_destroy_c) ||
+				!ifTable_removeReference (poEntry->pOldEntry->u32IfIndex, false, true, false))
+			{
+				goto neEntPortRowStatus_handler_cleanup;
+			}
+			
+			xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
 		}
 		
 		ifInfo_t oIfInfo = ifInfo_initInline (ifInfo_ifEntry_c);
 		
-		if (!ifTable_createReference (poEntry->u32IfIndex, 0, false, true, true, &oIfInfo))
+		if (!ifTable_createReference (poEntry->u32IfIndex, 0, false, true, false, &oIfInfo))
 		{
 			goto neEntPortRowStatus_handler_cleanup;
 		}
 		poEntry->i32Type = oIfInfo.poIfEntry->i32Type;
 		
-		if (!neEntPortRowStatus_update (poEntry, u8RowStatus))
+		if (poEntry->pOldEntry == NULL ||
+			poEntry->pOldEntry->u32IfIndex != poEntry->u32IfIndex)
+		{
+			xBTree_nodeAdd (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
+		}
+		
+		if (!neEntPortRowStatus_update (poEntry, u8RowStatus & xRowStatus_mask_c))
 		{
 			goto neEntPortRowStatus_handler_cleanup;
 		}
 		
-		/* TODO */
 		poEntry->u8RowStatus = xRowStatus_active_c;
+		
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
 		break;
 	}
 	
 	case xRowStatus_notInService_c:
 	case xRowStatus_notInService_c | xRowStatus_fromParent_c:
-		if (poEntry->u8RowStatus == xRowStatus_notInService_c)
-		{
-			goto neEntPortRowStatus_handler_success;
-		}
-		if (u8RowStatus & xRowStatus_fromParent_c && (poEntry->u8RowStatus != xRowStatus_active_c))
+		if (poEntry->u8RowStatus == xRowStatus_notInService_c ||
+			(u8RowStatus & xRowStatus_fromParent_c && (poEntry->u8RowStatus != xRowStatus_active_c)))
 		{
 			goto neEntPortRowStatus_handler_success;
 		}
 		
-		if (poEntry->u32IfIndex != 0 && !ifTable_removeReference (poEntry->u32IfIndex, false, true, true))
+		if (!neEntPortRowStatus_update (poEntry, u8RowStatus & xRowStatus_mask_c) ||
+			!ifTable_removeReference (poEntry->u32IfIndex, false, true, false))
 		{
 			goto neEntPortRowStatus_handler_cleanup;
 		}
 		
-		/* TODO */
-		u8RowStatus & xRowStatus_fromParent_c && (poEntry->u8RowStatus == xRowStatus_active_c) ?
-			(poEntry->u8RowStatus = xRowStatus_notReady_c): (poEntry->u8RowStatus = xRowStatus_notInService_c);
+		if (poEntry->pOldEntry == NULL &&
+			(poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+		{
+			goto neEntPortRowStatus_handler_cleanup;
+		}
+		memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
+		
+		poEntry->u8RowStatus =
+			u8RowStatus & xRowStatus_fromParent_c && (poEntry->u8RowStatus == xRowStatus_active_c) ?
+				xRowStatus_notReady_c: xRowStatus_notInService_c;
 		break;
 		
 	case xRowStatus_createAndGo_c:
-		poEntry->u8RowStatus = xRowStatus_notReady_c;
-		break;
+		goto neEntPortRowStatus_handler_cleanup;
 		
 	case xRowStatus_createAndWait_c:
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
@@ -3574,22 +3685,38 @@ neEntPortRowStatus_handler (
 		
 	case xRowStatus_destroy_c:
 	case xRowStatus_destroy_c | xRowStatus_fromParent_c:
-		if (poEntry->u8RowStatus == xRowStatus_active_c &&
-			!ifTable_removeReference (poEntry->u32IfIndex, false, true, true))
+		if (poEntry->u8RowStatus == xRowStatus_active_c)
 		{
-			goto neEntPortRowStatus_handler_cleanup;
+			if (!neEntPortRowStatus_update (poEntry, u8RowStatus & xRowStatus_mask_c) ||
+				!ifTable_removeReference (poEntry->u32IfIndex, false, true, true))
+			{
+				goto neEntPortRowStatus_handler_cleanup;
+			}
+		}
+		else if (
+			poEntry->pOldEntry != NULL && poEntry->pOldEntry->u32IfIndex != 0)
+		{
+			if (!neEntPortRowStatus_update (poEntry->pOldEntry, u8RowStatus & xRowStatus_mask_c))
+			{
+				goto neEntPortRowStatus_handler_cleanup;
+			}
+			
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
 		}
 		
-		/* TODO */
+		xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		break;
 	}
 	
 neEntPortRowStatus_handler_success:
+	
 	return true;
 	
 	
 neEntPortRowStatus_handler_cleanup:
+	
 	return false;
 }
 
@@ -3680,8 +3807,8 @@ neEntPortTable_mapper (
 			case NEENTPORTMODULEID:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ModuleId);
 				break;
-			case NEENTPORTID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Id);
+			case NEENTPORTPORTID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PortId);
 				break;
 			case NEENTPORTIFINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32IfIndex);
@@ -3724,7 +3851,7 @@ neEntPortTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case NEENTPORTID:
+			case NEENTPORTPORTID:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3767,9 +3894,9 @@ neEntPortTable_mapper (
 			{
 			case NEENTPORTCHASSISID:
 			case NEENTPORTMODULEID:
-			case NEENTPORTID:
+			case NEENTPORTPORTID:
 			case NEENTPORTIFINDEX:
-				if (table_entry->u8RowStatus == RS_ACTIVE)
+				if (table_entry->u8RowStatus == RS_ACTIVE || table_entry->u8RowStatus == RS_NOTREADY)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 					return SNMP_ERR_NOERROR;
@@ -3885,19 +4012,19 @@ neEntPortTable_mapper (
 				
 				table_entry->u32ModuleId = *request->requestvb->val.integer;
 				break;
-			case NEENTPORTID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32Id))) == NULL)
+			case NEENTPORTPORTID:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PortId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->u32Id, sizeof (table_entry->u32Id));
+					memcpy (pvOldDdata, &table_entry->u32PortId, sizeof (table_entry->u32PortId));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->u32Id = *request->requestvb->val.integer;
+				table_entry->u32PortId = *request->requestvb->val.integer;
 				break;
 			case NEENTPORTIFINDEX:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32IfIndex))) == NULL)
@@ -3961,8 +4088,8 @@ neEntPortTable_mapper (
 			case NEENTPORTMODULEID:
 				memcpy (&table_entry->u32ModuleId, pvOldDdata, sizeof (table_entry->u32ModuleId));
 				break;
-			case NEENTPORTID:
-				memcpy (&table_entry->u32Id, pvOldDdata, sizeof (table_entry->u32Id));
+			case NEENTPORTPORTID:
+				memcpy (&table_entry->u32PortId, pvOldDdata, sizeof (table_entry->u32PortId));
 				break;
 			case NEENTPORTIFINDEX:
 				memcpy (&table_entry->u32IfIndex, pvOldDdata, sizeof (table_entry->u32IfIndex));

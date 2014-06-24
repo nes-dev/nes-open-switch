@@ -32,7 +32,7 @@ include ${MK_COMMON}
 CFLAGS +=
 
 SNMP_SRC := ifMIB.c
-MODULE_SRC := if_main.c ${SNMP_SRC}
+MODULE_SRC := if_main.c ifUtils.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
 

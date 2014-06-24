@@ -26,6 +26,7 @@
 
 #include "systemUtils.h"
 #include "ethernet/ieee8021BridgeMib.h"
+#include "if/ifUtils.h"
 #include "if/ifMIB.h"
 #include "entityMIB.h"
 
@@ -56,9 +57,13 @@ neEntPortRowStatus_update (
 		switch (u8RowStatus)
 		{
 		case xRowStatus_active_c:
-			
 			if ((poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) == NULL &&
 				(poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_createExt (poEntry->u32EntPhysicalIndex, poEntry->u32IfIndex)) == NULL)
+			{
+				goto neEntPortRowStatus_updateEthernet_unlock;
+			}
+			
+			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_notPresent_c, true))
 			{
 				goto neEntPortRowStatus_updateEthernet_unlock;
 			}
@@ -67,10 +72,19 @@ neEntPortRowStatus_update (
 			break;
 			
 		case xRowStatus_notInService_c:
+			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_down_c, true))
+			{
+				goto neEntPortRowStatus_updateEthernet_unlock;
+			}
+			
 			/* TODO */
 			break;
 			
 		case xRowStatus_destroy_c:
+			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_notPresent_c, true))
+			{
+				goto neEntPortRowStatus_updateEthernet_unlock;
+			}
 			
 			if ((poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL &&
 				!ieee8021BridgePhyPortTable_removeExt (poIeee8021BridgePhyPortEntry))

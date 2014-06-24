@@ -28,6 +28,7 @@ extern "C" {
 
 
 #include "lib/binaryTree.h"
+#include "lib/sync.h"
 #include "lib/snmp.h"
 
 #include <stdbool.h>
@@ -50,6 +51,8 @@ void entityMIB_init (void);
 typedef struct entityGeneral_t
 {
 	uint32_t u32LastChangeTime;
+	
+	xRwLock_t oLock;
 } entityGeneral_t;
 
 extern entityGeneral_t oEntityGeneral;
@@ -404,6 +407,9 @@ typedef struct neEntPhysicalEntry_t
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
+	uint32_t u32ChassisIndex;
+	struct neEntPhysicalEntry_t *pOldEntry;
+	
 	xBTree_Node_t oBTreeNode;
 } neEntPhysicalEntry_t;
 
@@ -555,7 +561,7 @@ Netsnmp_Node_Handler neEntLPMappingTable_mapper;
  */
 #define NEENTPORTCHASSISID 1
 #define NEENTPORTMODULEID 2
-#define NEENTPORTID 3
+#define NEENTPORTPORTID 3
 #define NEENTPORTIFINDEX 4
 #define NEENTPORTROWSTATUS 5
 
@@ -579,11 +585,12 @@ typedef struct neEntPortEntry_t
 	/* Column values */
 	uint32_t u32ChassisId;
 	uint32_t u32ModuleId;
-	uint32_t u32Id;
+	uint32_t u32PortId;
 	uint32_t u32IfIndex;
 	uint8_t u8RowStatus;
 	
 	int32_t i32Type;
+	struct neEntPortEntry_t *pOldEntry;
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oIf_BTreeNode;
