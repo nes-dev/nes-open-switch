@@ -230,6 +230,111 @@ ieee8021BridgeBaseTable_removeEntry (ieee8021BridgeBaseEntry_t *poEntry)
 	return;
 }
 
+ieee8021BridgeBaseEntry_t *
+ieee8021BridgeBaseTable_createExt (
+	uint32_t u32ComponentId)
+{
+	ieee8021BridgeBaseEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021BridgeBaseTable_createEntry (
+		u32ComponentId);
+	if (poEntry == NULL)
+	{
+		goto ieee8021BridgeBaseTable_createExt_cleanup;
+	}
+	
+	if (!ieee8021BridgeBaseTable_createHier (poEntry))
+	{
+		ieee8021BridgeBaseTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto ieee8021BridgeBaseTable_createExt_cleanup;
+	}
+	
+	
+ieee8021BridgeBaseTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+ieee8021BridgeBaseTable_removeExt (ieee8021BridgeBaseEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!ieee8021BridgeBaseTable_removeHier (poEntry))
+	{
+		goto ieee8021BridgeBaseTable_removeExt_cleanup;
+	}
+	ieee8021BridgeBaseTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+	
+ieee8021BridgeBaseTable_removeExt_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgeBaseTable_createHier (
+	ieee8021BridgeBaseEntry_t *poEntry)
+{
+	return true;
+}
+
+bool
+ieee8021BridgeBaseTable_removeHier (
+	ieee8021BridgeBaseEntry_t *poEntry)
+{
+	return true;
+}
+
+bool
+ieee8021BridgeBaseRowStatus_handler (
+	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (poEntry->u8RowStatus == u8RowStatus)
+		{
+			goto ieee8021BridgeBaseRowStatus_handler_success;
+		}
+		
+		/* TODO */
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (poEntry->u8RowStatus == u8RowStatus)
+		{
+			goto ieee8021BridgeBaseRowStatus_handler_success;
+		}
+		
+		/* TODO */
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		goto ieee8021BridgeBaseRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+ieee8021BridgeBaseRowStatus_handler_success:
+	
+	return true;
+	
+	
+ieee8021BridgeBaseRowStatus_handler_cleanup:
+	
+	return false;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021BridgeBaseTable_getFirst (
@@ -416,6 +521,19 @@ ieee8021BridgeBaseTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case IEEE8021BRIDGEBASEBRIDGEADDRESS:
+			case IEEE8021BRIDGEBASECOMPONENTTYPE:
+			case IEEE8021BRIDGEBASEDEVICECAPABILITIES:
+				if (table_entry->u8RowStatus == RS_ACTIVE || table_entry->u8RowStatus == RS_NOTREADY)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			}
+			
+			switch (table_info->colnum)
+			{
 			case IEEE8021BRIDGEBASEROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
@@ -427,7 +545,7 @@ ieee8021BridgeBaseTable_mapper (
 						return SNMP_ERR_NOERROR;
 					}
 					
-					table_entry = ieee8021BridgeBaseTable_createEntry (
+					table_entry = ieee8021BridgeBaseTable_createExt (
 						*idx1->val.integer);
 					if (table_entry != NULL)
 					{
@@ -477,7 +595,7 @@ ieee8021BridgeBaseTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ieee8021BridgeBaseTable_removeEntry (table_entry);
+					ieee8021BridgeBaseTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -586,8 +704,11 @@ ieee8021BridgeBaseTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int ieee8021BridgeBaseTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
+					if (!ieee8021BridgeBaseRowStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -633,7 +754,7 @@ ieee8021BridgeBaseTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ieee8021BridgeBaseTable_removeEntry (table_entry);
+					ieee8021BridgeBaseTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -666,7 +787,7 @@ ieee8021BridgeBaseTable_mapper (
 					break;
 					
 				case RS_DESTROY:
-					ieee8021BridgeBaseTable_removeEntry (table_entry);
+					ieee8021BridgeBaseTable_removeExt (table_entry);
 					break;
 				}
 			}
