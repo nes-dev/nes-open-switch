@@ -235,6 +235,8 @@ typedef struct ieee8021BridgeBasePortEntry_t
 	uint8_t au8Name[255];
 	size_t u16Name_len;	/* # of uint8_t elements */
 	
+	struct ieee8021BridgeBasePortEntry_t *pOldEntry;
+	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeBasePortEntry_t;
 
@@ -252,6 +254,12 @@ ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
 void ieee8021BridgeBasePortTable_removeEntry (ieee8021BridgeBasePortEntry_t *poEntry);
+ieee8021BridgeBasePortEntry_t *ieee8021BridgeBasePortTable_createExt (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+bool ieee8021BridgeBasePortTable_removeExt (ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortIfIndex_handler (ieee8021BridgeBasePortEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgeBasePortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgeBasePortTable_getNext;
@@ -1012,6 +1020,14 @@ ieee8021BridgeDot1dPortEntry_t * ieee8021BridgeDot1dPortTable_getNextIndex (
 	uint32_t u32BasePortComponentId,
 	uint32_t u32BasePort);
 void ieee8021BridgeDot1dPortTable_removeEntry (ieee8021BridgeDot1dPortEntry_t *poEntry);
+ieee8021BridgeDot1dPortEntry_t * ieee8021BridgeDot1dPortTable_createExt (
+	uint32_t u32BasePortComponentId,
+	uint32_t u32BasePort);
+bool ieee8021BridgeDot1dPortTable_removeExt (ieee8021BridgeDot1dPortEntry_t *poEntry);
+bool ieee8021BridgeDot1dPortTable_createHier (ieee8021BridgeDot1dPortEntry_t *poEntry);
+bool ieee8021BridgeDot1dPortTable_removeHier (ieee8021BridgeDot1dPortEntry_t *poEntry);
+bool ieee8021BridgeDot1dPortRowStatus_handler (
+	ieee8021BridgeDot1dPortEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgeDot1dPortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgeDot1dPortTable_getNext;

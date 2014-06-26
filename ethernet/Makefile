@@ -32,7 +32,7 @@ include ${MK_COMMON}
 CFLAGS +=
 
 SNMP_SRC := ieee8021BridgeMib.c
-MODULE_SRC := ethernet_main.c ${SNMP_SRC}
+MODULE_SRC := ethernet_main.c ethernetUtils.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
 
