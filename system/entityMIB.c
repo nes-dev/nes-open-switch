@@ -1981,9 +1981,6 @@ neEntPhysicalRowStatus_handler (
 					entPhysicalContainsTable_removeEntry (poEntPhysicalContainsEntry);
 				}
 			}
-			
-			xBuffer_free (poEntry->pOldEntry);
-			poEntry->pOldEntry = NULL;
 		}
 		
 		if (poEntry->u32ContainedIn != 0 &&
@@ -2026,12 +2023,24 @@ neEntPhysicalRowStatus_handler (
 		poEntPhysicalEntry->i32Class = poEntry->i32Class;
 		
 		poEntry->u8RowStatus = xRowStatus_active_c;
+		
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
 		break;
 		
 	case xRowStatus_notInService_c:
 		if (poEntry->u8RowStatus == xRowStatus_notInService_c)
 		{
 			break;
+		}
+		
+		if (poEntry->pOldEntry == NULL &&
+			(poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+		{
+			goto neEntPhysicalRowStatus_handler_cleanup;
 		}
 		
 		if (poEntry->i32Class == neEntPhysicalClass_port_c)
@@ -2047,11 +2056,6 @@ neEntPhysicalRowStatus_handler (
 		
 		/* TODO */
 		
-		if (poEntry->pOldEntry == NULL &&
-			(poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
-		{
-			goto neEntPhysicalRowStatus_handler_cleanup;
-		}
 		memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
 		
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
@@ -2066,12 +2070,6 @@ neEntPhysicalRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (poEntry->pOldEntry != NULL)
-		{
-			xBuffer_free (poEntry->pOldEntry);
-			poEntry->pOldEntry = NULL;
-		}
-		
 		if (poEntry->i32Class == neEntPhysicalClass_port_c)
 		{
 			register neEntPortEntry_t *poNeEntPortEntry = NULL;
@@ -2110,6 +2108,13 @@ neEntPhysicalRowStatus_handler (
 		}
 		
 		/* TODO */
+		
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
+		
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		break;
 	}
@@ -3613,7 +3618,7 @@ neEntPortRowStatus_handler (
 			poEntry->pOldEntry->u32IfIndex != 0 && poEntry->pOldEntry->u32IfIndex != poEntry->u32IfIndex)
 		{
 			if (!neEntPortRowStatus_update (poEntry->pOldEntry, xRowStatus_destroy_c) ||
-				!ifTable_removeReference (poEntry->pOldEntry->u32IfIndex, false, true, false))
+				!ifData_removeReference (poEntry->pOldEntry->u32IfIndex, false, true, false))
 			{
 				goto neEntPortRowStatus_handler_cleanup;
 			}
@@ -3621,13 +3626,13 @@ neEntPortRowStatus_handler (
 			xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
 		}
 		
-		ifInfo_t oIfInfo = ifInfo_initInline (ifInfo_ifEntry_c);
+		ifData_t *poIfData = NULL;
 		
-		if (!ifTable_createReference (poEntry->u32IfIndex, 0, false, true, false, &oIfInfo))
+		if (!ifData_createReference (poEntry->u32IfIndex, 0, false, true, false, &poIfData))
 		{
 			goto neEntPortRowStatus_handler_cleanup;
 		}
-		poEntry->i32Type = oIfInfo.poIfEntry->i32Type;
+		poEntry->i32Type = poIfData->oIf.i32Type;
 		
 		if (poEntry->pOldEntry == NULL ||
 			poEntry->pOldEntry->u32IfIndex != poEntry->u32IfIndex)
@@ -3658,17 +3663,18 @@ neEntPortRowStatus_handler (
 			goto neEntPortRowStatus_handler_success;
 		}
 		
-		if (!neEntPortRowStatus_update (poEntry, u8RowStatus & xRowStatus_mask_c) ||
-			!ifTable_removeReference (poEntry->u32IfIndex, false, true, false))
-		{
-			goto neEntPortRowStatus_handler_cleanup;
-		}
-		
 		if (poEntry->pOldEntry == NULL &&
 			(poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
 		{
 			goto neEntPortRowStatus_handler_cleanup;
 		}
+		
+		if (!neEntPortRowStatus_update (poEntry, u8RowStatus & xRowStatus_mask_c) ||
+			!ifData_removeReference (poEntry->u32IfIndex, false, true, false))
+		{
+			goto neEntPortRowStatus_handler_cleanup;
+		}
+		
 		memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
 		
 		poEntry->u8RowStatus =
@@ -3688,7 +3694,7 @@ neEntPortRowStatus_handler (
 		if (poEntry->u8RowStatus == xRowStatus_active_c)
 		{
 			if (!neEntPortRowStatus_update (poEntry, u8RowStatus & xRowStatus_mask_c) ||
-				!ifTable_removeReference (poEntry->u32IfIndex, false, true, true))
+				!ifData_removeReference (poEntry->u32IfIndex, false, true, true))
 			{
 				goto neEntPortRowStatus_handler_cleanup;
 			}
@@ -3700,13 +3706,16 @@ neEntPortRowStatus_handler (
 			{
 				goto neEntPortRowStatus_handler_cleanup;
 			}
-			
-			xBuffer_free (poEntry->pOldEntry);
-			poEntry->pOldEntry = NULL;
 		}
 		
 		xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
 		break;
 	}
 	

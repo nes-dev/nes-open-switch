@@ -79,32 +79,6 @@ Netsnmp_Node_Handler ifMIBObjects_mapper;
 /**
  *	table mapper(s)
  */
-struct neIfEntry_t;
-struct ifEntry_t;
-struct ifXEntry_t;
-
-enum
-{
-	ifInfo_neIfEntry_c = 0x01,
-	ifInfo_ifEntry_c = 0x02,
-	ifInfo_ifXEntry_c = 0x04,
-	ifInfo_all_c = 0x07,
-};
-
-typedef struct ifInfo_t
-{
-	uint8_t u8Flags;
-	struct neIfEntry_t *poNeIfEntry;
-	struct ifEntry_t *poIfEntry;
-	struct ifXEntry_t *poIfXEntry;
-} ifInfo_t;
-
-#define ifInfo_initInline(_u8Flags) {.u8Flags = (_u8Flags), .poNeIfEntry = NULL, .poIfEntry = NULL, .poIfXEntry = NULL}
-
-bool ifInfo_getByIndexExt (
-	uint32_t u32Index,
-	ifInfo_t *poIfInfo, bool bWrLock);
-	
 /**
  *	table ifTable definitions
  */
@@ -422,7 +396,7 @@ enum
 typedef struct ifEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8Descr[32];
@@ -445,9 +419,7 @@ typedef struct ifEntry_t
 	uint32_t u32OutDiscards;
 	uint32_t u32OutErrors;
 	
-	uint32_t u32NumReferences;
-	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ifEntry_t;
 
 extern xBTree_t oIfTable_BTree;
@@ -461,19 +433,14 @@ ifEntry_t * ifTable_getByIndex (
 ifEntry_t * ifTable_getNextIndex (
 	uint32_t u32Index);
 void ifTable_removeEntry (ifEntry_t *poEntry);
-bool ifTable_createReference (
-	uint32_t u32IfIndex,
-	int32_t i32Type,
-	bool bCreate, bool bReference, bool bActivate,
-	ifInfo_t *poIfInfo);
-bool ifTable_removeReference (
-	uint32_t u32IfIndex,
-	bool bCreate, bool bReference, bool bActivate);
 ifEntry_t * ifTable_createExt (
 	uint32_t u32Index);
 bool ifTable_removeExt (ifEntry_t *poEntry);
 bool ifTable_createHier (ifEntry_t *poEntry);
 bool ifTable_removeHier (ifEntry_t *poEntry);
+bool ifAdminStatus_handler (
+	ifEntry_t *poEntry,
+	int32_t i32AdminStatus, bool bForce);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ifTable_getFirst;
 Netsnmp_Next_Data_Point ifTable_getNext;
@@ -524,7 +491,7 @@ enum
 typedef struct ifXEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8Name[32];
@@ -549,7 +516,7 @@ typedef struct ifXEntry_t
 	size_t u16Alias_len;	/* # of uint8_t elements */
 	uint32_t u32CounterDiscontinuityTime;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ifXEntry_t;
 
 extern xBTree_t oIfXTable_BTree;
@@ -1003,7 +970,7 @@ enum
 typedef struct neIfEntry_t
 {
 	/* Index values */
-	uint32_t u32IfIndex;
+// 	uint32_t u32IfIndex;
 	
 	/* Column values */
 	uint8_t au8Name[32];
@@ -1019,7 +986,9 @@ typedef struct neIfEntry_t
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
-	xBTree_Node_t oBTreeNode;
+	struct neIfEntry_t *poOldEntry;
+	
+// 	xBTree_Node_t oBTreeNode;
 } neIfEntry_t;
 
 extern xBTree_t oNeIfTable_BTree;
@@ -1047,6 +1016,55 @@ Netsnmp_Next_Data_Point neIfTable_getNext;
 Netsnmp_Get_Data_Point neIfTable_get;
 Netsnmp_Node_Handler neIfTable_mapper;
 #endif	/* SNMP_SRC */
+
+
+enum
+{
+	ifFlags_neIfCreated_c = 0,
+	ifFlags_ifCreated_c = 1,
+	ifFlags_ifXCreated_c = 2,
+	ifFlags_count_c,
+};
+
+typedef struct ifData_t
+{
+	uint32_t u32Index;
+	
+	neIfEntry_t oNe;
+	ifEntry_t oIf;
+	ifXEntry_t oIfX;
+	
+	uint8_t au8Flags[1];
+	uint32_t u32NumReferences;
+	
+	xBTree_Node_t oBTreeNode;
+} ifData_t;
+
+// extern xBTree_t oIfData_BTree;
+
+ifData_t * ifData_createEntry (
+	uint32_t u32Index);
+ifData_t * ifData_getByIndex (
+	uint32_t u32Index);
+ifData_t * ifData_getNextIndex (
+	uint32_t u32Index);
+#define ifData_getByNeIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oNe))
+#define ifData_getByIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oIf))
+#define ifData_getByIfXEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oIfX))
+void ifData_removeEntry (ifData_t *poEntry);
+ifData_t * ifData_getByIndexExt (
+	uint32_t u32Index, bool bWrLock);
+bool ifData_createReference (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	bool bCreate, bool bReference, bool bActivate,
+	ifData_t **ppoIfData);
+bool ifData_removeReference (
+	uint32_t u32IfIndex,
+	bool bCreate, bool bReference, bool bActivate);
+#define ifData_rdLock(poEntry) (xRwLock_rdLock (&(poEntry)->oLock))
+#define ifData_wrLock(poEntry) (xRwLock_wrLock (&(poEntry)->oLock))
+#define ifData_unLock(poEntry) (xRwLock_unlock (&(poEntry)->oLock))
 
 
 /**
