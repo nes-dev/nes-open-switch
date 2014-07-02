@@ -120,6 +120,9 @@ typedef struct ieee8021BridgeBaseEntry_t
 	int32_t i32MmrpEnabledStatus;
 	uint8_t u8RowStatus;
 	
+	uint32_t u32TpIfIndex;
+	uint32_t u32NumTpPorts;
+	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeBaseEntry_t;
 
@@ -431,6 +434,15 @@ ieee8021BridgeTpPortEntry_t * ieee8021BridgeTpPortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
 void ieee8021BridgeTpPortTable_removeEntry (ieee8021BridgeTpPortEntry_t *poEntry);
+ieee8021BridgeTpPortEntry_t * ieee8021BridgeTpPortTable_createExt (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+bool ieee8021BridgeTpPortTable_removeExt (ieee8021BridgeTpPortEntry_t *poEntry);
+bool ieee8021BridgeTpPortTable_createHier (ieee8021BridgeTpPortEntry_t *poEntry);
+bool ieee8021BridgeTpPortTable_removeHier (ieee8021BridgeTpPortEntry_t *poEntry);
+bool ieee8021BridgeTpPortTable_handler (
+	uint32_t u32IfIndex,
+	bool bEnable);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgeTpPortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgeTpPortTable_getNext;

@@ -594,6 +594,9 @@ ifStackEntry_t * ifStackTable_createExt (
 bool ifStackTable_removeExt (ifStackEntry_t *poEntry);
 bool ifStackTable_createHier (ifStackEntry_t *poEntry);
 bool ifStackTable_removeHier (ifStackEntry_t *poEntry);
+bool ifStackStatus_handler (
+	ifStackEntry_t *poEntry,
+	uint8_t u8Status);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ifStackTable_getFirst;
 Netsnmp_Next_Data_Point ifStackTable_getNext;
@@ -1020,6 +1023,8 @@ Netsnmp_Node_Handler neIfTable_mapper;
 
 enum
 {
+	ifIndex_zero_c = 0,
+	
 	ifFlags_neIfCreated_c = 0,
 	ifFlags_ifCreated_c = 1,
 	ifFlags_ifXCreated_c = 2,

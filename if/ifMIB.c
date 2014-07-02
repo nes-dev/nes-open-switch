@@ -1530,6 +1530,15 @@ ifStackTable_removeHier (
 	return true;
 }
 
+bool ifStackStatus_handler (
+	ifStackEntry_t *poEntry,
+	uint8_t u8Status)
+{
+	oIfMIBObjects.u32StackLastChange += 0;	/* TODO */
+	
+	return false;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ifStackTable_getFirst (
