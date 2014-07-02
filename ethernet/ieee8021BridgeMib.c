@@ -88,6 +88,7 @@ ieee8021BridgeMib_init (void)
 
 ieee8021Bridge_t oBridge =
 {
+	.oComponentLock = xRwLock_initInline (),
 	.oPhyPortLock = xRwLock_initInline (),
 };
 
@@ -165,6 +166,7 @@ ieee8021BridgeBaseTable_createEntry (
 	poEntry->i32TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_true_c;
 	poEntry->i32MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_true_c;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	xRwLock_init (&poEntry->oLock, NULL);
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021BridgeBaseTable_BTree);
 	return poEntry;
@@ -227,6 +229,7 @@ ieee8021BridgeBaseTable_removeEntry (ieee8021BridgeBaseEntry_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021BridgeBaseTable_BTree);
+	xRwLock_destroy (&poEntry->oLock);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
@@ -289,6 +292,78 @@ ieee8021BridgeBaseTable_removeHier (
 	return true;
 }
 
+bool ieee8021BridgeBaseTrafficClassesEnabled_handler (
+	ieee8021BridgeBaseEntry_t *poEntry, int32_t i32TrafficClassesEnabled, bool bForce)
+{
+	if (poEntry->i32TrafficClassesEnabled == i32TrafficClassesEnabled && !bForce)
+	{
+		goto ieee8021BridgeBaseTrafficClassesEnabled_handler_success;
+	}
+	
+	switch (i32TrafficClassesEnabled)
+	{
+	default:
+		goto ieee8021BridgeBaseTrafficClassesEnabled_handler_cleanup;
+		
+	case ieee8021BridgeBaseTrafficClassesEnabled_true_c:
+		/* TODO */
+		
+		!bForce ? (poEntry->i32TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_true_c): false;
+		break;
+		
+	case ieee8021BridgeBaseTrafficClassesEnabled_false_c:
+		/* TODO */
+		
+		!bForce ? (poEntry->i32TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_false_c): false;
+		break;
+	}
+	
+ieee8021BridgeBaseTrafficClassesEnabled_handler_success:
+	
+	return true;
+	
+	
+ieee8021BridgeBaseTrafficClassesEnabled_handler_cleanup:
+	
+	return false;
+}
+
+bool ieee8021BridgeBaseMmrpEnabledStatus_handler (
+	ieee8021BridgeBaseEntry_t *poEntry, int32_t i32MmrpEnabledStatus, bool bForce)
+{
+	if (poEntry->i32MmrpEnabledStatus == i32MmrpEnabledStatus && !bForce)
+	{
+		goto ieee8021BridgeBaseMmrpEnabledStatus_handler_success;
+	}
+	
+	switch (i32MmrpEnabledStatus)
+	{
+	default:
+		goto ieee8021BridgeBaseMmrpEnabledStatus_handler_cleanup;
+		
+	case ieee8021BridgeBaseMmrpEnabledStatus_true_c:
+		/* TODO */
+		
+		!bForce ? (poEntry->i32MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_true_c): false;
+		break;
+		
+	case ieee8021BridgeBaseMmrpEnabledStatus_false_c:
+		/* TODO */
+		
+		!bForce ? (poEntry->i32MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_false_c): false;
+		break;
+	}
+	
+ieee8021BridgeBaseMmrpEnabledStatus_handler_success:
+	
+	return true;
+	
+	
+ieee8021BridgeBaseMmrpEnabledStatus_handler_cleanup:
+	
+	return false;
+}
+
 bool
 ieee8021BridgeBaseRowStatus_handler (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus)
@@ -303,6 +378,14 @@ ieee8021BridgeBaseRowStatus_handler (
 		
 		/* TODO */
 		
+		if (!ieee8021BridgeBaseTrafficClassesEnabled_handler (poEntry, poEntry->i32TrafficClassesEnabled, true))
+		{
+			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
+		}
+		if (!ieee8021BridgeBaseMmrpEnabledStatus_handler (poEntry, poEntry->i32MmrpEnabledStatus, true))
+		{
+			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
+		}
 		if (!ieee8021BridgeBaseRowStatus_update (poEntry, u8RowStatus))
 		{
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
@@ -699,7 +782,11 @@ ieee8021BridgeBaseTable_mapper (
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32TrafficClassesEnabled = *request->requestvb->val.integer;
+				if (!ieee8021BridgeBaseTrafficClassesEnabled_handler (table_entry, *request->requestvb->val.integer, false))
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+					return SNMP_ERR_NOERROR;
+				}
 				break;
 			case IEEE8021BRIDGEBASEMMRPENABLEDSTATUS:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32MmrpEnabledStatus))) == NULL)
@@ -713,7 +800,11 @@ ieee8021BridgeBaseTable_mapper (
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32MmrpEnabledStatus = *request->requestvb->val.integer;
+				if (!ieee8021BridgeBaseMmrpEnabledStatus_handler (table_entry, *request->requestvb->val.integer, false))
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+					return SNMP_ERR_NOERROR;
+				}
 				break;
 			}
 		}
@@ -2152,6 +2243,7 @@ ieee8021BridgeTpPortTable_createHier (
 	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32ComponentId)) == NULL ||
 		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port)) == NULL ||
 		(poIeee8021BridgeDot1dPortEntry = ieee8021BridgeDot1dPortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port)) == NULL ||
+		poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c || poIeee8021BridgeDot1dPortEntry->u8RowStatus != xRowStatus_active_c ||
 		poIeee8021BridgeBasePortEntry->u32IfIndex == 0)
 	{
 		goto ieee8021BridgeTpPortTable_createHier_cleanup;
@@ -5808,6 +5900,65 @@ ieee8021BridgeILanIfTable_removeEntry (ieee8021BridgeILanIfEntry_t *poEntry)
 	return;
 }
 
+ieee8021BridgeILanIfEntry_t *
+ieee8021BridgeILanIfTable_createExt (
+	uint32_t u32IfIndex)
+{
+	ieee8021BridgeILanIfEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021BridgeILanIfTable_createEntry (
+		u32IfIndex);
+	if (poEntry == NULL)
+	{
+		return NULL;
+	}
+	
+	if (!ieee8021BridgeILanIfTable_createHier (poEntry))
+	{
+		ieee8021BridgeILanIfTable_removeEntry (poEntry);
+		return NULL;
+	}
+	
+	return poEntry;
+}
+
+bool
+ieee8021BridgeILanIfTable_removeExt (ieee8021BridgeILanIfEntry_t *poEntry)
+{
+	if (!ieee8021BridgeILanIfTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021BridgeILanIfTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021BridgeILanIfTable_createHier (
+	ieee8021BridgeILanIfEntry_t *poEntry)
+{
+	if (!ifData_createReference (poEntry->u32IfIndex, ifType_ilan_c, true, true, true, NULL))
+	{
+		goto ieee8021BridgeILanIfTable_createHier_cleanup;
+	}
+	
+	return true;
+	
+	
+ieee8021BridgeILanIfTable_createHier_cleanup:
+	
+	ieee8021BridgeILanIfTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+ieee8021BridgeILanIfTable_removeHier (
+	ieee8021BridgeILanIfEntry_t *poEntry)
+{
+	return ifData_removeReference (poEntry->u32IfIndex, true, true, true);
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021BridgeILanIfTable_getFirst (
@@ -5947,7 +6098,7 @@ ieee8021BridgeILanIfTable_mapper (
 						return SNMP_ERR_NOERROR;
 					}
 					
-					table_entry = ieee8021BridgeILanIfTable_createEntry (
+					table_entry = ieee8021BridgeILanIfTable_createExt (
 						*idx1->val.integer);
 					if (table_entry != NULL)
 					{
@@ -5997,7 +6148,7 @@ ieee8021BridgeILanIfTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ieee8021BridgeILanIfTable_removeEntry (table_entry);
+					ieee8021BridgeILanIfTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -6058,7 +6209,7 @@ ieee8021BridgeILanIfTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ieee8021BridgeILanIfTable_removeEntry (table_entry);
+					ieee8021BridgeILanIfTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -6091,7 +6242,7 @@ ieee8021BridgeILanIfTable_mapper (
 					break;
 					
 				case RS_DESTROY:
-					ieee8021BridgeILanIfTable_removeEntry (table_entry);
+					ieee8021BridgeILanIfTable_removeExt (table_entry);
 					break;
 				}
 			}
@@ -6299,7 +6450,7 @@ ieee8021BridgeDot1dPortTable_createHier (
 	}
 	
 	if (ieee8021BridgeTpPortTable_getByIndex (poEntry->u32BasePortComponentId, poEntry->u32BasePort) == NULL &&
-		ieee8021BridgeTpPortTable_createEntry (poEntry->u32BasePortComponentId, poEntry->u32BasePort) == NULL)
+		ieee8021BridgeTpPortTable_createExt (poEntry->u32BasePortComponentId, poEntry->u32BasePort) == NULL)
 	{
 		goto ieee8021BridgeDot1dPortTable_createHier_cleanup;
 	}
@@ -6366,7 +6517,7 @@ ieee8021BridgeDot1dPortTable_removeHier (
 	
 	if ((poIeee8021BridgeTpPortEntry = ieee8021BridgeTpPortTable_getByIndex (poEntry->u32BasePortComponentId, poEntry->u32BasePort)) != NULL)
 	{
-		ieee8021BridgeTpPortTable_removeEntry (poIeee8021BridgeTpPortEntry);
+		ieee8021BridgeTpPortTable_removeExt (poIeee8021BridgeTpPortEntry);
 	}
 	
 	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BasePortComponentId, poEntry->u32BasePort)) != NULL)

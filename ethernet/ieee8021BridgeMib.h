@@ -27,6 +27,9 @@ extern "C" {
 
 
 
+#include "ethernet_ext.h"
+#include "if/ifMIB.h"
+
 #include "lib/binaryTree.h"
 #include "lib/sync.h"
 #include "lib/snmp.h"
@@ -44,10 +47,15 @@ void ieee8021BridgeMib_init (void);
 
 typedef struct ieee8021Bridge_t
 {
+	xRwLock_t oComponentLock;
 	xRwLock_t oPhyPortLock;
 } ieee8021Bridge_t;
 
 extern ieee8021Bridge_t oBridge;
+
+#define ieee8021Bridge_wrLock() (xRwLock_wrLock (&oBridge.oComponentLock))
+#define ieee8021Bridge_rdLock() (xRwLock_rdLock (&oBridge.oComponentLock))
+#define ieee8021Bridge_unLock() (xRwLock_unlock (&oBridge.oComponentLock))
 
 
 /**
@@ -124,9 +132,14 @@ typedef struct ieee8021BridgeBaseEntry_t
 	uint32_t u32NumTpPorts;
 	
 	xBTree_Node_t oBTreeNode;
+	xRwLock_t oLock;
 } ieee8021BridgeBaseEntry_t;
 
 extern xBTree_t oIeee8021BridgeBaseTable_BTree;
+
+#define ieee8021BridgeBase_wrLock(poEntry) (xRwLock_wrLock (&(poEntry)->oLock))
+#define ieee8021BridgeBase_rdLock(poEntry) (xRwLock_rdLock (&(poEntry)->oLock))
+#define ieee8021BridgeBase_unLock(poEntry) (xRwLock_unlock (&(poEntry)->oLock))
 
 /* ieee8021BridgeBaseTable table mapper */
 void ieee8021BridgeBaseTable_init (void);
@@ -142,6 +155,10 @@ ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_createExt (
 bool ieee8021BridgeBaseTable_removeExt (ieee8021BridgeBaseEntry_t *poEntry);
 bool ieee8021BridgeBaseTable_createHier (ieee8021BridgeBaseEntry_t *poEntry);
 bool ieee8021BridgeBaseTable_removeHier (ieee8021BridgeBaseEntry_t *poEntry);
+bool ieee8021BridgeBaseTrafficClassesEnabled_handler (
+	ieee8021BridgeBaseEntry_t *poEntry, int32_t i32TrafficClassesEnabled, bool bForce);
+bool ieee8021BridgeBaseMmrpEnabledStatus_handler (
+	ieee8021BridgeBaseEntry_t *poEntry, int32_t i32MmrpEnabledStatus, bool bForce);
 bool ieee8021BridgeBaseRowStatus_handler (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
@@ -981,6 +998,11 @@ ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_getByIndex (
 ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_getNextIndex (
 	uint32_t u32IfIndex);
 void ieee8021BridgeILanIfTable_removeEntry (ieee8021BridgeILanIfEntry_t *poEntry);
+ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_createExt (
+	uint32_t u32IfIndex);
+bool ieee8021BridgeILanIfTable_removeExt (ieee8021BridgeILanIfEntry_t *poEntry);
+bool ieee8021BridgeILanIfTable_createHier (ieee8021BridgeILanIfEntry_t *poEntry);
+bool ieee8021BridgeILanIfTable_removeHier (ieee8021BridgeILanIfEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgeILanIfTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgeILanIfTable_getNext;
