@@ -29,6 +29,8 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
@@ -207,9 +209,9 @@ ieee8021QBridgeEntry_t *
 ieee8021QBridgeTable_createEntry (
 	uint32_t u32ComponentId)
 {
-	ieee8021QBridgeEntry_t *poEntry = NULL;
+	register ieee8021QBridgeEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -221,6 +223,9 @@ ieee8021QBridgeTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->i32VlanVersionNumber = ieee8021QBridgeVlanVersionNumber_version2_c;
+	poEntry->i32MaxVlanId = 4095;
+	poEntry->u32MaxSupportedVlans = 4095;
 	poEntry->i32MvrpEnabledStatus = ieee8021QBridgeMvrpEnabledStatus_true_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeTable_BTree);
@@ -257,7 +262,7 @@ ieee8021QBridgeTable_getNextIndex (
 	register ieee8021QBridgeEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -286,6 +291,319 @@ ieee8021QBridgeTable_removeEntry (ieee8021QBridgeEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021QBridgeTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ieee8021QBridgeEntry_t *
+ieee8021QBridgeTable_createExt (
+	uint32_t u32ComponentId)
+{
+	ieee8021QBridgeEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021QBridgeTable_createEntry (
+		u32ComponentId);
+	if (poEntry == NULL)
+	{
+		return NULL;
+	}
+	
+	if (!ieee8021QBridgeTable_createHier (poEntry))
+	{
+		ieee8021QBridgeTable_removeEntry (poEntry);
+		return NULL;
+	}
+	
+	return poEntry;
+}
+
+bool
+ieee8021QBridgeTable_removeExt (ieee8021QBridgeEntry_t *poEntry)
+{
+	if (!ieee8021QBridgeTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021QBridgeTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021QBridgeTable_createHier (
+	ieee8021QBridgeEntry_t *poEntry)
+{
+	register ieee8021QBridgeNextFreeLocalVlanEntry_t *poIeee8021QBridgeNextFreeLocalVlanEntry = NULL;
+	register ieee8021QBridgeLearningConstraintDefaultsEntry_t *poIeee8021QBridgeLearningConstraintDefaultsEntry = NULL;
+	
+	if ((poIeee8021QBridgeNextFreeLocalVlanEntry = ieee8021QBridgeNextFreeLocalVlanTable_getByIndex (poEntry->u32ComponentId)) == NULL &&
+		(poIeee8021QBridgeNextFreeLocalVlanEntry = ieee8021QBridgeNextFreeLocalVlanTable_createEntry (poEntry->u32ComponentId)) == NULL)
+	{
+		goto ieee8021QBridgeTable_createHier_cleanup;
+	}
+	
+	if ((poIeee8021QBridgeLearningConstraintDefaultsEntry = ieee8021QBridgeLearningConstraintDefaultsTable_getByIndex (poEntry->u32ComponentId)) == NULL &&
+		(poIeee8021QBridgeLearningConstraintDefaultsEntry = ieee8021QBridgeLearningConstraintDefaultsTable_createEntry (poEntry->u32ComponentId)) == NULL)
+	{
+		goto ieee8021QBridgeTable_createHier_cleanup;
+	}
+	
+	return true;
+	
+	
+ieee8021QBridgeTable_createHier_cleanup:
+	
+	ieee8021QBridgeTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+ieee8021QBridgeTable_removeHier (
+	ieee8021QBridgeEntry_t *poEntry)
+{
+	{
+		uint32_t u32FdbId = 0;
+		uint8_t au8Address[6] = {0};
+		size_t u16Address_len = 0;
+		register ieee8021QBridgeTpFdbEntry_t *poIeee8021QBridgeTpFdbEntry = NULL;
+		
+		while ((poIeee8021QBridgeTpFdbEntry = ieee8021QBridgeTpFdbTable_getNextIndex (poEntry->u32ComponentId, u32FdbId, au8Address, u16Address_len)) != NULL &&
+			poIeee8021QBridgeTpFdbEntry->u32FdbComponentId == poEntry->u32ComponentId)
+		{
+			u32FdbId = poIeee8021QBridgeTpFdbEntry->u32FdbId;
+			memcpy (au8Address, poIeee8021QBridgeTpFdbEntry->au8Address, sizeof (au8Address));
+			u16Address_len = poIeee8021QBridgeTpFdbEntry->u16Address_len;
+			ieee8021QBridgeTpFdbTable_removeEntry (poIeee8021QBridgeTpFdbEntry);
+		}
+	}
+	
+	{
+		uint32_t u32Id = 0;
+		register ieee8021QBridgeFdbEntry_t *poIeee8021QBridgeFdbEntry = NULL;
+		
+		while ((poIeee8021QBridgeFdbEntry = ieee8021QBridgeFdbTable_getNextIndex (poEntry->u32ComponentId, u32Id)) != NULL &&
+			poIeee8021QBridgeFdbEntry->u32ComponentId == poEntry->u32ComponentId)
+		{
+			u32Id = poIeee8021QBridgeFdbEntry->u32Id;
+			ieee8021QBridgeFdbTable_removeEntry (poIeee8021QBridgeFdbEntry);
+		}
+	}
+	
+	{
+		uint32_t u32VlanIndex = 0;
+		uint8_t au8Address[6] = {0};
+		size_t u16Address_len = 0;
+		register ieee8021QBridgeTpGroupEntry_t *poIeee8021QBridgeTpGroupEntry = NULL;
+		
+		while ((poIeee8021QBridgeTpGroupEntry = ieee8021QBridgeTpGroupTable_getNextIndex (poEntry->u32ComponentId, u32VlanIndex, au8Address, u16Address_len)) != NULL &&
+			poIeee8021QBridgeTpGroupEntry->u32VlanCurrentComponentId == poEntry->u32ComponentId)
+		{
+			u32VlanIndex = poIeee8021QBridgeTpGroupEntry->u32VlanIndex;
+			memcpy (au8Address, poIeee8021QBridgeTpGroupEntry->au8Address, sizeof (au8Address));
+			u16Address_len = poIeee8021QBridgeTpGroupEntry->u16Address_len;
+			ieee8021QBridgeTpGroupTable_removeEntry (poIeee8021QBridgeTpGroupEntry);
+		}
+	}
+	
+	{
+		uint32_t u32VlanIndex = 0;
+		register ieee8021QBridgeForwardAllEntry_t *poIeee8021QBridgeForwardAllEntry = NULL;
+		
+		while ((poIeee8021QBridgeForwardAllEntry = ieee8021QBridgeForwardAllTable_getNextIndex (poEntry->u32ComponentId, u32VlanIndex)) != NULL &&
+			poIeee8021QBridgeForwardAllEntry->u32VlanCurrentComponentId == poEntry->u32ComponentId)
+		{
+			u32VlanIndex = poIeee8021QBridgeForwardAllEntry->u32VlanIndex;
+			ieee8021QBridgeForwardAllTable_removeEntry (poIeee8021QBridgeForwardAllEntry);
+		}
+	}
+	
+	{
+		uint32_t u32VlanIndex = 0;
+		register ieee8021QBridgeForwardUnregisteredEntry_t *poIeee8021QBridgeForwardUnregisteredEntry = NULL;
+		
+		while ((poIeee8021QBridgeForwardUnregisteredEntry = ieee8021QBridgeForwardUnregisteredTable_getNextIndex (poEntry->u32ComponentId, u32VlanIndex)) != NULL &&
+			poIeee8021QBridgeForwardUnregisteredEntry->u32VlanCurrentComponentId == poEntry->u32ComponentId)
+		{
+			u32VlanIndex = poIeee8021QBridgeForwardUnregisteredEntry->u32VlanIndex;
+			ieee8021QBridgeForwardUnregisteredTable_removeEntry (poIeee8021QBridgeForwardUnregisteredEntry);
+		}
+	}
+	
+	{
+		uint32_t u32VlanIndex = 0;
+		uint8_t au8Address[6] = {0};
+		size_t u16Address_len = 0;
+		uint32_t u32ReceivePort = 0;
+		register ieee8021QBridgeStaticUnicastEntry_t *poIeee8021QBridgeStaticUnicastEntry = NULL;
+		
+		while ((poIeee8021QBridgeStaticUnicastEntry = ieee8021QBridgeStaticUnicastTable_getNextIndex (poEntry->u32ComponentId, u32VlanIndex, au8Address, u16Address_len, u32ReceivePort)) != NULL &&
+			poIeee8021QBridgeStaticUnicastEntry->u32ComponentId == poEntry->u32ComponentId)
+		{
+			u32VlanIndex = poIeee8021QBridgeStaticUnicastEntry->u32VlanIndex;
+			memcpy (au8Address, poIeee8021QBridgeStaticUnicastEntry->au8Address, sizeof (au8Address));
+			u16Address_len = poIeee8021QBridgeStaticUnicastEntry->u16Address_len;
+			u32ReceivePort = poIeee8021QBridgeStaticUnicastEntry->u32ReceivePort;
+			ieee8021QBridgeStaticUnicastTable_removeEntry (poIeee8021QBridgeStaticUnicastEntry);
+		}
+	}
+	
+	{
+		uint32_t u32VlanIndex = 0;
+		uint8_t au8Address[6] = {0};
+		size_t u16Address_len = 0;
+		uint32_t u32ReceivePort = 0;
+		register ieee8021QBridgeStaticMulticastEntry_t *poIeee8021QBridgeStaticMulticastEntry = NULL;
+		
+		while ((poIeee8021QBridgeStaticMulticastEntry = ieee8021QBridgeStaticMulticastTable_getNextIndex (poEntry->u32ComponentId, u32VlanIndex, au8Address, u16Address_len, u32ReceivePort)) != NULL &&
+			poIeee8021QBridgeStaticMulticastEntry->u32VlanCurrentComponentId == poEntry->u32ComponentId)
+		{
+			u32VlanIndex = poIeee8021QBridgeStaticMulticastEntry->u32VlanIndex;
+			memcpy (au8Address, poIeee8021QBridgeStaticMulticastEntry->au8Address, sizeof (au8Address));
+			u16Address_len = poIeee8021QBridgeStaticMulticastEntry->u16Address_len;
+			u32ReceivePort = poIeee8021QBridgeStaticMulticastEntry->u32ReceivePort;
+			ieee8021QBridgeStaticMulticastTable_removeEntry (poIeee8021QBridgeStaticMulticastEntry);
+		}
+	}
+	
+	{
+		uint32_t u32BridgeBasePort = 0;
+		int32_t i32GroupId = 0;
+		register ieee8021QBridgeProtocolPortEntry_t *poIeee8021QBridgeProtocolPortEntry = NULL;
+		
+		while ((poIeee8021QBridgeProtocolPortEntry = ieee8021QBridgeProtocolPortTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort, i32GroupId)) != NULL &&
+			poIeee8021QBridgeProtocolPortEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
+		{
+			u32BridgeBasePort = poIeee8021QBridgeProtocolPortEntry->u32BridgeBasePort;
+			i32GroupId = poIeee8021QBridgeProtocolPortEntry->i32GroupId;
+			ieee8021QBridgeProtocolPortTable_removeEntry (poIeee8021QBridgeProtocolPortEntry);
+		}
+	}
+	
+	{
+		int32_t i32TemplateFrameType = 0;
+		uint8_t au8TemplateProtocolValue[5] = {0};
+		size_t u16TemplateProtocolValue_len = 0;
+		register ieee8021QBridgeProtocolGroupEntry_t *poIeee8021QBridgeProtocolGroupEntry = NULL;
+		
+		while ((poIeee8021QBridgeProtocolGroupEntry = ieee8021QBridgeProtocolGroupTable_getNextIndex (poEntry->u32ComponentId, i32TemplateFrameType, au8TemplateProtocolValue, u16TemplateProtocolValue_len)) != NULL &&
+			poIeee8021QBridgeProtocolGroupEntry->u32ComponentId == poEntry->u32ComponentId)
+		{
+			i32TemplateFrameType = poIeee8021QBridgeProtocolGroupEntry->i32TemplateFrameType;
+			memcpy (au8TemplateProtocolValue, poIeee8021QBridgeProtocolGroupEntry->au8TemplateProtocolValue, sizeof (au8TemplateProtocolValue));
+			u16TemplateProtocolValue_len = poIeee8021QBridgeProtocolGroupEntry->u16TemplateProtocolValue_len;
+			ieee8021QBridgeProtocolGroupTable_removeEntry (poIeee8021QBridgeProtocolGroupEntry);
+		}
+	}
+	
+	{
+		uint32_t u32BridgeBasePort = 0;
+		int32_t i32LocalVid = 0;
+		register ieee8021QBridgeVIDXEntry_t *poIeee8021QBridgeVIDXEntry = NULL;
+		
+		while ((poIeee8021QBridgeVIDXEntry = ieee8021QBridgeVIDXTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort, i32LocalVid)) != NULL &&
+			poIeee8021QBridgeVIDXEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
+		{
+			u32BridgeBasePort = poIeee8021QBridgeVIDXEntry->u32BridgeBasePort;
+			i32LocalVid = poIeee8021QBridgeVIDXEntry->i32LocalVid;
+			ieee8021QBridgeVIDXTable_removeEntry (poIeee8021QBridgeVIDXEntry);
+		}
+	}
+	
+	{
+		uint32_t u32BridgeBasePort = 0;
+		int32_t i32RelayVid = 0;
+		register ieee8021QBridgeEgressVidXEntry_t *poIeee8021QBridgeEgressVidXEntry = NULL;
+		
+		while ((poIeee8021QBridgeEgressVidXEntry = ieee8021QBridgeEgressVidXTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort, i32RelayVid)) != NULL &&
+			poIeee8021QBridgeEgressVidXEntry->u32BridgeBaseComponentId == poEntry->u32ComponentId)
+		{
+			u32BridgeBasePort = poIeee8021QBridgeEgressVidXEntry->u32BridgeBasePort;
+			i32RelayVid = poIeee8021QBridgeEgressVidXEntry->i32RelayVid;
+			ieee8021QBridgeEgressVidXTable_removeEntry (poIeee8021QBridgeEgressVidXEntry);
+		}
+	}
+	
+	{
+		uint32_t u32Number = 0;
+		register ieee8021QBridgeCVlanPortEntry_t *poIeee8021QBridgeCVlanPortEntry = NULL;
+		
+		while ((poIeee8021QBridgeCVlanPortEntry = ieee8021QBridgeCVlanPortTable_getNextIndex (poEntry->u32ComponentId, u32Number)) != NULL &&
+			poIeee8021QBridgeCVlanPortEntry->u32ComponentId == poEntry->u32ComponentId)
+		{
+			u32Number = poIeee8021QBridgeCVlanPortEntry->u32Number;
+			ieee8021QBridgeCVlanPortTable_removeEntry (poIeee8021QBridgeCVlanPortEntry);
+		}
+	}
+	
+	{
+		uint32_t u32Vlan = 0;
+		int32_t i32Set = 0;
+		register ieee8021QBridgeLearningConstraintsEntry_t *poIeee8021QBridgeLearningConstraintsEntry = NULL;
+		
+		while ((poIeee8021QBridgeLearningConstraintsEntry = ieee8021QBridgeLearningConstraintsTable_getNextIndex (poEntry->u32ComponentId, u32Vlan, i32Set)) != NULL &&
+			poIeee8021QBridgeLearningConstraintsEntry->u32ComponentId == poEntry->u32ComponentId)
+		{
+			u32Vlan = poIeee8021QBridgeLearningConstraintsEntry->u32Vlan;
+			i32Set = poIeee8021QBridgeLearningConstraintsEntry->i32Set;
+			ieee8021QBridgeLearningConstraintsTable_removeEntry (poIeee8021QBridgeLearningConstraintsEntry);
+		}
+	}
+	
+	{
+		register ieee8021QBridgeLearningConstraintDefaultsEntry_t *poIeee8021QBridgeLearningConstraintDefaultsEntry = NULL;
+		
+		if ((poIeee8021QBridgeLearningConstraintDefaultsEntry = ieee8021QBridgeLearningConstraintDefaultsTable_getNextIndex (poEntry->u32ComponentId)) != NULL)
+		{
+			ieee8021QBridgeLearningConstraintDefaultsTable_removeEntry (poIeee8021QBridgeLearningConstraintDefaultsEntry);
+		}
+	}
+	
+	{
+		uint32_t u32BridgeBasePort = 0;
+		uint32_t u32QBridgeVlanIndex = 0;
+		register ieee8021QBridgePortVlanStatisticsEntry_t *poIeee8021QBridgePortVlanStatisticsEntry = NULL;
+		
+		while ((poIeee8021QBridgePortVlanStatisticsEntry = ieee8021QBridgePortVlanStatisticsTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort, u32QBridgeVlanIndex)) != NULL &&
+			poIeee8021QBridgePortVlanStatisticsEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
+		{
+			u32BridgeBasePort = poIeee8021QBridgePortVlanStatisticsEntry->u32BridgeBasePort;
+			u32QBridgeVlanIndex = poIeee8021QBridgePortVlanStatisticsEntry->u32QBridgeVlanIndex;
+			ieee8021QBridgePortVlanStatisticsTable_removeEntry (poIeee8021QBridgePortVlanStatisticsEntry);
+		}
+	}
+	
+	{
+		uint32_t u32BridgeBasePort = 0;
+		register ieee8021QBridgePortVlanEntry_t *poIeee8021QBridgePortVlanEntry = NULL;
+		
+		while ((poIeee8021QBridgePortVlanEntry = ieee8021QBridgePortVlanTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort)) != NULL &&
+			poIeee8021QBridgePortVlanEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
+		{
+			u32BridgeBasePort = poIeee8021QBridgePortVlanEntry->u32BridgeBasePort;
+			ieee8021QBridgePortVlanTable_removeEntry (poIeee8021QBridgePortVlanEntry);
+		}
+	}
+	
+	{
+		uint32_t u32VlanIndex = 0;
+		register ieee8021QBridgeVlanStaticEntry_t *poIeee8021QBridgeVlanStaticEntry = NULL;
+		
+		while ((poIeee8021QBridgeVlanStaticEntry = ieee8021QBridgeVlanStaticTable_getNextIndex (poEntry->u32ComponentId, u32VlanIndex)) != NULL &&
+			poIeee8021QBridgeVlanStaticEntry->u32ComponentId == poEntry->u32ComponentId)
+		{
+			u32VlanIndex = poIeee8021QBridgeVlanStaticEntry->u32VlanIndex;
+			ieee8021QBridgeVlanStaticTable_removeEntry (poIeee8021QBridgeVlanStaticEntry);
+		}
+	}
+	
+	{
+		register ieee8021QBridgeNextFreeLocalVlanEntry_t *poIeee8021QBridgeNextFreeLocalVlanEntry = NULL;
+		
+		if ((poIeee8021QBridgeNextFreeLocalVlanEntry = ieee8021QBridgeNextFreeLocalVlanTable_getByIndex (poEntry->u32ComponentId)) != NULL)
+		{
+			ieee8021QBridgeNextFreeLocalVlanTable_removeEntry (poIeee8021QBridgeNextFreeLocalVlanEntry);
+		}
+	}
+	
+	return true;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -546,9 +864,9 @@ ieee8021QBridgeCVlanPortTable_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32Number)
 {
-	ieee8021QBridgeCVlanPortEntry_t *poEntry = NULL;
+	register ieee8021QBridgeCVlanPortEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeCVlanPortEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -575,7 +893,7 @@ ieee8021QBridgeCVlanPortTable_getByIndex (
 	register ieee8021QBridgeCVlanPortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeCVlanPortEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -600,7 +918,7 @@ ieee8021QBridgeCVlanPortTable_getNextIndex (
 	register ieee8021QBridgeCVlanPortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeCVlanPortEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -988,9 +1306,9 @@ ieee8021QBridgeFdbTable_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32Id)
 {
-	ieee8021QBridgeFdbEntry_t *poEntry = NULL;
+	register ieee8021QBridgeFdbEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeFdbEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1015,7 +1333,7 @@ ieee8021QBridgeFdbTable_getByIndex (
 	register ieee8021QBridgeFdbEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeFdbEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1040,7 +1358,7 @@ ieee8021QBridgeFdbTable_getNextIndex (
 	register ieee8021QBridgeFdbEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeFdbEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1331,9 +1649,9 @@ ieee8021QBridgeTpFdbTable_createEntry (
 	uint32_t u32FdbId,
 	uint8_t *pau8Address, size_t u16Address_len)
 {
-	ieee8021QBridgeTpFdbEntry_t *poEntry = NULL;
+	register ieee8021QBridgeTpFdbEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeTpFdbEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1361,7 +1679,7 @@ ieee8021QBridgeTpFdbTable_getByIndex (
 	register ieee8021QBridgeTpFdbEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeTpFdbEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1389,7 +1707,7 @@ ieee8021QBridgeTpFdbTable_getNextIndex (
 	register ieee8021QBridgeTpFdbEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeTpFdbEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1588,9 +1906,9 @@ ieee8021QBridgeTpGroupTable_createEntry (
 	uint32_t u32VlanIndex,
 	uint8_t *pau8Address, size_t u16Address_len)
 {
-	ieee8021QBridgeTpGroupEntry_t *poEntry = NULL;
+	register ieee8021QBridgeTpGroupEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeTpGroupEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1618,7 +1936,7 @@ ieee8021QBridgeTpGroupTable_getByIndex (
 	register ieee8021QBridgeTpGroupEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeTpGroupEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1646,7 +1964,7 @@ ieee8021QBridgeTpGroupTable_getNextIndex (
 	register ieee8021QBridgeTpGroupEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeTpGroupEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1842,9 +2160,9 @@ ieee8021QBridgeForwardAllTable_createEntry (
 	uint32_t u32VlanCurrentComponentId,
 	uint32_t u32VlanIndex)
 {
-	ieee8021QBridgeForwardAllEntry_t *poEntry = NULL;
+	register ieee8021QBridgeForwardAllEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeForwardAllEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1869,7 +2187,7 @@ ieee8021QBridgeForwardAllTable_getByIndex (
 	register ieee8021QBridgeForwardAllEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeForwardAllEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1894,7 +2212,7 @@ ieee8021QBridgeForwardAllTable_getNextIndex (
 	register ieee8021QBridgeForwardAllEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeForwardAllEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2217,9 +2535,9 @@ ieee8021QBridgeForwardUnregisteredTable_createEntry (
 	uint32_t u32VlanCurrentComponentId,
 	uint32_t u32VlanIndex)
 {
-	ieee8021QBridgeForwardUnregisteredEntry_t *poEntry = NULL;
+	register ieee8021QBridgeForwardUnregisteredEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeForwardUnregisteredEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2244,7 +2562,7 @@ ieee8021QBridgeForwardUnregisteredTable_getByIndex (
 	register ieee8021QBridgeForwardUnregisteredEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeForwardUnregisteredEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2269,7 +2587,7 @@ ieee8021QBridgeForwardUnregisteredTable_getNextIndex (
 	register ieee8021QBridgeForwardUnregisteredEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeForwardUnregisteredEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2598,9 +2916,9 @@ ieee8021QBridgeStaticUnicastTable_createEntry (
 	uint8_t *pau8Address, size_t u16Address_len,
 	uint32_t u32ReceivePort)
 {
-	ieee8021QBridgeStaticUnicastEntry_t *poEntry = NULL;
+	register ieee8021QBridgeStaticUnicastEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeStaticUnicastEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2635,7 +2953,7 @@ ieee8021QBridgeStaticUnicastTable_getByIndex (
 	register ieee8021QBridgeStaticUnicastEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeStaticUnicastEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2665,7 +2983,7 @@ ieee8021QBridgeStaticUnicastTable_getNextIndex (
 	register ieee8021QBridgeStaticUnicastEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeStaticUnicastEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3168,9 +3486,9 @@ ieee8021QBridgeStaticMulticastTable_createEntry (
 	uint8_t *pau8Address, size_t u16Address_len,
 	uint32_t u32ReceivePort)
 {
-	ieee8021QBridgeStaticMulticastEntry_t *poEntry = NULL;
+	register ieee8021QBridgeStaticMulticastEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeStaticMulticastEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3205,7 +3523,7 @@ ieee8021QBridgeStaticMulticastTable_getByIndex (
 	register ieee8021QBridgeStaticMulticastEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeStaticMulticastEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3235,7 +3553,7 @@ ieee8021QBridgeStaticMulticastTable_getNextIndex (
 	register ieee8021QBridgeStaticMulticastEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeStaticMulticastEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3735,9 +4053,9 @@ ieee8021QBridgeVlanCurrentTable_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32Index)
 {
-	ieee8021QBridgeVlanCurrentEntry_t *poEntry = NULL;
+	register ieee8021QBridgeVlanCurrentEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeVlanCurrentEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3764,7 +4082,7 @@ ieee8021QBridgeVlanCurrentTable_getByIndex (
 	register ieee8021QBridgeVlanCurrentEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeVlanCurrentEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3791,7 +4109,7 @@ ieee8021QBridgeVlanCurrentTable_getNextIndex (
 	register ieee8021QBridgeVlanCurrentEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeVlanCurrentEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3995,9 +4313,9 @@ ieee8021QBridgeVlanStaticTable_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32VlanIndex)
 {
-	ieee8021QBridgeVlanStaticEntry_t *poEntry = NULL;
+	register ieee8021QBridgeVlanStaticEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeVlanStaticEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4023,7 +4341,7 @@ ieee8021QBridgeVlanStaticTable_getByIndex (
 	register ieee8021QBridgeVlanStaticEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeVlanStaticEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4048,7 +4366,7 @@ ieee8021QBridgeVlanStaticTable_getNextIndex (
 	register ieee8021QBridgeVlanStaticEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeVlanStaticEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4565,9 +4883,9 @@ ieee8021QBridgeNextFreeLocalVlanEntry_t *
 ieee8021QBridgeNextFreeLocalVlanTable_createEntry (
 	uint32_t u32ComponentId)
 {
-	ieee8021QBridgeNextFreeLocalVlanEntry_t *poEntry = NULL;
+	register ieee8021QBridgeNextFreeLocalVlanEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeNextFreeLocalVlanEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4590,7 +4908,7 @@ ieee8021QBridgeNextFreeLocalVlanTable_getByIndex (
 	register ieee8021QBridgeNextFreeLocalVlanEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeNextFreeLocalVlanEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4613,7 +4931,7 @@ ieee8021QBridgeNextFreeLocalVlanTable_getNextIndex (
 	register ieee8021QBridgeNextFreeLocalVlanEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeNextFreeLocalVlanEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4795,9 +5113,9 @@ ieee8021QBridgePortVlanTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort)
 {
-	ieee8021QBridgePortVlanEntry_t *poEntry = NULL;
+	register ieee8021QBridgePortVlanEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgePortVlanEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4828,7 +5146,7 @@ ieee8021QBridgePortVlanTable_getByIndex (
 	register ieee8021QBridgePortVlanEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgePortVlanEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4853,7 +5171,7 @@ ieee8021QBridgePortVlanTable_getNextIndex (
 	register ieee8021QBridgePortVlanEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgePortVlanEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5256,9 +5574,9 @@ ieee8021QBridgePortVlanStatisticsTable_createEntry (
 	uint32_t u32BridgeBasePort,
 	uint32_t u32QBridgeVlanIndex)
 {
-	ieee8021QBridgePortVlanStatisticsEntry_t *poEntry = NULL;
+	register ieee8021QBridgePortVlanStatisticsEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgePortVlanStatisticsEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5285,7 +5603,7 @@ ieee8021QBridgePortVlanStatisticsTable_getByIndex (
 	register ieee8021QBridgePortVlanStatisticsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgePortVlanStatisticsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5312,7 +5630,7 @@ ieee8021QBridgePortVlanStatisticsTable_getNextIndex (
 	register ieee8021QBridgePortVlanStatisticsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgePortVlanStatisticsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5513,9 +5831,9 @@ ieee8021QBridgeLearningConstraintsTable_createEntry (
 	uint32_t u32Vlan,
 	int32_t i32Set)
 {
-	ieee8021QBridgeLearningConstraintsEntry_t *poEntry = NULL;
+	register ieee8021QBridgeLearningConstraintsEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeLearningConstraintsEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5545,7 +5863,7 @@ ieee8021QBridgeLearningConstraintsTable_getByIndex (
 	register ieee8021QBridgeLearningConstraintsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeLearningConstraintsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5572,7 +5890,7 @@ ieee8021QBridgeLearningConstraintsTable_getNextIndex (
 	register ieee8021QBridgeLearningConstraintsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeLearningConstraintsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5992,9 +6310,9 @@ ieee8021QBridgeLearningConstraintDefaultsEntry_t *
 ieee8021QBridgeLearningConstraintDefaultsTable_createEntry (
 	uint32_t u32ComponentId)
 {
-	ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry = NULL;
+	register ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeLearningConstraintDefaultsEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6042,7 +6360,7 @@ ieee8021QBridgeLearningConstraintDefaultsTable_getNextIndex (
 	register ieee8021QBridgeLearningConstraintDefaultsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeLearningConstraintDefaultsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6350,9 +6668,9 @@ ieee8021QBridgeProtocolGroupTable_createEntry (
 	int32_t i32TemplateFrameType,
 	uint8_t *pau8TemplateProtocolValue, size_t u16TemplateProtocolValue_len)
 {
-	ieee8021QBridgeProtocolGroupEntry_t *poEntry = NULL;
+	register ieee8021QBridgeProtocolGroupEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeProtocolGroupEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6382,7 +6700,7 @@ ieee8021QBridgeProtocolGroupTable_getByIndex (
 	register ieee8021QBridgeProtocolGroupEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeProtocolGroupEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6410,7 +6728,7 @@ ieee8021QBridgeProtocolGroupTable_getNextIndex (
 	register ieee8021QBridgeProtocolGroupEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeProtocolGroupEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6837,9 +7155,9 @@ ieee8021QBridgeProtocolPortTable_createEntry (
 	uint32_t u32BridgeBasePort,
 	int32_t i32GroupId)
 {
-	ieee8021QBridgeProtocolPortEntry_t *poEntry = NULL;
+	register ieee8021QBridgeProtocolPortEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeProtocolPortEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6868,7 +7186,7 @@ ieee8021QBridgeProtocolPortTable_getByIndex (
 	register ieee8021QBridgeProtocolPortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeProtocolPortEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6895,7 +7213,7 @@ ieee8021QBridgeProtocolPortTable_getNextIndex (
 	register ieee8021QBridgeProtocolPortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeProtocolPortEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -7321,9 +7639,9 @@ ieee8021QBridgeVIDXTable_createEntry (
 	uint32_t u32BridgeBasePort,
 	int32_t i32LocalVid)
 {
-	ieee8021QBridgeVIDXEntry_t *poEntry = NULL;
+	register ieee8021QBridgeVIDXEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeVIDXEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -7352,7 +7670,7 @@ ieee8021QBridgeVIDXTable_getByIndex (
 	register ieee8021QBridgeVIDXEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeVIDXEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -7379,7 +7697,7 @@ ieee8021QBridgeVIDXTable_getNextIndex (
 	register ieee8021QBridgeVIDXEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeVIDXEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -7805,9 +8123,9 @@ ieee8021QBridgeEgressVidXTable_createEntry (
 	uint32_t u32BridgeBasePort,
 	int32_t i32RelayVid)
 {
-	ieee8021QBridgeEgressVidXEntry_t *poEntry = NULL;
+	register ieee8021QBridgeEgressVidXEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeEgressVidXEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -7836,7 +8154,7 @@ ieee8021QBridgeEgressVidXTable_getByIndex (
 	register ieee8021QBridgeEgressVidXEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeEgressVidXEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -7863,7 +8181,7 @@ ieee8021QBridgeEgressVidXTable_getNextIndex (
 	register ieee8021QBridgeEgressVidXEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeEgressVidXEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}

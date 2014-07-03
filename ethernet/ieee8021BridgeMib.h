@@ -531,6 +531,12 @@ ieee8021BridgePortPriorityEntry_t * ieee8021BridgePortPriorityTable_getNextIndex
 	uint32_t u32BasePortComponentId,
 	uint32_t u32BasePort);
 void ieee8021BridgePortPriorityTable_removeEntry (ieee8021BridgePortPriorityEntry_t *poEntry);
+ieee8021BridgePortPriorityEntry_t * ieee8021BridgePortPriorityTable_createExt (
+	uint32_t u32BasePortComponentId,
+	uint32_t u32BasePort);
+bool ieee8021BridgePortPriorityTable_removeExt (ieee8021BridgePortPriorityEntry_t *poEntry);
+bool ieee8021BridgePortPriorityTable_createHier (ieee8021BridgePortPriorityEntry_t *poEntry);
+bool ieee8021BridgePortPriorityTable_removeHier (ieee8021BridgePortPriorityEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgePortPriorityTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgePortPriorityTable_getNext;

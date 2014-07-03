@@ -27,8 +27,11 @@ extern "C" {
 
 
 
+#include "ethernet_ext.h"
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
+
+#include <stdbool.h>
 
 #define TOBE_REPLACED 1
 
@@ -109,6 +112,11 @@ ieee8021QBridgeEntry_t * ieee8021QBridgeTable_getByIndex (
 ieee8021QBridgeEntry_t * ieee8021QBridgeTable_getNextIndex (
 	uint32_t u32ComponentId);
 void ieee8021QBridgeTable_removeEntry (ieee8021QBridgeEntry_t *poEntry);
+ieee8021QBridgeEntry_t * ieee8021QBridgeTable_createExt (
+	uint32_t u32ComponentId);
+bool ieee8021QBridgeTable_removeExt (ieee8021QBridgeEntry_t *poEntry);
+bool ieee8021QBridgeTable_createHier (ieee8021QBridgeEntry_t *poEntry);
+bool ieee8021QBridgeTable_removeHier (ieee8021QBridgeEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeTable_getNext;
@@ -291,9 +299,9 @@ typedef struct ieee8021QBridgeTpGroupEntry_t
 	size_t u16Address_len;	/* # of uint8_t elements */
 	
 	/* Column values */
-	uint8_t au8EgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8EgressPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16EgressPorts_len;	/* # of uint8_t elements */
-	uint8_t au8Learnt[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8Learnt[ETHERNET_PORT_MAP_SIZE];
 	size_t u16Learnt_len;	/* # of uint8_t elements */
 	
 	xBTree_Node_t oBTreeNode;
@@ -340,11 +348,11 @@ typedef struct ieee8021QBridgeForwardAllEntry_t
 	uint32_t u32VlanIndex;
 	
 	/* Column values */
-	uint8_t au8Ports[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8Ports[ETHERNET_PORT_MAP_SIZE];
 	size_t u16Ports_len;	/* # of uint8_t elements */
-	uint8_t au8StaticPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8StaticPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16StaticPorts_len;	/* # of uint8_t elements */
-	uint8_t au8ForbiddenPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8ForbiddenPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16ForbiddenPorts_len;	/* # of uint8_t elements */
 	
 	xBTree_Node_t oBTreeNode;
@@ -388,11 +396,11 @@ typedef struct ieee8021QBridgeForwardUnregisteredEntry_t
 	uint32_t u32VlanIndex;
 	
 	/* Column values */
-	uint8_t au8Ports[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8Ports[ETHERNET_PORT_MAP_SIZE];
 	size_t u16Ports_len;	/* # of uint8_t elements */
-	uint8_t au8StaticPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8StaticPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16StaticPorts_len;	/* # of uint8_t elements */
-	uint8_t au8ForbiddenPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8ForbiddenPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16ForbiddenPorts_len;	/* # of uint8_t elements */
 	
 	xBTree_Node_t oBTreeNode;
@@ -461,9 +469,9 @@ typedef struct ieee8021QBridgeStaticUnicastEntry_t
 	uint32_t u32ReceivePort;
 	
 	/* Column values */
-	uint8_t au8StaticEgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8StaticEgressPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16StaticEgressPorts_len;	/* # of uint8_t elements */
-	uint8_t au8ForbiddenEgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8ForbiddenEgressPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16ForbiddenEgressPorts_len;	/* # of uint8_t elements */
 	uint8_t u8StorageType;
 	uint8_t u8RowStatus;
@@ -538,9 +546,9 @@ typedef struct ieee8021QBridgeStaticMulticastEntry_t
 	uint32_t u32ReceivePort;
 	
 	/* Column values */
-	uint8_t au8StaticEgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8StaticEgressPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16StaticEgressPorts_len;	/* # of uint8_t elements */
-	uint8_t au8ForbiddenEgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8ForbiddenEgressPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16ForbiddenEgressPorts_len;	/* # of uint8_t elements */
 	uint8_t u8StorageType;
 	uint8_t u8RowStatus;
@@ -606,9 +614,9 @@ typedef struct ieee8021QBridgeVlanCurrentEntry_t
 	
 	/* Column values */
 	uint32_t u32FdbId;
-	uint8_t au8EgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8EgressPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16EgressPorts_len;	/* # of uint8_t elements */
-	uint8_t au8UntaggedPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8UntaggedPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16UntaggedPorts_len;	/* # of uint8_t elements */
 	int32_t i32Status;
 	uint32_t u32CreationTime;
@@ -673,11 +681,11 @@ typedef struct ieee8021QBridgeVlanStaticEntry_t
 	/* Column values */
 	uint8_t au8Name[32];
 	size_t u16Name_len;	/* # of uint8_t elements */
-	uint8_t au8EgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8EgressPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16EgressPorts_len;	/* # of uint8_t elements */
 	uint8_t au8ForbiddenEgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
 	size_t u16ForbiddenEgressPorts_len;	/* # of uint8_t elements */
-	uint8_t au8UntaggedPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8UntaggedPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16UntaggedPorts_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	
