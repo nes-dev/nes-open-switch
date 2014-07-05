@@ -5,7 +5,7 @@
  *  All rights reserved. This source file is the sole property of NES, and
  *  contain proprietary and confidential information related to NES.
  *
- *  Licensed under the NES RED License, Version 1.0 (the "License"); you may
+ *  Licensed under the NES PROF License, Version 1.0 (the "License"); you may
  *  not use this file except in compliance with the License. You may obtain a
  *  copy of the License bundled along with this file. Any kind of reproduction
  *  or duplication of any part of this file which conflicts with the License
@@ -19,42 +19,53 @@
  */
 //set ts=4 sw=4
 
-#ifndef __LIB_H__
-#	define __LIB_H__
-
-#	ifdef __cplusplus
-extern "C" {
-#	endif
+#ifndef __HAL_ENTITY_C__
+#	define __HAL_ENTITY_C__
 
 
+#include "hal_defines.h"
+#include "system/entityMIB.h"
 
-#include <string.h>
-
-
-#define xOffsetOf(_type_t, _member_name) (\
-	(size_t) ((void*) &((_type_t*) 0)->_member_name - (void*) 0)\
-)
-
-#define xMin(a, b) ((a) < (b) ? (a): (b))
-#define xMax(a, b) ((a) > (b) ? (a): (b))
-
-#define xGetParentByMemberPtr(_member_ptr, _type_t, _member_name) (\
-	(_type_t*) ((void*) _member_ptr - xOffsetOf (_type_t, _member_name))\
-)
-
-#define xBinCmp(_pA, _pB, _u16ALen, _u16BLen) (\
-	(_u16ALen) < (_u16BLen) ? -1:\
-	(_u16ALen) == (_u16BLen) ? memcmp ((_pA), (_pB), (_u16ALen)): 1\
-)
-
-#define xUnused(_x) ((_x) = (_x))
-
-#define xCallback_tryExec(_func, _args ...) ((_func) == NULL || (_func) (_args))
+#include <stdbool.h>
+#include <stdint.h>
 
 
-
-#	ifdef __cplusplus
+bool
+halEntityDetect ()
+{
+	uint32_t u32Index = 0;
+	uint32_t u32ContainedIn = 0;
+	int32_t i32Class = 0;
+	uint8_t au8SerialNum[32] = {0};
+	size_t u16SerialNum_len = 0;
+	uint8_t u8RowStatus = 0;
+	
+	/* TODO */
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (!entPhysicalTable_createEntity (u32Index, i32Class, u32ContainedIn, au8SerialNum, u16SerialNum_len))
+		{
+			goto halEntityDetect_cleanup;
+		}
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!entPhysicalTable_removeEntity (u32Index))
+		{
+			goto halEntityDetect_cleanup;
+		}
+		break;
+	}
+	
+	return true;
+	
+	
+halEntityDetect_cleanup:
+	
+	return false;
 }
-#	endif
 
-#endif	// __LIB_H__
+
+#endif	// __HAL_ENTITY_C__

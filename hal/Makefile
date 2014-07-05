@@ -18,21 +18,29 @@
 #*  under the License.
 #*
 
-MOD := net
+MODULE := hal
+MODULE_BIN = ${MODULE}${OBJ_EXT}
+MODULE_TREE :=
 
-ifneq ($(MODULES),)
-$(eval $(call MOD_INC,$(MOD)))
+
+ifneq (${PROJECT_NAME},)
+$(eval $(call MODULE_INC,${MODULE},${MODULE_TREE}))
 else
 
-include $(MK_COMMON)
+include ${MK_COMMON}
 
-SRC := net.c if.c
+CFLAGS +=
 
-$(call MOD_DEP)
+SNMP_SRC :=
+MODULE_SRC := hal_main.c halSystem.c halEntity.c halEthernet.c halBridge.c ${SNMP_SRC}
 
-all: $(MOD)$(OBJ_EXT)
+$(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
 
-$(MOD)$(OBJ_EXT): $(SRC:%.c=%.o)
+$(SNMP_SRC:%.c=%.o): CFLAGS += ${SNMP_CFLAGS}
+
+all: ${MODULE_BIN}
+
+${MODULE_BIN}: $(MODULE_SRC:%.c=%.o)
 
 include make.dep
 

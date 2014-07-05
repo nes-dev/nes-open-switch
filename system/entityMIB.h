@@ -113,7 +113,7 @@ enum
 typedef struct entPhysicalEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8Descr[255];
@@ -147,8 +147,7 @@ typedef struct entPhysicalEntry_t
 	uint8_t au8Uris[/* TODO: , OCTETSTR, "" */ TOBE_REPLACED];
 	size_t u16Uris_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
-	xBTree_Node_t oSerialNum_BTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } entPhysicalEntry_t;
 
 extern xBTree_t oEntPhysicalTable_BTree;
@@ -168,7 +167,9 @@ void entPhysicalTable_removeEntry (entPhysicalEntry_t *poEntry);
 bool entPhysicalTable_createEntity (
 	uint32_t u32Index,
 	int32_t i32Class,
-	uint32_t u32ContainedIn);
+	uint32_t u32ContainedIn,
+	uint8_t *pu8SerialNum,
+	size_t u16SerialNum_len);
 bool entPhysicalTable_removeEntity (
 	uint32_t u32Index);
 #ifdef SNMP_SRC
@@ -195,7 +196,7 @@ Netsnmp_Node_Handler entPhysicalTable_mapper;
 typedef struct entLogicalEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8Descr[255];
@@ -213,7 +214,7 @@ typedef struct entLogicalEntry_t
 	uint8_t au8ContextName[255];
 	size_t u16ContextName_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } entLogicalEntry_t;
 
 extern xBTree_t oEntLogicalTable_BTree;
@@ -244,12 +245,12 @@ Netsnmp_Node_Handler entLogicalTable_mapper;
 typedef struct entLPMappingEntry_t
 {
 	/* Index values */
-	uint32_t u32LogicalIndex;
-	uint32_t u32LPPhysicalIndex;
+// 	uint32_t u32LogicalIndex;
+// 	uint32_t u32LPPhysicalIndex;
 	
 	/* Column values */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } entLPMappingEntry_t;
 
 extern xBTree_t oEntLPMappingTable_BTree;
@@ -399,7 +400,7 @@ enum
 typedef struct neEntPhysicalEntry_t
 {
 	/* Index values */
-	uint32_t u32EntPhysicalIndex;
+// 	uint32_t u32EntPhysicalIndex;
 	
 	/* Column values */
 	uint32_t u32ContainedIn;
@@ -408,9 +409,11 @@ typedef struct neEntPhysicalEntry_t
 	uint8_t u8StorageType;
 	
 	uint32_t u32ChassisIndex;
+	uint8_t au8SerialNum[32];
+	size_t u16SerialNum_len;
 	struct neEntPhysicalEntry_t *pOldEntry;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neEntPhysicalEntry_t;
 
 extern xBTree_t oNeEntPhysicalTable_BTree;
@@ -438,6 +441,44 @@ Netsnmp_Next_Data_Point neEntPhysicalTable_getNext;
 Netsnmp_Get_Data_Point neEntPhysicalTable_get;
 Netsnmp_Node_Handler neEntPhysicalTable_mapper;
 #endif	/* SNMP_SRC */
+
+
+enum
+{
+	entPhysicalFlags_neCreated_c = 0,
+	entPhysicalFlags_phyCreated_c = 1,
+	entPhysicalFlags_count_c,
+};
+
+typedef struct entPhysicalData_t
+{
+	uint32_t u32Index;
+	
+	neEntPhysicalEntry_t oNe;
+	entPhysicalEntry_t oPhy;
+	
+	uint8_t au8Flags[1];
+	
+	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oSerialNum_BTreeNode;
+} entPhysicalData_t;
+
+// extern xBTree_t oEntPhysicalData_BTree;
+// extern xBTree_t oEntPhysicalData_SerialNum_BTree;
+
+entPhysicalData_t * entPhysicalData_createEntry (
+	uint32_t u32Index);
+bool entPhysicalData_linkSerialNum (entPhysicalData_t *poEntry);
+entPhysicalData_t * entPhysicalData_getByIndex (
+	uint32_t u32Index);
+entPhysicalData_t * entPhysicalData_getBySerialNum (
+	uint8_t *pu8SerialNum,
+	size_t u16SerialNum_len);
+entPhysicalData_t * entPhysicalData_getNextIndex (
+	uint32_t u32Index);
+#define entPhysicalData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entPhysicalData_t, oNe))
+#define entPhysicalData_getByPhyEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entPhysicalData_t, oPhy))
+void entPhysicalData_removeEntry (entPhysicalData_t *poEntry);
 
 
 /**
@@ -468,13 +509,13 @@ enum
 typedef struct neEntLogicalEntry_t
 {
 	/* Index values */
-	uint32_t u32EntLogicalIndex;
+// 	uint32_t u32EntLogicalIndex;
 	
 	/* Column values */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neEntLogicalEntry_t;
 
 extern xBTree_t oNeEntLogicalTable_BTree;
@@ -494,6 +535,38 @@ Netsnmp_Next_Data_Point neEntLogicalTable_getNext;
 Netsnmp_Get_Data_Point neEntLogicalTable_get;
 Netsnmp_Node_Handler neEntLogicalTable_mapper;
 #endif	/* SNMP_SRC */
+
+
+enum
+{
+	entLogicalFlags_neCreated_c = 0,
+	entLogicalFlags_logCreated_c = 1,
+	entLogicalFlags_count_c,
+};
+
+typedef struct entLogicalData_t
+{
+	uint32_t u32Index;
+	
+	neEntLogicalEntry_t oNe;
+	entLogicalEntry_t oLog;
+	
+	uint8_t au8Flags[1];
+	
+	xBTree_Node_t oBTreeNode;
+} entLogicalData_t;
+
+// extern xBTree_t oEntLogicalData_BTree;
+
+entLogicalData_t * entLogicalData_createEntry (
+	uint32_t u32Index);
+entLogicalData_t * entLogicalData_getByIndex (
+	uint32_t u32Index);
+entLogicalData_t * entLogicalData_getNextIndex (
+	uint32_t u32Index);
+#define entLogicalData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entLogicalData_t, oNe))
+#define entLogicalData_getByLogEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entLogicalData_t, oLog))
+void entLogicalData_removeEntry (entLogicalData_t *poEntry);
 
 
 /**
@@ -524,14 +597,14 @@ enum
 typedef struct neEntLPMappingEntry_t
 {
 	/* Index values */
-	uint32_t u32EntLogicalIndex;
-	uint32_t u32EntLPPhysicalIndex;
+// 	uint32_t u32EntLogicalIndex;
+// 	uint32_t u32EntLPPhysicalIndex;
 	
 	/* Column values */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neEntLPMappingEntry_t;
 
 extern xBTree_t oNeEntLPMappingTable_BTree;
@@ -554,6 +627,42 @@ Netsnmp_Next_Data_Point neEntLPMappingTable_getNext;
 Netsnmp_Get_Data_Point neEntLPMappingTable_get;
 Netsnmp_Node_Handler neEntLPMappingTable_mapper;
 #endif	/* SNMP_SRC */
+
+
+enum
+{
+	entLPMappingFlags_neCreated_c = 0,
+	entLPMappingFlags_lpCreated_c = 1,
+	entLPMappingFlags_count_c,
+};
+
+typedef struct entLPMappingData_t
+{
+	uint32_t u32LogicalIndex;
+	uint32_t u32LPPhysicalIndex;
+	
+	neEntLPMappingEntry_t oNe;
+	entLPMappingEntry_t oLp;
+	
+	uint8_t au8Flags[1];
+	
+	xBTree_Node_t oBTreeNode;
+} entLPMappingData_t;
+
+// extern xBTree_t oEntLPMappingData_BTree;
+
+entLPMappingData_t * entLPMappingData_createEntry (
+	uint32_t u32LogicalIndex,
+	uint32_t u32LPPhysicalIndex);
+entLPMappingData_t * entLPMappingData_getByIndex (
+	uint32_t u32LogicalIndex,
+	uint32_t u32LPPhysicalIndex);
+entLPMappingData_t * entLPMappingData_getNextIndex (
+	uint32_t u32LogicalIndex,
+	uint32_t u32LPPhysicalIndex);
+#define entLPMappingData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entLPMappingData_t, oNe))
+#define entLPMappingData_getByLpEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entLPMappingData_t, oLp))
+void entLPMappingData_removeEntry (entLPMappingData_t *poEntry);
 
 
 /**
