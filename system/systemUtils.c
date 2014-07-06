@@ -63,7 +63,7 @@ neEntPortRowStatus_update (
 				goto neEntPortRowStatus_updateEthernet_unlock;
 			}
 			
-			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_notPresent_c, true))
+			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_notPresent_c, true, false))
 			{
 				goto neEntPortRowStatus_updateEthernet_unlock;
 			}
@@ -72,7 +72,7 @@ neEntPortRowStatus_update (
 			break;
 			
 		case xRowStatus_notInService_c:
-			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_down_c, true))
+			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_down_c, true, false))
 			{
 				goto neEntPortRowStatus_updateEthernet_unlock;
 			}
@@ -81,7 +81,7 @@ neEntPortRowStatus_update (
 			break;
 			
 		case xRowStatus_destroy_c:
-			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_notPresent_c, true))
+			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_notPresent_c, true, false))
 			{
 				goto neEntPortRowStatus_updateEthernet_unlock;
 			}

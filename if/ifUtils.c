@@ -36,8 +36,54 @@
 #include <stdint.h>
 
 
+static int8_t
+neIfTypeTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neIfTypeEntry_t *pEntry1 = xBTree_entry (pNode1, neIfTypeEntry_t, oBTreeNode);
+	register neIfTypeEntry_t *pEntry2 = xBTree_entry (pNode2, neIfTypeEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->i32Type < pEntry2->i32Type) ? -1:
+		(pEntry1->i32Type == pEntry2->i32Type) ? 0: 1;
+}
+
+static xBTree_t oNeIfTypeTable_BTree = xBTree_initInline (&neIfTypeTable_BTreeNodeCmp);
+
+neIfTypeEntry_t *
+neIfTypeTable_createExt (
+	int32_t i32Type)
+{
+	register neIfTypeEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->i32Type = i32Type;
+	
+	poEntry->pfEnableHandler = NULL;
+	
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeIfTypeTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeIfTypeTable_BTree);
+	return poEntry;
+}
+
 bool
-neIfStatus_modify (uint32_t u32IfIndex, int32_t i32OperStatus, bool bPropagate)
+neIfEnable_modify (
+	ifData_t *poIfEntry, int32_t i32AdminStatus)
+{
+	return false;
+}
+
+bool
+neIfStatus_modify (uint32_t u32IfIndex, int32_t i32OperStatus, bool bPropagate, bool bLocked)
 {
 	return false;
 }

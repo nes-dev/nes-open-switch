@@ -1053,7 +1053,7 @@ ifData_t * ifData_getByIndex (
 	uint32_t u32Index);
 ifData_t * ifData_getNextIndex (
 	uint32_t u32Index);
-#define ifData_getByNeIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oNe))
+#define ifData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oNe))
 #define ifData_getByIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oIf))
 #define ifData_getByIfXEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oIfX))
 void ifData_removeEntry (ifData_t *poEntry);

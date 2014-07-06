@@ -34,6 +34,8 @@ extern "C" {
 #include <stdint.h>
 
 
+bool ethernetUtilsInit (void);
+
 bool ieee8021BridgeBaseRowStatus_update (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 

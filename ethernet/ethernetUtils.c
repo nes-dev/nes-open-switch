@@ -24,13 +24,79 @@
 
 
 
+#include "ethernetUtils.h"
 #include "ieee8021BridgeMib.h"
+#include "bridge/ieee8021QBridgeMib.h"
+#include "if/ifUtils.h"
+#include "if/ifMIB.h"
+#include "hal/halEthernet.h"
 
 #include "lib/lib.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 
+
+static neIfTypeEnableHandler_t ethernet_enableModify;
+
+
+bool ethernetUtilsInit (void)
+{
+	register bool bRetCode = false;
+	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
+	
+	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_ethernetCsmacd_c)) == NULL)
+	{
+		goto ethernetUtilsInit_cleanup;
+	}
+	
+	poNeIfTypeEntry->pfEnableHandler = ethernet_enableModify;
+	
+	bRetCode = true;
+	
+ethernetUtilsInit_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ethernet_enableModify (
+	ifData_t *poIfEntry, int32_t i32AdminStatus)
+{
+	register bool bRetCode = false;
+	ieee8021BridgePhyPortInfo_t oEthernetPhyPortInfo = ieee8021BridgePhyPortInfo_initInline (ieee8021BridgePhyPortInfo_ifToPortEntry_c);
+	
+	ieee8021BridgePhyPortInfo_rdLock ();
+	
+	if (!ieee8021BridgePhyPortInfo_getByIfIndex (poIfEntry->u32Index, &oEthernetPhyPortInfo))
+	{
+		goto ethernet_enableModify_cleanup;
+	}
+	oEthernetPhyPortInfo.poIfToPortEntry->u32IndexComponentId = 0;
+	oEthernetPhyPortInfo.poIfToPortEntry->u32IndexPort = 0;
+	
+	if (oEthernetPhyPortInfo.poIfToPortEntry->u32IndexComponentId != 0 &&
+		oEthernetPhyPortInfo.poIfToPortEntry->u32IndexPort != 0)
+	{
+		if (i32AdminStatus == xAdminStatus_up_c &&
+			!halEthernet_ifConfig ())
+		{
+			goto ethernet_enableModify_cleanup;
+		}
+		
+		if (!halEthernet_ifEnable (poIfEntry->u32Index, i32AdminStatus))
+		{
+			goto ethernet_enableModify_cleanup;
+		}
+	}
+	
+	bRetCode = true;
+	
+ethernet_enableModify_cleanup:
+	
+	ieee8021BridgePhyPortInfo_unLock ();
+	return bRetCode;
+}
 
 bool
 ieee8021BridgeBaseRowStatus_update (

@@ -24,6 +24,7 @@
 
 
 #include "ieee8021BridgeMib_agent.h"
+#include "ethernetUtils.h"
 
 #include "switch_ext.h"
 #include "ethernet_ext.h"
@@ -48,6 +49,8 @@ void *
 ethernet_main (
 	void *pvArgv)
 {
+	ethernetUtilsInit ();
+	
 	ieee8021BridgeMib_init ();
 	
 	if (xThread_create (&oEthernetThread) == NULL)

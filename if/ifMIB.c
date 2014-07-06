@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "ifUtils.h"
 #include "ifMIB.h"
 
 #include "lib/number.h"
@@ -407,7 +408,7 @@ ifTable_removeEntry (ifEntry_t *poEntry)
 		return;
 	}
 	
-	register ifData_t *poIfData = ifData_getByNeIfEntry (poEntry);
+	register ifData_t *poIfData = ifData_getByIfEntry (poEntry);
 	
 	xBitmap_setBit (poIfData->au8Flags, ifFlags_ifCreated_c, 0);
 	return;
@@ -580,25 +581,49 @@ ifAdminStatus_handler (
 	{
 	case xAdminStatus_up_c:
 		poEntry->i32AdminStatus = xAdminStatus_up_c;
-		/* TODO */
+		
+		if (!neIfEnable_modify (poIfData, i32AdminStatus & xAdminStatus_mask_c))
+		{
+			goto ifAdminStatus_handler_cleanup;
+		}
 		break;
 		
 	case xAdminStatus_down_c:
+		if (!neIfStatus_modify (poIfData->u32Index, xOperStatus_down_c, false, false))
+		{
+			goto ifAdminStatus_handler_cleanup;
+		}
+		
 		poEntry->i32AdminStatus = xAdminStatus_down_c;
-		/* TODO */
+		
+		if (!neIfEnable_modify (poIfData, i32AdminStatus & xAdminStatus_mask_c))
+		{
+			goto ifAdminStatus_handler_cleanup;
+		}
 		break;
 		
 	case xAdminStatus_testing_c:
+		if (!neIfStatus_modify (poIfData->u32Index, xOperStatus_testing_c, false, false))
+		{
+			goto ifAdminStatus_handler_cleanup;
+		}
+		
 		poEntry->i32AdminStatus = xAdminStatus_testing_c;
-		/* TODO */
+		
+		if (!neIfEnable_modify (poIfData, i32AdminStatus & xAdminStatus_mask_c))
+		{
+			goto ifAdminStatus_handler_cleanup;
+		}
 		break;
 	}
 	
 ifAdminStatus_handler_success:
+	
 	return true;
 	
 	
 ifAdminStatus_handler_cleanup:
+	
 	return false;
 }
 
@@ -680,6 +705,7 @@ ifTable_mapper (
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			
 			register ifData_t *poIfData = ifData_getByIfEntry (table_entry);
 			
 			switch (table_info->colnum)
@@ -940,7 +966,7 @@ ifXTable_removeEntry (ifXEntry_t *poEntry)
 		return;
 	}
 	
-	register ifData_t *poIfData = ifData_getByNeIfEntry (poEntry);
+	register ifData_t *poIfData = ifData_getByIfXEntry (poEntry);
 	
 	xBitmap_setBit (poIfData->au8Flags, ifFlags_ifXCreated_c, 0);
 	return;
@@ -2412,7 +2438,7 @@ neIfTable_removeEntry (neIfEntry_t *poEntry)
 		return;
 	}
 	
-	ifData_removeEntry (ifData_getByNeIfEntry (poEntry));
+	ifData_removeEntry (ifData_getByNeEntry (poEntry));
 	return;
 }
 
@@ -2464,7 +2490,7 @@ bool
 neIfTable_createHier (
 	neIfEntry_t *poEntry)
 {
-	register ifData_t *poIfData = ifData_getByNeIfEntry (poEntry);
+	register ifData_t *poIfData = ifData_getByNeEntry (poEntry);
 	
 	if (ifTable_getByIndex (poIfData->u32Index) == NULL &&
 		ifTable_createExt (poIfData->u32Index) == NULL)
@@ -2486,7 +2512,7 @@ neIfTable_removeHier (
 	neIfEntry_t *poEntry)
 {
 	register ifEntry_t *poIfEntry = NULL;
-	register ifData_t *poIfData = ifData_getByNeIfEntry (poEntry);
+	register ifData_t *poIfData = ifData_getByNeEntry (poEntry);
 	
 	if (poIfData->u32NumReferences == 0 &&
 		(poIfEntry = ifTable_getByIndex (poIfData->u32Index)) != NULL)
@@ -2502,7 +2528,7 @@ neIfRowStatus_handler (
 	neIfEntry_t *poEntry,
 	uint8_t u8RowStatus)
 {
-	register ifData_t *poIfData = ifData_getByNeIfEntry (poEntry);
+	register ifData_t *poIfData = ifData_getByNeEntry (poEntry);
 	
 	if (!xBitmap_getBit (poIfData->au8Flags, ifFlags_ifCreated_c) ||
 		!xBitmap_getBit (poIfData->au8Flags, ifFlags_ifXCreated_c))

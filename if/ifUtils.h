@@ -37,9 +37,26 @@ extern "C" {
 #include <stdint.h>
 
 
-bool neIfStatus_modify (
-	uint32_t u32IfIndex, int32_t i32OperStatus, bool bPropagate);
+typedef bool (neIfTypeEnableHandler_t) (ifData_t *poIfEntry, int32_t i32AdminStatus);
 
+typedef struct neIfTypeEntry_t
+{
+	/* Index values */
+	int32_t i32Type;
+	
+	neIfTypeEnableHandler_t *pfEnableHandler;
+	
+	xBTree_Node_t oBTreeNode;
+} neIfTypeEntry_t;
+
+neIfTypeEntry_t * neIfTypeTable_createExt (
+	int32_t i32Type);
+
+bool neIfStatus_modify (
+	uint32_t u32IfIndex, int32_t i32OperStatus,
+	bool bPropagate, bool bLocked);
+
+extern neIfTypeEnableHandler_t neIfEnable_modify;
 
 
 #	ifdef __cplusplus

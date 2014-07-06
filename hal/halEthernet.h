@@ -19,25 +19,27 @@
  */
 //set ts=4 sw=4
 
-#ifndef __HAL_EXT_H__
-#	define __HAL_EXT_H__
+#ifndef __HAL_ETHERNET_H__
+#	define __HAL_ETHERNET_H__
 
 #	ifdef __cplusplus
 extern "C" {
 #	endif
 
 
-extern void *
-hal_main (
-	void *pvArgv);
+#include <stdbool.h>
+#include <stdint.h>
 
-extern void *
-hal_start (
-	void *pvArgv);
+
+extern bool
+	halEthernet_ifConfig ();
+extern bool
+	halEthernet_ifEnable (
+		uint32_t u32IfIndex, int32_t i32AdminStatus);
 
 
 #	ifdef __cplusplus
 }
 #	endif
 
-#endif	// __HAL_EXT_H__
+#endif	// __HAL_ETHERNET_H__
