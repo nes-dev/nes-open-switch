@@ -31,6 +31,8 @@ extern "C" {
 #include "lib/snmp.h"
 #include "lib/ip.h"
 
+#include <stdbool.h>
+
 #define TOBE_REPLACED 1
 
 
@@ -331,17 +333,17 @@ Netsnmp_Node_Handler neInetRouteTable_mapper;
 typedef struct neIpAddressEntry_t
 {
 	/* Index values */
-	int32_t i32IpAddressAddrType;
-	uint8_t au8IpAddressAddr[255];
-	size_t u16IpAddressAddr_len;	/* # of uint8_t elements */
+// 	int32_t i32IpAddressAddrType;
+// 	uint8_t au8IpAddressAddr[20];
+// 	size_t u16IpAddressAddr_len;	/* # of uint8_t elements */
 	
 	/* Column values */
 	uint32_t u32PrefixLength;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neIpAddressEntry_t;
 
-extern xBTree_t oNeIpAddressTable_BTree;
+// extern xBTree_t oNeIpAddressTable_BTree;
 
 /* neIpAddressTable table mapper */
 void neIpAddressTable_init (void);

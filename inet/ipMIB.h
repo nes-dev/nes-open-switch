@@ -27,9 +27,13 @@ extern "C" {
 
 
 
+#include "lib/lib.h"
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 #include "lib/ip.h"
+#include "neInetMIB.h"
+
+#include <stdbool.h>
 
 #define TOBE_REPLACED 1
 
@@ -633,9 +637,9 @@ enum
 typedef struct ipAddressEntry_t
 {
 	/* Index values */
-	int32_t i32AddrType;
-	uint8_t au8Addr[255];
-	size_t u16Addr_len;	/* # of uint8_t elements */
+// 	int32_t i32AddrType;
+// 	uint8_t au8Addr[20];
+// 	size_t u16Addr_len;	/* # of uint8_t elements */
 	
 	/* Column values */
 	uint32_t u32IfIndex;
@@ -649,10 +653,10 @@ typedef struct ipAddressEntry_t
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ipAddressEntry_t;
 
-extern xBTree_t oIpAddressTable_BTree;
+// extern xBTree_t oIpAddressTable_BTree;
 
 /* ipAddressTable table mapper */
 void ipAddressTable_init (void);
@@ -672,6 +676,56 @@ Netsnmp_Next_Data_Point ipAddressTable_getNext;
 Netsnmp_Get_Data_Point ipAddressTable_get;
 Netsnmp_Node_Handler ipAddressTable_mapper;
 #endif	/* SNMP_SRC */
+
+
+enum
+{
+	ipAddressFlags_ipCreated_c = 0,
+	ipAddressFlags_neCreated_c = 1,
+	ipAddressFlags_count_c,
+};
+
+typedef struct ipAddressData_t
+{
+	int32_t i32AddrType;
+	uint8_t au8Addr[20];
+	size_t u16Addr_len;	/* # of uint8_t elements */
+	uint32_t u32IfIndex;
+	uint32_t u32PrefixLength;
+	
+	ipAddressEntry_t oIp;
+	neIpAddressEntry_t oNe;
+	
+	uint8_t au8Flags[1];
+	uint32_t u32NumUnNumAddresses;
+	
+	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oIf_BTreeNode;
+} ipAddressData_t;
+
+extern xBTree_t oIpAddressData_BTree;
+// extern xBTree_t oIpAddressData_If_BTree;
+
+ipAddressData_t * ipAddressData_createEntry (
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len);
+ipAddressData_t * ipAddressData_getByIndex (
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len);
+ipAddressData_t * ipAddressData_getNextIndex (
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len);
+ipAddressData_t * ipAddressData_If_getByIndex (
+	uint32_t u32IfIndex,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len);
+ipAddressData_t * ipAddressData_If_getNextIndex (
+	uint32_t u32IfIndex,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len);
+#define ipAddressData_getByIpEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ipAddressData_t, oIp))
+#define ipAddressData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ipAddressData_t, oNe))
+void ipAddressData_removeEntry (ipAddressData_t *poEntry);
 
 
 /**

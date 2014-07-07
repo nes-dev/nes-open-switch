@@ -25,9 +25,12 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "ipMIB.h"
 
+#include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
+
+#include <stdbool.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
@@ -2130,11 +2133,11 @@ ipAddressTable_init (void)
 }
 
 static int8_t
-ipAddressTable_BTreeNodeCmp (
+ipAddressData_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register ipAddressEntry_t *pEntry1 = xBTree_entry (pNode1, ipAddressEntry_t, oBTreeNode);
-	register ipAddressEntry_t *pEntry2 = xBTree_entry (pNode2, ipAddressEntry_t, oBTreeNode);
+	register ipAddressData_t *pEntry1 = xBTree_entry (pNode1, ipAddressData_t, oBTreeNode);
+	register ipAddressData_t *pEntry2 = xBTree_entry (pNode2, ipAddressData_t, oBTreeNode);
 	
 	return
 		(pEntry1->i32AddrType < pEntry2->i32AddrType) ||
@@ -2142,17 +2145,32 @@ ipAddressTable_BTreeNodeCmp (
 		(pEntry1->i32AddrType == pEntry2->i32AddrType && xBinCmp (pEntry1->au8Addr, pEntry2->au8Addr, pEntry1->u16Addr_len, pEntry2->u16Addr_len) == 0) ? 0: 1;
 }
 
-xBTree_t oIpAddressTable_BTree = xBTree_initInline (&ipAddressTable_BTreeNodeCmp);
+static int8_t
+ipAddressData_If_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ipAddressData_t *pEntry1 = xBTree_entry (pNode1, ipAddressData_t, oIf_BTreeNode);
+	register ipAddressData_t *pEntry2 = xBTree_entry (pNode2, ipAddressData_t, oIf_BTreeNode);
+	
+	return
+		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32AddrType < pEntry2->i32AddrType) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32AddrType == pEntry2->i32AddrType && xBinCmp (pEntry1->au8Addr, pEntry2->au8Addr, pEntry1->u16Addr_len, pEntry2->u16Addr_len) == -1) ? -1:
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32AddrType == pEntry2->i32AddrType && xBinCmp (pEntry1->au8Addr, pEntry2->au8Addr, pEntry1->u16Addr_len, pEntry2->u16Addr_len) == 0) ? 0: 1;
+}
+
+xBTree_t oIpAddressData_BTree = xBTree_initInline (&ipAddressData_BTreeNodeCmp);
+static xBTree_t oIpAddressData_If_BTree = xBTree_initInline (&ipAddressData_If_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
-ipAddressEntry_t *
-ipAddressTable_createEntry (
+ipAddressData_t *
+ipAddressData_createEntry (
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len)
 {
-	ipAddressEntry_t *poEntry = NULL;
+	register ipAddressData_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ipAddressEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2160,11 +2178,153 @@ ipAddressTable_createEntry (
 	poEntry->i32AddrType = i32AddrType;
 	memcpy (poEntry->au8Addr, pau8Addr, u16Addr_len);
 	poEntry->u16Addr_len = u16Addr_len;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIpAddressTable_BTree) != NULL)
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIpAddressData_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIpAddressData_BTree);
+	return poEntry;
+}
+
+ipAddressData_t *
+ipAddressData_getByIndex (
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len)
+{
+	register ipAddressData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->i32AddrType = i32AddrType;
+	memcpy (poTmpEntry->au8Addr, pau8Addr, u16Addr_len);
+	poTmpEntry->u16Addr_len = u16Addr_len;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIpAddressData_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ipAddressData_t, oBTreeNode);
+}
+
+ipAddressData_t *
+ipAddressData_getNextIndex (
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len)
+{
+	register ipAddressData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->i32AddrType = i32AddrType;
+	memcpy (poTmpEntry->au8Addr, pau8Addr, u16Addr_len);
+	poTmpEntry->u16Addr_len = u16Addr_len;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIpAddressData_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ipAddressData_t, oBTreeNode);
+}
+
+ipAddressData_t *
+ipAddressData_If_getByIndex (
+	uint32_t u32IfIndex,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len)
+{
+	register ipAddressData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipAddressData_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->i32AddrType = i32AddrType;
+	memcpy (poTmpEntry->au8Addr, pau8Addr, u16Addr_len);
+	poTmpEntry->u16Addr_len = u16Addr_len;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oIf_BTreeNode, &oIpAddressData_If_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ipAddressData_t, oIf_BTreeNode);
+}
+
+ipAddressData_t *
+ipAddressData_If_getNextIndex (
+	uint32_t u32IfIndex,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len)
+{
+	register ipAddressData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipAddressData_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->i32AddrType = i32AddrType;
+	memcpy (poTmpEntry->au8Addr, pau8Addr, u16Addr_len);
+	poTmpEntry->u16Addr_len = u16Addr_len;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oIf_BTreeNode, &oIpAddressData_If_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ipAddressData_t, oIf_BTreeNode);
+}
+
+/* remove a row from the table */
+void
+ipAddressData_removeEntry (ipAddressData_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oIpAddressData_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIpAddressData_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* create a new row in the (unsorted) table */
+ipAddressEntry_t *
+ipAddressTable_createEntry (
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len)
+{
+	register ipAddressEntry_t *poEntry = NULL;
+	register ipAddressData_t *poIpAddressData = NULL;
+	
+	if ((poIpAddressData = ipAddressData_createEntry (i32AddrType, pau8Addr, u16Addr_len)) == NULL)
+	{
+		return NULL;
+	}
+	poEntry = &poIpAddressData->oIp;
 	
 	poEntry->i32Type = ipAddressType_unicast_c;
 	/*poEntry->aoPrefix = zeroDotZero*/;
@@ -2172,7 +2332,7 @@ ipAddressTable_createEntry (
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = ipAddressStorageType_volatile_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIpAddressTable_BTree);
+	xBitmap_setBit (poIpAddressData->au8Flags, ipAddressFlags_ipCreated_c, 1);
 	return poEntry;
 }
 
@@ -2181,25 +2341,15 @@ ipAddressTable_getByIndex (
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len)
 {
-	register ipAddressEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ipAddressData_t *poIpAddressData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipAddressEntry_t))) == NULL)
+	if ((poIpAddressData = ipAddressData_getByIndex (i32AddrType, pau8Addr, u16Addr_len)) == NULL ||
+		!xBitmap_getBit (poIpAddressData->au8Flags, ipAddressFlags_ipCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->i32AddrType = i32AddrType;
-	memcpy (poTmpEntry->au8Addr, pau8Addr, u16Addr_len);
-	poTmpEntry->u16Addr_len = u16Addr_len;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIpAddressTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ipAddressEntry_t, oBTreeNode);
+	return &poIpAddressData->oIp;
 }
 
 ipAddressEntry_t *
@@ -2207,39 +2357,27 @@ ipAddressTable_getNextIndex (
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len)
 {
-	register ipAddressEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ipAddressData_t *poIpAddressData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipAddressEntry_t))) == NULL)
+	if ((poIpAddressData = ipAddressData_getNextIndex (i32AddrType, pau8Addr, u16Addr_len)) == NULL ||
+		!xBitmap_getBit (poIpAddressData->au8Flags, ipAddressFlags_ipCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->i32AddrType = i32AddrType;
-	memcpy (poTmpEntry->au8Addr, pau8Addr, u16Addr_len);
-	poTmpEntry->u16Addr_len = u16Addr_len;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIpAddressTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ipAddressEntry_t, oBTreeNode);
+	return &poIpAddressData->oIp;
 }
 
 /* remove a row from the table */
 void
 ipAddressTable_removeEntry (ipAddressEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIpAddressTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
-		return;    /* Nothing to remove */
+		return;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIpAddressTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	ipAddressData_removeEntry (ipAddressData_getByIpEntry (poEntry));
 	return;
 }
 
@@ -2249,7 +2387,7 @@ ipAddressTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIpAddressTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oIpAddressData_BTree);
 	return ipAddressTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2258,20 +2396,20 @@ ipAddressTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ipAddressEntry_t *poEntry = NULL;
+	ipAddressData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ipAddressEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ipAddressData_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32AddrType);
 	idx = idx->next_variable;
 	snmp_set_var_value (idx, poEntry->au8Addr, poEntry->u16Addr_len);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIpAddressTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIpAddressData_BTree);
 	return put_index_data;
 }
 
@@ -2429,6 +2567,20 @@ ipAddressTable_mapper (
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
 			register netsnmp_variable_list *idx2 = idx1->next_variable;
+			
+			switch (table_info->colnum)
+			{
+			case IPADDRESSIFINDEX:
+			case IPADDRESSTYPE:
+			case IPADDRESSSTATUS:
+			case IPADDRESSSTORAGETYPE:
+				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			}
 			
 			switch (table_info->colnum)
 			{
