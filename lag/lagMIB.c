@@ -42,6 +42,9 @@ static oid dot3adAggPortTable_oid[] = {1,2,840,10006,300,43,1,2,1};
 static oid dot3adAggPortStatsTable_oid[] = {1,2,840,10006,300,43,1,2,2};
 static oid dot3adAggPortDebugTable_oid[] = {1,2,840,10006,300,43,1,2,3};
 static oid dot3adAggPortXTable_oid[] = {1,2,840,10006,300,43,1,2,4};
+static oid neAggTable_oid[] = {1,3,6,1,4,1,36969,71,1,1};
+static oid neAggPortListTable_oid[] = {1,3,6,1,4,1,36969,71,1,2};
+static oid neAggPortTable_oid[] = {1,3,6,1,4,1,36969,71,1,3};
 
 
 
@@ -74,6 +77,9 @@ lagMIB_init (void)
 	dot3adAggPortStatsTable_init ();
 	dot3adAggPortDebugTable_init ();
 	dot3adAggPortXTable_init ();
+	neAggTable_init ();
+	neAggPortListTable_init ();
+	neAggPortTable_init ();
 }
 
 
@@ -2236,6 +2242,1275 @@ dot3adAggPortXTable_mapper (
 		break;
 		
 	case MODE_SET_COMMIT:
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neAggTable table mapper **/
+void
+neAggTable_init (void)
+{
+	extern oid neAggTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neAggTable", &neAggTable_mapper,
+		neAggTable_oid, OID_LENGTH (neAggTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_INTEGER /* index: dot3adAggIndex */,
+		0);
+	table_info->min_column = NEAGGGROUPTYPE;
+	table_info->max_column = NEAGGSTORAGETYPE;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neAggTable_getFirst;
+	iinfo->get_next_data_point = &neAggTable_getNext;
+	iinfo->get_data_point = &neAggTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neAggTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neAggEntry_t *pEntry1 = xBTree_entry (pNode1, neAggEntry_t, oBTreeNode);
+	register neAggEntry_t *pEntry2 = xBTree_entry (pNode2, neAggEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32Dot3adAggIndex < pEntry2->u32Dot3adAggIndex) ? -1:
+		(pEntry1->u32Dot3adAggIndex == pEntry2->u32Dot3adAggIndex) ? 0: 1;
+}
+
+xBTree_t oNeAggTable_BTree = xBTree_initInline (&neAggTable_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+neAggEntry_t *
+neAggTable_createEntry (
+	uint32_t u32Dot3adAggIndex)
+{
+	register neAggEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->i32GroupType = neAggGroupType_none_c;
+	poEntry->u32GroupIndex = 0;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neAggStorageType_nonVolatile_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeAggTable_BTree);
+	return poEntry;
+}
+
+neAggEntry_t *
+neAggTable_getByIndex (
+	uint32_t u32Dot3adAggIndex)
+{
+	register neAggEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeAggTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neAggEntry_t, oBTreeNode);
+}
+
+neAggEntry_t *
+neAggTable_getNextIndex (
+	uint32_t u32Dot3adAggIndex)
+{
+	register neAggEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeAggTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neAggEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neAggTable_removeEntry (neAggEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeAggTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neAggTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeAggTable_BTree);
+	return neAggTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neAggTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neAggEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neAggEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Dot3adAggIndex);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeAggTable_BTree);
+	return put_index_data;
+}
+
+bool
+neAggTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neAggEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	
+	poEntry = neAggTable_getByIndex (
+		*idx1->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neAggTable table mapper */
+int
+neAggTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neAggEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGGROUPTYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32GroupType);
+				break;
+			case NEAGGGROUPINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32GroupIndex);
+				break;
+			case NEAGGROWSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
+				break;
+			case NEAGGSTORAGETYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGGROUPTYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEAGGGROUPINDEX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEAGGROWSTATUS:
+				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEAGGSTORAGETYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = neAggTable_createEntry (
+						*idx1->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+					
+				case RS_DESTROY:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neAggTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGGROUPTYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32GroupType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32GroupType, sizeof (table_entry->i32GroupType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32GroupType = *request->requestvb->val.integer;
+				break;
+			case NEAGGGROUPINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32GroupIndex))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32GroupIndex, sizeof (table_entry->u32GroupIndex));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32GroupIndex = *request->requestvb->val.integer;
+				break;
+			case NEAGGSTORAGETYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8StorageType = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		/* Check the internal consistency of an active row */
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_ACTIVE:
+				case RS_CREATEANDGO:
+					if (/* TODO : int neAggTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGGROUPTYPE:
+				memcpy (&table_entry->i32GroupType, pvOldDdata, sizeof (table_entry->i32GroupType));
+				break;
+			case NEAGGGROUPINDEX:
+				memcpy (&table_entry->u32GroupIndex, pvOldDdata, sizeof (table_entry->u32GroupIndex));
+				break;
+			case NEAGGROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neAggTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+				break;
+			case NEAGGSTORAGETYPE:
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_ACTIVE:
+					table_entry->u8RowStatus = RS_ACTIVE;
+					break;
+					
+				case RS_CREATEANDWAIT:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_NOTINSERVICE:
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
+					break;
+					
+				case RS_DESTROY:
+					neAggTable_removeEntry (table_entry);
+					break;
+				}
+			}
+		}
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neAggPortListTable table mapper **/
+void
+neAggPortListTable_init (void)
+{
+	extern oid neAggPortListTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neAggPortListTable", &neAggPortListTable_mapper,
+		neAggPortListTable_oid, OID_LENGTH (neAggPortListTable_oid),
+		HANDLER_CAN_RONLY
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_INTEGER /* index: dot3adAggIndex */,
+		ASN_INTEGER /* index: neAggPortListIndex */,
+		0);
+	table_info->min_column = NEAGGPORTLISTINDEX;
+	table_info->max_column = NEAGGPORTLISTINDEX;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neAggPortListTable_getFirst;
+	iinfo->get_next_data_point = &neAggPortListTable_getNext;
+	iinfo->get_data_point = &neAggPortListTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neAggPortListTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neAggPortListEntry_t *pEntry1 = xBTree_entry (pNode1, neAggPortListEntry_t, oBTreeNode);
+	register neAggPortListEntry_t *pEntry2 = xBTree_entry (pNode2, neAggPortListEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32Dot3adAggIndex < pEntry2->u32Dot3adAggIndex) ||
+		(pEntry1->u32Dot3adAggIndex == pEntry2->u32Dot3adAggIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32Dot3adAggIndex == pEntry2->u32Dot3adAggIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+xBTree_t oNeAggPortListTable_BTree = xBTree_initInline (&neAggPortListTable_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+neAggPortListEntry_t *
+neAggPortListTable_createEntry (
+	uint32_t u32Dot3adAggIndex,
+	uint32_t u32Index)
+{
+	register neAggPortListEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
+	poEntry->u32Index = u32Index;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggPortListTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeAggPortListTable_BTree);
+	return poEntry;
+}
+
+neAggPortListEntry_t *
+neAggPortListTable_getByIndex (
+	uint32_t u32Dot3adAggIndex,
+	uint32_t u32Index)
+{
+	register neAggPortListEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeAggPortListTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neAggPortListEntry_t, oBTreeNode);
+}
+
+neAggPortListEntry_t *
+neAggPortListTable_getNextIndex (
+	uint32_t u32Dot3adAggIndex,
+	uint32_t u32Index)
+{
+	register neAggPortListEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeAggPortListTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neAggPortListEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neAggPortListTable_removeEntry (neAggPortListEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggPortListTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeAggPortListTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neAggPortListTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeAggPortListTable_BTree);
+	return neAggPortListTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neAggPortListTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neAggPortListEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neAggPortListEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Dot3adAggIndex);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeAggPortListTable_BTree);
+	return put_index_data;
+}
+
+bool
+neAggPortListTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neAggPortListEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	
+	poEntry = neAggPortListTable_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neAggPortListTable table mapper */
+int
+neAggPortListTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neAggPortListEntry_t *table_entry;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggPortListEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGPORTLISTINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32Index);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neAggPortTable table mapper **/
+void
+neAggPortTable_init (void)
+{
+	extern oid neAggPortTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neAggPortTable", &neAggPortTable_mapper,
+		neAggPortTable_oid, OID_LENGTH (neAggPortTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_INTEGER /* index: dot3adAggPortIndex */,
+		0);
+	table_info->min_column = NEAGGPORTGROUPTYPE;
+	table_info->max_column = NEAGGPORTSTORAGETYPE;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neAggPortTable_getFirst;
+	iinfo->get_next_data_point = &neAggPortTable_getNext;
+	iinfo->get_data_point = &neAggPortTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neAggPortTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neAggPortEntry_t *pEntry1 = xBTree_entry (pNode1, neAggPortEntry_t, oBTreeNode);
+	register neAggPortEntry_t *pEntry2 = xBTree_entry (pNode2, neAggPortEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32Dot3adAggPortIndex < pEntry2->u32Dot3adAggPortIndex) ? -1:
+		(pEntry1->u32Dot3adAggPortIndex == pEntry2->u32Dot3adAggPortIndex) ? 0: 1;
+}
+
+xBTree_t oNeAggPortTable_BTree = xBTree_initInline (&neAggPortTable_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+neAggPortEntry_t *
+neAggPortTable_createEntry (
+	uint32_t u32Dot3adAggPortIndex)
+{
+	register neAggPortEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32Dot3adAggPortIndex = u32Dot3adAggPortIndex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggPortTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->i32GroupType = neAggPortGroupType_none_c;
+	poEntry->u32GroupIndex = 0;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neAggPortStorageType_nonVolatile_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeAggPortTable_BTree);
+	return poEntry;
+}
+
+neAggPortEntry_t *
+neAggPortTable_getByIndex (
+	uint32_t u32Dot3adAggPortIndex)
+{
+	register neAggPortEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Dot3adAggPortIndex = u32Dot3adAggPortIndex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeAggPortTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neAggPortEntry_t, oBTreeNode);
+}
+
+neAggPortEntry_t *
+neAggPortTable_getNextIndex (
+	uint32_t u32Dot3adAggPortIndex)
+{
+	register neAggPortEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Dot3adAggPortIndex = u32Dot3adAggPortIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeAggPortTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neAggPortEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neAggPortTable_removeEntry (neAggPortEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggPortTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeAggPortTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neAggPortTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeAggPortTable_BTree);
+	return neAggPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neAggPortTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neAggPortEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neAggPortEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Dot3adAggPortIndex);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeAggPortTable_BTree);
+	return put_index_data;
+}
+
+bool
+neAggPortTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neAggPortEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	
+	poEntry = neAggPortTable_getByIndex (
+		*idx1->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neAggPortTable table mapper */
+int
+neAggPortTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neAggPortEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGPORTGROUPTYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32GroupType);
+				break;
+			case NEAGGPORTGROUPINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32GroupIndex);
+				break;
+			case NEAGGPORTROWSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
+				break;
+			case NEAGGPORTSTORAGETYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGPORTGROUPTYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEAGGPORTGROUPINDEX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEAGGPORTROWSTATUS:
+				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEAGGPORTSTORAGETYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGPORTROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = neAggPortTable_createEntry (
+						*idx1->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+					
+				case RS_DESTROY:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neAggPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGPORTROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neAggPortTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neAggPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGPORTGROUPTYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32GroupType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32GroupType, sizeof (table_entry->i32GroupType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32GroupType = *request->requestvb->val.integer;
+				break;
+			case NEAGGPORTGROUPINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32GroupIndex))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32GroupIndex, sizeof (table_entry->u32GroupIndex));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32GroupIndex = *request->requestvb->val.integer;
+				break;
+			case NEAGGPORTSTORAGETYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8StorageType = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		/* Check the internal consistency of an active row */
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGPORTROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_ACTIVE:
+				case RS_CREATEANDGO:
+					if (/* TODO : int neAggPortTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neAggPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGPORTGROUPTYPE:
+				memcpy (&table_entry->i32GroupType, pvOldDdata, sizeof (table_entry->i32GroupType));
+				break;
+			case NEAGGPORTGROUPINDEX:
+				memcpy (&table_entry->u32GroupIndex, pvOldDdata, sizeof (table_entry->u32GroupIndex));
+				break;
+			case NEAGGPORTROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neAggPortTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+				break;
+			case NEAGGPORTSTORAGETYPE:
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neAggPortEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGPORTROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_ACTIVE:
+					table_entry->u8RowStatus = RS_ACTIVE;
+					break;
+					
+				case RS_CREATEANDWAIT:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_NOTINSERVICE:
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
+					break;
+					
+				case RS_DESTROY:
+					neAggPortTable_removeEntry (table_entry);
+					break;
+				}
+			}
+		}
 		break;
 	}
 	

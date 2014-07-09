@@ -473,6 +473,175 @@ Netsnmp_Node_Handler dot3adAggPortXTable_mapper;
 #endif	/* SNMP_SRC */
 
 
+/**
+ *	table neAggTable definitions
+ */
+#define NEAGGGROUPTYPE 1
+#define NEAGGGROUPINDEX 2
+#define NEAGGROWSTATUS 3
+#define NEAGGSTORAGETYPE 4
+
+enum
+{
+	/* enums for column neAggGroupType */
+	neAggGroupType_none_c = 1,
+	neAggGroupType_entity_c = 2,
+	neAggGroupType_lsr_c = 3,
+
+	/* enums for column neAggRowStatus */
+	neAggRowStatus_active_c = 1,
+	neAggRowStatus_notInService_c = 2,
+	neAggRowStatus_notReady_c = 3,
+	neAggRowStatus_createAndGo_c = 4,
+	neAggRowStatus_createAndWait_c = 5,
+	neAggRowStatus_destroy_c = 6,
+
+	/* enums for column neAggStorageType */
+	neAggStorageType_other_c = 1,
+	neAggStorageType_volatile_c = 2,
+	neAggStorageType_nonVolatile_c = 3,
+	neAggStorageType_permanent_c = 4,
+	neAggStorageType_readOnly_c = 5,
+};
+
+/* table neAggTable row entry data structure */
+typedef struct neAggEntry_t
+{
+	/* Index values */
+	uint32_t u32Dot3adAggIndex;
+	
+	/* Column values */
+	int32_t i32GroupType;
+	uint32_t u32GroupIndex;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	
+	xBTree_Node_t oBTreeNode;
+} neAggEntry_t;
+
+extern xBTree_t oNeAggTable_BTree;
+
+/* neAggTable table mapper */
+void neAggTable_init (void);
+neAggEntry_t * neAggTable_createEntry (
+	uint32_t u32Dot3adAggIndex);
+neAggEntry_t * neAggTable_getByIndex (
+	uint32_t u32Dot3adAggIndex);
+neAggEntry_t * neAggTable_getNextIndex (
+	uint32_t u32Dot3adAggIndex);
+void neAggTable_removeEntry (neAggEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neAggTable_getFirst;
+Netsnmp_Next_Data_Point neAggTable_getNext;
+Netsnmp_Get_Data_Point neAggTable_get;
+Netsnmp_Node_Handler neAggTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table neAggPortListTable definitions
+ */
+#define NEAGGPORTLISTINDEX 1
+
+/* table neAggPortListTable row entry data structure */
+typedef struct neAggPortListEntry_t
+{
+	/* Index values */
+	uint32_t u32Dot3adAggIndex;
+	uint32_t u32Index;
+	
+	/* Column values */
+	
+	xBTree_Node_t oBTreeNode;
+} neAggPortListEntry_t;
+
+extern xBTree_t oNeAggPortListTable_BTree;
+
+/* neAggPortListTable table mapper */
+void neAggPortListTable_init (void);
+neAggPortListEntry_t * neAggPortListTable_createEntry (
+	uint32_t u32Dot3adAggIndex,
+	uint32_t u32Index);
+neAggPortListEntry_t * neAggPortListTable_getByIndex (
+	uint32_t u32Dot3adAggIndex,
+	uint32_t u32Index);
+neAggPortListEntry_t * neAggPortListTable_getNextIndex (
+	uint32_t u32Dot3adAggIndex,
+	uint32_t u32Index);
+void neAggPortListTable_removeEntry (neAggPortListEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neAggPortListTable_getFirst;
+Netsnmp_Next_Data_Point neAggPortListTable_getNext;
+Netsnmp_Get_Data_Point neAggPortListTable_get;
+Netsnmp_Node_Handler neAggPortListTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table neAggPortTable definitions
+ */
+#define NEAGGPORTGROUPTYPE 1
+#define NEAGGPORTGROUPINDEX 2
+#define NEAGGPORTROWSTATUS 3
+#define NEAGGPORTSTORAGETYPE 4
+
+enum
+{
+	/* enums for column neAggPortGroupType */
+	neAggPortGroupType_none_c = 1,
+	neAggPortGroupType_entity_c = 2,
+	neAggPortGroupType_lsr_c = 3,
+
+	/* enums for column neAggPortRowStatus */
+	neAggPortRowStatus_active_c = 1,
+	neAggPortRowStatus_notInService_c = 2,
+	neAggPortRowStatus_notReady_c = 3,
+	neAggPortRowStatus_createAndGo_c = 4,
+	neAggPortRowStatus_createAndWait_c = 5,
+	neAggPortRowStatus_destroy_c = 6,
+
+	/* enums for column neAggPortStorageType */
+	neAggPortStorageType_other_c = 1,
+	neAggPortStorageType_volatile_c = 2,
+	neAggPortStorageType_nonVolatile_c = 3,
+	neAggPortStorageType_permanent_c = 4,
+	neAggPortStorageType_readOnly_c = 5,
+};
+
+/* table neAggPortTable row entry data structure */
+typedef struct neAggPortEntry_t
+{
+	/* Index values */
+	uint32_t u32Dot3adAggPortIndex;
+	
+	/* Column values */
+	int32_t i32GroupType;
+	uint32_t u32GroupIndex;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	
+	xBTree_Node_t oBTreeNode;
+} neAggPortEntry_t;
+
+extern xBTree_t oNeAggPortTable_BTree;
+
+/* neAggPortTable table mapper */
+void neAggPortTable_init (void);
+neAggPortEntry_t * neAggPortTable_createEntry (
+	uint32_t u32Dot3adAggPortIndex);
+neAggPortEntry_t * neAggPortTable_getByIndex (
+	uint32_t u32Dot3adAggPortIndex);
+neAggPortEntry_t * neAggPortTable_getNextIndex (
+	uint32_t u32Dot3adAggPortIndex);
+void neAggPortTable_removeEntry (neAggPortEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neAggPortTable_getFirst;
+Netsnmp_Next_Data_Point neAggPortTable_getNext;
+Netsnmp_Get_Data_Point neAggPortTable_get;
+Netsnmp_Node_Handler neAggPortTable_mapper;
+#endif	/* SNMP_SRC */
+
+
 
 #	ifdef __cplusplus
 }
