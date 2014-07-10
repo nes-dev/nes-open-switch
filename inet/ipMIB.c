@@ -2381,6 +2381,54 @@ ipAddressTable_removeEntry (ipAddressEntry_t *poEntry)
 	return;
 }
 
+ipAddressEntry_t *
+ipAddressTable_createExt (
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len)
+{
+	ipAddressEntry_t *poEntry = NULL;
+	neIpAddressEntry_t *poNeIpAddressEntry = NULL;
+	
+	poEntry = ipAddressTable_createEntry (
+		i32AddrType,
+		pau8Addr, u16Addr_len);
+	if (poEntry == NULL)
+	{
+		return NULL;
+	}
+	
+	poNeIpAddressEntry = neIpAddressTable_createEntry (
+		i32AddrType,
+		pau8Addr, u16Addr_len);
+	if (poNeIpAddressEntry == NULL)
+	{
+		ipAddressTable_removeEntry (poEntry);
+		return NULL;
+	}
+	
+	return poEntry;
+}
+
+bool
+ipAddressTable_removeExt (ipAddressEntry_t *poEntry)
+{
+	register ipAddressData_t *poIpAddressData = ipAddressData_getByIpEntry (poEntry);
+	
+	neIpAddressTable_removeEntry (&poIpAddressData->oNe);
+	ipAddressTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+
+bool
+ipAddressRowStatus_handler (
+	ipAddressEntry_t *poEntry,
+	int32_t u8RowStatus)
+{
+	return false;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ipAddressTable_getFirst (
@@ -2588,6 +2636,9 @@ ipAddressTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_WRONGVALUE);
+					return SNMP_ERR_NOERROR;
+					
 				case RS_CREATEANDWAIT:
 					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
 					{
@@ -2595,7 +2646,7 @@ ipAddressTable_mapper (
 						return SNMP_ERR_NOERROR;
 					}
 					
-					table_entry = ipAddressTable_createEntry (
+					table_entry = ipAddressTable_createExt (
 						*idx1->val.integer,
 						(void*) idx2->val.string, idx2->val_len);
 					if (table_entry != NULL)
@@ -2646,7 +2697,7 @@ ipAddressTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ipAddressTable_removeEntry (table_entry);
+					ipAddressTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -2733,8 +2784,11 @@ ipAddressTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int ipAddressTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
+					if (!ipAddressRowStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -2772,7 +2826,7 @@ ipAddressTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ipAddressTable_removeEntry (table_entry);
+					ipAddressTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -2796,19 +2850,12 @@ ipAddressTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_ACTIVE:
-					table_entry->u8RowStatus = RS_ACTIVE;
-					break;
-					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_NOTINSERVICE:
-					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
-					ipAddressTable_removeEntry (table_entry);
+					ipAddressTable_removeExt (table_entry);
 					break;
 				}
 			}

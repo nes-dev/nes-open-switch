@@ -673,6 +673,13 @@ ipAddressEntry_t * ipAddressTable_getNextIndex (
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len);
 void ipAddressTable_removeEntry (ipAddressEntry_t *poEntry);
+ipAddressEntry_t * ipAddressTable_createExt (
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len);
+bool ipAddressTable_removeExt (ipAddressEntry_t *poEntry);
+bool ipAddressRowStatus_handler (
+	ipAddressEntry_t *poEntry,
+	int32_t i32RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ipAddressTable_getFirst;
 Netsnmp_Next_Data_Point ipAddressTable_getNext;

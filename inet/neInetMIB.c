@@ -1517,39 +1517,25 @@ neIpAddressTable_mapper (
 		{
 			table_entry = (neIpAddressEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			register netsnmp_variable_list *idx1 = table_info->indexes;
-			register netsnmp_variable_list *idx2 = idx1->next_variable;
 			
 			switch (table_info->colnum)
 			{
 			case NEIPADDRESSPREFIXLENGTH:
-				if (table_entry == NULL)
+			{
+				register ipAddressData_t *poIpAddressData = ipAddressData_getByNeEntry (table_entry);
+				
+				if (poIpAddressData->oIp.u8RowStatus == xRowStatus_active_c || poIpAddressData->oIp.u8RowStatus == xRowStatus_notReady_c)
 				{
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-						return SNMP_ERR_NOERROR;
-					}
-					
-					table_entry = neIpAddressTable_createEntry (
-						*idx1->val.integer,
-						(void*) idx2->val.string, idx2->val_len);
-					if (table_entry != NULL)
-					{
-						netsnmp_insert_iterator_context (request, table_entry);
-						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
-					}
-					else
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-						return SNMP_ERR_NOERROR;
-					}
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
 				}
 				break;
+			}
 			default:
 				if (table_entry == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+					return SNMP_ERR_NOERROR;
 				}
 				break;
 			}
@@ -1570,8 +1556,6 @@ neIpAddressTable_mapper (
 			switch (table_info->colnum)
 			{
 			case NEIPADDRESSPREFIXLENGTH:
-				neIpAddressTable_removeEntry (table_entry);
-				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				break;
 			}
 		}
@@ -1620,8 +1604,6 @@ neIpAddressTable_mapper (
 			case NEIPADDRESSPREFIXLENGTH:
 				if (pvOldDdata == table_entry)
 				{
-					neIpAddressTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				}
 				else
 				{
