@@ -28,6 +28,7 @@ extern "C" {
 
 
 #include "lib/lib.h"
+#include "lib/ieee802.h"
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 #include "lib/ip.h"
@@ -528,7 +529,7 @@ typedef struct ipAddressPrefixEntry_t
 	/* Index values */
 	uint32_t u32IfIndex;
 	int32_t i32Type;
-	uint8_t au8Prefix[255];
+	uint8_t au8Prefix[20];
 	size_t u16Prefix_len;	/* # of uint8_t elements */
 	uint32_t u32Length;
 	
@@ -538,6 +539,8 @@ typedef struct ipAddressPrefixEntry_t
 	int32_t i32AutonomousFlag;
 	uint32_t u32AdvPreferredLifetime;
 	uint32_t u32AdvValidLifetime;
+	
+	uint32_t u32NumAddresses;
 	
 	xBTree_Node_t oBTreeNode;
 } ipAddressPrefixEntry_t;
@@ -781,11 +784,11 @@ typedef struct ipNetToPhysicalEntry_t
 	/* Index values */
 	uint32_t u32IfIndex;
 	int32_t i32NetAddressType;
-	uint8_t au8NetAddress[255];
+	uint8_t au8NetAddress[20];
 	size_t u16NetAddress_len;	/* # of uint8_t elements */
 	
 	/* Column values */
-	uint8_t au8PhysAddress[65535];
+	uint8_t au8PhysAddress[IeeeEui64_size_c];
 	size_t u16PhysAddress_len;	/* # of uint8_t elements */
 	uint32_t u32LastUpdated;
 	int32_t i32Type;
@@ -910,7 +913,7 @@ typedef struct ipDefaultRouterEntry_t
 {
 	/* Index values */
 	int32_t i32AddressType;
-	uint8_t au8Address[255];
+	uint8_t au8Address[20];
 	size_t u16Address_len;	/* # of uint8_t elements */
 	uint32_t u32IfIndex;
 	

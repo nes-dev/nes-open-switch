@@ -453,9 +453,9 @@ ipv4InterfaceEntry_t *
 ipv4InterfaceTable_createEntry (
 	uint32_t u32IfIndex)
 {
-	ipv4InterfaceEntry_t *poEntry = NULL;
+	register ipv4InterfaceEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ipv4InterfaceEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -480,7 +480,7 @@ ipv4InterfaceTable_getByIndex (
 	register ipv4InterfaceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipv4InterfaceEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -503,7 +503,7 @@ ipv4InterfaceTable_getNextIndex (
 	register ipv4InterfaceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipv4InterfaceEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -783,9 +783,9 @@ ipv6InterfaceEntry_t *
 ipv6InterfaceTable_createEntry (
 	uint32_t u32IfIndex)
 {
-	ipv6InterfaceEntry_t *poEntry = NULL;
+	register ipv6InterfaceEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ipv6InterfaceEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -808,7 +808,7 @@ ipv6InterfaceTable_getByIndex (
 	register ipv6InterfaceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipv6InterfaceEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -831,7 +831,7 @@ ipv6InterfaceTable_getNextIndex (
 	register ipv6InterfaceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipv6InterfaceEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1145,9 +1145,9 @@ ipSystemStatsEntry_t *
 ipSystemStatsTable_createEntry (
 	int32_t i32IPVersion)
 {
-	ipSystemStatsEntry_t *poEntry = NULL;
+	register ipSystemStatsEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ipSystemStatsEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1170,7 +1170,7 @@ ipSystemStatsTable_getByIndex (
 	register ipSystemStatsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipSystemStatsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1193,7 +1193,7 @@ ipSystemStatsTable_getNextIndex (
 	register ipSystemStatsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipSystemStatsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1507,9 +1507,9 @@ ipIfStatsTable_createEntry (
 	int32_t i32IPVersion,
 	uint32_t u32IfIndex)
 {
-	ipIfStatsEntry_t *poEntry = NULL;
+	register ipIfStatsEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ipIfStatsEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1534,7 +1534,7 @@ ipIfStatsTable_getByIndex (
 	register ipIfStatsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipIfStatsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1559,7 +1559,7 @@ ipIfStatsTable_getNextIndex (
 	register ipIfStatsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipIfStatsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1881,9 +1881,9 @@ ipAddressPrefixTable_createEntry (
 	uint8_t *pau8Prefix, size_t u16Prefix_len,
 	uint32_t u32Length)
 {
-	ipAddressPrefixEntry_t *poEntry = NULL;
+	register ipAddressPrefixEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ipAddressPrefixEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1913,7 +1913,7 @@ ipAddressPrefixTable_getByIndex (
 	register ipAddressPrefixEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipAddressPrefixEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1943,7 +1943,7 @@ ipAddressPrefixTable_getNextIndex (
 	register ipAddressPrefixEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipAddressPrefixEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2878,9 +2878,9 @@ ipNetToPhysicalTable_createEntry (
 	int32_t i32NetAddressType,
 	uint8_t *pau8NetAddress, size_t u16NetAddress_len)
 {
-	ipNetToPhysicalEntry_t *poEntry = NULL;
+	register ipNetToPhysicalEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ipNetToPhysicalEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2911,7 +2911,7 @@ ipNetToPhysicalTable_getByIndex (
 	register ipNetToPhysicalEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipNetToPhysicalEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2939,7 +2939,7 @@ ipNetToPhysicalTable_getNextIndex (
 	register ipNetToPhysicalEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipNetToPhysicalEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3399,9 +3399,9 @@ ipv6ScopeZoneIndexEntry_t *
 ipv6ScopeZoneIndexTable_createEntry (
 	uint32_t u32IfIndex)
 {
-	ipv6ScopeZoneIndexEntry_t *poEntry = NULL;
+	register ipv6ScopeZoneIndexEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ipv6ScopeZoneIndexEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3424,7 +3424,7 @@ ipv6ScopeZoneIndexTable_getByIndex (
 	register ipv6ScopeZoneIndexEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipv6ScopeZoneIndexEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3447,7 +3447,7 @@ ipv6ScopeZoneIndexTable_getNextIndex (
 	register ipv6ScopeZoneIndexEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipv6ScopeZoneIndexEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3665,9 +3665,9 @@ ipDefaultRouterTable_createEntry (
 	uint8_t *pau8Address, size_t u16Address_len,
 	uint32_t u32IfIndex)
 {
-	ipDefaultRouterEntry_t *poEntry = NULL;
+	register ipDefaultRouterEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ipDefaultRouterEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3695,7 +3695,7 @@ ipDefaultRouterTable_getByIndex (
 	register ipDefaultRouterEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipDefaultRouterEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3723,7 +3723,7 @@ ipDefaultRouterTable_getNextIndex (
 	register ipDefaultRouterEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipDefaultRouterEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3916,9 +3916,9 @@ ipv6RouterAdvertEntry_t *
 ipv6RouterAdvertTable_createEntry (
 	uint32_t u32IfIndex)
 {
-	ipv6RouterAdvertEntry_t *poEntry = NULL;
+	register ipv6RouterAdvertEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ipv6RouterAdvertEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3950,7 +3950,7 @@ ipv6RouterAdvertTable_getByIndex (
 	register ipv6RouterAdvertEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipv6RouterAdvertEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3973,7 +3973,7 @@ ipv6RouterAdvertTable_getNextIndex (
 	register ipv6RouterAdvertEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ipv6RouterAdvertEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
