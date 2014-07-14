@@ -23,6 +23,8 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "ethernet/ieee8021BridgeMib.h"
+#include "if/ifMIB.h"
 #include "ipMIB.h"
 
 #include "lib/bitmap.h"
@@ -1978,6 +1980,72 @@ ipAddressPrefixTable_removeEntry (ipAddressPrefixEntry_t *poEntry)
 	return;
 }
 
+ipAddressPrefixEntry_t *
+ipAddressPrefixTable_handler (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	uint8_t *pau8Addr, size_t u16Addr_len,
+	uint32_t u32PrefixLength,
+	bool bAttach)
+{
+	register uint8_t u8PrefixSize = 0;
+	register uint8_t *pu8Prefix = NULL;
+	register ipAddressPrefixEntry_t *poIpAddressPrefixEntry = NULL;
+	
+	u8PrefixSize =
+		i32Type == ipAddressAddrType_ipv4_c ? InetVersion_ipv4_c:
+		i32Type == ipAddressAddrType_ipv4z_c ? InetAddressIPv4_size_c:
+		i32Type == ipAddressAddrType_ipv6_c ? InetVersion_ipv6_c:
+		i32Type == ipAddressAddrType_ipv6z_c ? InetAddressIPv6z_size_c: 0;
+		
+	if ((pu8Prefix = xBuffer_cAlloc (u8PrefixSize)) == NULL)
+	{
+		goto ipAddressPrefixTable_handler_cleanup;
+	}
+	xBitmap_setRev (pu8Prefix, 0, u32PrefixLength - 1, 1);
+	xBitmap_and (pu8Prefix, pu8Prefix, pau8Addr, u32PrefixLength);
+	if (i32Type == ipAddressAddrType_ipv4z_c || i32Type == ipAddressAddrType_ipv6z_c)
+	{
+		memcpy (&pu8Prefix [u8PrefixSize - InetZoneIndex_size_c - 1], pau8Addr, InetZoneIndex_size_c);
+	}
+	
+	poIpAddressPrefixEntry = ipAddressPrefixTable_getByIndex (u32IfIndex, i32Type, pu8Prefix, u8PrefixSize, u32PrefixLength);
+	
+	if (bAttach)
+	{
+		if (poIpAddressPrefixEntry == NULL &&
+			(poIpAddressPrefixEntry = ipAddressPrefixTable_createEntry (u32IfIndex, i32Type, pu8Prefix, u8PrefixSize, u32PrefixLength)) == NULL)
+		{
+			goto ipAddressPrefixTable_handler_cleanup;
+		}
+		
+		poIpAddressPrefixEntry->u32NumAddresses++;
+	}
+	else
+	{
+		if (poIpAddressPrefixEntry == NULL)
+		{
+			goto ipAddressPrefixTable_handler_cleanup;
+		}
+		
+		poIpAddressPrefixEntry->u32NumAddresses--;
+		
+		if (poIpAddressPrefixEntry->u32NumAddresses == 0)
+		{
+			ipAddressPrefixTable_removeEntry (poIpAddressPrefixEntry);
+			poIpAddressPrefixEntry = NULL;
+		}
+	}
+	
+ipAddressPrefixTable_handler_cleanup:
+	
+	if (pu8Prefix != NULL)
+	{
+		xBuffer_free (pu8Prefix);
+	}
+	return poIpAddressPrefixEntry;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ipAddressPrefixTable_getFirst (
@@ -2420,12 +2488,198 @@ ipAddressTable_removeExt (ipAddressEntry_t *poEntry)
 	return true;
 }
 
+bool
+ipAddressIfIndex_handler (
+	ipAddressEntry_t *poEntry)
+{
+	register neInetInterfaceEntry_t *poNeInetInterfaceEntry = NULL;
+	register ipAddressData_t *poIpAddressData = ipAddressData_getByIpEntry (poEntry);
+	
+	
+	if (poIpAddressData->u32IfIndex == poIpAddressData->oIp.u32IfIndex)
+	{
+		return true;
+	}
+	
+	if (poIpAddressData->u32IfIndex == 0)
+	{
+		goto ipAddressIfIndex_handler_newIfIndex;
+	}
+	
+	if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL)
+	{
+		goto ipAddressIfIndex_handler_cleanup;
+	}
+	
+	xBTree_nodeRemove (&poIpAddressData->oIf_BTreeNode, &oIpAddressData_If_BTree);
+	
+	if (poIpAddressData->u32PrefixLength != 0)
+	{
+		ipAddressPrefixTable_handler (
+			poIpAddressData->u32IfIndex, poIpAddressData->i32AddrType, poIpAddressData->au8Addr, poIpAddressData->u16Addr_len, poIpAddressData->u32PrefixLength, false);
+			
+		poIpAddressData->u32PrefixLength = 0;
+	}
+	
+	if (!neInetInterfaceTable_removeExt (poNeInetInterfaceEntry, poIpAddressData->i32AddrType, poIpAddressData->au8Addr, poIpAddressData->u16Addr_len, false))
+	{
+		goto ipAddressIfIndex_handler_cleanup;
+	}
+	
+	if (!ifData_removeReference (poIpAddressData->u32IfIndex, false, true, false))
+	{
+		goto ipAddressIfIndex_handler_cleanup;
+	}
+	poIpAddressData->u32IfIndex = 0;
+	
+	
+ipAddressIfIndex_handler_newIfIndex:
+	
+	if (poIpAddressData->oIp.u32IfIndex == 0)
+	{
+		goto ipAddressIfIndex_handler_success;
+	}
+	
+	if (!ifData_createReference (poIpAddressData->oIp.u32IfIndex, 0, false, true, false, NULL))
+	{
+		goto ipAddressIfIndex_handler_cleanup;
+	}
+	
+	if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->oIp.u32IfIndex)) == NULL &&
+		(poNeInetInterfaceEntry = neInetInterfaceTable_createExt (
+			poIpAddressData->oIp.u32IfIndex, poIpAddressData->i32AddrType, poIpAddressData->au8Addr, poIpAddressData->u16Addr_len, false)) == NULL)
+	{
+		goto ipAddressIfIndex_handler_cleanup;
+	}
+	
+	if (poIpAddressData->oNe.u32PrefixLength != 0 &&
+		ipAddressPrefixTable_handler (
+			poIpAddressData->oIp.u32IfIndex, poIpAddressData->i32AddrType, poIpAddressData->au8Addr, poIpAddressData->u16Addr_len, poIpAddressData->oNe.u32PrefixLength, true) == NULL)
+	{
+		goto ipAddressIfIndex_handler_cleanup;
+	}
+	poIpAddressData->u32PrefixLength = poIpAddressData->oNe.u32PrefixLength;
+	
+ipAddressIfIndex_handler_success:
+	
+	poIpAddressData->u32IfIndex = poIpAddressData->oIp.u32IfIndex;
+	xBTree_nodeAdd (&poIpAddressData->oIf_BTreeNode, &oIpAddressData_If_BTree);
+	
+	return true;
+	
+	
+ipAddressIfIndex_handler_cleanup:
+	
+	return false;
+}
 
 bool
 ipAddressRowStatus_handler (
 	ipAddressEntry_t *poEntry,
 	int32_t u8RowStatus)
 {
+	register neInetInterfaceEntry_t *poNeInetInterfaceEntry = NULL;
+	register ipAddressData_t *poIpAddressData = ipAddressData_getByIpEntry (poEntry);
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (poEntry->u8RowStatus == xRowStatus_active_c)
+		{
+			goto ipAddressRowStatus_handler_success;
+		}
+		
+		if (poIpAddressData->oIp.u32IfIndex == 0 ||
+			poIpAddressData->oNe.u32PrefixLength == 0)
+		{
+			goto ipAddressRowStatus_handler_cleanup;
+		}
+		
+		if (!ipAddressIfIndex_handler (poEntry))
+		{
+			goto ipAddressRowStatus_handler_cleanup;
+		}
+		
+		if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL)
+		{
+			goto ipAddressRowStatus_handler_cleanup;
+		}
+		
+		if (poNeInetInterfaceEntry->i32TrafficEnable == neInetInterfaceTrafficEnable_true_c &&
+			!ieee8021BridgeTpPortTable_handler (poIpAddressData->u32IfIndex, false))
+		{
+			goto ipAddressRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_active_c;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (poEntry->u8RowStatus != xRowStatus_active_c)
+		{
+			goto ipAddressRowStatus_handler_success;
+		}
+		
+		if (((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL ||
+			 poNeInetInterfaceEntry->i32TrafficEnable == neInetInterfaceTrafficEnable_true_c) &&
+			!ieee8021BridgeTpPortTable_handler (poIpAddressData->u32IfIndex, true))
+		{
+			goto ipAddressRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		poEntry->u8RowStatus = xRowStatus_notReady_c;
+		break;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (poIpAddressData->u32IfIndex == 0)
+		{
+			goto ipAddressRowStatus_handler_success;
+		}
+		
+		{
+			uint32_t u32IfIndex = poIpAddressData->u32IfIndex;
+			
+			if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL)
+			{
+				goto ipAddressRowStatus_handler_cleanup;
+			}
+			
+			poIpAddressData->oIp.u32IfIndex = 0;
+			if (!ipAddressIfIndex_handler (poEntry))
+			{
+				goto ipAddressRowStatus_handler_cleanup;
+			}
+			
+			if (((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (u32IfIndex)) == NULL ||
+				 poNeInetInterfaceEntry->i32TrafficEnable == neInetInterfaceTrafficEnable_true_c) &&
+				!ieee8021BridgeTpPortTable_handler (u32IfIndex, true))
+			{
+				goto ipAddressRowStatus_handler_cleanup;
+			}
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+ipAddressRowStatus_handler_success:
+	
+	return true;
+	
+	
+ipAddressRowStatus_handler_cleanup:
+	
 	return false;
 }
 

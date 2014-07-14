@@ -78,6 +78,8 @@ enum
 	InetAddressVpnIPv4_size_c		= 12,
 	InetAddressVpnIPv6_size_c		= 24,
 	
+	InetZoneIndex_size_c			= 4,
+	
 	InetVersion_unknown_c 			= 0,
 	InetVersion_ipv4_c 				= 1,
 	InetVersion_ipv6_c 				= 2,

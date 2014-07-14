@@ -370,7 +370,7 @@ neInetInterfaceTable_init (void)
 	netsnmp_table_helper_add_indexes (table_info,
 		ASN_INTEGER /* index: ifIndex */,
 		0);
-	table_info->min_column = NEINETINTERFACETRANSPORTENABLE;
+	table_info->min_column = NEINETINTERFACETRAFFICENABLE;
 	table_info->max_column = NEINETINTERFACEFORWARDINGENABLE;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
@@ -418,7 +418,7 @@ neInetInterfaceTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32TransportEnable = neInetInterfaceTransportEnable_true_c;
+	poEntry->i32TrafficEnable = neInetInterfaceTrafficEnable_true_c;
 	/*poEntry->au8ForwardingEnable = neInetInterfaceForwardingEnable_{ ipv4 , ipv6 , clnp }_c*/;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeInetInterfaceTable_BTree);
@@ -484,6 +484,26 @@ neInetInterfaceTable_removeEntry (neInetInterfaceEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeInetInterfaceTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+neInetInterfaceEntry_t *
+neInetInterfaceTable_createExt (
+	uint32_t u32IfIndex,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len,
+	bool bUnNumAddr)
+{
+	return NULL;
+}
+
+bool
+neInetInterfaceTable_removeExt (
+	neInetInterfaceEntry_t *poEntry,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len,
+	bool bUnNumAddr)
+{
+	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -567,8 +587,8 @@ neInetInterfaceTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEINETINTERFACETRANSPORTENABLE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TransportEnable);
+			case NEINETINTERFACETRAFFICENABLE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TrafficEnable);
 				break;
 			case NEINETINTERFACEFORWARDINGENABLE:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ForwardingEnable, table_entry->u16ForwardingEnable_len);
@@ -592,7 +612,7 @@ neInetInterfaceTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEINETINTERFACETRANSPORTENABLE:
+			case NEINETINTERFACETRAFFICENABLE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -625,7 +645,7 @@ neInetInterfaceTable_mapper (
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
-				continue;
+				return SNMP_ERR_NOERROR;
 			}
 		}
 		break;
@@ -642,19 +662,19 @@ neInetInterfaceTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEINETINTERFACETRANSPORTENABLE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TransportEnable))) == NULL)
+			case NEINETINTERFACETRAFFICENABLE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TrafficEnable))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32TransportEnable, sizeof (table_entry->i32TransportEnable));
+					memcpy (pvOldDdata, &table_entry->i32TrafficEnable, sizeof (table_entry->i32TrafficEnable));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32TransportEnable = *request->requestvb->val.integer;
+				table_entry->i32TrafficEnable = *request->requestvb->val.integer;
 				break;
 			case NEINETINTERFACEFORWARDINGENABLE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8ForwardingEnable))) == NULL)
@@ -691,8 +711,8 @@ neInetInterfaceTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEINETINTERFACETRANSPORTENABLE:
-				memcpy (&table_entry->i32TransportEnable, pvOldDdata, sizeof (table_entry->i32TransportEnable));
+			case NEINETINTERFACETRAFFICENABLE:
+				memcpy (&table_entry->i32TrafficEnable, pvOldDdata, sizeof (table_entry->i32TrafficEnable));
 				break;
 			case NEINETINTERFACEFORWARDINGENABLE:
 				memcpy (table_entry->au8ForwardingEnable, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);

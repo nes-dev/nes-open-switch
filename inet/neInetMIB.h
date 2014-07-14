@@ -27,6 +27,7 @@ extern "C" {
 
 
 
+#include "lib/ieee802.h"
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 #include "lib/ip.h"
@@ -92,14 +93,14 @@ Netsnmp_Node_Handler neIpScalars_mapper;
 /**
  *	table neInetInterfaceTable definitions
  */
-#define NEINETINTERFACETRANSPORTENABLE 1
+#define NEINETINTERFACETRAFFICENABLE 1
 #define NEINETINTERFACEFORWARDINGENABLE 2
 
 enum
 {
-	/* enums for column neInetInterfaceTransportEnable */
-	neInetInterfaceTransportEnable_true_c = 1,
-	neInetInterfaceTransportEnable_false_c = 2,
+	/* enums for column neInetInterfaceTrafficEnable */
+	neInetInterfaceTrafficEnable_true_c = 1,
+	neInetInterfaceTrafficEnable_false_c = 2,
 
 	/* enums for column neInetInterfaceForwardingEnable */
 	neInetInterfaceForwardingEnable_ipv4_c = 0,
@@ -114,7 +115,7 @@ typedef struct neInetInterfaceEntry_t
 	uint32_t u32IfIndex;
 	
 	/* Column values */
-	int32_t i32TransportEnable;
+	int32_t i32TrafficEnable;
 	uint8_t au8ForwardingEnable[1];
 	size_t u16ForwardingEnable_len;	/* # of uint8_t elements */
 	
@@ -132,6 +133,16 @@ neInetInterfaceEntry_t * neInetInterfaceTable_getByIndex (
 neInetInterfaceEntry_t * neInetInterfaceTable_getNextIndex (
 	uint32_t u32IfIndex);
 void neInetInterfaceTable_removeEntry (neInetInterfaceEntry_t *poEntry);
+neInetInterfaceEntry_t *neInetInterfaceTable_createExt (
+	uint32_t u32IfIndex,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len,
+	bool bUnNumAddr);
+bool neInetInterfaceTable_removeExt (
+	neInetInterfaceEntry_t *poEntry,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len,
+	bool bUnNumAddr);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neInetInterfaceTable_getFirst;
 Netsnmp_Next_Data_Point neInetInterfaceTable_getNext;
@@ -413,13 +424,13 @@ typedef struct neIpUnNumEntry_t
 	/* Column values */
 	int32_t i32AddressType;
 	uint32_t u32NumberedIfIndex;
-	uint8_t au8LocalAddress[255];
+	uint8_t au8LocalAddress[20];
 	size_t u16LocalAddress_len;	/* # of uint8_t elements */
-	uint8_t au8RemoteAddress[255];
+	uint8_t au8RemoteAddress[20];
 	size_t u16RemoteAddress_len;	/* # of uint8_t elements */
 	uint32_t u32LocalId;
 	uint32_t u32RemoteId;
-	uint8_t au8DestPhysAddress[/* TODO: PhysAddress, PhysAddress, "" */ TOBE_REPLACED];
+	uint8_t au8DestPhysAddress[IeeeEui64_size_c];
 	size_t u16DestPhysAddress_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
@@ -498,7 +509,7 @@ typedef struct neIpAsNodeEntry_t
 	/* Index values */
 	uint32_t u32Asn;
 	int32_t i32AddrType;
-	uint8_t au8Addr[255];
+	uint8_t au8Addr[20];
 	size_t u16Addr_len;	/* # of uint8_t elements */
 	uint32_t u32AddrPrefixLen;
 	

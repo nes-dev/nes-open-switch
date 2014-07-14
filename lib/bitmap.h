@@ -44,7 +44,7 @@ extern "C" {
 #	define xBitmask_bitString(_bit_start, _bit_end) (\
 	(~xBitmask_empty_c >> (_bit_start)) &\
 	(~xBitmask_empty_c << (uint8_t) (xBitmask_length_c - _bit_end - 1)))
-
+	
 #	define xBitmap_bitLength(_mask_len) ((_mask_len) << 3)
 
 #	define xBitmap_static(_map, _bit_len) uint8_t _map[xBitmap_maskCount (_bit_len)]
@@ -73,6 +73,32 @@ extern "C" {
 			_map[xBitmap_maskIndex (_bit_idx)] =\
 				(_map[xBitmap_maskIndex (_bit_idx)] & ~xBitmask_bitMask (_bit_idx)) |\
 				(((_fill) != 0) << xBitmask_bitIndex (_bit_idx));\
+		}\
+		\
+		if ((_bit_end) - _bit_idx >= xBitmask_length_c - 1)\
+		{\
+			_bit_idx += xBitmask_length_c - 1;\
+		}\
+	}
+	
+#	define xBitmap_setRev(_map, _bit_start, _bit_end, _fill) \
+	for (register uint16_t _bit_idx = (_bit_start); _bit_idx < (_bit_end); _bit_idx++)\
+	{\
+		if (xBitmask_bitIndex (_bit_idx) == 0 && (_fill) == 0)\
+		{\
+			_map[xBitmap_maskIndex (_bit_idx)] = xBitmask_empty_c;\
+		}\
+		else if (\
+			xBitmask_bitIndex (_bit_idx) == 0 && (_fill) != 0)\
+		{\
+			_map[xBitmap_maskIndex (_bit_idx)] = xBitmask_full_c;\
+		}\
+		else if (\
+			xBitmask_bitIndex (_bit_idx) != 0)\
+		{\
+			_map[xBitmap_maskIndex (_bit_idx)] =\
+				(_map[xBitmap_maskIndex (_bit_idx)] & ~xBitmask_bitMaskRev (_bit_idx)) |\
+				(((_fill) != 0) << xBitmask_bitIndexRev (_bit_idx));\
 		}\
 		\
 		if ((_bit_end) - _bit_idx >= xBitmask_length_c - 1)\

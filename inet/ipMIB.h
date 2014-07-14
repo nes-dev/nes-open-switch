@@ -565,6 +565,12 @@ ipAddressPrefixEntry_t * ipAddressPrefixTable_getNextIndex (
 	uint8_t *pau8Prefix, size_t u16Prefix_len,
 	uint32_t u32Length);
 void ipAddressPrefixTable_removeEntry (ipAddressPrefixEntry_t *poEntry);
+ipAddressPrefixEntry_t * ipAddressPrefixTable_handler (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	uint8_t *pau8Addr, size_t u16Addr_len,
+	uint32_t u32PrefixLength,
+	bool bAttach);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ipAddressPrefixTable_getFirst;
 Netsnmp_Next_Data_Point ipAddressPrefixTable_getNext;
@@ -677,6 +683,8 @@ ipAddressEntry_t * ipAddressTable_createExt (
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len);
 bool ipAddressTable_removeExt (ipAddressEntry_t *poEntry);
+bool ipAddressIfIndex_handler (
+	ipAddressEntry_t *poEntry);
 bool ipAddressRowStatus_handler (
 	ipAddressEntry_t *poEntry,
 	int32_t i32RowStatus);
