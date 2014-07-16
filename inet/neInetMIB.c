@@ -404,9 +404,9 @@ neInetInterfaceEntry_t *
 neInetInterfaceTable_createEntry (
 	uint32_t u32IfIndex)
 {
-	neInetInterfaceEntry_t *poEntry = NULL;
+	register neInetInterfaceEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (neInetInterfaceEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -432,7 +432,7 @@ neInetInterfaceTable_getByIndex (
 	register neInetInterfaceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neInetInterfaceEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -455,7 +455,7 @@ neInetInterfaceTable_getNextIndex (
 	register neInetInterfaceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neInetInterfaceEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -797,9 +797,9 @@ neInetIntRouteTable_createEntry (
 	uint32_t u32IfIndex,
 	int32_t i32Proto)
 {
-	neInetIntRouteEntry_t *poEntry = NULL;
+	register neInetIntRouteEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (neInetIntRouteEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -834,7 +834,7 @@ neInetIntRouteTable_getByIndex (
 	register neInetIntRouteEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neInetIntRouteEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -869,7 +869,7 @@ neInetIntRouteTable_getNextIndex (
 	register neInetIntRouteEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neInetIntRouteEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1090,9 +1090,9 @@ neInetRouteTable_createEntry (
 	uint8_t *pau8NextHop, size_t u16NextHop_len,
 	uint32_t u32IfIndex)
 {
-	neInetRouteEntry_t *poEntry = NULL;
+	register neInetRouteEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (neInetRouteEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1125,7 +1125,7 @@ neInetRouteTable_getByIndex (
 	register neInetRouteEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neInetRouteEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1158,7 +1158,7 @@ neInetRouteTable_getNextIndex (
 	register neInetRouteEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neInetRouteEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1687,16 +1687,44 @@ neIpUnNumTable_BTreeNodeCmp (
 		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
 }
 
+static int8_t
+neIpUnNumTable_LocalId_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neIpUnNumEntry_t *pEntry1 = xBTree_entry (pNode1, neIpUnNumEntry_t, oLocalId_BTreeNode);
+	register neIpUnNumEntry_t *pEntry2 = xBTree_entry (pNode2, neIpUnNumEntry_t, oLocalId_BTreeNode);
+	
+	return
+		(pEntry1->u32LocalId < pEntry2->u32LocalId) ? -1:
+		(pEntry1->u32LocalId == pEntry2->u32LocalId) ? 0: 1;
+}
+
+static int8_t
+neIpUnNumTable_RemoteId_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neIpUnNumEntry_t *pEntry1 = xBTree_entry (pNode1, neIpUnNumEntry_t, oRemoteId_BTreeNode);
+	register neIpUnNumEntry_t *pEntry2 = xBTree_entry (pNode2, neIpUnNumEntry_t, oRemoteId_BTreeNode);
+	
+	return
+		(pEntry1->u32RemoteId < pEntry2->u32RemoteId) ||
+		(pEntry1->u32RemoteId == pEntry2->u32RemoteId && pEntry1->i32AddressType < pEntry2->i32AddressType) ||
+		(pEntry1->u32RemoteId == pEntry2->u32RemoteId && pEntry1->i32AddressType == pEntry2->i32AddressType && xBinCmp (pEntry1->au8RemoteAddress, pEntry2->au8RemoteAddress, pEntry1->u16RemoteAddress_len, pEntry2->u16RemoteAddress_len) == -1) ? -1:
+		(pEntry1->u32RemoteId == pEntry2->u32RemoteId && pEntry1->i32AddressType == pEntry2->i32AddressType && xBinCmp (pEntry1->au8RemoteAddress, pEntry2->au8RemoteAddress, pEntry1->u16RemoteAddress_len, pEntry2->u16RemoteAddress_len) == 0) ? 0: 1;
+}
+
 xBTree_t oNeIpUnNumTable_BTree = xBTree_initInline (&neIpUnNumTable_BTreeNodeCmp);
+xBTree_t oNeIpUnNumTable_LocalId_BTree = xBTree_initInline (&neIpUnNumTable_LocalId_BTreeNodeCmp);
+xBTree_t oNeIpUnNumTable_RemoteId_BTree = xBTree_initInline (&neIpUnNumTable_RemoteId_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 neIpUnNumEntry_t *
 neIpUnNumTable_createEntry (
 	uint32_t u32IfIndex)
 {
-	neIpUnNumEntry_t *poEntry = NULL;
+	register neIpUnNumEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (neIpUnNumEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1709,6 +1737,7 @@ neIpUnNumTable_createEntry (
 	}
 	
 	poEntry->i32AddressType = neIpUnNumAddressType_ipv4_c;
+	poEntry->u32NumberedIfIndex = 0;
 	poEntry->u32RemoteId = 0;
 	/*poEntry->au8DestPhysAddress = 0*/;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
@@ -1725,7 +1754,7 @@ neIpUnNumTable_getByIndex (
 	register neIpUnNumEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neIpUnNumEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1748,7 +1777,7 @@ neIpUnNumTable_getNextIndex (
 	register neIpUnNumEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neIpUnNumEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1764,6 +1793,108 @@ neIpUnNumTable_getNextIndex (
 	return xBTree_entry (poNode, neIpUnNumEntry_t, oBTreeNode);
 }
 
+neIpUnNumEntry_t *
+neIpUnNumTable_LocalId_getByIndex (
+	uint32_t u32LocalId)
+{
+	register neIpUnNumEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neIpUnNumEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32LocalId = u32LocalId;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeIpUnNumTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neIpUnNumEntry_t, oBTreeNode);
+}
+
+neIpUnNumEntry_t *
+neIpUnNumTable_LocalId_getNextIndex (
+	uint32_t u32LocalId)
+{
+	register neIpUnNumEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neIpUnNumEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32LocalId = u32LocalId;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeIpUnNumTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neIpUnNumEntry_t, oBTreeNode);
+}
+
+neIpUnNumEntry_t *
+neIpUnNumTable_RemoteId_getByIndex (
+	uint32_t u32RemoteId,
+	int32_t i32AddressType,
+	uint8_t *pau8RemoteAddress, size_t u16RemoteAddress_len)
+{
+	register neIpUnNumEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neIpUnNumEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32RemoteId = u32RemoteId;
+	poTmpEntry->i32AddressType = i32AddressType;
+	memcpy (poTmpEntry->au8RemoteAddress, pau8RemoteAddress, u16RemoteAddress_len);
+	poTmpEntry->u16RemoteAddress_len = u16RemoteAddress_len;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oRemoteId_BTreeNode, &oNeIpUnNumTable_RemoteId_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neIpUnNumEntry_t, oRemoteId_BTreeNode);
+}
+
+neIpUnNumEntry_t *
+neIpUnNumTable_RemoteId_getNextIndex (
+	uint32_t u32RemoteId,
+	int32_t i32AddressType,
+	uint8_t *pau8RemoteAddress, size_t u16RemoteAddress_len)
+{
+	register neIpUnNumEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neIpUnNumEntry_t))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32RemoteId = u32RemoteId;
+	poTmpEntry->i32AddressType = i32AddressType;
+	memcpy (poTmpEntry->au8RemoteAddress, pau8RemoteAddress, u16RemoteAddress_len);
+	poTmpEntry->u16RemoteAddress_len = u16RemoteAddress_len;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oRemoteId_BTreeNode, &oNeIpUnNumTable_RemoteId_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neIpUnNumEntry_t, oRemoteId_BTreeNode);
+}
+
 /* remove a row from the table */
 void
 neIpUnNumTable_removeEntry (neIpUnNumEntry_t *poEntry)
@@ -1777,6 +1908,14 @@ neIpUnNumTable_removeEntry (neIpUnNumEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeIpUnNumTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+bool
+neIpUnNumRowStatus_handler (
+	neIpUnNumEntry_t *poEntry,
+	int32_t u8RowStatus)
+{
+	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -2189,8 +2328,11 @@ neIpUnNumTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int neIpUnNumTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
+					if (!neIpUnNumRowStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -2264,15 +2406,8 @@ neIpUnNumTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_ACTIVE:
-					table_entry->u8RowStatus = RS_ACTIVE;
-					break;
-					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_NOTINSERVICE:
-					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -2349,9 +2484,9 @@ neIpAsNodeTable_createEntry (
 	uint8_t *pau8Addr, size_t u16Addr_len,
 	uint32_t u32AddrPrefixLen)
 {
-	neIpAsNodeEntry_t *poEntry = NULL;
+	register neIpAsNodeEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (neIpAsNodeEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2384,7 +2519,7 @@ neIpAsNodeTable_getByIndex (
 	register neIpAsNodeEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neIpAsNodeEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2414,7 +2549,7 @@ neIpAsNodeTable_getNextIndex (
 	register neIpAsNodeEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neIpAsNodeEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}

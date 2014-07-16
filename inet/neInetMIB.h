@@ -436,9 +436,13 @@ typedef struct neIpUnNumEntry_t
 	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oLocalId_BTreeNode;
+	xBTree_Node_t oRemoteId_BTreeNode;
 } neIpUnNumEntry_t;
 
 extern xBTree_t oNeIpUnNumTable_BTree;
+extern xBTree_t oNeIpUnNumTable_LocalId_BTree;
+extern xBTree_t oNeIpUnNumTable_RemoteId_BTree;
 
 /* neIpUnNumTable table mapper */
 void neIpUnNumTable_init (void);
@@ -448,7 +452,22 @@ neIpUnNumEntry_t * neIpUnNumTable_getByIndex (
 	uint32_t u32IfIndex);
 neIpUnNumEntry_t * neIpUnNumTable_getNextIndex (
 	uint32_t u32IfIndex);
+neIpUnNumEntry_t * neIpUnNumTable_LocalId_getByIndex (
+	uint32_t u32LocalId);
+neIpUnNumEntry_t * neIpUnNumTable_LocalId_getNextIndex (
+	uint32_t u32LocalId);
+neIpUnNumEntry_t * neIpUnNumTable_RemoteId_getByIndex (
+	uint32_t u32RemoteId,
+	int32_t i32AddressType,
+	uint8_t *pau8RemoteAddress, size_t u16RemoteAddress_len);
+neIpUnNumEntry_t * neIpUnNumTable_RemoteId_getNextIndex (
+	uint32_t u32RemoteId,
+	int32_t i32AddressType,
+	uint8_t *pau8RemoteAddress, size_t u16RemoteAddress_len);
 void neIpUnNumTable_removeEntry (neIpUnNumEntry_t *poEntry);
+bool neIpUnNumRowStatus_handler (
+	neIpUnNumEntry_t *poEntry,
+	int32_t i32RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neIpUnNumTable_getFirst;
 Netsnmp_Next_Data_Point neIpUnNumTable_getNext;
