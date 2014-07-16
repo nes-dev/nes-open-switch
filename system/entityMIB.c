@@ -3598,7 +3598,7 @@ neEntPortTable_init (void)
 	netsnmp_table_helper_add_indexes (table_info,
 		ASN_UNSIGNED /* index: entPhysicalIndex */,
 		0);
-	table_info->min_column = NEENTPORTCHASSISID;
+	table_info->min_column = NEENTPORTCHASSISINDEX;
 	table_info->max_column = NEENTPORTROWSTATUS;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
@@ -3614,11 +3614,11 @@ neEntPortTable_init (void)
 }
 
 static int8_t
-neEntPortTable_BTreeNodeCmp (
+neEntPortData_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register neEntPortEntry_t *pEntry1 = xBTree_entry (pNode1, neEntPortEntry_t, oBTreeNode);
-	register neEntPortEntry_t *pEntry2 = xBTree_entry (pNode2, neEntPortEntry_t, oBTreeNode);
+	register neEntPortData_t *pEntry1 = xBTree_entry (pNode1, neEntPortData_t, oBTreeNode);
+	register neEntPortData_t *pEntry2 = xBTree_entry (pNode2, neEntPortData_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32EntPhysicalIndex < pEntry2->u32EntPhysicalIndex) ? -1:
@@ -3626,45 +3626,141 @@ neEntPortTable_BTreeNodeCmp (
 }
 
 static int8_t
-neEntPortTable_If_BTreeNodeCmp (
+neEntPortData_If_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register neEntPortEntry_t *pEntry1 = xBTree_entry (pNode1, neEntPortEntry_t, oBTreeNode);
-	register neEntPortEntry_t *pEntry2 = xBTree_entry (pNode2, neEntPortEntry_t, oBTreeNode);
+	register neEntPortData_t *pEntry1 = xBTree_entry (pNode1, neEntPortData_t, oBTreeNode);
+	register neEntPortData_t *pEntry2 = xBTree_entry (pNode2, neEntPortData_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ? -1:
 		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
 }
 
-xBTree_t oNeEntPortTable_BTree = xBTree_initInline (&neEntPortTable_BTreeNodeCmp);
-xBTree_t oNeEntPortTable_If_BTree = xBTree_initInline (&neEntPortTable_If_BTreeNodeCmp);
+static int8_t
+neEntPortData_Map_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntPortData_t *pEntry1 = xBTree_entry (pNode1, neEntPortData_t, oBTreeNode);
+	register neEntPortData_t *pEntry2 = xBTree_entry (pNode2, neEntPortData_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32ChassisIndex < pEntry2->u32ChassisIndex) ||
+		(pEntry1->u32ChassisIndex == pEntry2->u32ChassisIndex && pEntry1->u32PortIndex < pEntry2->u32PortIndex) ? -1:
+		(pEntry1->u32ChassisIndex == pEntry2->u32ChassisIndex && pEntry1->u32PortIndex == pEntry2->u32PortIndex) ? 0: 1;
+}
+
+static xBTree_t oNeEntPortData_BTree = xBTree_initInline (&neEntPortData_BTreeNodeCmp);
+static xBTree_t oNeEntPortData_If_BTree = xBTree_initInline (&neEntPortData_If_BTreeNodeCmp);
+static xBTree_t oNeEntPortData_Map_BTree = xBTree_initInline (&neEntPortData_Map_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+neEntPortData_t *
+neEntPortData_createEntry (
+	uint32_t u32EntPhysicalIndex)
+{
+	register neEntPortData_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortData_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->u32ChassisIndex = 0;
+	poEntry->u32PortIndex = 0;
+	poEntry->u32IfIndex = 0;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntPortData_BTree);
+	return poEntry;
+}
+
+neEntPortData_t *
+neEntPortData_getByIndex (
+	uint32_t u32EntPhysicalIndex)
+{
+	register neEntPortData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntPortData_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPortData_t, oBTreeNode);
+}
+
+neEntPortData_t *
+neEntPortData_getNextIndex (
+	uint32_t u32EntPhysicalIndex)
+{
+	register neEntPortData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntPortData_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPortData_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neEntPortData_removeEntry (neEntPortData_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortData_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntPortData_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
 
 /* create a new row in the (unsorted) table */
 neEntPortEntry_t *
 neEntPortTable_createEntry (
 	uint32_t u32EntPhysicalIndex)
 {
-	neEntPortEntry_t *poEntry = NULL;
+	register neEntPortEntry_t *poEntry = NULL;
+	register neEntPortData_t *poNeEntPort = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (neEntPortEntry_t))) == NULL)
+	if ((poNeEntPort = neEntPortData_createEntry (u32EntPhysicalIndex)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poNeEntPort->oPort;
 	
-	poEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	poEntry->u32ChassisId = 0;
-	poEntry->u32ModuleId = 0;
-	poEntry->u32PortId = 0;
+	poEntry->u32ChassisIndex = 0;
+	poEntry->u32PortIndex = 0;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntPortTable_BTree);
+	xBitmap_setBit (poNeEntPort->au8Flags, neEntPortFlags_portCreated_c, 1); 
 	return poEntry;
 }
 
@@ -3672,60 +3768,42 @@ neEntPortEntry_t *
 neEntPortTable_getByIndex (
 	uint32_t u32EntPhysicalIndex)
 {
-	register neEntPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register neEntPortData_t *poNeEntPort = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntPortEntry_t))) == NULL)
+	if ((poNeEntPort = neEntPortData_getByIndex (u32EntPhysicalIndex)) == NULL ||
+		!xBitmap_getBit (poNeEntPort->au8Flags, neEntPortFlags_portCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neEntPortEntry_t, oBTreeNode);
+	return &poNeEntPort->oPort;
 }
 
 neEntPortEntry_t *
 neEntPortTable_getNextIndex (
 	uint32_t u32EntPhysicalIndex)
 {
-	register neEntPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register neEntPortData_t *poNeEntPort = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntPortEntry_t))) == NULL)
+	if ((poNeEntPort = neEntPortData_getNextIndex (u32EntPhysicalIndex)) == NULL ||
+		!xBitmap_getBit (poNeEntPort->au8Flags, neEntPortFlags_portCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neEntPortEntry_t, oBTreeNode);
+	return &poNeEntPort->oPort;
 }
 
 /* remove a row from the table */
 void
 neEntPortTable_removeEntry (neEntPortEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
-		return;    /* Nothing to remove */
+		return;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntPortTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	neEntPortData_removeEntry (neEntPortData_getByPortEntry (poEntry));
 	return;
 }
 
@@ -3764,7 +3842,7 @@ neEntPortRowStatus_handler (
 				goto neEntPortRowStatus_handler_cleanup;
 			}
 			
-			xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
+			xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortData_If_BTree);
 		}
 		
 		ifData_t *poIfData = NULL;
@@ -3778,7 +3856,7 @@ neEntPortRowStatus_handler (
 		if (poEntry->pOldEntry == NULL ||
 			poEntry->pOldEntry->u32IfIndex != poEntry->u32IfIndex)
 		{
-			xBTree_nodeAdd (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
+			xBTree_nodeAdd (&poEntry->oIf_BTreeNode, &oNeEntPortData_If_BTree);
 		}
 		
 		if (!neEntPortRowStatus_update (poEntry, u8RowStatus & xRowStatus_mask_c))
@@ -3849,7 +3927,7 @@ neEntPortRowStatus_handler (
 			}
 		}
 		
-		xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
+		xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortData_If_BTree);
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		
 		if (poEntry->pOldEntry != NULL)
@@ -3876,7 +3954,7 @@ neEntPortTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oNeEntPortTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oNeEntPortData_BTree);
 	return neEntPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -3885,18 +3963,18 @@ neEntPortTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neEntPortEntry_t *poEntry = NULL;
+	neEntPortData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, neEntPortEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, neEntPortData_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32EntPhysicalIndex);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntPortTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntPortData_BTree);
 	return put_index_data;
 }
 
@@ -3951,14 +4029,11 @@ neEntPortTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEENTPORTCHASSISID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ChassisId);
+			case NEENTPORTCHASSISINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ChassisIndex);
 				break;
-			case NEENTPORTMODULEID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ModuleId);
-				break;
-			case NEENTPORTPORTID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PortId);
+			case NEENTPORTPORTINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PortIndex);
 				break;
 			case NEENTPORTIFINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32IfIndex);
@@ -3985,7 +4060,7 @@ neEntPortTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEENTPORTCHASSISID:
+			case NEENTPORTCHASSISINDEX:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3993,15 +4068,7 @@ neEntPortTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case NEENTPORTMODULEID:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case NEENTPORTPORTID:
+			case NEENTPORTPORTINDEX:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -4042,11 +4109,10 @@ neEntPortTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEENTPORTCHASSISID:
-			case NEENTPORTMODULEID:
-			case NEENTPORTPORTID:
+			case NEENTPORTCHASSISINDEX:
+			case NEENTPORTPORTINDEX:
 			case NEENTPORTIFINDEX:
-				if (table_entry->u8RowStatus == RS_ACTIVE || table_entry->u8RowStatus == RS_NOTREADY)
+				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 					return SNMP_ERR_NOERROR;
@@ -4134,47 +4200,33 @@ neEntPortTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEENTPORTCHASSISID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ChassisId))) == NULL)
+			case NEENTPORTCHASSISINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ChassisIndex))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->u32ChassisId, sizeof (table_entry->u32ChassisId));
+					memcpy (pvOldDdata, &table_entry->u32ChassisIndex, sizeof (table_entry->u32ChassisIndex));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->u32ChassisId = *request->requestvb->val.integer;
+				table_entry->u32ChassisIndex = *request->requestvb->val.integer;
 				break;
-			case NEENTPORTMODULEID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ModuleId))) == NULL)
+			case NEENTPORTPORTINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PortIndex))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->u32ModuleId, sizeof (table_entry->u32ModuleId));
+					memcpy (pvOldDdata, &table_entry->u32PortIndex, sizeof (table_entry->u32PortIndex));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->u32ModuleId = *request->requestvb->val.integer;
-				break;
-			case NEENTPORTPORTID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PortId))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u32PortId, sizeof (table_entry->u32PortId));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u32PortId = *request->requestvb->val.integer;
+				table_entry->u32PortIndex = *request->requestvb->val.integer;
 				break;
 			case NEENTPORTIFINDEX:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32IfIndex))) == NULL)
@@ -4232,14 +4284,11 @@ neEntPortTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEENTPORTCHASSISID:
-				memcpy (&table_entry->u32ChassisId, pvOldDdata, sizeof (table_entry->u32ChassisId));
+			case NEENTPORTCHASSISINDEX:
+				memcpy (&table_entry->u32ChassisIndex, pvOldDdata, sizeof (table_entry->u32ChassisIndex));
 				break;
-			case NEENTPORTMODULEID:
-				memcpy (&table_entry->u32ModuleId, pvOldDdata, sizeof (table_entry->u32ModuleId));
-				break;
-			case NEENTPORTPORTID:
-				memcpy (&table_entry->u32PortId, pvOldDdata, sizeof (table_entry->u32PortId));
+			case NEENTPORTPORTINDEX:
+				memcpy (&table_entry->u32PortIndex, pvOldDdata, sizeof (table_entry->u32PortIndex));
 				break;
 			case NEENTPORTIFINDEX:
 				memcpy (&table_entry->u32IfIndex, pvOldDdata, sizeof (table_entry->u32IfIndex));
@@ -4306,8 +4355,8 @@ neEntChassisPortTable_init (void)
 		ASN_UNSIGNED /* index: neEntChassisPortChassisIndex */,
 		ASN_UNSIGNED /* index: neEntChassisPortIndex */,
 		0);
-	table_info->min_column = NEENTCHASSISPORTINDEX;
-	table_info->max_column = NEENTCHASSISPORTINDEX;
+	table_info->min_column = NEENTCHASSISPORTENTINDEX;
+	table_info->max_column = NEENTCHASSISPORTENTINDEX;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &neEntChassisPortTable_getFirst;
@@ -4321,44 +4370,13 @@ neEntChassisPortTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-neEntChassisPortTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register neEntChassisPortEntry_t *pEntry1 = xBTree_entry (pNode1, neEntChassisPortEntry_t, oBTreeNode);
-	register neEntChassisPortEntry_t *pEntry2 = xBTree_entry (pNode2, neEntChassisPortEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32ChassisIndex < pEntry2->u32ChassisIndex) ||
-		(pEntry1->u32ChassisIndex == pEntry2->u32ChassisIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32ChassisIndex == pEntry2->u32ChassisIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oNeEntChassisPortTable_BTree = xBTree_initInline (&neEntChassisPortTable_BTreeNodeCmp);
-
 /* create a new row in the (unsorted) table */
 neEntChassisPortEntry_t *
 neEntChassisPortTable_createEntry (
 	uint32_t u32ChassisIndex,
 	uint32_t u32Index)
 {
-	neEntChassisPortEntry_t *poEntry = NULL;
-	
-	if ((poEntry = xBuffer_cAlloc (sizeof (neEntChassisPortEntry_t))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poEntry->u32ChassisIndex = u32ChassisIndex;
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntChassisPortTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntChassisPortTable_BTree);
-	return poEntry;
+	return NULL;
 }
 
 neEntChassisPortEntry_t *
@@ -4366,24 +4384,15 @@ neEntChassisPortTable_getByIndex (
 	uint32_t u32ChassisIndex,
 	uint32_t u32Index)
 {
-	register neEntChassisPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register neEntPortData_t *poNeEntPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntChassisPortEntry_t))) == NULL)
+	if ((poNeEntPortData = neEntPortData_getByIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poNeEntPortData->au8Flags, ifFlags_ifCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ChassisIndex = u32ChassisIndex;
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntChassisPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neEntChassisPortEntry_t, oBTreeNode);
+	return &poNeEntPortData->oMap;
 }
 
 neEntChassisPortEntry_t *
@@ -4391,38 +4400,21 @@ neEntChassisPortTable_getNextIndex (
 	uint32_t u32ChassisIndex,
 	uint32_t u32Index)
 {
-	register neEntChassisPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register neEntPortData_t *poNeEntPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (neEntChassisPortEntry_t))) == NULL)
+	if ((poNeEntPortData = neEntPortData_getNextIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poNeEntPortData->au8Flags, ifFlags_ifCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ChassisIndex = u32ChassisIndex;
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntChassisPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neEntChassisPortEntry_t, oBTreeNode);
+	return &poNeEntPortData->oMap;
 }
 
 /* remove a row from the table */
 void
 neEntChassisPortTable_removeEntry (neEntChassisPortEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntChassisPortTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntChassisPortTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -4432,7 +4424,7 @@ neEntChassisPortTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oNeEntChassisPortTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oNeEntPortData_Map_BTree);
 	return neEntChassisPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -4441,20 +4433,20 @@ neEntChassisPortTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neEntChassisPortEntry_t *poEntry = NULL;
+	neEntPortData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, neEntChassisPortEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, neEntPortData_t, oMap_BTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ChassisIndex);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PortIndex);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntChassisPortTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oMap_BTreeNode, &oNeEntPortData_Map_BTree);
 	return put_index_data;
 }
 
@@ -4507,10 +4499,12 @@ neEntChassisPortTable_mapper (
 				continue;
 			}
 			
+			register neEntPortData_t *poNeEntPortData = neEntPortData_getByMapEntry (table_entry);
+			
 			switch (table_info->colnum)
 			{
-			case NEENTCHASSISPORTINDEX:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Index);
+			case NEENTCHASSISPORTENTINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, poNeEntPortData->u32EntPhysicalIndex);
 				break;
 				
 			default:
