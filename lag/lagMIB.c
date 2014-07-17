@@ -25,6 +25,7 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "lagMIB.h"
 
+#include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
@@ -167,100 +168,231 @@ dot3adAggTable_init (void)
 }
 
 static int8_t
-dot3adAggTable_BTreeNodeCmp (
+dot3adAggData_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register dot3adAggEntry_t *pEntry1 = xBTree_entry (pNode1, dot3adAggEntry_t, oBTreeNode);
-	register dot3adAggEntry_t *pEntry2 = xBTree_entry (pNode2, dot3adAggEntry_t, oBTreeNode);
+	register dot3adAggData_t *pEntry1 = xBTree_entry (pNode1, dot3adAggData_t, oBTreeNode);
+	register dot3adAggData_t *pEntry2 = xBTree_entry (pNode2, dot3adAggData_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
 		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
 }
 
-xBTree_t oDot3adAggTable_BTree = xBTree_initInline (&dot3adAggTable_BTreeNodeCmp);
+static int8_t
+dot3adAggData_Group_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register dot3adAggData_t *pEntry1 = xBTree_entry (pNode1, dot3adAggData_t, oBTreeNode);
+	register dot3adAggData_t *pEntry2 = xBTree_entry (pNode2, dot3adAggData_t, oBTreeNode);
+	
+	return
+		(pEntry1->i32GroupType < pEntry2->i32GroupType) ||
+		(pEntry1->i32GroupType == pEntry2->i32GroupType && pEntry1->u32GroupIndex < pEntry2->u32GroupIndex) ||
+		(pEntry1->i32GroupType == pEntry2->i32GroupType && pEntry1->u32GroupIndex == pEntry2->u32GroupIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->i32GroupType == pEntry2->i32GroupType && pEntry1->u32GroupIndex == pEntry2->u32GroupIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+static xBTree_t oDot3adAggData_BTree = xBTree_initInline (&dot3adAggData_BTreeNodeCmp);
+static xBTree_t oDot3adAggData_Group_BTree = xBTree_initInline (&dot3adAggData_Group_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+dot3adAggData_t *
+dot3adAggData_createEntry (
+	uint32_t u32Index)
+{
+	register dot3adAggData_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32Index = u32Index;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggData_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggData_BTree);
+	return poEntry;
+}
+
+dot3adAggData_t *
+dot3adAggData_getByIndex (
+	uint32_t u32Index)
+{
+	register dot3adAggData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot3adAggData_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggData_t, oBTreeNode);
+}
+
+dot3adAggData_t *
+dot3adAggData_getNextIndex (
+	uint32_t u32Index)
+{
+	register dot3adAggData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot3adAggData_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggData_t, oBTreeNode);
+}
+
+dot3adAggData_t *
+dot3adAggData_Group_getByIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index)
+{
+	register dot3adAggData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->i32GroupType = i32GroupType;
+	poTmpEntry->u32GroupIndex = u32GroupIndex;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oGroup_BTreeNode, &oDot3adAggData_Group_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggData_t, oBTreeNode);
+}
+
+dot3adAggData_t *
+dot3adAggData_Group_getNextIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index)
+{
+	register dot3adAggData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->i32GroupType = i32GroupType;
+	poTmpEntry->u32GroupIndex = u32GroupIndex;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oGroup_BTreeNode, &oDot3adAggData_Group_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggData_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+dot3adAggData_removeEntry (dot3adAggData_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggData_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oDot3adAggData_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
 
 /* create a new row in the (unsorted) table */
 dot3adAggEntry_t *
 dot3adAggTable_createEntry (
 	uint32_t u32Index)
 {
-	dot3adAggEntry_t *poEntry = NULL;
+	register dot3adAggData_t *poDot3adAggData = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot3adAggEntry_t))) == NULL)
+	if ((poDot3adAggData = dot3adAggData_getByIndex (u32Index)) == NULL ||
+		xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c))
 	{
 		return NULL;
 	}
 	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggTable_BTree);
-	return poEntry;
+	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c, 1);
+	return &poDot3adAggData->oAgg;
 }
 
 dot3adAggEntry_t *
 dot3adAggTable_getByIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggData_t *poDot3adAggData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggEntry_t))) == NULL)
+	if ((poDot3adAggData = dot3adAggData_getByIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot3adAggTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggEntry_t, oBTreeNode);
+	return &poDot3adAggData->oAgg;
 }
 
 dot3adAggEntry_t *
 dot3adAggTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggData_t *poDot3adAggData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggEntry_t))) == NULL)
+	if ((poDot3adAggData = dot3adAggData_getNextIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot3adAggTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggEntry_t, oBTreeNode);
+	return &poDot3adAggData->oAgg;
 }
 
 /* remove a row from the table */
 void
 dot3adAggTable_removeEntry (dot3adAggEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
-		return;    /* Nothing to remove */
+		return;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oDot3adAggTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (poEntry);
+	
+	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c, 0);
 	return;
 }
 
@@ -270,7 +402,7 @@ dot3adAggTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggData_BTree);
 	return dot3adAggTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -279,18 +411,18 @@ dot3adAggTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggEntry_t *poEntry = NULL;
+	dot3adAggData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggData_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggData_BTree);
 	return put_index_data;
 }
 
@@ -565,101 +697,65 @@ dot3adAggPortListTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-dot3adAggPortListTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register dot3adAggPortListEntry_t *pEntry1 = xBTree_entry (pNode1, dot3adAggPortListEntry_t, oBTreeNode);
-	register dot3adAggPortListEntry_t *pEntry2 = xBTree_entry (pNode2, dot3adAggPortListEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oDot3adAggPortListTable_BTree = xBTree_initInline (&dot3adAggPortListTable_BTreeNodeCmp);
-
 /* create a new row in the (unsorted) table */
 dot3adAggPortListEntry_t *
 dot3adAggPortListTable_createEntry (
 	uint32_t u32Index)
 {
-	dot3adAggPortListEntry_t *poEntry = NULL;
+	register dot3adAggData_t *poDot3adAggData = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot3adAggPortListEntry_t))) == NULL)
+	if ((poDot3adAggData = dot3adAggData_getByIndex (u32Index)) == NULL ||
+		xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_portListCreated_c))
 	{
 		return NULL;
 	}
 	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortListTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggPortListTable_BTree);
-	return poEntry;
+	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_portListCreated_c, 1);
+	return &poDot3adAggData->oPortList;
 }
 
 dot3adAggPortListEntry_t *
 dot3adAggPortListTable_getByIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortListEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggData_t *poDot3adAggData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggPortListEntry_t))) == NULL)
+	if ((poDot3adAggData = dot3adAggData_getByIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_portListCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot3adAggPortListTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggPortListEntry_t, oBTreeNode);
+	return &poDot3adAggData->oPortList;
 }
 
 dot3adAggPortListEntry_t *
 dot3adAggPortListTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortListEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggData_t *poDot3adAggData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggPortListEntry_t))) == NULL)
+	if ((poDot3adAggData = dot3adAggData_getNextIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_portListCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot3adAggPortListTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggPortListEntry_t, oBTreeNode);
+	return &poDot3adAggData->oPortList;
 }
 
 /* remove a row from the table */
 void
 dot3adAggPortListTable_removeEntry (dot3adAggPortListEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortListTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
-		return;    /* Nothing to remove */
+		return;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oDot3adAggPortListTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByPortListEntry (poEntry);
+	
+	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_portListCreated_c, 0);
 	return;
 }
 
@@ -669,7 +765,7 @@ dot3adAggPortListTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortListTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggData_BTree);
 	return dot3adAggPortListTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -678,18 +774,18 @@ dot3adAggPortListTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggPortListEntry_t *poEntry = NULL;
+	dot3adAggData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortListEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggData_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortListTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggData_BTree);
 	return put_index_data;
 }
 
@@ -793,100 +889,231 @@ dot3adAggPortTable_init (void)
 }
 
 static int8_t
-dot3adAggPortTable_BTreeNodeCmp (
+dot3adAggPortData_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register dot3adAggPortEntry_t *pEntry1 = xBTree_entry (pNode1, dot3adAggPortEntry_t, oBTreeNode);
-	register dot3adAggPortEntry_t *pEntry2 = xBTree_entry (pNode2, dot3adAggPortEntry_t, oBTreeNode);
+	register dot3adAggPortData_t *pEntry1 = xBTree_entry (pNode1, dot3adAggPortData_t, oBTreeNode);
+	register dot3adAggPortData_t *pEntry2 = xBTree_entry (pNode2, dot3adAggPortData_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
 		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
 }
 
-xBTree_t oDot3adAggPortTable_BTree = xBTree_initInline (&dot3adAggPortTable_BTreeNodeCmp);
+static int8_t
+dot3adAggPortData_Group_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register dot3adAggPortData_t *pEntry1 = xBTree_entry (pNode1, dot3adAggPortData_t, oBTreeNode);
+	register dot3adAggPortData_t *pEntry2 = xBTree_entry (pNode2, dot3adAggPortData_t, oBTreeNode);
+	
+	return
+		(pEntry1->i32GroupType < pEntry2->i32GroupType) ||
+		(pEntry1->i32GroupType == pEntry2->i32GroupType && pEntry1->u32GroupIndex < pEntry2->u32GroupIndex) ||
+		(pEntry1->i32GroupType == pEntry2->i32GroupType && pEntry1->u32GroupIndex == pEntry2->u32GroupIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->i32GroupType == pEntry2->i32GroupType && pEntry1->u32GroupIndex == pEntry2->u32GroupIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+static xBTree_t oDot3adAggPortData_BTree = xBTree_initInline (&dot3adAggPortData_BTreeNodeCmp);
+static xBTree_t oDot3adAggPortData_Group_BTree = xBTree_initInline (&dot3adAggPortData_Group_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+dot3adAggPortData_t *
+dot3adAggPortData_createEntry (
+	uint32_t u32Index)
+{
+	register dot3adAggPortData_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32Index = u32Index;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
+	return poEntry;
+}
+
+dot3adAggPortData_t *
+dot3adAggPortData_getByIndex (
+	uint32_t u32Index)
+{
+	register dot3adAggPortData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot3adAggPortData_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggPortData_t, oBTreeNode);
+}
+
+dot3adAggPortData_t *
+dot3adAggPortData_getNextIndex (
+	uint32_t u32Index)
+{
+	register dot3adAggPortData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot3adAggPortData_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggPortData_t, oBTreeNode);
+}
+
+dot3adAggPortData_t *
+dot3adAggPortData_Group_getByIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index)
+{
+	register dot3adAggPortData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->i32GroupType = i32GroupType;
+	poTmpEntry->u32GroupIndex = u32GroupIndex;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot3adAggPortData_Group_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggPortData_t, oBTreeNode);
+}
+
+dot3adAggPortData_t *
+dot3adAggPortData_Group_getNextIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index)
+{
+	register dot3adAggPortData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->i32GroupType = i32GroupType;
+	poTmpEntry->u32GroupIndex = u32GroupIndex;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot3adAggPortData_Group_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggPortData_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+dot3adAggPortData_removeEntry (dot3adAggPortData_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
 
 /* create a new row in the (unsorted) table */
 dot3adAggPortEntry_t *
 dot3adAggPortTable_createEntry (
 	uint32_t u32Index)
 {
-	dot3adAggPortEntry_t *poEntry = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot3adAggPortEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
+		xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portCreated_c))
 	{
 		return NULL;
 	}
 	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggPortTable_BTree);
-	return poEntry;
+	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portCreated_c, 1);
+	return &poDot3adAggPortData->oPort;
 }
 
 dot3adAggPortEntry_t *
 dot3adAggPortTable_getByIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggPortEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot3adAggPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggPortEntry_t, oBTreeNode);
+	return &poDot3adAggPortData->oPort;
 }
 
 dot3adAggPortEntry_t *
 dot3adAggPortTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggPortEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getNextIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot3adAggPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggPortEntry_t, oBTreeNode);
+	return &poDot3adAggPortData->oPort;
 }
 
 /* remove a row from the table */
 void
 dot3adAggPortTable_removeEntry (dot3adAggPortEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
-		return;    /* Nothing to remove */
+		return;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oDot3adAggPortTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortEntry (poEntry);
+	
+	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portCreated_c, 0);
 	return;
 }
 
@@ -896,7 +1123,7 @@ dot3adAggPortTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortData_BTree);
 	return dot3adAggPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -905,18 +1132,18 @@ dot3adAggPortTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggPortEntry_t *poEntry = NULL;
+	dot3adAggPortData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortData_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
 	return put_index_data;
 }
 
@@ -1445,101 +1672,65 @@ dot3adAggPortStatsTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-dot3adAggPortStatsTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register dot3adAggPortStatsEntry_t *pEntry1 = xBTree_entry (pNode1, dot3adAggPortStatsEntry_t, oBTreeNode);
-	register dot3adAggPortStatsEntry_t *pEntry2 = xBTree_entry (pNode2, dot3adAggPortStatsEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oDot3adAggPortStatsTable_BTree = xBTree_initInline (&dot3adAggPortStatsTable_BTreeNodeCmp);
-
 /* create a new row in the (unsorted) table */
 dot3adAggPortStatsEntry_t *
 dot3adAggPortStatsTable_createEntry (
 	uint32_t u32Index)
 {
-	dot3adAggPortStatsEntry_t *poEntry = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot3adAggPortStatsEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
+		xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_statsCreated_c))
 	{
 		return NULL;
 	}
 	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortStatsTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggPortStatsTable_BTree);
-	return poEntry;
+	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_statsCreated_c, 1);
+	return &poDot3adAggPortData->oStats;
 }
 
 dot3adAggPortStatsEntry_t *
 dot3adAggPortStatsTable_getByIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortStatsEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggPortStatsEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_statsCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot3adAggPortStatsTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggPortStatsEntry_t, oBTreeNode);
+	return &poDot3adAggPortData->oStats;
 }
 
 dot3adAggPortStatsEntry_t *
 dot3adAggPortStatsTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortStatsEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggPortStatsEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getNextIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_statsCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot3adAggPortStatsTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggPortStatsEntry_t, oBTreeNode);
+	return &poDot3adAggPortData->oStats;
 }
 
 /* remove a row from the table */
 void
 dot3adAggPortStatsTable_removeEntry (dot3adAggPortStatsEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortStatsTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
-		return;    /* Nothing to remove */
+		return;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oDot3adAggPortStatsTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByStatsEntry (poEntry);
+	
+	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_statsCreated_c, 0);
 	return;
 }
 
@@ -1549,7 +1740,7 @@ dot3adAggPortStatsTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortStatsTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortData_BTree);
 	return dot3adAggPortStatsTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -1558,18 +1749,18 @@ dot3adAggPortStatsTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggPortStatsEntry_t *poEntry = NULL;
+	dot3adAggPortData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortStatsEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortData_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortStatsTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
 	return put_index_data;
 }
 
@@ -1693,101 +1884,65 @@ dot3adAggPortDebugTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-dot3adAggPortDebugTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register dot3adAggPortDebugEntry_t *pEntry1 = xBTree_entry (pNode1, dot3adAggPortDebugEntry_t, oBTreeNode);
-	register dot3adAggPortDebugEntry_t *pEntry2 = xBTree_entry (pNode2, dot3adAggPortDebugEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oDot3adAggPortDebugTable_BTree = xBTree_initInline (&dot3adAggPortDebugTable_BTreeNodeCmp);
-
 /* create a new row in the (unsorted) table */
 dot3adAggPortDebugEntry_t *
 dot3adAggPortDebugTable_createEntry (
 	uint32_t u32Index)
 {
-	dot3adAggPortDebugEntry_t *poEntry = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot3adAggPortDebugEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
+		xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_debugCreated_c))
 	{
 		return NULL;
 	}
 	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortDebugTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggPortDebugTable_BTree);
-	return poEntry;
+	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_debugCreated_c, 1);
+	return &poDot3adAggPortData->oDebug;
 }
 
 dot3adAggPortDebugEntry_t *
 dot3adAggPortDebugTable_getByIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortDebugEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggPortDebugEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_debugCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot3adAggPortDebugTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggPortDebugEntry_t, oBTreeNode);
+	return &poDot3adAggPortData->oDebug;
 }
 
 dot3adAggPortDebugEntry_t *
 dot3adAggPortDebugTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortDebugEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggPortDebugEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getNextIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_debugCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot3adAggPortDebugTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggPortDebugEntry_t, oBTreeNode);
+	return &poDot3adAggPortData->oDebug;
 }
 
 /* remove a row from the table */
 void
 dot3adAggPortDebugTable_removeEntry (dot3adAggPortDebugEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortDebugTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
-		return;    /* Nothing to remove */
+		return;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oDot3adAggPortDebugTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByDebugEntry (poEntry);
+	
+	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_debugCreated_c, 0);
 	return;
 }
 
@@ -1797,7 +1952,7 @@ dot3adAggPortDebugTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortDebugTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortData_BTree);
 	return dot3adAggPortDebugTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -1806,18 +1961,18 @@ dot3adAggPortDebugTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggPortDebugEntry_t *poEntry = NULL;
+	dot3adAggPortData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortDebugEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortData_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortDebugTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
 	return put_index_data;
 }
 
@@ -1953,42 +2108,24 @@ dot3adAggPortXTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-dot3adAggPortXTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register dot3adAggPortXEntry_t *pEntry1 = xBTree_entry (pNode1, dot3adAggPortXEntry_t, oBTreeNode);
-	register dot3adAggPortXEntry_t *pEntry2 = xBTree_entry (pNode2, dot3adAggPortXEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oDot3adAggPortXTable_BTree = xBTree_initInline (&dot3adAggPortXTable_BTreeNodeCmp);
-
 /* create a new row in the (unsorted) table */
 dot3adAggPortXEntry_t *
 dot3adAggPortXTable_createEntry (
 	uint32_t u32Index)
 {
-	dot3adAggPortXEntry_t *poEntry = NULL;
+	register dot3adAggPortXEntry_t *poEntry = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot3adAggPortXEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
+		xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c))
 	{
 		return NULL;
 	}
-	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortXTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poDot3adAggPortData->oPortX;
 	
 	/*poEntry->au8ProtocolDA = 1652522221570*/;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggPortXTable_BTree);
+	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c, 1);
 	return poEntry;
 }
 
@@ -1996,60 +2133,44 @@ dot3adAggPortXEntry_t *
 dot3adAggPortXTable_getByIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortXEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggPortXEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot3adAggPortXTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggPortXEntry_t, oBTreeNode);
+	return &poDot3adAggPortData->oPortX;
 }
 
 dot3adAggPortXEntry_t *
 dot3adAggPortXTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortXEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot3adAggPortXEntry_t))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getNextIndex (u32Index)) == NULL ||
+		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot3adAggPortXTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, dot3adAggPortXEntry_t, oBTreeNode);
+	return &poDot3adAggPortData->oPortX;
 }
 
 /* remove a row from the table */
 void
 dot3adAggPortXTable_removeEntry (dot3adAggPortXEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggPortXTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
-		return;    /* Nothing to remove */
+		return;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oDot3adAggPortXTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortXEntry (poEntry);
+	
+	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c, 0);
 	return;
 }
 
@@ -2059,7 +2180,7 @@ dot3adAggPortXTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortXTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortData_BTree);
 	return dot3adAggPortXTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2068,18 +2189,18 @@ dot3adAggPortXTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggPortXEntry_t *poEntry = NULL;
+	dot3adAggPortData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortXEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortData_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortXTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
 	return put_index_data;
 }
 
@@ -2282,45 +2403,27 @@ neAggTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-neAggTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register neAggEntry_t *pEntry1 = xBTree_entry (pNode1, neAggEntry_t, oBTreeNode);
-	register neAggEntry_t *pEntry2 = xBTree_entry (pNode2, neAggEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Dot3adAggIndex < pEntry2->u32Dot3adAggIndex) ? -1:
-		(pEntry1->u32Dot3adAggIndex == pEntry2->u32Dot3adAggIndex) ? 0: 1;
-}
-
-xBTree_t oNeAggTable_BTree = xBTree_initInline (&neAggTable_BTreeNodeCmp);
-
 /* create a new row in the (unsorted) table */
 neAggEntry_t *
 neAggTable_createEntry (
 	uint32_t u32Dot3adAggIndex)
 {
 	register neAggEntry_t *poEntry = NULL;
+	register dot3adAggData_t *poDot3adAggData = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poDot3adAggData = dot3adAggData_createEntry (u32Dot3adAggIndex)) == NULL)
 	{
 		return NULL;
 	}
-	
-	poEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poDot3adAggData->oNe;
 	
 	poEntry->i32GroupType = neAggGroupType_none_c;
 	poEntry->u32GroupIndex = 0;
+	/*poEntry->au8SpeedMax = 0*/;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neAggStorageType_nonVolatile_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeAggTable_BTree);
+	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_neCreated_c, 1); 
 	return poEntry;
 }
 
@@ -2328,60 +2431,42 @@ neAggEntry_t *
 neAggTable_getByIndex (
 	uint32_t u32Dot3adAggIndex)
 {
-	register neAggEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggData_t *poDot3adAggData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poDot3adAggData = dot3adAggData_getByIndex (u32Dot3adAggIndex)) == NULL ||
+		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_neCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeAggTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neAggEntry_t, oBTreeNode);
+	return &poDot3adAggData->oNe;
 }
 
 neAggEntry_t *
 neAggTable_getNextIndex (
 	uint32_t u32Dot3adAggIndex)
 {
-	register neAggEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggData_t *poDot3adAggData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poDot3adAggData = dot3adAggData_getNextIndex (u32Dot3adAggIndex)) == NULL ||
+		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_neCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeAggTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neAggEntry_t, oBTreeNode);
+	return &poDot3adAggData->oNe;
 }
 
 /* remove a row from the table */
 void
 neAggTable_removeEntry (neAggEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
-		return;    /* Nothing to remove */
+		return;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeAggTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	dot3adAggData_removeEntry (dot3adAggData_getByNeEntry (poEntry));
 	return;
 }
 
@@ -2391,7 +2476,7 @@ neAggTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oNeAggTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggData_BTree);
 	return neAggTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2400,18 +2485,18 @@ neAggTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neAggEntry_t *poEntry = NULL;
+	dot3adAggData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, neAggEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggData_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Dot3adAggIndex);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeAggTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggData_BTree);
 	return put_index_data;
 }
 
@@ -2781,10 +2866,10 @@ neAggPortListTable_init (void)
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
 		ASN_INTEGER /* index: dot3adAggIndex */,
-		ASN_INTEGER /* index: neAggPortListIndex */,
+		ASN_INTEGER /* index: dot3adAggPortIndex */,
 		0);
-	table_info->min_column = NEAGGPORTLISTINDEX;
-	table_info->max_column = NEAGGPORTLISTINDEX;
+	table_info->min_column = NEAGGPORTLISTSTATE;
+	table_info->max_column = NEAGGPORTLISTSTATE;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &neAggPortListTable_getFirst;
@@ -2807,8 +2892,8 @@ neAggPortListTable_BTreeNodeCmp (
 	
 	return
 		(pEntry1->u32Dot3adAggIndex < pEntry2->u32Dot3adAggIndex) ||
-		(pEntry1->u32Dot3adAggIndex == pEntry2->u32Dot3adAggIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32Dot3adAggIndex == pEntry2->u32Dot3adAggIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+		(pEntry1->u32Dot3adAggIndex == pEntry2->u32Dot3adAggIndex && pEntry1->u32Dot3adAggPortIndex < pEntry2->u32Dot3adAggPortIndex) ? -1:
+		(pEntry1->u32Dot3adAggIndex == pEntry2->u32Dot3adAggIndex && pEntry1->u32Dot3adAggPortIndex == pEntry2->u32Dot3adAggPortIndex) ? 0: 1;
 }
 
 xBTree_t oNeAggPortListTable_BTree = xBTree_initInline (&neAggPortListTable_BTreeNodeCmp);
@@ -2817,7 +2902,7 @@ xBTree_t oNeAggPortListTable_BTree = xBTree_initInline (&neAggPortListTable_BTre
 neAggPortListEntry_t *
 neAggPortListTable_createEntry (
 	uint32_t u32Dot3adAggIndex,
-	uint32_t u32Index)
+	uint32_t u32Dot3adAggPortIndex)
 {
 	register neAggPortListEntry_t *poEntry = NULL;
 	
@@ -2827,7 +2912,7 @@ neAggPortListTable_createEntry (
 	}
 	
 	poEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
-	poEntry->u32Index = u32Index;
+	poEntry->u32Dot3adAggPortIndex = u32Dot3adAggPortIndex;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggPortListTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -2841,7 +2926,7 @@ neAggPortListTable_createEntry (
 neAggPortListEntry_t *
 neAggPortListTable_getByIndex (
 	uint32_t u32Dot3adAggIndex,
-	uint32_t u32Index)
+	uint32_t u32Dot3adAggPortIndex)
 {
 	register neAggPortListEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -2852,7 +2937,7 @@ neAggPortListTable_getByIndex (
 	}
 	
 	poTmpEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
-	poTmpEntry->u32Index = u32Index;
+	poTmpEntry->u32Dot3adAggPortIndex = u32Dot3adAggPortIndex;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeAggPortListTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -2866,7 +2951,7 @@ neAggPortListTable_getByIndex (
 neAggPortListEntry_t *
 neAggPortListTable_getNextIndex (
 	uint32_t u32Dot3adAggIndex,
-	uint32_t u32Index)
+	uint32_t u32Dot3adAggPortIndex)
 {
 	register neAggPortListEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -2877,7 +2962,7 @@ neAggPortListTable_getNextIndex (
 	}
 	
 	poTmpEntry->u32Dot3adAggIndex = u32Dot3adAggIndex;
-	poTmpEntry->u32Index = u32Index;
+	poTmpEntry->u32Dot3adAggPortIndex = u32Dot3adAggPortIndex;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeAggPortListTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -2929,7 +3014,7 @@ neAggPortListTable_getNext (
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Dot3adAggIndex);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Dot3adAggPortIndex);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeAggPortListTable_BTree);
 	return put_index_data;
@@ -2986,8 +3071,8 @@ neAggPortListTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEAGGPORTLISTINDEX:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32Index);
+			case NEAGGPORTLISTSTATE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32State);
 				break;
 				
 			default:
@@ -3036,45 +3121,26 @@ neAggPortTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-neAggPortTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register neAggPortEntry_t *pEntry1 = xBTree_entry (pNode1, neAggPortEntry_t, oBTreeNode);
-	register neAggPortEntry_t *pEntry2 = xBTree_entry (pNode2, neAggPortEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Dot3adAggPortIndex < pEntry2->u32Dot3adAggPortIndex) ? -1:
-		(pEntry1->u32Dot3adAggPortIndex == pEntry2->u32Dot3adAggPortIndex) ? 0: 1;
-}
-
-xBTree_t oNeAggPortTable_BTree = xBTree_initInline (&neAggPortTable_BTreeNodeCmp);
-
 /* create a new row in the (unsorted) table */
 neAggPortEntry_t *
 neAggPortTable_createEntry (
 	uint32_t u32Dot3adAggPortIndex)
 {
 	register neAggPortEntry_t *poEntry = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_createEntry (u32Dot3adAggPortIndex)) == NULL)
 	{
 		return NULL;
 	}
-	
-	poEntry->u32Dot3adAggPortIndex = u32Dot3adAggPortIndex;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggPortTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poDot3adAggPortData->oNe;
 	
 	poEntry->i32GroupType = neAggPortGroupType_none_c;
 	poEntry->u32GroupIndex = 0;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neAggPortStorageType_nonVolatile_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeAggPortTable_BTree);
+	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_neCreated_c, 1); 
 	return poEntry;
 }
 
@@ -3082,60 +3148,42 @@ neAggPortEntry_t *
 neAggPortTable_getByIndex (
 	uint32_t u32Dot3adAggPortIndex)
 {
-	register neAggPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Dot3adAggPortIndex)) == NULL ||
+		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_neCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Dot3adAggPortIndex = u32Dot3adAggPortIndex;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeAggPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neAggPortEntry_t, oBTreeNode);
+	return &poDot3adAggPortData->oNe;
 }
 
 neAggPortEntry_t *
 neAggPortTable_getNextIndex (
 	uint32_t u32Dot3adAggPortIndex)
 {
-	register neAggPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poDot3adAggPortData = dot3adAggPortData_getNextIndex (u32Dot3adAggPortIndex)) == NULL ||
+		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_neCreated_c))
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Dot3adAggPortIndex = u32Dot3adAggPortIndex;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeAggPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neAggPortEntry_t, oBTreeNode);
+	return &poDot3adAggPortData->oNe;
 }
 
 /* remove a row from the table */
 void
 neAggPortTable_removeEntry (neAggPortEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeAggPortTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
-		return;    /* Nothing to remove */
+		return;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeAggPortTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	dot3adAggPortData_removeEntry (dot3adAggPortData_getByNeEntry (poEntry));
 	return;
 }
 
@@ -3145,7 +3193,7 @@ neAggPortTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oNeAggPortTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortData_BTree);
 	return neAggPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -3154,18 +3202,18 @@ neAggPortTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neAggPortEntry_t *poEntry = NULL;
+	dot3adAggPortData_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, neAggPortEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortData_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Dot3adAggPortIndex);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeAggPortTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
 	return put_index_data;
 }
 

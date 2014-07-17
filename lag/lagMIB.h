@@ -30,6 +30,8 @@ extern "C" {
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+
 #define TOBE_REPLACED 1
 
 
@@ -87,7 +89,7 @@ enum
 typedef struct dot3adAggEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8MACAddress[6];
@@ -104,10 +106,10 @@ typedef struct dot3adAggEntry_t
 	int32_t i32PartnerOperKey;
 	int32_t i32CollectorMaxDelay;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } dot3adAggEntry_t;
 
-extern xBTree_t oDot3adAggTable_BTree;
+// extern xBTree_t oDot3adAggTable_BTree;
 
 /* dot3adAggTable table mapper */
 void dot3adAggTable_init (void);
@@ -135,16 +137,16 @@ Netsnmp_Node_Handler dot3adAggTable_mapper;
 typedef struct dot3adAggPortListEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8Ports[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
 	size_t u16Ports_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } dot3adAggPortListEntry_t;
 
-extern xBTree_t oDot3adAggPortListTable_BTree;
+// extern xBTree_t oDot3adAggPortListTable_BTree;
 
 /* dot3adAggPortListTable table mapper */
 void dot3adAggPortListTable_init (void);
@@ -242,7 +244,7 @@ enum
 typedef struct dot3adAggPortEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	int32_t i32ActorSystemPriority;
@@ -276,10 +278,10 @@ typedef struct dot3adAggPortEntry_t
 	size_t u16PartnerOperState_len;	/* # of uint8_t elements */
 	int32_t i32AggregateOrIndividual;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } dot3adAggPortEntry_t;
 
-extern xBTree_t oDot3adAggPortTable_BTree;
+// extern xBTree_t oDot3adAggPortTable_BTree;
 
 /* dot3adAggPortTable table mapper */
 void dot3adAggPortTable_init (void);
@@ -314,7 +316,7 @@ Netsnmp_Node_Handler dot3adAggPortTable_mapper;
 typedef struct dot3adAggPortStatsEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint32_t u32LACPDUsRx;
@@ -326,10 +328,10 @@ typedef struct dot3adAggPortStatsEntry_t
 	uint32_t u32MarkerPDUsTx;
 	uint32_t u32MarkerResponsePDUsTx;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } dot3adAggPortStatsEntry_t;
 
-extern xBTree_t oDot3adAggPortStatsTable_BTree;
+// extern xBTree_t oDot3adAggPortStatsTable_BTree;
 
 /* dot3adAggPortStatsTable table mapper */
 void dot3adAggPortStatsTable_init (void);
@@ -397,7 +399,7 @@ enum
 typedef struct dot3adAggPortDebugEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	int32_t i32RxState;
@@ -414,10 +416,10 @@ typedef struct dot3adAggPortDebugEntry_t
 	uint32_t u32ActorChangeCount;
 	uint32_t u32PartnerChangeCount;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } dot3adAggPortDebugEntry_t;
 
-extern xBTree_t oDot3adAggPortDebugTable_BTree;
+// extern xBTree_t oDot3adAggPortDebugTable_BTree;
 
 /* dot3adAggPortDebugTable table mapper */
 void dot3adAggPortDebugTable_init (void);
@@ -445,16 +447,16 @@ Netsnmp_Node_Handler dot3adAggPortDebugTable_mapper;
 typedef struct dot3adAggPortXEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8ProtocolDA[6];
 	size_t u16ProtocolDA_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } dot3adAggPortXEntry_t;
 
-extern xBTree_t oDot3adAggPortXTable_BTree;
+// extern xBTree_t oDot3adAggPortXTable_BTree;
 
 /* dot3adAggPortXTable table mapper */
 void dot3adAggPortXTable_init (void);
@@ -508,7 +510,7 @@ enum
 typedef struct neAggEntry_t
 {
 	/* Index values */
-	uint32_t u32Dot3adAggIndex;
+// 	uint32_t u32Dot3adAggIndex;
 	
 	/* Column values */
 	int32_t i32GroupType;
@@ -516,10 +518,10 @@ typedef struct neAggEntry_t
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neAggEntry_t;
 
-extern xBTree_t oNeAggTable_BTree;
+// extern xBTree_t oNeAggTable_BTree;
 
 /* neAggTable table mapper */
 void neAggTable_init (void);
@@ -538,19 +540,74 @@ Netsnmp_Node_Handler neAggTable_mapper;
 #endif	/* SNMP_SRC */
 
 
+enum
+{
+	dot3adAggFlags_neCreated_c = 0,
+	dot3adAggFlags_aggCreated_c = 1,
+	dot3adAggFlags_portListCreated_c = 2,
+	dot3adAggFlags_count_c,
+};
+
+typedef struct dot3adAggData_t
+{
+	uint32_t u32Index;
+	int32_t i32GroupType;
+	uint32_t u32GroupIndex;
+	
+	neAggEntry_t oNe;
+	dot3adAggEntry_t oAgg;
+	dot3adAggPortListEntry_t oPortList;
+	
+	uint8_t au8Flags[1];
+	
+	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oGroup_BTreeNode;
+} dot3adAggData_t;
+
+// extern xBTree_t oDot3adAggData_BTree;
+// extern xBTree_t oDot3adAggData_Group_BTree;
+
+dot3adAggData_t * dot3adAggData_createEntry (
+	uint32_t u32Index);
+dot3adAggData_t * dot3adAggData_getByIndex (
+	uint32_t u32Index);
+dot3adAggData_t * dot3adAggData_getNextIndex (
+	uint32_t u32Index);
+dot3adAggData_t * dot3adAggData_Group_getByIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index);
+dot3adAggData_t * dot3adAggData_Group_getNextIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index);
+#define dot3adAggData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggData_t, oNe))
+#define dot3adAggData_getByAggEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggData_t, oAgg))
+#define dot3adAggData_getByPortListEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggData_t, oPortList))
+void dot3adAggData_removeEntry (dot3adAggData_t *poEntry);
+
+
 /**
  *	table neAggPortListTable definitions
  */
-#define NEAGGPORTLISTINDEX 1
+#define NEAGGPORTLISTSTATE 1
+
+enum
+{
+	/* enums for column neAggPortListState */
+	neAggPortListState_active_c = 1,
+	neAggPortListState_standby_c = 2,
+};
 
 /* table neAggPortListTable row entry data structure */
 typedef struct neAggPortListEntry_t
 {
 	/* Index values */
 	uint32_t u32Dot3adAggIndex;
-	uint32_t u32Index;
+	uint32_t u32Dot3adAggPortIndex;
 	
 	/* Column values */
+	int32_t i32State;
 	
 	xBTree_Node_t oBTreeNode;
 } neAggPortListEntry_t;
@@ -561,13 +618,13 @@ extern xBTree_t oNeAggPortListTable_BTree;
 void neAggPortListTable_init (void);
 neAggPortListEntry_t * neAggPortListTable_createEntry (
 	uint32_t u32Dot3adAggIndex,
-	uint32_t u32Index);
+	uint32_t u32Dot3adAggPortIndex);
 neAggPortListEntry_t * neAggPortListTable_getByIndex (
 	uint32_t u32Dot3adAggIndex,
-	uint32_t u32Index);
+	uint32_t u32Dot3adAggPortIndex);
 neAggPortListEntry_t * neAggPortListTable_getNextIndex (
 	uint32_t u32Dot3adAggIndex,
-	uint32_t u32Index);
+	uint32_t u32Dot3adAggPortIndex);
 void neAggPortListTable_removeEntry (neAggPortListEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neAggPortListTable_getFirst;
@@ -612,7 +669,7 @@ enum
 typedef struct neAggPortEntry_t
 {
 	/* Index values */
-	uint32_t u32Dot3adAggPortIndex;
+// 	uint32_t u32Dot3adAggPortIndex;
 	
 	/* Column values */
 	int32_t i32GroupType;
@@ -620,10 +677,10 @@ typedef struct neAggPortEntry_t
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neAggPortEntry_t;
 
-extern xBTree_t oNeAggPortTable_BTree;
+// extern xBTree_t oNeAggPortTable_BTree;
 
 /* neAggPortTable table mapper */
 void neAggPortTable_init (void);
@@ -640,6 +697,59 @@ Netsnmp_Next_Data_Point neAggPortTable_getNext;
 Netsnmp_Get_Data_Point neAggPortTable_get;
 Netsnmp_Node_Handler neAggPortTable_mapper;
 #endif	/* SNMP_SRC */
+
+
+enum
+{
+	dot3adAggPortFlags_neCreated_c = 0,
+	dot3adAggPortFlags_portCreated_c = 1,
+	dot3adAggPortFlags_statsCreated_c = 2,
+	dot3adAggPortFlags_debugCreated_c = 3,
+	dot3adAggPortFlags_portXCreated_c = 4,
+	dot3adAggPortFlags_count_c,
+};
+
+typedef struct dot3adAggPortData_t
+{
+	uint32_t u32Index;
+	int32_t i32GroupType;
+	uint32_t u32GroupIndex;
+	
+	neAggPortEntry_t oNe;
+	dot3adAggPortEntry_t oPort;
+	dot3adAggPortStatsEntry_t oStats;
+	dot3adAggPortDebugEntry_t oDebug;
+	dot3adAggPortXEntry_t oPortX;
+	
+	uint8_t au8Flags[1];
+	
+	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oGroup_BTreeNode;
+} dot3adAggPortData_t;
+
+// extern xBTree_t oDot3adAggPortData_BTree;
+// extern xBTree_t oDot3adAggPortData_Group_BTree;
+
+dot3adAggPortData_t * dot3adAggPortData_createEntry (
+	uint32_t u32Index);
+dot3adAggPortData_t * dot3adAggPortData_getByIndex (
+	uint32_t u32Index);
+dot3adAggPortData_t * dot3adAggPortData_getNextIndex (
+	uint32_t u32Index);
+dot3adAggPortData_t * dot3adAggPortData_Group_getByIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index);
+dot3adAggPortData_t * dot3adAggPortData_Group_getNextIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index);
+#define dot3adAggPortData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oNe))
+#define dot3adAggPortData_getByPortEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oPort))
+#define dot3adAggPortData_getByStatsEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oStats))
+#define dot3adAggPortData_getByDebugEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oDebug))
+#define dot3adAggPortData_getByPortXEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oPortX))
+void dot3adAggPortData_removeEntry (dot3adAggPortData_t *poEntry);
 
 
 
