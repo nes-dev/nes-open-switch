@@ -465,6 +465,11 @@ neIpUnNumEntry_t * neIpUnNumTable_RemoteId_getNextIndex (
 	int32_t i32AddressType,
 	uint8_t *pau8RemoteAddress, size_t u16RemoteAddress_len);
 void neIpUnNumTable_removeEntry (neIpUnNumEntry_t *poEntry);
+neIpUnNumEntry_t * neIpUnNumTable_createExt (
+	uint32_t u32IfIndex);
+bool neIpUnNumTable_removeExt (neIpUnNumEntry_t *poEntry);
+bool neIpUnNumTable_createHier (neIpUnNumEntry_t *poEntry);
+bool neIpUnNumTable_removeHier (neIpUnNumEntry_t *poEntry);
 bool neIpUnNumRowStatus_handler (
 	neIpUnNumEntry_t *poEntry,
 	int32_t i32RowStatus);

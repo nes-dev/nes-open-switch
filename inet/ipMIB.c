@@ -2872,20 +2872,6 @@ ipAddressTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case IPADDRESSIFINDEX:
-			case IPADDRESSTYPE:
-			case IPADDRESSSTATUS:
-			case IPADDRESSSTORAGETYPE:
-				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			}
-			
-			switch (table_info->colnum)
-			{
 			case IPADDRESSROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
@@ -2927,6 +2913,20 @@ ipAddressTable_mapper (
 				if (table_entry == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case IPADDRESSIFINDEX:
+			case IPADDRESSTYPE:
+			case IPADDRESSSTATUS:
+			case IPADDRESSSTORAGETYPE:
+				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
 				}
 				break;
 			}

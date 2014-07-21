@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "if/ifMIB.h"
 #include "ipMIB.h"
 #include "neInetMIB.h"
 
@@ -1540,21 +1541,23 @@ neIpAddressTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEIPADDRESSPREFIXLENGTH:
-			{
-				register ipAddressData_t *poIpAddressData = ipAddressData_getByNeEntry (table_entry);
-				
-				if (poIpAddressData->oIp.u8RowStatus == xRowStatus_active_c || poIpAddressData->oIp.u8RowStatus == xRowStatus_notReady_c)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			}
 			default:
 				if (table_entry == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			}
+			
+			register ipAddressData_t *poIpAddressData = ipAddressData_getByNeEntry (table_entry);
+			
+			switch (table_info->colnum)
+			{
+			case NEIPADDRESSPREFIXLENGTH:
+				if (poIpAddressData->oIp.u8RowStatus == xRowStatus_active_c || poIpAddressData->oIp.u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				break;
@@ -1910,11 +1913,167 @@ neIpUnNumTable_removeEntry (neIpUnNumEntry_t *poEntry)
 	return;
 }
 
+neIpUnNumEntry_t *
+neIpUnNumTable_createExt (
+	uint32_t u32IfIndex)
+{
+	neIpUnNumEntry_t *poEntry = NULL;
+	
+	if (ifData_getByIndexExt (u32IfIndex, false) == NULL)
+	{
+		goto neIpUnNumTable_createExt_cleanup;
+	}
+	
+	poEntry = neIpUnNumTable_createEntry (
+		u32IfIndex);
+	if (poEntry == NULL)
+	{
+		goto neIpUnNumTable_createExt_cleanup;
+	}
+	
+neIpUnNumTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+neIpUnNumTable_removeExt (neIpUnNumEntry_t *poEntry)
+{
+	neIpUnNumTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+neIpUnNumTable_createHier (
+	neIpUnNumEntry_t *poEntry)
+{
+	register ipAddressData_t *poIpAddressData = NULL;
+	register neInetInterfaceEntry_t *poNeInetInterfaceEntry = NULL;
+	
+	if (poEntry->u32LocalId == 0)
+	{
+		goto neIpUnNumTable_createHier_cleanup;
+	}
+	
+	if ((poIpAddressData = ipAddressData_getByIndex (poEntry->i32AddressType, poEntry->au8LocalAddress, poEntry->u16LocalAddress_len)) == NULL)
+	{
+		goto neIpUnNumTable_createHier_cleanup;
+	}
+	
+	if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poEntry->u32IfIndex)) == NULL &&
+		(poNeInetInterfaceEntry = neInetInterfaceTable_createExt (poEntry->u32IfIndex, poEntry->i32AddressType, poEntry->au8LocalAddress, poEntry->u16LocalAddress_len, true)) == NULL)
+	{
+		goto neIpUnNumTable_createHier_cleanup;
+	}
+	
+	poEntry->u32NumberedIfIndex = poIpAddressData->u32IfIndex;
+	poIpAddressData->u32NumUnNumAddresses++;
+	
+	xBTree_nodeAdd (&poEntry->oLocalId_BTreeNode, &oNeIpUnNumTable_LocalId_BTree);
+	return true;
+	
+	
+neIpUnNumTable_createHier_cleanup:
+	
+	neIpUnNumTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+neIpUnNumTable_removeHier (
+	neIpUnNumEntry_t *poEntry)
+{
+	register ipAddressData_t *poIpAddressData = NULL;
+	register neInetInterfaceEntry_t *poNeInetInterfaceEntry = NULL;
+	
+	if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poEntry->u32IfIndex)) == NULL)
+	{
+		goto neIpUnNumTable_removeHier_cleanup;
+	}
+	
+	neInetInterfaceTable_removeExt (poNeInetInterfaceEntry, poEntry->i32AddressType, poEntry->au8LocalAddress, poEntry->u16LocalAddress_len, true);
+	
+	if ((poIpAddressData = ipAddressData_getByIndex (poEntry->i32AddressType, poEntry->au8LocalAddress, poEntry->u16LocalAddress_len)) == NULL)
+	{
+		goto neIpUnNumTable_removeHier_cleanup;
+	}
+	
+	poEntry->u32NumberedIfIndex = 0;
+	poIpAddressData->u32NumUnNumAddresses--;
+	
+	xBTree_nodeRemove (&poEntry->oLocalId_BTreeNode, &oNeIpUnNumTable_LocalId_BTree);
+	return true;
+	
+	
+neIpUnNumTable_removeHier_cleanup:
+	
+	return false;
+}
+
 bool
 neIpUnNumRowStatus_handler (
 	neIpUnNumEntry_t *poEntry,
 	int32_t u8RowStatus)
 {
+	if (ifData_getByIndexExt (poEntry->u32IfIndex, false) == NULL)
+	{
+		goto neIpUnNumRowStatus_handler_cleanup;
+	}
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (poEntry->u8RowStatus == xRowStatus_active_c)
+		{
+			goto neIpUnNumRowStatus_handler_success;
+		}
+		
+		if (!neIpUnNumTable_createHier (poEntry))
+		{
+			goto neIpUnNumRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_active_c;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (poEntry->u8RowStatus != xRowStatus_active_c)
+		{
+			goto neIpUnNumRowStatus_handler_success;
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		poEntry->u8RowStatus = xRowStatus_notReady_c;
+		break;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!neIpUnNumTable_removeHier (poEntry))
+		{
+			goto neIpUnNumRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+neIpUnNumRowStatus_handler_success:
+	
+	return true;
+	
+	
+neIpUnNumRowStatus_handler_cleanup:
+	
 	return false;
 }
 
@@ -2130,14 +2289,11 @@ neIpUnNumTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-				case RS_CREATEANDWAIT:
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-						return SNMP_ERR_NOERROR;
-					}
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_WRONGVALUE);
+					return SNMP_ERR_NOERROR;
 					
-					table_entry = neIpUnNumTable_createEntry (
+				case RS_CREATEANDWAIT:
+					table_entry = neIpUnNumTable_createExt (
 						*idx1->val.integer);
 					if (table_entry != NULL)
 					{
@@ -2166,6 +2322,23 @@ neIpUnNumTable_mapper (
 				}
 				break;
 			}
+			
+			switch (table_info->colnum)
+			{
+			case NEIPUNNUMADDRESSTYPE:
+			case NEIPUNNUMLOCALADDRESS:
+			case NEIPUNNUMREMOTEADDRESS:
+			case NEIPUNNUMLOCALID:
+			case NEIPUNNUMREMOTEID:
+			case NEIPUNNUMDESTPHYSADDRESS:
+			case NEIPUNNUMSTORAGETYPE:
+				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			}
 		}
 		break;
 		
@@ -2187,7 +2360,7 @@ neIpUnNumTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					neIpUnNumTable_removeEntry (table_entry);
+					neIpUnNumTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -2382,7 +2555,7 @@ neIpUnNumTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					neIpUnNumTable_removeEntry (table_entry);
+					neIpUnNumTable_removeExt (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -2411,7 +2584,7 @@ neIpUnNumTable_mapper (
 					break;
 					
 				case RS_DESTROY:
-					neIpUnNumTable_removeEntry (table_entry);
+					neIpUnNumTable_removeExt (table_entry);
 					break;
 				}
 			}
