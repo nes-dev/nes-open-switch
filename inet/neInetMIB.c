@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "ethernet/ieee8021BridgeMib.h"
 #include "if/ifMIB.h"
 #include "ipMIB.h"
 #include "neInetMIB.h"
@@ -494,7 +495,71 @@ neInetInterfaceTable_createExt (
 	uint8_t *pau8Addr, size_t u16Addr_len,
 	bool bUnNumAddr)
 {
-	return NULL;
+	neInetInterfaceEntry_t *poEntry = NULL;
+	
+	if (ifData_getByIndexExt (u32IfIndex, false) == NULL)
+	{
+		return NULL;
+	}
+	
+	if ((poEntry = neInetInterfaceTable_getByIndex (u32IfIndex)) == NULL &&
+		(poEntry = neInetInterfaceTable_createEntry (u32IfIndex)) == NULL)
+	{
+		return NULL;
+	}
+	
+	if (!neInetInterfaceTable_createHier (poEntry, i32AddrType, pau8Addr, u16Addr_len))
+	{
+		neInetInterfaceTable_removeEntry (poEntry);
+		return NULL;
+	}
+	
+	if (bUnNumAddr)
+	{
+		switch (i32AddrType)
+		{
+		case ipAddressAddrType_ipv4_c:
+			poEntry->u32NumIpv4UnNumAddresses++;
+			oIp.u32NumIpv4UnNumAddresses++;
+			break;
+		case ipAddressAddrType_ipv6_c:
+			poEntry->u32NumIpv6UnNumAddresses++;
+			oIp.u32NumIpv6UnNumAddresses++;
+			break;
+		case ipAddressAddrType_ipv4z_c:
+			poEntry->u32NumIpv4zUnNumAddresses++;
+			oIp.u32NumIpv4zUnNumAddresses++;
+			break;
+		case ipAddressAddrType_ipv6z_c:
+			poEntry->u32NumIpv6zUnNumAddresses++;
+			oIp.u32NumIpv6zUnNumAddresses++;
+			break;
+		}
+	}
+	else
+	{
+		switch (i32AddrType)
+		{
+		case ipAddressAddrType_ipv4_c:
+			poEntry->u32NumIpv4Addresses++;
+			oIp.u32NumIpv4Addresses++;
+			break;
+		case ipAddressAddrType_ipv6_c:
+			poEntry->u32NumIpv6Addresses++;
+			oIp.u32NumIpv6Addresses++;
+			break;
+		case ipAddressAddrType_ipv4z_c:
+			poEntry->u32NumIpv4zAddresses++;
+			oIp.u32NumIpv4zAddresses++;
+			break;
+		case ipAddressAddrType_ipv6z_c:
+			poEntry->u32NumIpv6zAddresses++;
+			oIp.u32NumIpv6zAddresses++;
+			break;
+		}
+	}
+	
+	return poEntry;
 }
 
 bool
@@ -504,6 +569,240 @@ neInetInterfaceTable_removeExt (
 	uint8_t *pau8Addr, size_t u16Addr_len,
 	bool bUnNumAddr)
 {
+	if (bUnNumAddr)
+	{
+		switch (i32AddrType)
+		{
+		case ipAddressAddrType_ipv4_c:
+			poEntry->u32NumIpv4UnNumAddresses--;
+			oIp.u32NumIpv4UnNumAddresses--;
+			break;
+		case ipAddressAddrType_ipv6_c:
+			poEntry->u32NumIpv6UnNumAddresses--;
+			oIp.u32NumIpv6UnNumAddresses--;
+			break;
+		case ipAddressAddrType_ipv4z_c:
+			poEntry->u32NumIpv4zUnNumAddresses--;
+			oIp.u32NumIpv4zUnNumAddresses--;
+			break;
+		case ipAddressAddrType_ipv6z_c:
+			poEntry->u32NumIpv6zUnNumAddresses--;
+			oIp.u32NumIpv6zUnNumAddresses--;
+			break;
+		}
+	}
+	else
+	{
+		switch (i32AddrType)
+		{
+		case ipAddressAddrType_ipv4_c:
+			poEntry->u32NumIpv4Addresses--;
+			oIp.u32NumIpv4Addresses--;
+			break;
+		case ipAddressAddrType_ipv4z_c:
+			poEntry->u32NumIpv4zAddresses--;
+			oIp.u32NumIpv4zAddresses--;
+			break;
+		case ipAddressAddrType_ipv6_c:
+			poEntry->u32NumIpv6Addresses--;
+			oIp.u32NumIpv6Addresses--;
+			break;
+		case ipAddressAddrType_ipv6z_c:
+			poEntry->u32NumIpv6zAddresses--;
+			oIp.u32NumIpv6zAddresses--;
+			break;
+		}
+	}
+	
+	if (!neInetInterfaceTable_removeHier (poEntry, i32AddrType, pau8Addr, u16Addr_len))
+	{
+		return false;
+	}
+	
+	if (poEntry->u32NumIpv4Addresses == 0 && poEntry->u32NumIpv4zAddresses == 0 && poEntry->u32NumIpv4UnNumAddresses == 0 && poEntry->u32NumIpv4zUnNumAddresses == 0 &&
+		poEntry->u32NumIpv6Addresses == 0 && poEntry->u32NumIpv6zAddresses == 0 && poEntry->u32NumIpv6UnNumAddresses == 0 && poEntry->u32NumIpv6zUnNumAddresses == 0)
+	{
+		neInetInterfaceTable_removeEntry (poEntry);
+	}
+	
+	return true;
+}
+
+bool
+neInetInterfaceTable_createHier (
+	neInetInterfaceEntry_t *poEntry,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len)
+{
+	register uint8_t u8InetVersion = 0;
+	register ipv4InterfaceEntry_t *poIpv4InterfaceEntry = NULL;
+	register ipv6InterfaceEntry_t *poIpv6InterfaceEntry = NULL;
+	register ipSystemStatsEntry_t *poIpSystemStatsEntry = NULL;
+	register ipIfStatsEntry_t *poIpIfStatsEntry = NULL;
+	register ipv6ScopeZoneIndexEntry_t *poIpv6ScopeZoneIndexEntry = NULL;
+	
+	
+	u8InetVersion =
+		i32AddrType == ipAddressAddrType_ipv4_c || i32AddrType == ipAddressAddrType_ipv4z_c ? InetVersion_ipv4_c:
+		i32AddrType == ipAddressAddrType_ipv6_c || i32AddrType == ipAddressAddrType_ipv6z_c ? InetVersion_ipv6_c: InetVersion_unknown_c;
+		
+	if (u8InetVersion == InetVersion_ipv4_c)
+	{
+		if ((poIpv4InterfaceEntry = ipv4InterfaceTable_getByIndex (poEntry->u32IfIndex)) == NULL &&
+			(poIpv4InterfaceEntry = ipv4InterfaceTable_createEntry (poEntry->u32IfIndex)) == NULL)
+		{
+			goto neInetInterfaceTable_createHier_cleanup;
+		}
+	}
+	else if (u8InetVersion == InetVersion_ipv6_c)
+	{
+		if ((poIpv6InterfaceEntry = ipv6InterfaceTable_getByIndex (poEntry->u32IfIndex)) == NULL &&
+			(poIpv6InterfaceEntry = ipv6InterfaceTable_createEntry (poEntry->u32IfIndex)) == NULL)
+		{
+			goto neInetInterfaceTable_createHier_cleanup;
+		}
+	}
+	
+	
+	if ((poIpSystemStatsEntry = ipSystemStatsTable_getByIndex (u8InetVersion)) == NULL &&
+		(poIpSystemStatsEntry = ipSystemStatsTable_createEntry (u8InetVersion)) == NULL)
+	{
+		goto neInetInterfaceTable_createHier_cleanup;
+	}
+	
+	if ((poIpIfStatsEntry = ipIfStatsTable_getByIndex (u8InetVersion, poEntry->u32IfIndex)) == NULL &&
+		(poIpIfStatsEntry = ipIfStatsTable_createEntry (u8InetVersion, poEntry->u32IfIndex)) == NULL)
+	{
+		goto neInetInterfaceTable_createHier_cleanup;
+	}
+	
+	if (u8InetVersion == InetVersion_ipv6_c)
+	{
+		if ((poIpv6ScopeZoneIndexEntry = ipv6ScopeZoneIndexTable_getByIndex (poEntry->u32IfIndex)) == NULL &&
+			(poIpv6ScopeZoneIndexEntry = ipv6ScopeZoneIndexTable_createEntry (poEntry->u32IfIndex)) == NULL)
+		{
+			goto neInetInterfaceTable_createHier_cleanup;
+		}
+	}
+	
+	return true;
+	
+	
+neInetInterfaceTable_createHier_cleanup:
+	
+	neInetInterfaceTable_removeHier (poEntry, i32AddrType, pau8Addr, u16Addr_len);
+	return false;
+}
+
+bool
+neInetInterfaceTable_removeHier (
+	neInetInterfaceEntry_t *poEntry,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len)
+{
+	register uint8_t u8InetVersion = 0;
+	register ipv4InterfaceEntry_t *poIpv4InterfaceEntry = NULL;
+	register ipv6InterfaceEntry_t *poIpv6InterfaceEntry = NULL;
+	register ipSystemStatsEntry_t *poIpSystemStatsEntry = NULL;
+	register ipIfStatsEntry_t *poIpIfStatsEntry = NULL;
+	register ipv6ScopeZoneIndexEntry_t *poIpv6ScopeZoneIndexEntry = NULL;
+	
+	
+	u8InetVersion =
+		i32AddrType == ipAddressAddrType_ipv4_c || i32AddrType == ipAddressAddrType_ipv4z_c ? InetVersion_ipv4_c:
+		i32AddrType == ipAddressAddrType_ipv6_c || i32AddrType == ipAddressAddrType_ipv6z_c ? InetVersion_ipv6_c: InetVersion_unknown_c;
+		
+	if (u8InetVersion == InetVersion_ipv4_c)
+	{
+		if ((poIpv4InterfaceEntry = ipv4InterfaceTable_getByIndex (poEntry->u32IfIndex)) == NULL)
+		{
+			return false;
+		}
+	}
+	else if (u8InetVersion == InetVersion_ipv6_c)
+	{
+		if ((poIpv6InterfaceEntry = ipv6InterfaceTable_getByIndex (poEntry->u32IfIndex)) == NULL)
+		{
+			return false;
+		}
+	}
+	
+	
+	if (u8InetVersion == InetVersion_ipv6_c &&
+		poEntry->u32NumIpv6Addresses == 0 && poEntry->u32NumIpv6zAddresses == 0 && poEntry->u32NumIpv6UnNumAddresses == 0 && poEntry->u32NumIpv6zUnNumAddresses == 0)
+	{
+		if ((poIpv6ScopeZoneIndexEntry = ipv6ScopeZoneIndexTable_getByIndex (poEntry->u32IfIndex)) != NULL)
+		{
+			ipv6ScopeZoneIndexTable_removeEntry (poIpv6ScopeZoneIndexEntry);
+		}
+	}
+	
+	if ((u8InetVersion == InetVersion_ipv4_c &&
+		 poEntry->u32NumIpv4Addresses == 0 && poEntry->u32NumIpv4zAddresses == 0 && poEntry->u32NumIpv4UnNumAddresses == 0 && poEntry->u32NumIpv4zUnNumAddresses == 0) ||
+		(u8InetVersion == InetVersion_ipv6_c &&
+		 poEntry->u32NumIpv6Addresses == 0 && poEntry->u32NumIpv6zAddresses == 0 && poEntry->u32NumIpv6UnNumAddresses == 0 && poEntry->u32NumIpv6zUnNumAddresses == 0))
+	{
+		if ((poIpIfStatsEntry = ipIfStatsTable_getByIndex (u8InetVersion, poEntry->u32IfIndex)) == NULL)
+		{
+			ipIfStatsTable_removeEntry (poIpIfStatsEntry);
+		}
+	}
+	
+	if ((u8InetVersion == InetVersion_ipv4_c &&
+		 oIp.u32NumIpv4Addresses == 0 && oIp.u32NumIpv4zAddresses == 0 && oIp.u32NumIpv4UnNumAddresses == 0 && oIp.u32NumIpv4zUnNumAddresses == 0) ||
+		(u8InetVersion == InetVersion_ipv6_c &&
+		 oIp.u32NumIpv6Addresses == 0 && oIp.u32NumIpv6zAddresses == 0 && oIp.u32NumIpv6UnNumAddresses == 0 && oIp.u32NumIpv6zUnNumAddresses == 0))
+	{
+		if ((poIpSystemStatsEntry = ipSystemStatsTable_getByIndex (u8InetVersion)) != NULL)
+		{
+			ipSystemStatsTable_removeEntry (poIpSystemStatsEntry);
+		}
+	}
+	
+	if (u8InetVersion == InetVersion_ipv4_c &&
+		poEntry->u32NumIpv4Addresses == 0 && poEntry->u32NumIpv4zAddresses == 0 && poEntry->u32NumIpv4UnNumAddresses == 0 && poEntry->u32NumIpv4zUnNumAddresses == 0)
+	{
+		ipv4InterfaceTable_removeEntry (poIpv4InterfaceEntry);
+	}
+	else if (
+		u8InetVersion == InetVersion_ipv6_c &&
+		poEntry->u32NumIpv6Addresses == 0 && poEntry->u32NumIpv6zAddresses == 0 && poEntry->u32NumIpv6UnNumAddresses == 0 && poEntry->u32NumIpv6zUnNumAddresses == 0)
+	{
+		ipv6InterfaceTable_removeEntry (poIpv6InterfaceEntry);
+	}
+	
+	return true;
+}
+
+bool
+neInetInterfaceTrafficEnable_handler (
+	neInetInterfaceEntry_t *poEntry,
+	int32_t i32TrafficEnable)
+{
+	if (i32TrafficEnable != neInetInterfaceTrafficEnable_true_c &&
+		i32TrafficEnable != neInetInterfaceTrafficEnable_false_c)
+	{
+		goto neInetInterfaceTrafficEnable_handler_cleanup;
+	}
+	
+	if (poEntry->i32TrafficEnable == i32TrafficEnable)
+	{
+		goto neInetInterfaceTrafficEnable_handler_success;
+	}
+	
+	if (!ieee8021BridgeTpPortTable_handler (poEntry->u32IfIndex, i32TrafficEnable != neInetInterfaceTrafficEnable_true_c))
+	{
+		goto neInetInterfaceTrafficEnable_handler_cleanup;
+	}
+	
+neInetInterfaceTrafficEnable_handler_success:
+	
+	poEntry->i32TrafficEnable = i32TrafficEnable;
+	return true;
+	
+	
+neInetInterfaceTrafficEnable_handler_cleanup:
+	
 	return false;
 }
 

@@ -81,6 +81,15 @@ typedef struct ip_t
 	uint32_t u32Ipv6InterfaceTableLastChange;
 	int32_t i32AddressSpinLock;
 	int32_t i32Ipv6RouterAdvertSpinLock;
+	
+	uint32_t u32NumIpv4Addresses;
+	uint32_t u32NumIpv6Addresses;
+	uint32_t u32NumIpv4zAddresses;
+	uint32_t u32NumIpv6zAddresses;
+	uint32_t u32NumIpv4UnNumAddresses;
+	uint32_t u32NumIpv6UnNumAddresses;
+	uint32_t u32NumIpv4zUnNumAddresses;
+	uint32_t u32NumIpv6zUnNumAddresses;
 } ip_t;
 
 extern ip_t oIp;

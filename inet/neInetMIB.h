@@ -119,6 +119,15 @@ typedef struct neInetInterfaceEntry_t
 	uint8_t au8ForwardingEnable[1];
 	size_t u16ForwardingEnable_len;	/* # of uint8_t elements */
 	
+	uint32_t u32NumIpv4Addresses;
+	uint32_t u32NumIpv6Addresses;
+	uint32_t u32NumIpv4zAddresses;
+	uint32_t u32NumIpv6zAddresses;
+	uint32_t u32NumIpv4UnNumAddresses;
+	uint32_t u32NumIpv6UnNumAddresses;
+	uint32_t u32NumIpv4zUnNumAddresses;
+	uint32_t u32NumIpv6zUnNumAddresses;
+	
 	xBTree_Node_t oBTreeNode;
 } neInetInterfaceEntry_t;
 
@@ -143,6 +152,14 @@ bool neInetInterfaceTable_removeExt (
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len,
 	bool bUnNumAddr);
+bool neInetInterfaceTable_createHier (
+	neInetInterfaceEntry_t *poEntry,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len);
+bool neInetInterfaceTable_removeHier (
+	neInetInterfaceEntry_t *poEntry,
+	int32_t i32AddrType,
+	uint8_t *pau8Addr, size_t u16Addr_len);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neInetInterfaceTable_getFirst;
 Netsnmp_Next_Data_Point neInetInterfaceTable_getNext;
