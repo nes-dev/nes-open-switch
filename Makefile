@@ -26,7 +26,7 @@ MK_COMMON	:= $(abspath ${PROJECT_DIR}/Makefile.common)
 
 INCLUDES	:= -I${PROJECT_DIR} -I${PROJECT_DIR}/include
 DEFINES		:= -D_POSIX_C_SOURCE=200112 -D_POSIX_SOURCE=200112 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -D_REENTRANT
-CFLAGS		+= -std=gnu99 -Wall -g
+CFLAGS		+= -std=gnu99 -Wall -g -O3
 #CFLAGS		+= -std=gnu99 -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -D_REENTRANT -Wall -g
 LDFLAGS		+= -lrt -lpthread
 LDLIBS		:=

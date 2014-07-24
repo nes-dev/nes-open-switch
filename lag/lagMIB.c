@@ -2557,6 +2557,9 @@ neAggTable_mapper (
 			case NEAGGGROUPINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32GroupIndex);
 				break;
+			case NEAGGSPEEDMAX:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8SpeedMax, table_entry->u16SpeedMax_len);
+				break;
 			case NEAGGROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
@@ -2592,6 +2595,14 @@ neAggTable_mapper (
 				break;
 			case NEAGGGROUPINDEX:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEAGGSPEEDMAX:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8SpeedMax));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -2737,6 +2748,24 @@ neAggTable_mapper (
 				
 				table_entry->u32GroupIndex = *request->requestvb->val.integer;
 				break;
+			case NEAGGSPEEDMAX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8SpeedMax))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16SpeedMax_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8SpeedMax, sizeof (table_entry->au8SpeedMax));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8SpeedMax, 0, sizeof (table_entry->au8SpeedMax));
+				memcpy (table_entry->au8SpeedMax, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16SpeedMax_len = request->requestvb->val_len;
+				break;
 			case NEAGGSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
@@ -2795,6 +2824,10 @@ neAggTable_mapper (
 				break;
 			case NEAGGGROUPINDEX:
 				memcpy (&table_entry->u32GroupIndex, pvOldDdata, sizeof (table_entry->u32GroupIndex));
+				break;
+			case NEAGGSPEEDMAX:
+				memcpy (table_entry->au8SpeedMax, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16SpeedMax_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case NEAGGROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -2868,8 +2901,8 @@ neAggPortListTable_init (void)
 		ASN_INTEGER /* index: dot3adAggIndex */,
 		ASN_INTEGER /* index: dot3adAggPortIndex */,
 		0);
-	table_info->min_column = NEAGGPORTLISTSTATE;
-	table_info->max_column = NEAGGPORTLISTSTATE;
+	table_info->min_column = NEAGGPORTSELECTION;
+	table_info->max_column = NEAGGPORTSELECTION;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &neAggPortListTable_getFirst;
@@ -3071,8 +3104,8 @@ neAggPortListTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEAGGPORTLISTSTATE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32State);
+			case NEAGGPORTSELECTION:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Selection);
 				break;
 				
 			default:
@@ -3137,6 +3170,7 @@ neAggPortTable_createEntry (
 	
 	poEntry->i32GroupType = neAggPortGroupType_none_c;
 	poEntry->u32GroupIndex = 0;
+	xBitmap_setBitsRev (poEntry->au8Flags, 2, 1, neAggPortFlags_lacp_c, neAggPortFlags_lacpActive_c);
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neAggPortStorageType_nonVolatile_c;
 	
@@ -3274,6 +3308,9 @@ neAggPortTable_mapper (
 			case NEAGGPORTGROUPINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32GroupIndex);
 				break;
+			case NEAGGPORTFLAGS:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Flags, table_entry->u16Flags_len);
+				break;
 			case NEAGGPORTROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
@@ -3309,6 +3346,14 @@ neAggPortTable_mapper (
 				break;
 			case NEAGGPORTGROUPINDEX:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEAGGPORTFLAGS:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8Flags));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -3454,6 +3499,24 @@ neAggPortTable_mapper (
 				
 				table_entry->u32GroupIndex = *request->requestvb->val.integer;
 				break;
+			case NEAGGPORTFLAGS:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8Flags))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16Flags_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8Flags, sizeof (table_entry->au8Flags));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8Flags, 0, sizeof (table_entry->au8Flags));
+				memcpy (table_entry->au8Flags, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16Flags_len = request->requestvb->val_len;
+				break;
 			case NEAGGPORTSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
@@ -3512,6 +3575,10 @@ neAggPortTable_mapper (
 				break;
 			case NEAGGPORTGROUPINDEX:
 				memcpy (&table_entry->u32GroupIndex, pvOldDdata, sizeof (table_entry->u32GroupIndex));
+				break;
+			case NEAGGPORTFLAGS:
+				memcpy (table_entry->au8Flags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16Flags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case NEAGGPORTROWSTATUS:
 				switch (*request->requestvb->val.integer)

@@ -480,15 +480,19 @@ Netsnmp_Node_Handler dot3adAggPortXTable_mapper;
  */
 #define NEAGGGROUPTYPE 1
 #define NEAGGGROUPINDEX 2
-#define NEAGGROWSTATUS 3
-#define NEAGGSTORAGETYPE 4
+#define NEAGGSPEEDMAX 3
+#define NEAGGROWSTATUS 4
+#define NEAGGSTORAGETYPE 5
 
 enum
 {
 	/* enums for column neAggGroupType */
 	neAggGroupType_none_c = 1,
-	neAggGroupType_entity_c = 2,
-	neAggGroupType_lsr_c = 3,
+	neAggGroupType_if_c = 2,
+	neAggGroupType_entity_c = 3,
+	neAggGroupType_lsr_c = 4,
+	neAggGroupType_rg_c = 5,
+	neAggGroupType_other_c = 6,
 
 	/* enums for column neAggRowStatus */
 	neAggRowStatus_active_c = 1,
@@ -515,6 +519,8 @@ typedef struct neAggEntry_t
 	/* Column values */
 	int32_t i32GroupType;
 	uint32_t u32GroupIndex;
+	uint8_t au8SpeedMax[8];
+	size_t u16SpeedMax_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
@@ -543,8 +549,8 @@ Netsnmp_Node_Handler neAggTable_mapper;
 enum
 {
 	dot3adAggFlags_neCreated_c = 0,
-	dot3adAggFlags_aggCreated_c = 1,
-	dot3adAggFlags_portListCreated_c = 2,
+	dot3adAggFlags_aggCreated_c,
+	dot3adAggFlags_portListCreated_c,
 	dot3adAggFlags_count_c,
 };
 
@@ -590,13 +596,14 @@ void dot3adAggData_removeEntry (dot3adAggData_t *poEntry);
 /**
  *	table neAggPortListTable definitions
  */
-#define NEAGGPORTLISTSTATE 1
+#define NEAGGPORTSELECTION 1
 
 enum
 {
-	/* enums for column neAggPortListState */
-	neAggPortListState_active_c = 1,
-	neAggPortListState_standby_c = 2,
+	/* enums for column neAggPortSelection */
+	neAggPortSelection_active_c = 1,
+	neAggPortSelection_standby_c = 2,
+	neAggPortSelection_none_c = 3,
 };
 
 /* table neAggPortListTable row entry data structure */
@@ -607,7 +614,7 @@ typedef struct neAggPortListEntry_t
 	uint32_t u32Dot3adAggPortIndex;
 	
 	/* Column values */
-	int32_t i32State;
+	int32_t i32Selection;
 	
 	xBTree_Node_t oBTreeNode;
 } neAggPortListEntry_t;
@@ -639,15 +646,25 @@ Netsnmp_Node_Handler neAggPortListTable_mapper;
  */
 #define NEAGGPORTGROUPTYPE 1
 #define NEAGGPORTGROUPINDEX 2
-#define NEAGGPORTROWSTATUS 3
-#define NEAGGPORTSTORAGETYPE 4
+#define NEAGGPORTFLAGS 3
+#define NEAGGPORTROWSTATUS 4
+#define NEAGGPORTSTORAGETYPE 5
 
 enum
 {
 	/* enums for column neAggPortGroupType */
 	neAggPortGroupType_none_c = 1,
-	neAggPortGroupType_entity_c = 2,
-	neAggPortGroupType_lsr_c = 3,
+	neAggPortGroupType_if_c = 2,
+	neAggPortGroupType_entity_c = 3,
+	neAggPortGroupType_lsr_c = 4,
+	neAggPortGroupType_rg_c = 5,
+	neAggPortGroupType_other_c = 6,
+
+	/* enums for column neAggPortFlags */
+	neAggPortFlags_lacp_c = 0,
+	neAggPortFlags_lacpActive_c = 1,
+	neAggPortFlags_slowTimer_c = 2,
+	neAggPortFlags_dynKeyMgmt_c = 3,
 
 	/* enums for column neAggPortRowStatus */
 	neAggPortRowStatus_active_c = 1,
@@ -674,6 +691,8 @@ typedef struct neAggPortEntry_t
 	/* Column values */
 	int32_t i32GroupType;
 	uint32_t u32GroupIndex;
+	uint8_t au8Flags[1];
+	size_t u16Flags_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
@@ -701,11 +720,23 @@ Netsnmp_Node_Handler neAggPortTable_mapper;
 
 enum
 {
+	dot3adAggPortState_lacpActivity_c = 0,
+	dot3adAggPortState_lacpTimeout_c = 1,
+	dot3adAggPortState_aggregation_c = 2,
+	dot3adAggPortState_synchronization_c = 3,
+	dot3adAggPortState_collecting_c = 4,
+	dot3adAggPortState_distributing_c = 5,
+	dot3adAggPortState_defaulted_c = 6,
+	dot3adAggPortState_expired_c = 7,
+	dot3adAggPortState_count_c,
+	dot3adAggPortState_bitMin = dot3adAggPortState_lacpActivity_c,
+	dot3adAggPortState_bitMax_c = dot3adAggPortState_expired_c,
+	
 	dot3adAggPortFlags_neCreated_c = 0,
-	dot3adAggPortFlags_portCreated_c = 1,
-	dot3adAggPortFlags_statsCreated_c = 2,
-	dot3adAggPortFlags_debugCreated_c = 3,
-	dot3adAggPortFlags_portXCreated_c = 4,
+	dot3adAggPortFlags_portCreated_c,
+	dot3adAggPortFlags_statsCreated_c,
+	dot3adAggPortFlags_debugCreated_c,
+	dot3adAggPortFlags_portXCreated_c,
 	dot3adAggPortFlags_count_c,
 };
 

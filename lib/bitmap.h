@@ -28,7 +28,15 @@ extern "C" {
 
 
 
+#	include <stdbool.h>
 #	include <stdint.h>
+
+
+typedef uint8_t xBitmask_t;
+typedef uint8_t *xBitmap_t;
+
+#	define xBitmap_declare(_map, _bit_len) xBitmask_t _map[xBitmap_maskCount (_bit_len)]
+
 
 #	define xBitmask_full_c		0xFF
 #	define xBitmask_empty_c		0x00
@@ -44,7 +52,7 @@ extern "C" {
 #	define xBitmask_bitString(_bit_start, _bit_end) (\
 	(~xBitmask_empty_c >> (_bit_start)) &\
 	(~xBitmask_empty_c << (uint8_t) (xBitmask_length_c - _bit_end - 1)))
-	
+
 #	define xBitmap_bitLength(_mask_len) ((_mask_len) << 3)
 
 #	define xBitmap_static(_map, _bit_len) uint8_t _map[xBitmap_maskCount (_bit_len)]
@@ -55,106 +63,151 @@ extern "C" {
 #	define xBitmap_clearAll(_map, _bit_len) xBitmap_set(_map, 0, (_bit_len) - 1, 0)
 #	define xBitmap_setAll(_map, _bit_len) xBitmap_set(_map, 0, (_bit_len) - 1, 1)
 
-#	define xBitmap_set(_map, _bit_start, _bit_end, _fill) \
-	for (register uint16_t _bit_idx = (_bit_start); _bit_idx < (_bit_end); _bit_idx++)\
-	{\
-		if (xBitmask_bitIndex (_bit_idx) == 0 && (_fill) == 0)\
-		{\
-			_map[xBitmap_maskIndex (_bit_idx)] = xBitmask_empty_c;\
-		}\
-		else if (\
-			xBitmask_bitIndex (_bit_idx) == 0 && (_fill) != 0)\
-		{\
-			_map[xBitmap_maskIndex (_bit_idx)] = xBitmask_full_c;\
-		}\
-		else if (\
-			xBitmask_bitIndex (_bit_idx) != 0)\
-		{\
-			_map[xBitmap_maskIndex (_bit_idx)] =\
-				(_map[xBitmap_maskIndex (_bit_idx)] & ~xBitmask_bitMask (_bit_idx)) |\
-				(((_fill) != 0) << xBitmask_bitIndex (_bit_idx));\
-		}\
-		\
-		if ((_bit_end) - _bit_idx >= xBitmask_length_c - 1)\
-		{\
-			_bit_idx += xBitmask_length_c - 1;\
-		}\
+inline void
+	xBitmap_set (
+		xBitmask_t *poMap, uint32_t u32BitStart, uint32_t u32BitEnd, bool bFill)
+{
+	for (register uint16_t u16BitIdx = u32BitStart; u16BitIdx < u32BitEnd; u16BitIdx++)
+	{
+		if (xBitmask_bitIndex (u16BitIdx) == 0 && !bFill)
+		{
+			poMap[xBitmap_maskIndex (u16BitIdx)] = xBitmask_empty_c;
+		}
+		else if (
+			xBitmask_bitIndex (u16BitIdx) == 0 && bFill)
+		{
+			poMap[xBitmap_maskIndex (u16BitIdx)] = xBitmask_full_c;
+		}
+		else if (
+			xBitmask_bitIndex (u16BitIdx) != 0)
+		{
+			poMap[xBitmap_maskIndex (u16BitIdx)] =
+				(poMap[xBitmap_maskIndex (u16BitIdx)] & ~xBitmask_bitMask (u16BitIdx)) |
+				(bFill << xBitmask_bitIndex (u16BitIdx));
+		}
+		
+		if (u32BitEnd - u16BitIdx >= xBitmask_length_c - 1)
+		{
+			u16BitIdx += xBitmask_length_c - 1;
+		}
 	}
 	
-#	define xBitmap_setRev(_map, _bit_start, _bit_end, _fill) \
-	for (register uint16_t _bit_idx = (_bit_start); _bit_idx < (_bit_end); _bit_idx++)\
-	{\
-		if (xBitmask_bitIndex (_bit_idx) == 0 && (_fill) == 0)\
-		{\
-			_map[xBitmap_maskIndex (_bit_idx)] = xBitmask_empty_c;\
-		}\
-		else if (\
-			xBitmask_bitIndex (_bit_idx) == 0 && (_fill) != 0)\
-		{\
-			_map[xBitmap_maskIndex (_bit_idx)] = xBitmask_full_c;\
-		}\
-		else if (\
-			xBitmask_bitIndex (_bit_idx) != 0)\
-		{\
-			_map[xBitmap_maskIndex (_bit_idx)] =\
-				(_map[xBitmap_maskIndex (_bit_idx)] & ~xBitmask_bitMaskRev (_bit_idx)) |\
-				(((_fill) != 0) << xBitmask_bitIndexRev (_bit_idx));\
-		}\
-		\
-		if ((_bit_end) - _bit_idx >= xBitmask_length_c - 1)\
-		{\
-			_bit_idx += xBitmask_length_c - 1;\
-		}\
+	return;
+}
+
+inline void
+	xBitmap_setRev (
+		xBitmask_t *poMap, uint32_t u32BitStart, uint32_t u32BitEnd, bool bFill)
+{
+	for (register uint16_t u16BitIdx = u32BitStart; u16BitIdx < u32BitEnd; u16BitIdx++)
+	{
+		if (xBitmask_bitIndex (u16BitIdx) == 0 && !bFill)
+		{
+			poMap[xBitmap_maskIndex (u16BitIdx)] = xBitmask_empty_c;
+		}
+		else if (
+			xBitmask_bitIndex (u16BitIdx) == 0 && bFill)
+		{
+			poMap[xBitmap_maskIndex (u16BitIdx)] = xBitmask_full_c;
+		}
+		else if (
+			xBitmask_bitIndex (u16BitIdx) != 0)
+		{
+			poMap[xBitmap_maskIndex (u16BitIdx)] =
+				(poMap[xBitmap_maskIndex (u16BitIdx)] & ~xBitmask_bitMaskRev (u16BitIdx)) |
+				(bFill << xBitmask_bitIndexRev (u16BitIdx));
+		}
+		
+		if (u32BitEnd - u16BitIdx >= xBitmask_length_c - 1)
+		{
+			u16BitIdx += xBitmask_length_c - 1;
+		}
 	}
 	
+	return;
+}
+
+inline uint8_t
+	xBitmap_getBit (
+		xBitmask_t *poMap, uint32_t u32Pos)
+{
+	return poMap[xBitmap_maskIndex (u32Pos)] & xBitmask_bitMask (u32Pos);
+}
+
+inline uint8_t
+	xBitmap_getBitRev (
+		xBitmask_t *poMap, uint32_t u32Pos)
+{
+	return poMap[xBitmap_maskIndex (u32Pos)] & xBitmask_bitMask (u32Pos);
+}
+
+inline uint8_t
+	xBitmap_setBit (
+		xBitmask_t *poMap, uint32_t u32Pos, bool bVal)
+{
+	register uint16_t u16Idx = xBitmap_maskIndex (u32Pos);
 	
-#	define xBitmap_getBit(_map, _pos) (\
-		_map[xBitmap_maskIndex (_pos)] & xBitmask_bitMask (_pos)\
-	)
+	return poMap[u16Idx] = (poMap[u16Idx] & ~xBitmask_bitMask (u32Pos)) | (bVal << xBitmask_bitIndex (u32Pos));
+}
+
+inline uint8_t
+	xBitmap_setBitRev (
+		xBitmask_t *poMap, uint32_t u32Pos, bool bVal)
+{
+	register uint16_t u16Idx = xBitmap_maskIndex (u32Pos);
 	
-	
-#	define xBitmap_getBitRev(_map, _pos) (\
-		_map[xBitmap_maskIndex (_pos)] & xBitmask_bitMaskRev (_pos)\
-	)
-	
-	
-#	define xBitmap_setBit(_map, _pos, _val) ({\
-		register uint16_t idx = xBitmap_maskIndex (_pos);\
-		\
-		_map[idx] = (_map[idx] & ~xBitmask_bitMask (_pos)) | (((_val) != 0) << xBitmask_bitIndex (_pos));\
-	})
-	
-	
-#	define xBitmap_setBitRev(_map, _pos, _val) ({\
-		register uint16_t idx = xBitmap_maskIndex (_pos);\
-		\
-		_map[idx] = (_map[idx] & ~xBitmask_bitMaskRev (_pos)) | (((_val) != 0) << xBitmask_bitIndexRev (_pos));\
-	})
-	
-	
-#	define xBitmap_or(_map_o1, _map_i1, _map_i2, _bit_len) \
-	for (register uint16_t _bit_idx = 0; _bit_idx < _bit_len; _bit_idx += xBitmask_length_c)\
-	{\
-		register uint16_t mask_idx = xBitmap_maskIndex (_bit_idx);\
-		\
-		_map_o1[mask_idx] = _map_i1[mask_idx] | _map_i2[mask_idx];\
+	return poMap[u16Idx] = (poMap[u16Idx] & ~xBitmask_bitMaskRev (u32Pos)) | (bVal << xBitmask_bitIndexRev (u32Pos));
+}
+
+extern bool
+	xBitmap_vSetBits (
+		bool bIsRev, xBitmask_t *poMap, uint32_t u32Count, bool bVal, uint32_t u32Pos, ...);
+		
+#	define xBitmap_setBits(_map, _count, _val, _pos ...) xBitmap_vSetBits (0, _map, _count, _val, ## _pos)
+#	define xBitmap_setBitsRev(_map, _count, _val, _pos ...) xBitmap_vSetBits (1, _map, _count, _val, ## _pos)
+
+
+inline void
+	xBitmap_or (
+		xBitmask_t *poMapO1, xBitmask_t *poMapI1, xBitmask_t *poMapI2, uint32_t u32BitLen)
+{
+	for (register uint16_t u16BitIdx = 0; u16BitIdx < u32BitLen; u16BitIdx += xBitmask_length_c)
+	{
+		register uint16_t u16MaskIdx = xBitmap_maskIndex (u16BitIdx);
+		
+		poMapO1[u16MaskIdx] = poMapI1[u16MaskIdx] | poMapI2[u16MaskIdx];
 	}
 	
-#	define xBitmap_and(_map_o1, _map_i1, _map_i2, _bit_len) \
-	for (register uint16_t _bit_idx = 0; _bit_idx < _bit_len; _bit_idx += xBitmask_length_c)\
-	{\
-		register uint16_t mask_idx = xBitmap_maskIndex (_bit_idx);\
-		\
-		_map_o1[mask_idx] = _map_i1[mask_idx] & _map_i2[mask_idx];\
+	return;
+}
+
+inline void
+	xBitmap_and(
+		xBitmask_t *poMapO1, xBitmask_t *poMapI1, xBitmask_t *poMapI2, uint32_t u32BitLen)
+{
+	for (register uint16_t u16BitIdx = 0; u16BitIdx < u32BitLen; u16BitIdx += xBitmask_length_c)
+	{
+		register uint16_t u16MaskIdx = xBitmap_maskIndex (u16BitIdx);
+		
+		poMapO1[u16MaskIdx] = poMapI1[u16MaskIdx] & poMapI2[u16MaskIdx];
 	}
 	
-#	define xBitmap_xor(_map_o1, _map_i1, _map_i2, _bit_len) \
-	for (register uint16_t _bit_idx = 0; _bit_idx < _bit_len; _bit_idx += xBitmask_length_c)\
-	{\
-		register uint16_t mask_idx = xBitmap_maskIndex (_bit_idx);\
-		\
-		_map_o1[mask_idx] = _map_i1[mask_idx] ^ _map_i2[mask_idx];\
+	return;
+}
+
+inline void
+	xBitmap_xor (
+		xBitmask_t *poMapO1, xBitmask_t *poMapI1, xBitmask_t *poMapI2, uint32_t u32BitLen)
+{
+	for (register uint16_t u16BitIdx = 0; u16BitIdx < u32BitLen; u16BitIdx += xBitmask_length_c)
+	{
+		register uint16_t u16MaskIdx = xBitmap_maskIndex (u16BitIdx);
+		
+		poMapO1[u16MaskIdx] = poMapI1[u16MaskIdx] ^ poMapI2[u16MaskIdx];
 	}
+	
+	return;
+}
 
 
 
@@ -316,11 +369,6 @@ extern "C" {
 		}\
 		else if (\
 			(_map[xBitmap_maskIndex (_bit_idx)] & xBitmask_bitMaskRev (_bit_idx)) == 0)\
-
-
-typedef uint8_t xBitmask_t;
-typedef uint8_t *xBitmap_t;
-#	define xBitmap_declare(_map, _bit_len) xBitmask_t _map[xBitmap_maskCount (_bit_len)]
 
 
 
