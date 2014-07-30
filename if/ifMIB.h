@@ -674,8 +674,10 @@ Netsnmp_Node_Handler ifRcvAddressTable_mapper;
 #define NEIFMTU 4
 #define NEIFSPEED 5
 #define NEIFPHYSADDRESS 6
-#define NEIFROWSTATUS 7
-#define NEIFSTORAGETYPE 8
+#define NEIFADMINFLAGS 7
+#define NEIFOPERFLAGS 8
+#define NEIFROWSTATUS 9
+#define NEIFSTORAGETYPE 10
 
 enum
 {
@@ -953,6 +955,62 @@ enum
 	neIfType_aluGponPhysicalUni_c = 271,
 	neIfType_vmwareNicTeam_c = 272,
 
+	/* enums for column neIfAdminFlags */
+	neIfAdminFlags_speed10Mbps_c = 0,
+	neIfAdminFlags_speed100Mbps_c = 1,
+	neIfAdminFlags_speed1Gbps_c = 2,
+	neIfAdminFlags_speed10Gbps_c = 3,
+	neIfAdminFlags_speed40Gbps_c = 4,
+	neIfAdminFlags_speed100Gbps_c = 5,
+	neIfAdminFlags_speed1Tbps_c = 6,
+	neIfAdminFlags_speedOther_c = 7,
+	neIfAdminFlags_copper_c = 8,
+	neIfAdminFlags_fiber_c = 9,
+	neIfAdminFlags_autoNeg_c = 10,
+	neIfAdminFlags_pause_c = 11,
+	neIfAdminFlags_pauseAsym_c = 12,
+	neIfAdminFlags_fullDuplex_c = 13,
+	neIfAdminFlags_halfDuplex_c = 14,
+	neIfAdminFlags_oam_c = 15,
+	neIfAdminFlags_xCat_c = 16,
+	neIfAdminFlags_xCatVc_c = 17,
+	neIfAdminFlags_lag_c = 18,
+	neIfAdminFlags_loopDetect_c = 19,
+	neIfAdminFlags_macFwd_c = 20,
+	neIfAdminFlags_vlanFwd_c = 21,
+	neIfAdminFlags_pbbFwd_c = 22,
+	neIfAdminFlags_mplsFwd_c = 23,
+	neIfAdminFlags_ipFwd_c = 24,
+	neIfAdminFlags_te_c = 25,
+
+	/* enums for column neIfOperFlags */
+	neIfOperFlags_speed10Mbps_c = 0,
+	neIfOperFlags_speed100Mbps_c = 1,
+	neIfOperFlags_speed1Gbps_c = 2,
+	neIfOperFlags_speed10Gbps_c = 3,
+	neIfOperFlags_speed40Gbps_c = 4,
+	neIfOperFlags_speed100Gbps_c = 5,
+	neIfOperFlags_speed1Tbps_c = 6,
+	neIfOperFlags_speedOther_c = 7,
+	neIfOperFlags_copper_c = 8,
+	neIfOperFlags_fiber_c = 9,
+	neIfOperFlags_autoNeg_c = 10,
+	neIfOperFlags_pause_c = 11,
+	neIfOperFlags_pauseAsym_c = 12,
+	neIfOperFlags_fullDuplex_c = 13,
+	neIfOperFlags_halfDuplex_c = 14,
+	neIfOperFlags_oam_c = 15,
+	neIfOperFlags_xCat_c = 16,
+	neIfOperFlags_xCatVc_c = 17,
+	neIfOperFlags_lag_c = 18,
+	neIfOperFlags_loopDetect_c = 19,
+	neIfOperFlags_macFwd_c = 20,
+	neIfOperFlags_vlanFwd_c = 21,
+	neIfOperFlags_pbbFwd_c = 22,
+	neIfOperFlags_mplsFwd_c = 23,
+	neIfOperFlags_ipFwd_c = 24,
+	neIfOperFlags_te_c = 25,
+
 	/* enums for column neIfRowStatus */
 	neIfRowStatus_active_c = 1,
 	neIfRowStatus_notInService_c = 2,
@@ -986,6 +1044,10 @@ typedef struct neIfEntry_t
 	size_t u16Speed_len;	/* # of uint8_t elements */
 	uint8_t au8PhysAddress[8];
 	size_t u16PhysAddress_len;	/* # of uint8_t elements */
+	uint8_t au8AdminFlags[3];
+	size_t u16AdminFlags_len;	/* # of uint8_t elements */
+	uint8_t au8OperFlags[3];
+	size_t u16OperFlags_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
@@ -1025,7 +1087,7 @@ enum
 {
 	ifIndex_zero_c = 0,
 	
-	ifFlags_neIfCreated_c = 0,
+	ifFlags_neCreated_c = 0,
 	ifFlags_ifCreated_c = 1,
 	ifFlags_ifXCreated_c = 2,
 	ifFlags_count_c,

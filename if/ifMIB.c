@@ -560,7 +560,7 @@ ifAdminStatus_handler (
 {
 	register ifData_t *poIfData = ifData_getByIfEntry (poEntry);
 	
-	if (!xBitmap_getBit (poIfData->au8Flags, ifFlags_neIfCreated_c) ||
+	if (!xBitmap_getBit (poIfData->au8Flags, ifFlags_neCreated_c) ||
 		!xBitmap_getBit (poIfData->au8Flags, ifFlags_ifXCreated_c))
 	{
 		goto ifAdminStatus_handler_cleanup;
@@ -919,7 +919,7 @@ ifXTable_createEntry (
 	}
 	poEntry = &poIfData->oIfX;
 	
-	poEntry->i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_disabled_c;
+	poEntry->i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_enabled_c;
 	poEntry->i32PromiscuousMode = ifPromiscuousMode_false_c;
 	poEntry->i32ConnectorPresent = ifConnectorPresent_false_c;
 	
@@ -2391,11 +2391,11 @@ neIfTable_createEntry (
 	/*poEntry->au8Name = ""*/;
 	/*poEntry->au8Descr = ""*/;
 	/*poEntry->au8PhysAddress = 0*/;
-	/*poEntry->au8Flags*/;
+	xBitmap_setBitsRev (poEntry->au8AdminFlags, 4, 1, neIfAdminFlags_speed100Mbps_c, neIfAdminFlags_autoNeg_c, neIfAdminFlags_loopDetect_c, neIfAdminFlags_macFwd_c);
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neIfStorageType_volatile_c;
 	
-	xBitmap_setBit (poIfData->au8Flags, ifFlags_neIfCreated_c, 1); 
+	xBitmap_setBit (poIfData->au8Flags, ifFlags_neCreated_c, 1); 
 	return poEntry;
 }
 
@@ -2406,7 +2406,7 @@ neIfTable_getByIndex (
 	register ifData_t *poIfData = NULL;
 	
 	if ((poIfData = ifData_getByIndex (u32IfIndex)) == NULL ||
-		!xBitmap_getBit (poIfData->au8Flags, ifFlags_neIfCreated_c))
+		!xBitmap_getBit (poIfData->au8Flags, ifFlags_neCreated_c))
 	{
 		return NULL;
 	}
@@ -2421,7 +2421,7 @@ neIfTable_getNextIndex (
 	register ifData_t *poIfData = NULL;
 	
 	if ((poIfData = ifData_getNextIndex (u32IfIndex)) == NULL ||
-		!xBitmap_getBit (poIfData->au8Flags, ifFlags_neIfCreated_c))
+		!xBitmap_getBit (poIfData->au8Flags, ifFlags_neCreated_c))
 	{
 		return NULL;
 	}
@@ -2536,13 +2536,18 @@ neIfRowStatus_handler (
 		goto neIfRowStatus_handler_cleanup;
 	}
 	
+	if (poEntry->u8RowStatus == u8RowStatus)
+	{
+		goto neIfRowStatus_handler_success;
+	}
+	
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
 	{
-		if (poEntry->u8RowStatus == xRowStatus_active_c)
+		if (poEntry->i32Type == 0)
 		{
-			goto neIfRowStatus_handler_success;
+			goto neIfRowStatus_handler_cleanup;
 		}
 		
 		poIfData->oIf.i32Type = poEntry->i32Type;
@@ -2690,6 +2695,12 @@ neIfTable_mapper (
 			case NEIFPHYSADDRESS:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PhysAddress, table_entry->u16PhysAddress_len);
 				break;
+			case NEIFADMINFLAGS:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdminFlags, table_entry->u16AdminFlags_len);
+				break;
+			case NEIFOPERFLAGS:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8OperFlags, table_entry->u16OperFlags_len);
+				break;
 			case NEIFROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
@@ -2763,6 +2774,14 @@ neIfTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
+			case NEIFADMINFLAGS:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8AdminFlags));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
 			case NEIFROWSTATUS:
 				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
 				if (ret != SNMP_ERR_NOERROR)
@@ -2793,23 +2812,6 @@ neIfTable_mapper (
 			table_entry = (neIfEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
-			
-			switch (table_info->colnum)
-			{
-			case NEIFNAME:
-			case NEIFDESCR:
-			case NEIFTYPE:
-			case NEIFMTU:
-			case NEIFSPEED:
-			case NEIFPHYSADDRESS:
-			case NEIFSTORAGETYPE:
-				if (table_entry->u8RowStatus == RS_ACTIVE || table_entry->u8RowStatus == RS_NOTREADY)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			}
 			
 			switch (table_info->colnum)
 			{
@@ -2850,6 +2852,24 @@ neIfTable_mapper (
 				if (table_entry == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEIFNAME:
+			case NEIFDESCR:
+			case NEIFTYPE:
+			case NEIFMTU:
+			case NEIFSPEED:
+			case NEIFPHYSADDRESS:
+			case NEIFADMINFLAGS:
+			case NEIFSTORAGETYPE:
+				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+					return SNMP_ERR_NOERROR;
 				}
 				break;
 			}
@@ -2991,6 +3011,24 @@ neIfTable_mapper (
 				memcpy (table_entry->au8PhysAddress, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16PhysAddress_len = request->requestvb->val_len;
 				break;
+			case NEIFADMINFLAGS:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8AdminFlags))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16AdminFlags_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8AdminFlags, sizeof (table_entry->au8AdminFlags));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8AdminFlags, 0, sizeof (table_entry->au8AdminFlags));
+				memcpy (table_entry->au8AdminFlags, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16AdminFlags_len = request->requestvb->val_len;
+				break;
 			case NEIFSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
@@ -3068,6 +3106,10 @@ neIfTable_mapper (
 			case NEIFPHYSADDRESS:
 				memcpy (table_entry->au8PhysAddress, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16PhysAddress_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NEIFADMINFLAGS:
+				memcpy (table_entry->au8AdminFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16AdminFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case NEIFROWSTATUS:
 				switch (*request->requestvb->val.integer)
