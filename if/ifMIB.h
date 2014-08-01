@@ -27,6 +27,7 @@ extern "C" {
 
 
 
+#include "lib/ieee802.h"
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
@@ -633,12 +634,14 @@ typedef struct ifRcvAddressEntry_t
 {
 	/* Index values */
 	uint32_t u32Index;
-	uint8_t au8Address[/* TODO: PhysAddress, PhysAddress, "" */ TOBE_REPLACED];
+	uint8_t au8Address[IeeeEui64_size_c];
 	size_t u16Address_len;	/* # of uint8_t elements */
 	
 	/* Column values */
 	uint8_t u8Status;
 	int32_t i32Type;
+	
+	uint32_t u32NumReferences;
 	
 	xBTree_Node_t oBTreeNode;
 } ifRcvAddressEntry_t;
@@ -657,6 +660,12 @@ ifRcvAddressEntry_t * ifRcvAddressTable_getNextIndex (
 	uint32_t u32Index,
 	uint8_t *pau8Address, size_t u16Address_len);
 void ifRcvAddressTable_removeEntry (ifRcvAddressEntry_t *poEntry);
+bool ifRcvAddressTable_createRegister (
+	uint32_t u32Index,
+	uint8_t *pau8Address, size_t u16Address_len);
+bool ifRcvAddressTable_removeRegister (
+	uint32_t u32Index,
+	uint8_t *pau8Address, size_t u16Address_len);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ifRcvAddressTable_getFirst;
 Netsnmp_Next_Data_Point ifRcvAddressTable_getNext;

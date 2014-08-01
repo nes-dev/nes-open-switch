@@ -500,6 +500,22 @@ ifTable_createHier (
 		poUpperStackEntry->u8Status = ifStackStatus_active_c;
 	}
 	
+	{
+		register ifRcvAddressEntry_t *poIfRcvAddressEntry = NULL;
+		uint8_t au8Address[sizeof (poIfRcvAddressEntry->au8Address)] = {0};
+		size_t u16Address_len = 0;
+		
+		while (
+			(poIfRcvAddressEntry = ifRcvAddressTable_getNextIndex (poIfData->u32Index, au8Address, u16Address_len)) != NULL &&
+			poIfRcvAddressEntry->u32Index == poIfData->u32Index)
+		{
+			memcpy (au8Address, poIfRcvAddressEntry->au8Address, sizeof (au8Address));
+			u16Address_len = poIfRcvAddressEntry->u16Address_len;
+			
+			ifRcvAddressTable_removeEntry (poIfRcvAddressEntry);
+		}
+	}
+	
 	return true;
 	
 	
@@ -2010,6 +2026,69 @@ ifRcvAddressTable_removeEntry (ifRcvAddressEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfRcvAddressTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+bool
+ifRcvAddressTable_createRegister (
+	uint32_t u32Index,
+	uint8_t *pau8Address, size_t u16Address_len)
+{
+	bool bRetCode = false;
+	register ifRcvAddressEntry_t *poEntry = NULL;
+	
+	if (u32Index == ifIndex_zero_c ||
+		pau8Address == NULL || u16Address_len == 0)
+	{
+		return false;
+	}
+	
+	if (ifData_getByIndex (u32Index) != NULL)
+	{
+		goto ifRcvAddressTable_createRegister_cleanup;
+	}
+	
+	if ((poEntry = ifRcvAddressTable_getByIndex (u32Index, pau8Address, u16Address_len)) == NULL &&
+		(poEntry = ifRcvAddressTable_createEntry (u32Index, pau8Address, u16Address_len)) == NULL)
+	{
+		goto ifRcvAddressTable_createRegister_cleanup;
+	}
+	poEntry->u8Status = xRowStatus_active_c;
+	
+	poEntry->u32NumReferences++;
+	bRetCode = true;
+	
+ifRcvAddressTable_createRegister_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ifRcvAddressTable_removeRegister (
+	uint32_t u32Index,
+	uint8_t *pau8Address, size_t u16Address_len)
+{
+	bool bRetCode = false;
+	register ifRcvAddressEntry_t *poEntry = NULL;
+	
+	if ((poEntry = ifRcvAddressTable_getByIndex (u32Index, pau8Address, u16Address_len)) == NULL)
+	{
+		goto ifRcvAddressTable_removeRegister_cleanup;
+	}
+	
+	if (poEntry->u32NumReferences > 0)
+	{
+		poEntry->u32NumReferences--;
+	}
+	if (poEntry->u32NumReferences == 0)
+	{
+		ifRcvAddressTable_removeEntry (poEntry);
+	}
+	
+	bRetCode = true;
+	
+ifRcvAddressTable_removeRegister_cleanup:
+	
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
