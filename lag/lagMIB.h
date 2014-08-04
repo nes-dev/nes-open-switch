@@ -120,6 +120,11 @@ dot3adAggEntry_t * dot3adAggTable_getByIndex (
 dot3adAggEntry_t * dot3adAggTable_getNextIndex (
 	uint32_t u32Index);
 void dot3adAggTable_removeEntry (dot3adAggEntry_t *poEntry);
+dot3adAggEntry_t * dot3adAggTable_createExt (
+	uint32_t u32Index);
+bool dot3adAggTable_removeExt (dot3adAggEntry_t *poEntry);
+bool dot3adAggTable_createHier (dot3adAggEntry_t *poEntry);
+bool dot3adAggTable_removeHier (dot3adAggEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point dot3adAggTable_getFirst;
 Netsnmp_Next_Data_Point dot3adAggTable_getNext;
@@ -538,6 +543,13 @@ neAggEntry_t * neAggTable_getByIndex (
 neAggEntry_t * neAggTable_getNextIndex (
 	uint32_t u32Dot3adAggIndex);
 void neAggTable_removeEntry (neAggEntry_t *poEntry);
+neAggEntry_t * neAggTable_createExt (
+	uint32_t u32Dot3adAggIndex);
+bool neAggTable_removeExt (neAggEntry_t *poEntry);
+bool neAggTable_createHier (neAggEntry_t *poEntry);
+bool neAggTable_removeHier (neAggEntry_t *poEntry);
+bool neAggRowStatus_handler (
+	neAggEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neAggTable_getFirst;
 Netsnmp_Next_Data_Point neAggTable_getNext;

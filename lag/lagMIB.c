@@ -24,6 +24,7 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "lagMIB.h"
+#include "if/ifMIB.h"
 
 #include "lib/bitmap.h"
 #include "lib/binaryTree.h"
@@ -394,6 +395,102 @@ dot3adAggTable_removeEntry (dot3adAggEntry_t *poEntry)
 	
 	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c, 0);
 	return;
+}
+
+dot3adAggEntry_t *
+dot3adAggTable_createExt (
+	uint32_t u32Index)
+{
+	dot3adAggEntry_t *poEntry = NULL;
+	
+	poEntry = dot3adAggTable_createEntry (
+		u32Index);
+	if (poEntry == NULL)
+	{
+		goto dot3adAggTable_createExt_cleanup;
+	}
+	
+	if (!dot3adAggTable_createHier (poEntry))
+	{
+		dot3adAggTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto dot3adAggTable_createExt_cleanup;
+	}
+	
+	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
+	
+	
+dot3adAggTable_createExt_cleanup:
+	return poEntry;
+}
+
+bool
+dot3adAggTable_removeExt (dot3adAggEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!dot3adAggTable_removeHier (poEntry))
+	{
+		goto dot3adAggTable_removeExt_cleanup;
+	}
+	dot3adAggTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
+	
+	
+dot3adAggTable_removeExt_cleanup:
+	return bRetCode;
+}
+
+bool
+dot3adAggTable_createHier (
+	dot3adAggEntry_t *poEntry)
+{
+	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (poEntry);
+	
+	if (!ifData_createReference (poDot3adAggData->u32Index, ifType_ieee8023adLag_c, true, true, true, NULL))
+	{
+		goto dot3adAggTable_createHier_cleanup;
+	}
+	
+	if (dot3adAggPortListTable_getByIndex (poDot3adAggData->u32Index) == NULL &&
+		dot3adAggPortListTable_createEntry (poDot3adAggData->u32Index) == NULL)
+	{
+		goto dot3adAggTable_createHier_cleanup;
+	}
+	
+	return true;
+	
+	
+dot3adAggTable_createHier_cleanup:
+	
+	dot3adAggTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+dot3adAggTable_removeHier (
+	dot3adAggEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register dot3adAggPortListEntry_t *poDot3adAggPortListEntry = NULL;
+	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (poEntry);
+	
+	if ((poDot3adAggPortListEntry = dot3adAggPortListTable_getByIndex (poDot3adAggData->u32Index)) != NULL)
+	{
+		dot3adAggPortListTable_removeEntry (poDot3adAggPortListEntry);
+	}
+	
+	if (!ifData_removeReference (poDot3adAggData->u32Index, true, true, true))
+	{
+		goto dot3adAggTable_removeHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+dot3adAggTable_removeHier_cleanup:
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -2470,6 +2567,100 @@ neAggTable_removeEntry (neAggEntry_t *poEntry)
 	return;
 }
 
+neAggEntry_t *
+neAggTable_createExt (
+	uint32_t u32Dot3adAggIndex)
+{
+	neAggEntry_t *poEntry = NULL;
+	
+	poEntry = neAggTable_createEntry (
+		u32Dot3adAggIndex);
+	if (poEntry == NULL)
+	{
+		goto neAggTable_createExt_cleanup;
+	}
+	
+	if (!neAggTable_createHier (poEntry))
+	{
+		neAggTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto neAggTable_createExt_cleanup;
+	}
+	
+	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
+	
+	
+neAggTable_createExt_cleanup:
+	return poEntry;
+}
+
+bool
+neAggTable_removeExt (neAggEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!neAggTable_removeHier (poEntry))
+	{
+		goto neAggTable_removeExt_cleanup;
+	}
+	neAggTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
+	
+	
+neAggTable_removeExt_cleanup:
+	return bRetCode;
+}
+
+bool
+neAggTable_createHier (
+	neAggEntry_t *poEntry)
+{
+	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByNeEntry (poEntry);
+	
+	if (dot3adAggTable_getByIndex (poDot3adAggData->u32Index) == NULL &&
+		dot3adAggTable_createExt (poDot3adAggData->u32Index) == NULL)
+	{
+		goto neAggTable_createHier_cleanup;
+	}
+	
+	return true;
+	
+	
+neAggTable_createHier_cleanup:
+	
+	neAggTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+neAggTable_removeHier (
+	neAggEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register dot3adAggEntry_t *poDot3adAggEntry = NULL;
+	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByNeEntry (poEntry);
+	
+	if ((poDot3adAggEntry = dot3adAggTable_getByIndex (poDot3adAggData->u32Index)) != NULL &&
+		!dot3adAggTable_removeExt (poDot3adAggEntry))
+	{
+		goto neAggTable_removeHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+neAggTable_removeHier_cleanup:
+	return bRetCode;
+}
+
+bool
+neAggRowStatus_handler (
+	neAggEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	return false;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 neAggTable_getFirst (
@@ -2794,8 +2985,11 @@ neAggTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int neAggTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
+					if (!neAggRowStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -2858,15 +3052,8 @@ neAggTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_ACTIVE:
-					table_entry->u8RowStatus = RS_ACTIVE;
-					break;
-					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_NOTINSERVICE:
-					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
