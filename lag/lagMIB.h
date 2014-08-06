@@ -297,6 +297,11 @@ dot3adAggPortEntry_t * dot3adAggPortTable_getByIndex (
 dot3adAggPortEntry_t * dot3adAggPortTable_getNextIndex (
 	uint32_t u32Index);
 void dot3adAggPortTable_removeEntry (dot3adAggPortEntry_t *poEntry);
+dot3adAggPortEntry_t * dot3adAggPortTable_createExt (
+	uint32_t u32Index);
+bool dot3adAggPortTable_removeExt (dot3adAggPortEntry_t *poEntry);
+bool dot3adAggPortTable_createHier (dot3adAggPortEntry_t *poEntry);
+bool dot3adAggPortTable_removeHier (dot3adAggPortEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point dot3adAggPortTable_getFirst;
 Netsnmp_Next_Data_Point dot3adAggPortTable_getNext;
@@ -722,6 +727,13 @@ neAggPortEntry_t * neAggPortTable_getByIndex (
 neAggPortEntry_t * neAggPortTable_getNextIndex (
 	uint32_t u32Dot3adAggPortIndex);
 void neAggPortTable_removeEntry (neAggPortEntry_t *poEntry);
+neAggPortEntry_t * neAggPortTable_createExt (
+	uint32_t u32Dot3adAggIndex);
+bool neAggPortTable_removeExt (neAggPortEntry_t *poEntry);
+bool neAggPortTable_createHier (neAggPortEntry_t *poEntry);
+bool neAggPortTable_removeHier (neAggPortEntry_t *poEntry);
+bool neAggPortRowStatus_handler (
+	neAggPortEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neAggPortTable_getFirst;
 Netsnmp_Next_Data_Point neAggPortTable_getNext;
