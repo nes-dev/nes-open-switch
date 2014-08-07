@@ -32,7 +32,7 @@ include ${MK_COMMON}
 CFLAGS +=
 
 SNMP_SRC := lagMIB.c
-MODULE_SRC := lag_main.c ${SNMP_SRC}
+MODULE_SRC := lag_main.c lagUtils.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
 
