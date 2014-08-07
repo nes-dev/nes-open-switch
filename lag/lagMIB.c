@@ -24,6 +24,7 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "lagMIB.h"
+#include "lagUtils.h"
 #include "if/ifMIB.h"
 
 #include "lib/bitmap.h"
@@ -2787,6 +2788,114 @@ bool
 neAggRowStatus_handler (
 	neAggEntry_t *poEntry, uint8_t u8RowStatus)
 {
+	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByNeEntry (poEntry);
+	
+	if (poEntry->u8RowStatus == u8RowStatus)
+	{
+		goto neAggRowStatus_handler_success;
+	}
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		/* TODO */
+		
+		{
+			register uint32_t u32Index = 0;
+			register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+			
+			while (
+				(poDot3adAggPortData = dot3adAggPortData_Group_getNextIndex (poDot3adAggData->i32GroupType, poDot3adAggData->u32GroupIndex, u32Index)) != NULL &&
+				poDot3adAggPortData->i32GroupType == poDot3adAggData->i32GroupType && poDot3adAggPortData->u32GroupIndex == poDot3adAggData->u32GroupIndex)
+			{
+				u32Index = poDot3adAggPortData->u32Index;
+				
+				if (!neAggPortRowStatus_handler (&poDot3adAggPortData->oNe, u8RowStatus | xRowStatus_fromParent_c))
+				{
+					goto neAggRowStatus_handler_cleanup;
+				}
+			}
+		}
+		
+		if (!neAggRowStatus_update (poEntry, u8RowStatus))
+		{
+			goto neAggRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = xRowStatus_active_c;
+		break;
+		
+	case xRowStatus_notInService_c:
+		{
+			register uint32_t u32Index = 0;
+			register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+			
+			while (
+				(poDot3adAggPortData = dot3adAggPortData_Group_getNextIndex (poDot3adAggData->i32GroupType, poDot3adAggData->u32GroupIndex, u32Index)) != NULL &&
+				poDot3adAggPortData->i32GroupType == poDot3adAggData->i32GroupType && poDot3adAggPortData->u32GroupIndex == poDot3adAggData->u32GroupIndex)
+			{
+				u32Index = poDot3adAggPortData->u32Index;
+				
+				if (!neAggPortRowStatus_handler (&poDot3adAggPortData->oNe, u8RowStatus | xRowStatus_fromParent_c))
+				{
+					goto neAggRowStatus_handler_cleanup;
+				}
+			}
+		}
+		
+		if (!neAggRowStatus_update (poEntry, u8RowStatus))
+		{
+			goto neAggRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		goto neAggRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		{
+			register uint32_t u32Index = 0;
+			register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+			
+			while (
+				(poDot3adAggPortData = dot3adAggPortData_Group_getNextIndex (poDot3adAggData->i32GroupType, poDot3adAggData->u32GroupIndex, u32Index)) != NULL &&
+				poDot3adAggPortData->i32GroupType == poDot3adAggData->i32GroupType && poDot3adAggPortData->u32GroupIndex == poDot3adAggData->u32GroupIndex)
+			{
+				u32Index = poDot3adAggPortData->u32Index;
+				
+				if (!neAggPortRowStatus_handler (&poDot3adAggPortData->oNe, u8RowStatus | xRowStatus_fromParent_c))
+				{
+					goto neAggRowStatus_handler_cleanup;
+				}
+			}
+		}
+		
+		if (!neAggRowStatus_update (poEntry, u8RowStatus))
+		{
+			goto neAggRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+neAggRowStatus_handler_success:
+	
+	return true;
+	
+	
+neAggRowStatus_handler_cleanup:
+	
 	return false;
 }
 
@@ -3628,6 +3737,64 @@ bool
 neAggPortRowStatus_handler (
 	neAggPortEntry_t *poEntry, uint8_t u8RowStatus)
 {
+	if (poEntry->u8RowStatus == u8RowStatus)
+	{
+		goto neAggPortRowStatus_handler_success;
+	}
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		/* TODO */
+		
+		if (!neAggPortRowStatus_update (poEntry, u8RowStatus))
+		{
+			goto neAggPortRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = xRowStatus_active_c;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!neAggPortRowStatus_update (poEntry, u8RowStatus))
+		{
+			goto neAggPortRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_active_c;
+		break;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!neAggPortRowStatus_update (poEntry, u8RowStatus))
+		{
+			goto neAggPortRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+neAggPortRowStatus_handler_success:
+	
+	return true;
+	
+	
+neAggPortRowStatus_handler_cleanup:
+	
 	return false;
 }
 

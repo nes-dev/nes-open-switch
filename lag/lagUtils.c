@@ -61,5 +61,22 @@ lag_aggEnableModify (
 }
 
 
+bool
+neAggRowStatus_update (
+	neAggEntry_t *poEntry,
+	uint8_t u8RowStatus)
+{
+	return false;
+}
+
+bool
+neAggPortRowStatus_update (
+	neAggPortEntry_t *poEntry,
+	uint8_t u8RowStatus)
+{
+	return false;
+}
+
+
 
 #endif	// __LAG_UTILS_C__

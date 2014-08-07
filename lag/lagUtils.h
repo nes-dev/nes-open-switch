@@ -27,10 +27,22 @@ extern "C" {
 #	endif
 
 
+
+#include "lagMIB.h"
+
 #include <stdbool.h>
 
 
 bool lagUtilsInit (void);
+
+bool
+	neAggRowStatus_update (
+		neAggEntry_t *poEntry,
+		uint8_t u8RowStatus);
+bool
+	neAggPortRowStatus_update (
+		neAggPortEntry_t *poEntry,
+		uint8_t u8RowStatus);
 
 
 
