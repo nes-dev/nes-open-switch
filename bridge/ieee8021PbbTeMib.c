@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ieee8021PbbTeMib.h"
 
 #include "lib/binaryTree.h"
@@ -32,6 +33,8 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid ieee8021PbbTeMib_oid[] = {1,3,111,2,802,1,1,10};
 
 static oid ieee8021PbbTeProtectionGroupListTable_oid[] = {1,3,111,2,802,1,1,10,1,1};
 static oid ieee8021PbbTeMASharedGroupTable_oid[] = {1,3,111,2,802,1,1,10,1,2};
@@ -53,6 +56,8 @@ static oid ieee8021PbbTeProtectionGroupAdminFailure_oid[] = {1,3,111,2,802,1,1,1
 void
 ieee8021PbbTeMib_init (void)
 {
+	extern oid ieee8021PbbTeMib_oid[];
+	
 	DEBUGMSGTL (("ieee8021PbbTeMib", "Initializing\n"));
 	
 	
@@ -64,6 +69,9 @@ ieee8021PbbTeMib_init (void)
 	ieee8021PbbTeProtectionGroupConfigTable_init ();
 	ieee8021PbbTeProtectionGroupISidTable_init ();
 	ieee8021PbbTeBridgeStaticForwardAnyUnicastTable_init ();
+	
+	/* register ieee8021PbbTeMib modules */
+	sysORTable_createRegister ("ieee8021PbbTeMib", ieee8021PbbTeMib_oid, OID_LENGTH (ieee8021PbbTeMib_oid));
 }
 
 

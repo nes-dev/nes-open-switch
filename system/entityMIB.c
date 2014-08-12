@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "if/ifMIB.h"
 #include "entityMIB.h"
 #include "systemUtils.h"
@@ -37,6 +38,9 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid entityMIB_oid[] = {1,3,6,1,2,1,47};
+static oid neEntityMIB_oid[] = {1,3,6,1,4,1,36969,70};
 
 /* array length = OID_LENGTH + 1 */
 static oid entityGeneral_oid[] = {1,3,6,1,2,1,47,1,4,1};
@@ -57,10 +61,11 @@ static oid snmptrap_oid[] = {1,3,6,1,6,3,1,1,4,1,0};
 static oid entConfigChange_oid[] = {1,3,6,1,2,1,47,2,0,1};
 
 
+#if 0
 static bool entPhysicalTable_getChassis (
 	uint32_t u32EntPhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
 	uint32_t *pu32ChassisIndex);
-
+#endif
 
 
 /**
@@ -69,6 +74,8 @@ static bool entPhysicalTable_getChassis (
 void
 entityMIB_init (void)
 {
+	extern oid entityMIB_oid[];
+	extern oid neEntityMIB_oid[];
 	extern oid entityGeneral_oid[];
 	
 	DEBUGMSGTL (("entityMIB", "Initializing\n"));
@@ -96,6 +103,10 @@ entityMIB_init (void)
 	neEntLPMappingTable_init ();
 	neEntPortTable_init ();
 	neEntChassisPortTable_init ();
+	
+	/* register entityMIB modules */
+	sysORTable_createRegister ("entityMIB", entityMIB_oid, OID_LENGTH (entityMIB_oid));
+	sysORTable_createRegister ("neEntityMIB", neEntityMIB_oid, OID_LENGTH (neEntityMIB_oid));
 }
 
 

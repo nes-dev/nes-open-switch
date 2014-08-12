@@ -25,17 +25,20 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "systemMIB.h"
 
+#include "lib/freeRange.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
+
+#include <string.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
 
-/* array length = OID_LENGTH + 1 */
-static oid system_oid[] = {1,3,6,1,2,1,1,1};
+static oid system_oid[] = {1,3,6,1,2,1,1};
 
+/* array length = OID_LENGTH + 1 */
 static oid sysORTable_oid[] = {1,3,6,1,2,1,1,9};
 
 
@@ -54,7 +57,7 @@ systemMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"system_mapper", &system_mapper,
-			system_oid, OID_LENGTH (system_oid) - 1,
+			system_oid, OID_LENGTH (system_oid),
 			HANDLER_CAN_RWRITE
 		),
 		SYSDESCR,
@@ -64,6 +67,9 @@ systemMIB_init (void)
 	
 	/* register systemMIB group table mappers */
 	sysORTable_init ();
+	
+	/* register systemMIB modules */
+	sysORTable_createRegister ("system", system_oid, OID_LENGTH (system_oid));
 }
 
 
@@ -259,6 +265,9 @@ system_mapper (netsnmp_mib_handler *handler,
  *	table mapper(s) & helper(s)
  */
 /** initialize sysORTable table mapper **/
+
+static xFreeRange_t oSysORIndex_FreeRange = xFreeRange_initInline ();
+
 void
 sysORTable_init (void)
 {
@@ -290,6 +299,7 @@ sysORTable_init (void)
 	netsnmp_register_table_iterator (reg, iinfo);
 	
 	/* Initialise the contents of the table here */
+	xFreeRange_createRange (&oSysORIndex_FreeRange, sysORIndex_start_c, sysORIndex_end_c);
 }
 
 static int8_t
@@ -304,16 +314,29 @@ sysORTable_BTreeNodeCmp (
 		(pEntry1->i32Index == pEntry2->i32Index) ? 0: 1;
 }
 
+static int8_t
+sysORTable_ID_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register sysOREntry_t *pEntry1 = xBTree_entry (pNode1, sysOREntry_t, oBTreeNode);
+	register sysOREntry_t *pEntry2 = xBTree_entry (pNode2, sysOREntry_t, oBTreeNode);
+	
+	return
+		(xOidCmp (pEntry1->aoID, pEntry2->aoID, pEntry1->u16ID_len, pEntry2->u16ID_len) == -1) ? -1:
+		(xOidCmp (pEntry1->aoID, pEntry2->aoID, pEntry1->u16ID_len, pEntry2->u16ID_len) == 0) ? 0: 1;
+}
+
 xBTree_t oSysORTable_BTree = xBTree_initInline (&sysORTable_BTreeNodeCmp);
+xBTree_t oSysORTable_ID_BTree = xBTree_initInline (&sysORTable_ID_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 sysOREntry_t *
 sysORTable_createEntry (
 	int32_t i32Index)
 {
-	sysOREntry_t *poEntry = NULL;
+	register sysOREntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (sysOREntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -336,7 +359,7 @@ sysORTable_getByIndex (
 	register sysOREntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (sysOREntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -353,13 +376,43 @@ sysORTable_getByIndex (
 }
 
 sysOREntry_t *
+sysORTable_ID_getByIndex (
+	xOid_t *poID, size_t u16ID_len)
+{
+	register sysOREntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if (poID == NULL || u16ID_len == 0 ||
+		u16ID_len > sizeof (poTmpEntry->aoID) / sizeof (poTmpEntry->aoID[0]))
+	{
+		return NULL;
+	}
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->aoID, poID, u16ID_len * sizeof (poTmpEntry->aoID[0]));
+	poTmpEntry->u16ID_len = u16ID_len;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oID_BTreeNode, &oSysORTable_ID_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, sysOREntry_t, oID_BTreeNode);
+}
+
+sysOREntry_t *
 sysORTable_getNextIndex (
 	int32_t i32Index)
 {
 	register sysOREntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (sysOREntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -388,6 +441,110 @@ sysORTable_removeEntry (sysOREntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oSysORTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+bool
+sysORTable_createRegister (
+	const char *pc8Descr, xOid_t *poID, size_t u16ID_len)
+{
+	register bool bRetCode = false;
+	uint16_t u16Descr_len = 0;
+	uint32_t u32Index = 0;
+	register sysOREntry_t *poEntry = NULL;
+	
+	if (pc8Descr == NULL || poID == NULL || u16ID_len == 0 ||
+		u16ID_len > sizeof (poEntry->aoID) / sizeof (poEntry->aoID[0]))
+	{
+		goto sysORTable_createRegister_cleanup;
+	}
+	
+	u16Descr_len = strlen (pc8Descr);
+	if (u16Descr_len == 0 || u16Descr_len > sizeof (poEntry->au8Descr))
+	{
+		goto sysORTable_createRegister_cleanup;
+	}
+	
+	system_wrLock ();
+	
+	if (sysORTable_ID_getByIndex (poID, u16ID_len) != NULL)
+	{
+		goto sysORTable_createRegister_unlock;
+	}
+	
+	if (!xFreeRange_getFreeIndex (&oSysORIndex_FreeRange, false, 0, 0, &u32Index))
+	{
+		goto sysORTable_createRegister_unlock;
+	}
+	
+	if ((poEntry = sysORTable_createEntry (u32Index)) != NULL)
+	{
+		goto sysORTable_createRegister_unlock;
+	}
+	
+	if (!xFreeRange_allocateIndex (&oSysORIndex_FreeRange, poEntry->i32Index))
+	{
+		goto sysORTable_createRegister_unlock;
+	}
+	
+	memcpy (poEntry->aoID, poID, u16ID_len * sizeof (poEntry->aoID[0]));
+	poEntry->u16ID_len = u16ID_len;
+	memcpy (poEntry->au8Descr, pc8Descr, u16Descr_len);
+	poEntry->u16Descr_len = u16Descr_len;
+	poEntry->u32UpTime = 0;	/* TODO */
+	
+	xBTree_nodeAdd (&poEntry->oID_BTreeNode, &oSysORTable_ID_BTree);
+	
+sysORTable_createRegister_unlock:
+	system_unLock ();
+	
+	if (poEntry == NULL)
+	{
+		goto sysORTable_createRegister_cleanup;
+	}
+	
+	bRetCode = true;
+	
+sysORTable_createRegister_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+sysORTable_removeRegister (
+	xOid_t *poID, size_t u16ID_len)
+{
+	register bool bRetCode = false;
+	register sysOREntry_t *poEntry = NULL;
+	
+	if (poID == NULL || u16ID_len == 0 ||
+		u16ID_len > sizeof (poEntry->aoID) / sizeof (poEntry->aoID[0]))
+	{
+		goto sysORTable_removeRegister_cleanup;
+	}
+	
+	system_wrLock ();
+	
+	if ((poEntry = sysORTable_ID_getByIndex (poID, u16ID_len)) == NULL)
+	{
+		goto sysORTable_removeRegister_unlock;
+	}
+	
+	if (!xFreeRange_removeIndex (&oSysORIndex_FreeRange, poEntry->i32Index))
+	{
+		goto sysORTable_removeRegister_unlock;
+	}
+	
+	xBTree_nodeRemove (&poEntry->oID_BTreeNode, &oSysORTable_ID_BTree);
+	sysORTable_removeEntry (poEntry);
+	
+sysORTable_removeRegister_unlock:
+	system_unLock ();
+	
+	bRetCode = true;
+	
+sysORTable_removeRegister_cleanup:
+	
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */

@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ieee8021PbMib.h"
 
 #include "lib/binaryTree.h"
@@ -32,6 +33,8 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid ieee8021PbMib_oid[] = {1,3,111,2,802,1,1,5};
 
 static oid ieee8021PbCVidRegistrationTable_oid[] = {1,3,111,2,802,1,1,5,1,2};
 static oid ieee8021PbEdgePortTable_oid[] = {1,3,111,2,802,1,1,5,1,3};
@@ -50,6 +53,8 @@ static oid ieee8021PbInternalInterfaceTable_oid[] = {1,3,111,2,802,1,1,5,1,9};
 void
 ieee8021PbMib_init (void)
 {
+	extern oid ieee8021PbMib_oid[];
+	
 	DEBUGMSGTL (("ieee8021PbMib", "Initializing\n"));
 	
 	
@@ -62,6 +67,9 @@ ieee8021PbMib_init (void)
 	ieee8021PbCepTable_init ();
 	ieee8021PbRcapTable_init ();
 	ieee8021PbInternalInterfaceTable_init ();
+	
+	/* register ieee8021PbMib modules */
+	sysORTable_createRegister ("ieee8021PbMib", ieee8021PbMib_oid, OID_LENGTH (ieee8021PbMib_oid));
 }
 
 

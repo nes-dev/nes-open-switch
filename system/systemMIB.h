@@ -28,6 +28,7 @@ extern "C" {
 
 
 #include "lib/binaryTree.h"
+#include "lib/sync.h"
 #include "lib/snmp.h"
 
 #define TOBE_REPLACED 1
@@ -67,6 +68,8 @@ typedef struct system_t
 	size_t u16Location_len;	/* # of uint8_t elements */
 	int32_t i32Services;
 	uint32_t u32ORLastChange;
+	
+	xRwLock_t oLock;
 } system_t;
 
 extern system_t oSystem;
@@ -74,6 +77,10 @@ extern system_t oSystem;
 #ifdef SNMP_SRC
 Netsnmp_Node_Handler system_mapper;
 #endif	/* SNMP_SRC */
+
+#define system_wrLock() (xRwLock_wrLock (&oSystem.oLock))
+#define system_rdLock() (xRwLock_rdLock (&oSystem.oLock))
+#define system_unLock() (xRwLock_unlock (&oSystem.oLock))
 
 
 
@@ -87,6 +94,13 @@ Netsnmp_Node_Handler system_mapper;
 #define SYSORID 2
 #define SYSORDESCR 3
 #define SYSORUPTIME 4
+
+enum
+{
+	sysORIndex_zero_c = 0,
+	sysORIndex_start_c = 1,
+	sysORIndex_end_c = 0x7FFFFFFF,
+};
 
 /* table sysORTable row entry data structure */
 typedef struct sysOREntry_t
@@ -102,9 +116,11 @@ typedef struct sysOREntry_t
 	uint32_t u32UpTime;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oID_BTreeNode;
 } sysOREntry_t;
 
 extern xBTree_t oSysORTable_BTree;
+extern xBTree_t oSysORTable_ID_BTree;
 
 /* sysORTable table mapper */
 void sysORTable_init (void);
@@ -112,9 +128,16 @@ sysOREntry_t * sysORTable_createEntry (
 	int32_t i32Index);
 sysOREntry_t * sysORTable_getByIndex (
 	int32_t i32Index);
+sysOREntry_t * sysORTable_ID_getByIndex (
+	xOid_t *poID, size_t u16ID_len);
 sysOREntry_t * sysORTable_getNextIndex (
 	int32_t i32Index);
 void sysORTable_removeEntry (sysOREntry_t *poEntry);
+bool sysORTable_createRegister (
+	const char *pc8Descr,
+	xOid_t *poID, size_t u16ID_len);
+bool sysORTable_removeRegister (
+	xOid_t *poID, size_t u16ID_len);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point sysORTable_getFirst;
 Netsnmp_Next_Data_Point sysORTable_getNext;

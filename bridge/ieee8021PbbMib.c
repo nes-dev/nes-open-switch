@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ieee8021PbbMib.h"
 
 #include "lib/binaryTree.h"
@@ -32,6 +33,8 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid ieee8021PbbMib_oid[] = {1,3,111,2,802,1,1,9};
 
 /* array length = OID_LENGTH + 1 */
 static oid ieee8021PbbBackboneEdgeBridgeObjects_oid[] = {1,3,111,2,802,1,1,9,1,1,1,1};
@@ -54,6 +57,7 @@ static oid ieee8021PbbCbpTable_oid[] = {1,3,111,2,802,1,1,9,1,1,10};
 void
 ieee8021PbbMib_init (void)
 {
+	extern oid ieee8021PbbMib_oid[];
 	extern oid ieee8021PbbBackboneEdgeBridgeObjects_oid[];
 	
 	DEBUGMSGTL (("ieee8021PbbMib", "Initializing\n"));
@@ -80,6 +84,9 @@ ieee8021PbbMib_init (void)
 	ieee8021PbbVipToPipMappingTable_init ();
 	ieee8021PbbCBPServiceMappingTable_init ();
 	ieee8021PbbCbpTable_init ();
+	
+	/* register ieee8021PbbMib modules */
+	sysORTable_createRegister ("ieee8021PbbMib", ieee8021PbbMib_oid, OID_LENGTH (ieee8021PbbMib_oid));
 }
 
 

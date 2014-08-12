@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ieee8021QBridgeMib.h"
 
 #include "lib/binaryTree.h"
@@ -34,6 +35,8 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid ieee8021QBridgeMib_oid[] = {1,3,111,2,802,1,1,4};
 
 /* array length = OID_LENGTH + 1 */
 static oid ieee8021QBridgeVlan_oid[] = {1,3,111,2,802,1,1,4,1,4,1};
@@ -67,6 +70,7 @@ static oid ieee8021QBridgeEgressVidXTable_oid[] = {1,3,111,2,802,1,1,4,1,6,2};
 void
 ieee8021QBridgeMib_init (void)
 {
+	extern oid ieee8021QBridgeMib_oid[];
 	extern oid ieee8021QBridgeVlan_oid[];
 	
 	DEBUGMSGTL (("ieee8021QBridgeMib", "Initializing\n"));
@@ -104,6 +108,9 @@ ieee8021QBridgeMib_init (void)
 	ieee8021QBridgeProtocolPortTable_init ();
 	ieee8021QBridgeVIDXTable_init ();
 	ieee8021QBridgeEgressVidXTable_init ();
+	
+	/* register ieee8021QBridgeMib modules */
+	sysORTable_createRegister ("ieee8021QBridgeMib", ieee8021QBridgeMib_oid, OID_LENGTH (ieee8021QBridgeMib_oid));
 }
 
 
