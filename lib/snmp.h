@@ -28,6 +28,8 @@ extern "C" {
 
 
 
+#include "lib/lib.h"
+
 #include <stdint.h>
 
 
@@ -88,6 +90,31 @@ typedef struct xOctetString_t
 	void	    *pData;
 	uint16_t	u16Len;
 } xOctetString_t;
+
+
+inline int
+xOidCmp (xOid_t *pOidA, xOid_t *pOidB, int iALen, int iBLen)
+{
+	int iResVal = 1;
+	
+	if (*((char*) &iResVal) == 0)
+	{
+		iResVal = xBinCmp (pOidA, pOidB, iALen * sizeof (*pOidA), iBLen * sizeof (*pOidB));
+	}
+	else
+	{
+		iResVal =
+			iALen < iBLen ? -1:
+			iALen > iBLen ? 1: 0;
+			
+		for (int iIdx = 0; iResVal == 0 && iIdx < iALen && iIdx < iBLen; iIdx++)
+		{
+			iResVal = pOidA[iIdx] - pOidB[iIdx];
+		}
+	}
+	
+	return iResVal;
+}
 
 
 

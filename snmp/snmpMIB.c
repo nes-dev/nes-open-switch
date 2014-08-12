@@ -714,9 +714,9 @@ snmpTargetAddrEntry_t *
 snmpTargetAddrTable_createEntry (
 	uint8_t *pau8Name, size_t u16Name_len)
 {
-	snmpTargetAddrEntry_t *poEntry = NULL;
+	register snmpTargetAddrEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (snmpTargetAddrEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -746,7 +746,7 @@ snmpTargetAddrTable_getByIndex (
 	register snmpTargetAddrEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpTargetAddrEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -770,7 +770,7 @@ snmpTargetAddrTable_getNextIndex (
 	register snmpTargetAddrEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpTargetAddrEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1365,9 +1365,9 @@ snmpTargetParamsEntry_t *
 snmpTargetParamsTable_createEntry (
 	uint8_t *pau8Name, size_t u16Name_len)
 {
-	snmpTargetParamsEntry_t *poEntry = NULL;
+	register snmpTargetParamsEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (snmpTargetParamsEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1394,7 +1394,7 @@ snmpTargetParamsTable_getByIndex (
 	register snmpTargetParamsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpTargetParamsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1418,7 +1418,7 @@ snmpTargetParamsTable_getNextIndex (
 	register snmpTargetParamsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpTargetParamsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1942,9 +1942,9 @@ snmpNotifyEntry_t *
 snmpNotifyTable_createEntry (
 	uint8_t *pau8Name, size_t u16Name_len)
 {
-	snmpNotifyEntry_t *poEntry = NULL;
+	register snmpNotifyEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (snmpNotifyEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1973,7 +1973,7 @@ snmpNotifyTable_getByIndex (
 	register snmpNotifyEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpNotifyEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1997,7 +1997,7 @@ snmpNotifyTable_getNextIndex (
 	register snmpNotifyEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpNotifyEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2465,9 +2465,9 @@ snmpNotifyFilterProfileEntry_t *
 snmpNotifyFilterProfileTable_createEntry (
 	uint8_t *pau8TargetParamsName, size_t u16TargetParamsName_len)
 {
-	snmpNotifyFilterProfileEntry_t *poEntry = NULL;
+	register snmpNotifyFilterProfileEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (snmpNotifyFilterProfileEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2494,7 +2494,7 @@ snmpNotifyFilterProfileTable_getByIndex (
 	register snmpNotifyFilterProfileEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpNotifyFilterProfileEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2518,7 +2518,7 @@ snmpNotifyFilterProfileTable_getNextIndex (
 	register snmpNotifyFilterProfileEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpNotifyFilterProfileEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2949,8 +2949,8 @@ snmpNotifyFilterTable_BTreeNodeCmp (
 	
 	return
 		(xBinCmp (pEntry1->au8ProfileName, pEntry2->au8ProfileName, pEntry1->u16ProfileName_len, pEntry2->u16ProfileName_len) == -1) ||
-		(xBinCmp (pEntry1->au8ProfileName, pEntry2->au8ProfileName, pEntry1->u16ProfileName_len, pEntry2->u16ProfileName_len) == 0 && xBinCmp (pEntry1->aoSubtree, pEntry2->aoSubtree, pEntry1->u16Subtree_len, pEntry2->u16Subtree_len) == -1) ? -1:
-		(xBinCmp (pEntry1->au8ProfileName, pEntry2->au8ProfileName, pEntry1->u16ProfileName_len, pEntry2->u16ProfileName_len) == 0 && xBinCmp (pEntry1->aoSubtree, pEntry2->aoSubtree, pEntry1->u16Subtree_len, pEntry2->u16Subtree_len) == 0) ? 0: 1;
+		(xBinCmp (pEntry1->au8ProfileName, pEntry2->au8ProfileName, pEntry1->u16ProfileName_len, pEntry2->u16ProfileName_len) == 0 && xOidCmp (pEntry1->aoSubtree, pEntry2->aoSubtree, pEntry1->u16Subtree_len, pEntry2->u16Subtree_len) == -1) ? -1:
+		(xBinCmp (pEntry1->au8ProfileName, pEntry2->au8ProfileName, pEntry1->u16ProfileName_len, pEntry2->u16ProfileName_len) == 0 && xOidCmp (pEntry1->aoSubtree, pEntry2->aoSubtree, pEntry1->u16Subtree_len, pEntry2->u16Subtree_len) == 0) ? 0: 1;
 }
 
 xBTree_t oSnmpNotifyFilterTable_BTree = xBTree_initInline (&snmpNotifyFilterTable_BTreeNodeCmp);
@@ -2961,9 +2961,9 @@ snmpNotifyFilterTable_createEntry (
 	uint8_t *pau8ProfileName, size_t u16ProfileName_len,
 	xOid_t *paoSubtree, size_t u16Subtree_len)
 {
-	snmpNotifyFilterEntry_t *poEntry = NULL;
+	register snmpNotifyFilterEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (snmpNotifyFilterEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2995,7 +2995,7 @@ snmpNotifyFilterTable_getByIndex (
 	register snmpNotifyFilterEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpNotifyFilterEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3022,7 +3022,7 @@ snmpNotifyFilterTable_getNextIndex (
 	register snmpNotifyFilterEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpNotifyFilterEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3501,9 +3501,9 @@ usmUserTable_createEntry (
 	uint8_t *pau8EngineID, size_t u16EngineID_len,
 	uint8_t *pau8Name, size_t u16Name_len)
 {
-	usmUserEntry_t *poEntry = NULL;
+	register usmUserEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (usmUserEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3540,7 +3540,7 @@ usmUserTable_getByIndex (
 	register usmUserEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (usmUserEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3567,7 +3567,7 @@ usmUserTable_getNextIndex (
 	register usmUserEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (usmUserEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4249,9 +4249,9 @@ vacmContextEntry_t *
 vacmContextTable_createEntry (
 	uint8_t *pau8Name, size_t u16Name_len)
 {
-	vacmContextEntry_t *poEntry = NULL;
+	register vacmContextEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (vacmContextEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4275,7 +4275,7 @@ vacmContextTable_getByIndex (
 	register vacmContextEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (vacmContextEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4299,7 +4299,7 @@ vacmContextTable_getNextIndex (
 	register vacmContextEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (vacmContextEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4482,9 +4482,9 @@ vacmSecurityToGroupTable_createEntry (
 	int32_t i32SecurityModel,
 	uint8_t *pau8SecurityName, size_t u16SecurityName_len)
 {
-	vacmSecurityToGroupEntry_t *poEntry = NULL;
+	register vacmSecurityToGroupEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (vacmSecurityToGroupEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4513,7 +4513,7 @@ vacmSecurityToGroupTable_getByIndex (
 	register vacmSecurityToGroupEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (vacmSecurityToGroupEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4539,7 +4539,7 @@ vacmSecurityToGroupTable_getNextIndex (
 	register vacmSecurityToGroupEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (vacmSecurityToGroupEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4995,9 +4995,9 @@ vacmAccessTable_createEntry (
 	int32_t i32SecurityModel,
 	int32_t i32SecurityLevel)
 {
-	vacmAccessEntry_t *poEntry = NULL;
+	register vacmAccessEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (vacmAccessEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5035,7 +5035,7 @@ vacmAccessTable_getByIndex (
 	register vacmAccessEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (vacmAccessEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5066,7 +5066,7 @@ vacmAccessTable_getNextIndex (
 	register vacmAccessEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (vacmAccessEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5613,8 +5613,8 @@ vacmViewTreeFamilyTable_BTreeNodeCmp (
 	
 	return
 		(xBinCmp (pEntry1->au8ViewName, pEntry2->au8ViewName, pEntry1->u16ViewName_len, pEntry2->u16ViewName_len) == -1) ||
-		(xBinCmp (pEntry1->au8ViewName, pEntry2->au8ViewName, pEntry1->u16ViewName_len, pEntry2->u16ViewName_len) == 0 && xBinCmp (pEntry1->aoSubtree, pEntry2->aoSubtree, pEntry1->u16Subtree_len, pEntry2->u16Subtree_len) == -1) ? -1:
-		(xBinCmp (pEntry1->au8ViewName, pEntry2->au8ViewName, pEntry1->u16ViewName_len, pEntry2->u16ViewName_len) == 0 && xBinCmp (pEntry1->aoSubtree, pEntry2->aoSubtree, pEntry1->u16Subtree_len, pEntry2->u16Subtree_len) == 0) ? 0: 1;
+		(xBinCmp (pEntry1->au8ViewName, pEntry2->au8ViewName, pEntry1->u16ViewName_len, pEntry2->u16ViewName_len) == 0 && xOidCmp (pEntry1->aoSubtree, pEntry2->aoSubtree, pEntry1->u16Subtree_len, pEntry2->u16Subtree_len) == -1) ? -1:
+		(xBinCmp (pEntry1->au8ViewName, pEntry2->au8ViewName, pEntry1->u16ViewName_len, pEntry2->u16ViewName_len) == 0 && xOidCmp (pEntry1->aoSubtree, pEntry2->aoSubtree, pEntry1->u16Subtree_len, pEntry2->u16Subtree_len) == 0) ? 0: 1;
 }
 
 xBTree_t oVacmViewTreeFamilyTable_BTree = xBTree_initInline (&vacmViewTreeFamilyTable_BTreeNodeCmp);
@@ -5625,9 +5625,9 @@ vacmViewTreeFamilyTable_createEntry (
 	uint8_t *pau8ViewName, size_t u16ViewName_len,
 	xOid_t *paoSubtree, size_t u16Subtree_len)
 {
-	vacmViewTreeFamilyEntry_t *poEntry = NULL;
+	register vacmViewTreeFamilyEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (vacmViewTreeFamilyEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5659,7 +5659,7 @@ vacmViewTreeFamilyTable_getByIndex (
 	register vacmViewTreeFamilyEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (vacmViewTreeFamilyEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -5686,7 +5686,7 @@ vacmViewTreeFamilyTable_getNextIndex (
 	register vacmViewTreeFamilyEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (vacmViewTreeFamilyEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6162,9 +6162,9 @@ snmpCommunityEntry_t *
 snmpCommunityTable_createEntry (
 	uint8_t *pau8Index, size_t u16Index_len)
 {
-	snmpCommunityEntry_t *poEntry = NULL;
+	register snmpCommunityEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (snmpCommunityEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6192,7 +6192,7 @@ snmpCommunityTable_getByIndex (
 	register snmpCommunityEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpCommunityEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6216,7 +6216,7 @@ snmpCommunityTable_getNextIndex (
 	register snmpCommunityEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpCommunityEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6788,9 +6788,9 @@ snmpTargetAddrExtEntry_t *
 snmpTargetAddrExtTable_createEntry (
 	uint8_t *pau8Name, size_t u16Name_len)
 {
-	snmpTargetAddrExtEntry_t *poEntry = NULL;
+	register snmpTargetAddrExtEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (snmpTargetAddrExtEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6817,7 +6817,7 @@ snmpTargetAddrExtTable_getByIndex (
 	register snmpTargetAddrExtEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpTargetAddrExtEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6841,7 +6841,7 @@ snmpTargetAddrExtTable_getNextIndex (
 	register snmpTargetAddrExtEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (snmpTargetAddrExtEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}

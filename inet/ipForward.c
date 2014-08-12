@@ -169,10 +169,10 @@ inetCidrRouteTable_BTreeNodeCmp (
 		(pEntry1->i32DestType < pEntry2->i32DestType) ||
 		(pEntry1->i32DestType == pEntry2->i32DestType && xBinCmp (pEntry1->au8Dest, pEntry2->au8Dest, pEntry1->u16Dest_len, pEntry2->u16Dest_len) == -1) ||
 		(pEntry1->i32DestType == pEntry2->i32DestType && xBinCmp (pEntry1->au8Dest, pEntry2->au8Dest, pEntry1->u16Dest_len, pEntry2->u16Dest_len) == 0 && pEntry1->u32PfxLen < pEntry2->u32PfxLen) ||
-		(pEntry1->i32DestType == pEntry2->i32DestType && xBinCmp (pEntry1->au8Dest, pEntry2->au8Dest, pEntry1->u16Dest_len, pEntry2->u16Dest_len) == 0 && pEntry1->u32PfxLen == pEntry2->u32PfxLen && xBinCmp (pEntry1->aoPolicy, pEntry2->aoPolicy, pEntry1->u16Policy_len, pEntry2->u16Policy_len) == -1) ||
-		(pEntry1->i32DestType == pEntry2->i32DestType && xBinCmp (pEntry1->au8Dest, pEntry2->au8Dest, pEntry1->u16Dest_len, pEntry2->u16Dest_len) == 0 && pEntry1->u32PfxLen == pEntry2->u32PfxLen && xBinCmp (pEntry1->aoPolicy, pEntry2->aoPolicy, pEntry1->u16Policy_len, pEntry2->u16Policy_len) == 0 && pEntry1->i32NextHopType < pEntry2->i32NextHopType) ||
-		(pEntry1->i32DestType == pEntry2->i32DestType && xBinCmp (pEntry1->au8Dest, pEntry2->au8Dest, pEntry1->u16Dest_len, pEntry2->u16Dest_len) == 0 && pEntry1->u32PfxLen == pEntry2->u32PfxLen && xBinCmp (pEntry1->aoPolicy, pEntry2->aoPolicy, pEntry1->u16Policy_len, pEntry2->u16Policy_len) == 0 && pEntry1->i32NextHopType == pEntry2->i32NextHopType && xBinCmp (pEntry1->au8NextHop, pEntry2->au8NextHop, pEntry1->u16NextHop_len, pEntry2->u16NextHop_len) == -1) ? -1:
-		(pEntry1->i32DestType == pEntry2->i32DestType && xBinCmp (pEntry1->au8Dest, pEntry2->au8Dest, pEntry1->u16Dest_len, pEntry2->u16Dest_len) == 0 && pEntry1->u32PfxLen == pEntry2->u32PfxLen && xBinCmp (pEntry1->aoPolicy, pEntry2->aoPolicy, pEntry1->u16Policy_len, pEntry2->u16Policy_len) == 0 && pEntry1->i32NextHopType == pEntry2->i32NextHopType && xBinCmp (pEntry1->au8NextHop, pEntry2->au8NextHop, pEntry1->u16NextHop_len, pEntry2->u16NextHop_len) == 0) ? 0: 1;
+		(pEntry1->i32DestType == pEntry2->i32DestType && xBinCmp (pEntry1->au8Dest, pEntry2->au8Dest, pEntry1->u16Dest_len, pEntry2->u16Dest_len) == 0 && pEntry1->u32PfxLen == pEntry2->u32PfxLen && xOidCmp (pEntry1->aoPolicy, pEntry2->aoPolicy, pEntry1->u16Policy_len, pEntry2->u16Policy_len) == -1) ||
+		(pEntry1->i32DestType == pEntry2->i32DestType && xBinCmp (pEntry1->au8Dest, pEntry2->au8Dest, pEntry1->u16Dest_len, pEntry2->u16Dest_len) == 0 && pEntry1->u32PfxLen == pEntry2->u32PfxLen && xOidCmp (pEntry1->aoPolicy, pEntry2->aoPolicy, pEntry1->u16Policy_len, pEntry2->u16Policy_len) == 0 && pEntry1->i32NextHopType < pEntry2->i32NextHopType) ||
+		(pEntry1->i32DestType == pEntry2->i32DestType && xBinCmp (pEntry1->au8Dest, pEntry2->au8Dest, pEntry1->u16Dest_len, pEntry2->u16Dest_len) == 0 && pEntry1->u32PfxLen == pEntry2->u32PfxLen && xOidCmp (pEntry1->aoPolicy, pEntry2->aoPolicy, pEntry1->u16Policy_len, pEntry2->u16Policy_len) == 0 && pEntry1->i32NextHopType == pEntry2->i32NextHopType && xBinCmp (pEntry1->au8NextHop, pEntry2->au8NextHop, pEntry1->u16NextHop_len, pEntry2->u16NextHop_len) == -1) ? -1:
+		(pEntry1->i32DestType == pEntry2->i32DestType && xBinCmp (pEntry1->au8Dest, pEntry2->au8Dest, pEntry1->u16Dest_len, pEntry2->u16Dest_len) == 0 && pEntry1->u32PfxLen == pEntry2->u32PfxLen && xOidCmp (pEntry1->aoPolicy, pEntry2->aoPolicy, pEntry1->u16Policy_len, pEntry2->u16Policy_len) == 0 && pEntry1->i32NextHopType == pEntry2->i32NextHopType && xBinCmp (pEntry1->au8NextHop, pEntry2->au8NextHop, pEntry1->u16NextHop_len, pEntry2->u16NextHop_len) == 0) ? 0: 1;
 }
 
 xBTree_t oInetCidrRouteTable_BTree = xBTree_initInline (&inetCidrRouteTable_BTreeNodeCmp);
@@ -187,9 +187,9 @@ inetCidrRouteTable_createEntry (
 	int32_t i32NextHopType,
 	uint8_t *pau8NextHop, size_t u16NextHop_len)
 {
-	inetCidrRouteEntry_t *poEntry = NULL;
+	register inetCidrRouteEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (inetCidrRouteEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -233,7 +233,7 @@ inetCidrRouteTable_getByIndex (
 	register inetCidrRouteEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (inetCidrRouteEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -269,7 +269,7 @@ inetCidrRouteTable_getNextIndex (
 	register inetCidrRouteEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (inetCidrRouteEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
