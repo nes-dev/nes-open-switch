@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ifUtils.h"
 #include "ifMIB.h"
 
@@ -30,6 +31,7 @@
 #include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
+#include "lib/sync.h"
 #include "lib/snmp.h"
 
 #include <stdbool.h>
@@ -38,8 +40,11 @@
 
 
 
+static oid interfaces_oid[] = {1,3,6,1,2,1,2};
+static oid ifMIB_oid[] = {1,3,6,1,2,1,31};
+static oid neIfMIB_oid[] = {1,3,6,1,4,1,36969,61};
+
 /* array length = OID_LENGTH + 1 */
-static oid interfaces_oid[] = {1,3,6,1,2,1,2,1};
 static oid ifMIBObjects_oid[] = {1,3,6,1,2,1,31,1,5};
 
 static oid ifTable_oid[] = {1,3,6,1,2,1,2,2};
@@ -62,6 +67,8 @@ void
 ifMIB_init (void)
 {
 	extern oid interfaces_oid[];
+	extern oid ifMIB_oid[];
+	extern oid neIfMIB_oid[];
 	extern oid ifMIBObjects_oid[];
 	
 	DEBUGMSGTL (("ifMIB", "Initializing\n"));
@@ -70,7 +77,7 @@ ifMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"interfaces_mapper", &interfaces_mapper,
-			interfaces_oid, OID_LENGTH (interfaces_oid) - 1,
+			interfaces_oid, OID_LENGTH (interfaces_oid),
 			HANDLER_CAN_RONLY
 		),
 		IFNUMBER,
@@ -95,13 +102,21 @@ ifMIB_init (void)
 	ifStackTable_init ();
 	ifRcvAddressTable_init ();
 	neIfTable_init ();
+	
+	/* register ifMIB modules */
+	sysORTable_createRegister ("interfaces", interfaces_oid, OID_LENGTH (interfaces_oid));
+	sysORTable_createRegister ("ifMIB", ifMIB_oid, OID_LENGTH (ifMIB_oid));
+	sysORTable_createRegister ("neIfMIB", neIfMIB_oid, OID_LENGTH (neIfMIB_oid));
 }
 
 
 /**
  *	scalar mapper(s)
  */
-interfaces_t oInterfaces;
+interfaces_t oInterfaces =
+{
+	.oIfLock = xRwLock_initInline (),
+};
 
 /** interfaces scalar mapper **/
 int
@@ -224,6 +239,8 @@ ifData_createEntry (
 		return NULL;
 	}
 	
+	xRwLock_init (&poEntry->oLock, NULL);
+	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfData_BTree);
 	return poEntry;
 }
@@ -302,6 +319,78 @@ ifData_createReference (
 	bool bCreate, bool bReference, bool bActivate,
 	ifData_t **ppoIfData)
 {
+	register ifData_t *poIfData = NULL;
+	
+	if (u32IfIndex == ifIndex_zero_c &&
+		(i32Type == 0 || !bCreate || ppoIfData == NULL))
+	{
+		return false;
+	}
+	
+	
+	bCreate ? ifTable_wrLock (): ifTable_rdLock ();
+	
+	if (u32IfIndex != ifIndex_zero_c && (poIfData = ifData_getByIndex (u32IfIndex)) != NULL)
+	{
+		if (i32Type != 0 && poIfData->oIf.i32Type != 0 && poIfData->oIf.i32Type != i32Type)
+		{
+			goto ifData_createReference_ifUnlock;
+		}
+	}
+	else if (bCreate)
+	{
+		register neIfEntry_t *poNeIfEntry = NULL;
+		
+		if ((poNeIfEntry = neIfTable_createExt (u32IfIndex)) == NULL)
+		{
+			goto ifData_createReference_ifUnlock;
+		}
+		
+		poIfData = ifData_getByNeEntry (poNeIfEntry);
+	}
+	else
+	{
+		goto ifData_createReference_ifUnlock;
+	}
+	
+	ifData_wrLock (poIfData);
+	
+ifData_createReference_ifUnlock:
+	ifTable_unLock ();
+	if (poIfData == NULL)
+	{
+		goto ifData_createReference_cleanup;
+	}
+	
+	i32Type != 0 ? (poIfData->oNe.i32Type = i32Type): false;
+	
+	if (bReference)
+	{
+		poIfData->u32NumReferences++;
+	}
+	if (bActivate && !neIfRowStatus_handler (&poIfData->oNe, xRowStatus_active_c))
+	{
+		goto ifData_createReference_cleanup;
+	}
+	
+	if (ppoIfData == NULL)
+	{
+		ifData_unLock (poIfData);
+	}
+	else
+	{
+		*ppoIfData = poIfData;
+	}
+	return true;
+	
+	
+ifData_createReference_cleanup:
+	
+	poIfData != NULL ? ifData_unLock (poIfData): false;
+	if (u32IfIndex != ifIndex_zero_c)
+	{
+		ifData_removeReference (u32IfIndex, bCreate, bReference, bActivate);
+	}
 	return false;
 }
 
@@ -310,6 +399,44 @@ ifData_removeReference (
 	uint32_t u32IfIndex,
 	bool bCreate, bool bReference, bool bActivate)
 {
+	register ifData_t *poIfData = NULL;
+	
+	bCreate ? ifTable_wrLock (): ifTable_rdLock ();
+	
+	if ((poIfData = ifData_getByIndex (u32IfIndex)) == NULL)
+	{
+		goto ifData_removeReference_success;
+	}
+	ifData_wrLock (poIfData);
+	
+	if (bActivate && !neIfRowStatus_handler (&poIfData->oNe, xRowStatus_destroy_c))
+	{
+		goto ifData_removeReference_cleanup;
+	}
+	if (bReference && poIfData->u32NumReferences > 0)
+	{
+		poIfData->u32NumReferences--;
+	}
+	if (bCreate && poIfData->u32NumReferences == 0)
+	{
+		if (!neIfTable_removeExt (&poIfData->oNe))
+		{
+			goto ifData_removeReference_cleanup;
+		}
+		poIfData = NULL;
+	}
+	
+ifData_removeReference_success:
+	
+	poIfData != NULL ? ifData_unLock (poIfData): false;
+	ifTable_unLock ();
+	return true;
+	
+	
+ifData_removeReference_cleanup:
+	
+	poIfData != NULL ? ifData_unLock (poIfData): false;
+	ifTable_unLock ();
 	return false;
 }
 

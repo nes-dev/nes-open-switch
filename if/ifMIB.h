@@ -29,6 +29,7 @@ extern "C" {
 
 #include "lib/ieee802.h"
 #include "lib/binaryTree.h"
+#include "lib/sync.h"
 #include "lib/snmp.h"
 
 #include <stdbool.h>
@@ -51,6 +52,8 @@ void ifMIB_init (void);
 typedef struct interfaces_t
 {
 	int32_t i32IfNumber;
+	
+	xRwLock_t oIfLock;
 } interfaces_t;
 
 extern interfaces_t oInterfaces;
@@ -74,6 +77,10 @@ extern ifMIBObjects_t oIfMIBObjects;
 #ifdef SNMP_SRC
 Netsnmp_Node_Handler ifMIBObjects_mapper;
 #endif	/* SNMP_SRC */
+
+#define ifTable_wrLock() (xRwLock_wrLock (&oInterfaces.oIfLock))
+#define ifTable_rdLock() (xRwLock_rdLock (&oInterfaces.oIfLock))
+#define ifTable_unLock() (xRwLock_unlock (&oInterfaces.oIfLock))
 
 
 
@@ -1114,6 +1121,7 @@ typedef struct ifData_t
 	uint32_t u32NumReferences;
 	
 	xBTree_Node_t oBTreeNode;
+	xRwLock_t oLock;
 } ifData_t;
 
 // extern xBTree_t oIfData_BTree;
