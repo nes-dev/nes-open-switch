@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "tcpMIB.h"
 
 #include "lib/binaryTree.h"
@@ -33,9 +34,10 @@
 
 
 
-/* array length = OID_LENGTH + 1 */
-static oid tcp_oid[] = {1,3,6,1,2,1,6,1};
+static oid tcp_oid[] = {1,3,6,1,2,1,6};
+static oid tcpMIB_oid[] = {1,3,6,1,2,1,49};
 
+/* array length = OID_LENGTH + 1 */
 static oid tcpConnectionTable_oid[] = {1,3,6,1,2,1,6,19};
 static oid tcpListenerTable_oid[] = {1,3,6,1,2,1,6,20};
 
@@ -48,6 +50,7 @@ void
 tcpMIB_init (void)
 {
 	extern oid tcp_oid[];
+	extern oid tcpMIB_oid[];
 	
 	DEBUGMSGTL (("tcpMIB", "Initializing\n"));
 	
@@ -55,7 +58,7 @@ tcpMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"tcp_mapper", &tcp_mapper,
-			tcp_oid, OID_LENGTH (tcp_oid) - 1,
+			tcp_oid, OID_LENGTH (tcp_oid),
 			HANDLER_CAN_RONLY
 		),
 		TCPRTOALGORITHM,
@@ -66,6 +69,10 @@ tcpMIB_init (void)
 	/* register tcpMIB group table mappers */
 	tcpConnectionTable_init ();
 	tcpListenerTable_init ();
+	
+	/* register tcpMIB modules */
+	sysORTable_createRegister ("tcp", tcp_oid, OID_LENGTH (tcp_oid));
+	sysORTable_createRegister ("tcpMIB", tcpMIB_oid, OID_LENGTH (tcpMIB_oid));
 }
 
 

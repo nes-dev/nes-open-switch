@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "lagMIB.h"
 #include "lagUtils.h"
 #include "if/ifMIB.h"
@@ -35,6 +36,9 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid lagMIB_oid[] = {1,2,840,10006,300,43};
+static oid neLagMIB_oid[] = {1,3,6,1,4,1,36969,71};
 
 /* array length = OID_LENGTH + 1 */
 static oid lagMIBObjects_oid[] = {1,2,840,10006,300,43,1,3};
@@ -57,6 +61,8 @@ static oid neAggPortTable_oid[] = {1,3,6,1,4,1,36969,71,1,3};
 void
 lagMIB_init (void)
 {
+	extern oid lagMIB_oid[];
+	extern oid neLagMIB_oid[];
 	extern oid lagMIBObjects_oid[];
 	
 	DEBUGMSGTL (("lagMIB", "Initializing\n"));
@@ -83,6 +89,10 @@ lagMIB_init (void)
 	neAggTable_init ();
 	neAggPortListTable_init ();
 	neAggPortTable_init ();
+	
+	/* register lagMIB modules */
+	sysORTable_createRegister ("lagMIB", lagMIB_oid, OID_LENGTH (lagMIB_oid));
+	sysORTable_createRegister ("neLagMIB", neLagMIB_oid, OID_LENGTH (neLagMIB_oid));
 }
 
 

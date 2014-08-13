@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "icmpMIB.h"
 
 #include "lib/binaryTree.h"
@@ -32,6 +33,8 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid icmp_oid[] = {1,3,6,1,2,1,5};
 
 static oid icmpStatsTable_oid[] = {1,3,6,1,2,1,5,29};
 static oid icmpMsgStatsTable_oid[] = {1,3,6,1,2,1,5,30};
@@ -44,12 +47,17 @@ static oid icmpMsgStatsTable_oid[] = {1,3,6,1,2,1,5,30};
 void
 icmpMIB_init (void)
 {
+	extern oid icmp_oid[];
+	
 	DEBUGMSGTL (("icmpMIB", "Initializing\n"));
 	
 	
 	/* register icmpMIB group table mappers */
 	icmpStatsTable_init ();
 	icmpMsgStatsTable_init ();
+	
+	/* register icmpMIB modules */
+	sysORTable_createRegister ("icmp", icmp_oid, OID_LENGTH (icmp_oid));
 }
 
 

@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ieee8021MstpMib.h"
 
 #include "lib/binaryTree.h"
@@ -32,6 +33,8 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid ieee8021MstpMib_oid[] = {1,3,111,2,802,1,1,6};
 
 static oid ieee8021MstpCistTable_oid[] = {1,3,111,2,802,1,1,6,1,1};
 static oid ieee8021MstpTable_oid[] = {1,3,111,2,802,1,1,6,1,2};
@@ -50,6 +53,8 @@ static oid ieee8021MstpVlanV2Table_oid[] = {1,3,111,2,802,1,1,6,1,10};
 void
 ieee8021MstpMib_init (void)
 {
+	extern oid ieee8021MstpMib_oid[];
+	
 	DEBUGMSGTL (("ieee8021MstpMib", "Initializing\n"));
 	
 	
@@ -62,6 +67,9 @@ ieee8021MstpMib_init (void)
 	ieee8021MstpCistPortExtensionTable_init ();
 	ieee8021MstpFidToMstiV2Table_init ();
 	ieee8021MstpVlanV2Table_init ();
+	
+	/* register ieee8021MstpMib modules */
+	sysORTable_createRegister ("ieee8021MstpMib", ieee8021MstpMib_oid, OID_LENGTH (ieee8021MstpMib_oid));
 }
 
 

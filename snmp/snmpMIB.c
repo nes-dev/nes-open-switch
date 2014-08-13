@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "snmpMIB.h"
 
 #include "lib/binaryTree.h"
@@ -32,6 +33,13 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid snmpMIB_oid[] = {1,3,6,1,6,3,1};
+static oid snmpTargetMIB_oid[] = {1,3,6,1,6,3,12};
+static oid snmpNotificationMIB_oid[] = {1,3,6,1,6,3,13};
+static oid snmpUsmMIB_oid[] = {1,3,6,1,6,3,15};
+static oid snmpVacmMIB_oid[] = {1,3,6,1,6,3,16};
+static oid snmpCommunityMIB_oid[] = {1,3,6,1,6,3,18};
 
 /* array length = OID_LENGTH + 1 */
 static oid snmpSet_oid[] = {1,3,6,1,6,3,1,1,6,1};
@@ -67,6 +75,12 @@ static oid authenticationFailure_oid[] = {1,3,6,1,6,3,1,1,5,5};
 void
 snmpMIB_init (void)
 {
+	extern oid snmpMIB_oid[];
+	extern oid snmpTargetMIB_oid[];
+	extern oid snmpNotificationMIB_oid[];
+	extern oid snmpUsmMIB_oid[];
+	extern oid snmpVacmMIB_oid[];
+	extern oid snmpCommunityMIB_oid[];
 	extern oid snmpSet_oid[];
 	extern oid snmpTargetObjects_oid[];
 	extern oid usmStats_oid[];
@@ -144,6 +158,14 @@ snmpMIB_init (void)
 	vacmViewTreeFamilyTable_init ();
 	snmpCommunityTable_init ();
 	snmpTargetAddrExtTable_init ();
+	
+	/* register snmpMIB modules */
+	sysORTable_createRegister ("snmpMIB", snmpMIB_oid, OID_LENGTH (snmpMIB_oid));
+	sysORTable_createRegister ("snmpTargetMIB", snmpTargetMIB_oid, OID_LENGTH (snmpTargetMIB_oid));
+	sysORTable_createRegister ("snmpNotificationMIB", snmpNotificationMIB_oid, OID_LENGTH (snmpNotificationMIB_oid));
+	sysORTable_createRegister ("snmpUsmMIB", snmpUsmMIB_oid, OID_LENGTH (snmpUsmMIB_oid));
+	sysORTable_createRegister ("snmpVacmMIB", snmpVacmMIB_oid, OID_LENGTH (snmpVacmMIB_oid));
+	sysORTable_createRegister ("snmpCommunityMIB", snmpCommunityMIB_oid, OID_LENGTH (snmpCommunityMIB_oid));
 }
 
 

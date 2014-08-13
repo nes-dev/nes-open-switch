@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ieee8021SpanningTreeMib.h"
 
 #include "lib/binaryTree.h"
@@ -32,6 +33,8 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid ieee8021SpanningTreeMib_oid[] = {1,3,111,2,802,1,1,3};
 
 static oid ieee8021SpanningTreeTable_oid[] = {1,3,111,2,802,1,1,3,1,1};
 static oid ieee8021SpanningTreePortTable_oid[] = {1,3,111,2,802,1,1,3,1,2};
@@ -49,12 +52,17 @@ static oid ieee8021SpanningTreeTopologyChange_oid[] = {1,3,111,2,802,1,1,3,0,2};
 void
 ieee8021SpanningTreeMib_init (void)
 {
+	extern oid ieee8021SpanningTreeMib_oid[];
+	
 	DEBUGMSGTL (("ieee8021SpanningTreeMib", "Initializing\n"));
 	
 	
 	/* register ieee8021SpanningTreeMib group table mappers */
 	ieee8021SpanningTreeTable_init ();
 	ieee8021SpanningTreePortTable_init ();
+	
+	/* register ieee8021SpanningTreeMib modules */
+	sysORTable_createRegister ("ieee8021SpanningTreeMib", ieee8021SpanningTreeMib_oid, OID_LENGTH (ieee8021SpanningTreeMib_oid));
 }
 
 

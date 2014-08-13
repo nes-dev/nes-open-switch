@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ieee8021CfmMib.h"
 
 #include "lib/binaryTree.h"
@@ -32,6 +33,8 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid ieee8021CfmMib_oid[] = {1,3,111,2,802,1,1,8};
 
 /* array length = OID_LENGTH + 1 */
 static oid dot1agCfmDefaultMd_oid[] = {1,3,111,2,802,1,1,8,1,2,1};
@@ -56,6 +59,7 @@ static oid dot1agCfmFaultAlarm_oid[] = {1,3,111,2,802,1,1,8,0,1};
 void
 ieee8021CfmMib_init (void)
 {
+	extern oid ieee8021CfmMib_oid[];
 	extern oid dot1agCfmDefaultMd_oid[];
 	extern oid dot1agCfmMd_oid[];
 	
@@ -91,6 +95,9 @@ ieee8021CfmMib_init (void)
 	dot1agCfmMepTable_init ();
 	dot1agCfmLtrTable_init ();
 	dot1agCfmMepDbTable_init ();
+	
+	/* register ieee8021CfmMib modules */
+	sysORTable_createRegister ("ieee8021CfmMib", ieee8021CfmMib_oid, OID_LENGTH (ieee8021CfmMib_oid));
 }
 
 

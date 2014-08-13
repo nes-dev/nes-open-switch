@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "clnsMIB.h"
 
 #include "lib/binaryTree.h"
@@ -32,6 +33,8 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid clns_oid[] = {1,3,6,1,3,1};
 
 /* array length = OID_LENGTH + 1 */
 static oid clnp_oid[] = {1,3,6,1,3,1,1,1};
@@ -51,6 +54,7 @@ static oid clnpMediaToNetTable_oid[] = {1,3,6,1,3,1,1,24};
 void
 clnsMIB_init (void)
 {
+	extern oid clns_oid[];
 	extern oid clnp_oid[];
 	extern oid error_oid[];
 	extern oid esis_oid[];
@@ -96,6 +100,9 @@ clnsMIB_init (void)
 	clnpRoutingTable_init ();
 	clnpNetToMediaTable_init ();
 	clnpMediaToNetTable_init ();
+	
+	/* register clnsMIB modules */
+	sysORTable_createRegister ("clns", clns_oid, OID_LENGTH (clns_oid));
 }
 
 

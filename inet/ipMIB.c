@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ethernet/ieee8021BridgeMib.h"
 #include "if/ifMIB.h"
 #include "ipMIB.h"
@@ -38,8 +39,10 @@
 
 
 
+static oid ip_oid[] = {1,3,6,1,2,1,4};
+static oid ipMIB_oid[] = {1,3,6,1,2,1,48};
+
 /* array length = OID_LENGTH + 1 */
-static oid ip_oid[] = {1,3,6,1,2,1,4,1};
 static oid ipTrafficStats_oid[] = {1,3,6,1,2,1,4,31,2};
 
 static oid ipv4InterfaceTable_oid[] = {1,3,6,1,2,1,4,28};
@@ -62,6 +65,7 @@ void
 ipMIB_init (void)
 {
 	extern oid ip_oid[];
+	extern oid ipMIB_oid[];
 	extern oid ipTrafficStats_oid[];
 	
 	DEBUGMSGTL (("ipMIB", "Initializing\n"));
@@ -70,7 +74,7 @@ ipMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"ip_mapper", &ip_mapper,
-			ip_oid, OID_LENGTH (ip_oid) - 1,
+			ip_oid, OID_LENGTH (ip_oid),
 			HANDLER_CAN_RWRITE
 		),
 		IPFORWARDING,
@@ -100,6 +104,10 @@ ipMIB_init (void)
 	ipv6ScopeZoneIndexTable_init ();
 	ipDefaultRouterTable_init ();
 	ipv6RouterAdvertTable_init ();
+	
+	/* register ipMIB modules */
+	sysORTable_createRegister ("ip", ip_oid, OID_LENGTH (ip_oid));
+	sysORTable_createRegister ("ipMIB", ipMIB_oid, OID_LENGTH (ipMIB_oid));
 }
 
 

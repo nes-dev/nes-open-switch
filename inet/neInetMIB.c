@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ethernet/ieee8021BridgeMib.h"
 #include "if/ifMIB.h"
 #include "ipMIB.h"
@@ -38,6 +39,8 @@
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
+
+static oid neInetMIB_oid[] = {1,3,6,1,4,1,36969,53};
 
 /* array length = OID_LENGTH + 1 */
 static oid neInetScalars_oid[] = {1,3,6,1,4,1,36969,53,1,1,1};
@@ -58,6 +61,7 @@ static oid neIpAsNodeTable_oid[] = {1,3,6,1,4,1,36969,53,3,4};
 void
 neInetMIB_init (void)
 {
+	extern oid neInetMIB_oid[];
 	extern oid neInetScalars_oid[];
 	extern oid neIpScalars_oid[];
 	
@@ -93,6 +97,9 @@ neInetMIB_init (void)
 	neIpAddressTable_init ();
 	neIpUnNumTable_init ();
 	neIpAsNodeTable_init ();
+	
+	/* register neInetMIB modules */
+	sysORTable_createRegister ("neInetMIB", neInetMIB_oid, OID_LENGTH (neInetMIB_oid));
 }
 
 

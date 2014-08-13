@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "ipForward.h"
 
 #include "lib/binaryTree.h"
@@ -33,9 +34,9 @@
 
 
 
-/* array length = OID_LENGTH + 1 */
-static oid ipForward_oid[] = {1,3,6,1,2,1,4,24,6};
+static oid ipForward_oid[] = {1,3,6,1,2,1,4,24};
 
+/* array length = OID_LENGTH + 1 */
 static oid inetCidrRouteTable_oid[] = {1,3,6,1,2,1,4,24,7};
 
 
@@ -54,7 +55,7 @@ ipForward_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"ipForward_mapper", &ipForward_mapper,
-			ipForward_oid, OID_LENGTH (ipForward_oid) - 1,
+			ipForward_oid, OID_LENGTH (ipForward_oid),
 			HANDLER_CAN_RONLY
 		),
 		INETCIDRROUTENUMBER,
@@ -64,6 +65,9 @@ ipForward_init (void)
 	
 	/* register ipForward group table mappers */
 	inetCidrRouteTable_init ();
+	
+	/* register ipForward modules */
+	sysORTable_createRegister ("ipForward", ipForward_oid, OID_LENGTH (ipForward_oid));
 }
 
 

@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "system/systemMIB.h"
 #include "udpMIB.h"
 
 #include "lib/binaryTree.h"
@@ -33,9 +34,10 @@
 
 
 
-/* array length = OID_LENGTH + 1 */
-static oid udp_oid[] = {1,3,6,1,2,1,7,1};
+static oid udp_oid[] = {1,3,6,1,2,1,7};
+static oid udpMIB_oid[] = {1,3,6,1,2,1,50};
 
+/* array length = OID_LENGTH + 1 */
 static oid udpEndpointTable_oid[] = {1,3,6,1,2,1,7,7};
 
 
@@ -47,6 +49,7 @@ void
 udpMIB_init (void)
 {
 	extern oid udp_oid[];
+	extern oid udpMIB_oid[];
 	
 	DEBUGMSGTL (("udpMIB", "Initializing\n"));
 	
@@ -54,7 +57,7 @@ udpMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"udp_mapper", &udp_mapper,
-			udp_oid, OID_LENGTH (udp_oid) - 1,
+			udp_oid, OID_LENGTH (udp_oid),
 			HANDLER_CAN_RONLY
 		),
 		UDPINDATAGRAMS,
@@ -64,6 +67,10 @@ udpMIB_init (void)
 	
 	/* register udpMIB group table mappers */
 	udpEndpointTable_init ();
+	
+	/* register udpMIB modules */
+	sysORTable_createRegister ("udp", udp_oid, OID_LENGTH (udp_oid));
+	sysORTable_createRegister ("udpMIB", udpMIB_oid, OID_LENGTH (udpMIB_oid));
 }
 
 
