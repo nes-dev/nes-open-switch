@@ -677,6 +677,20 @@ dot3adAggTable_mapper (
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			
+			register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (table_entry);
+			
+			switch (table_info->colnum)
+			{
+			case DOT3ADAGGACTORSYSTEMPRIORITY:
+			case DOT3ADAGGCOLLECTORMAXDELAY:
+				if (poDot3adAggData->oNe.u8RowStatus == xRowStatus_active_c || poDot3adAggData->oNe.u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			}
 		}
 		break;
 		
@@ -1043,6 +1057,9 @@ dot3adAggPortData_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->i32OperStatus = xOperStatus_notPresent_c;
+	poEntry->i32Selection = dot3adAggPortSelection_none_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
 	return poEntry;
@@ -1629,6 +1646,28 @@ dot3adAggPortTable_mapper (
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
+			}
+			
+			register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortEntry (table_entry);
+			
+			switch (table_info->colnum)
+			{
+			case DOT3ADAGGPORTACTORADMINKEY:
+			case DOT3ADAGGPORTACTOROPERKEY:
+			case DOT3ADAGGPORTPARTNERADMINSYSTEMPRIORITY:
+			case DOT3ADAGGPORTPARTNERADMINSYSTEMID:
+			case DOT3ADAGGPORTPARTNERADMINKEY:
+			case DOT3ADAGGPORTACTORPORTPRIORITY:
+			case DOT3ADAGGPORTPARTNERADMINPORT:
+			case DOT3ADAGGPORTPARTNERADMINPORTPRIORITY:
+			case DOT3ADAGGPORTACTORADMINSTATE:
+			case DOT3ADAGGPORTPARTNERADMINSTATE:
+				if (poDot3adAggPortData->oNe.u8RowStatus == xRowStatus_active_c || poDot3adAggPortData->oNe.u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
 			}
 		}
 		break;
@@ -2361,6 +2400,7 @@ dot3adAggPortXTable_createEntry (
 	poEntry = &poDot3adAggPortData->oPortX;
 	
 	/*poEntry->au8ProtocolDA = 1652522221570*/;
+	memcpy (poEntry->au8ProtocolDA, IeeeEui_slowProtocolsMulticast, sizeof (poEntry->au8ProtocolDA));
 	
 	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c, 1);
 	return poEntry;

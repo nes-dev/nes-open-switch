@@ -19,55 +19,18 @@
  */
 //set ts=4 sw=4
 
-#ifndef __IEEE802_H__
-#	define __IEEE802_H__
-
-#	ifdef __cplusplus
-extern "C" {
-#	endif
+#ifndef __IEEE802_C__
+#	define __IEEE802_C__
 
 
+
+#include "ieee802.h"
 
 #include <stdint.h>
 
 
-enum
-{
-	IeeeEui48_size_c		= 6,
-	IeeeEui64_size_c		= 8,
-};
-
-typedef uint8_t IeeeEui48_t [IeeeEui48_size_c];
-typedef uint8_t IeeeEui64_t [IeeeEui64_size_c];
-
-typedef struct IeeeEui48Header_t
-{
-	IeeeEui48_t		oDestAddress;
-	IeeeEui48_t		oSrcAddress;
-	uint16_t			u16Type;
-} IeeeEui48Header_t;
-
-uint32_t xIeeeCrc32 (uint8_t *pu8Buf, uint16_t u16BufSize);
-uint32_t xIeeeCrc16 (uint8_t *pu8Buf, uint16_t u16BufSize);
-
-
-const IeeeEui48_t IeeeEui_slowProtocolsMulticast;
-
-enum
-{
-	IeeeEtherType_slowProtocols_c		= 0x8809,
-	
-	IeeeSlowProtocolsType_unused_c		= 0x00,
-	IeeeSlowProtocolsType_lacp_c		= 0x01,
-	IeeeSlowProtocolsType_marker_c		= 0x02,
-	IeeeSlowProtocolsType_oam_c			= 0x03,
-	IeeeSlowProtocolsType_ossp_c		= 0x0A,
-};
+const IeeeEui48_t IeeeEui_slowProtocolsMulticast = {0x01, 0x80, 0xC2, 0x00, 0x00, 0x02};
 
 
 
-#	ifdef __cplusplus
-}
-#	endif
-
-#endif	// __IEEE802_H__
+#endif	// __IEEE802_C__

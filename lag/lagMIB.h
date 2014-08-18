@@ -28,6 +28,7 @@ extern "C" {
 
 
 #include "lib/binaryTree.h"
+#include "lib/sync.h"
 #include "lib/snmp.h"
 
 #include <stdbool.h>
@@ -50,6 +51,7 @@ void lagMIB_init (void);
 typedef struct lagMIBObjects_t
 {
 	uint32_t u32Dot3adTablesLastChanged;
+	xRwLock_t oLock;
 } lagMIBObjects_t;
 
 extern lagMIBObjects_t oLagMIBObjects;
@@ -57,6 +59,10 @@ extern lagMIBObjects_t oLagMIBObjects;
 #ifdef SNMP_SRC
 Netsnmp_Node_Handler lagMIBObjects_mapper;
 #endif	/* SNMP_SRC */
+
+#define dot3adAgg_rdLock() (xRwLock_rdLock (&oLagMIBObjects.oLock))
+#define dot3adAgg_wrLock() (xRwLock_wrLock (&oLagMIBObjects.oLock))
+#define dot3adAgg_unLock() (xRwLock_unlock (&oLagMIBObjects.oLock))
 
 
 
@@ -762,6 +768,10 @@ enum
 	dot3adAggPortFlags_debugCreated_c,
 	dot3adAggPortFlags_portXCreated_c,
 	dot3adAggPortFlags_count_c,
+	
+	dot3adAggPortSelection_active_c = 1,
+	dot3adAggPortSelection_standby_c = 2,
+	dot3adAggPortSelection_none_c = 3,
 };
 
 typedef struct dot3adAggPortData_t
@@ -777,6 +787,10 @@ typedef struct dot3adAggPortData_t
 	dot3adAggPortXEntry_t oPortX;
 	
 	uint8_t au8Flags[1];
+	int32_t i32OperStatus;
+	bool bFullDuplex;
+	int32_t i32Selection;
+	int32_t i32CollectorMaxDelay;
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oGroup_BTreeNode;
