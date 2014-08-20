@@ -19,23 +19,22 @@
  */
 //set ts=4 sw=4
 
-#ifndef __LAG_EXT_H__
-#	define __LAG_EXT_H__
+#ifndef __LACP_EXT_H__
+#	define __LACP_EXT_H__
 
 #	ifdef __cplusplus
 extern "C" {
 #	endif
 
 
-#define TaskId_lag_c 0
-#define TaskId_lacp_c 1
+#include <stdint.h>
 
 extern void *
-lag_main (
+lacp_main (
 	void *pvArgv);
 
 extern void *
-lag_start (
+lacp_start (
 	void *pvArgv);
 
 
@@ -43,4 +42,4 @@ lag_start (
 }
 #	endif
 
-#endif	// __LAG_EXT_H__
+#endif	// __LACP_EXT_H__

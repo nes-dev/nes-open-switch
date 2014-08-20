@@ -25,6 +25,7 @@
 
 
 #include "lagUtils.h"
+#include "lag/lacp/lacpUtils.h"
 #include "if/ifUtils.h"
 
 #include <stdbool.h>
@@ -39,6 +40,8 @@ bool lagUtilsInit (void)
 	register bool bRetCode = false;
 	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
 	
+	ifTable_wrLock ();
+	
 	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_ieee8023adLag_c)) == NULL)
 	{
 		goto lagUtilsInit_cleanup;
@@ -50,6 +53,7 @@ bool lagUtilsInit (void)
 	
 lagUtilsInit_cleanup:
 	
+	ifTable_unLock ();
 	return bRetCode;
 }
 
@@ -66,7 +70,59 @@ neAggRowStatus_update (
 	neAggEntry_t *poEntry,
 	uint8_t u8RowStatus)
 {
-	return false;
+	register bool bRetCode = false;
+	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (poEntry);
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (!neIfStatus_modify (poDot3adAggData->u32Index, xOperStatus_notPresent_c, true, false))
+		{
+			goto neAggRowStatus_update_cleanup;
+		}
+		
+		/* TODO */
+		
+		if (!dot3adAggLacpStatus_update (poDot3adAggData, u8RowStatus))
+		{
+			goto neAggRowStatus_update_cleanup;
+		}
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!neIfStatus_modify (poDot3adAggData->u32Index, xOperStatus_down_c, true, false))
+		{
+			goto neAggRowStatus_update_cleanup;
+		}
+		
+		/* TODO */
+		
+		if (!dot3adAggLacpStatus_update (poDot3adAggData, u8RowStatus))
+		{
+			goto neAggRowStatus_update_cleanup;
+		}
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!neIfStatus_modify (poDot3adAggData->u32Index, xOperStatus_notPresent_c, true, false))
+		{
+			goto neAggRowStatus_update_cleanup;
+		}
+		
+		/* TODO */
+		
+		if (!dot3adAggLacpStatus_update (poDot3adAggData, u8RowStatus))
+		{
+			goto neAggRowStatus_update_cleanup;
+		}
+		break;
+	}
+	
+	bRetCode = true;
+	
+neAggRowStatus_update_cleanup:
+	
+	return bRetCode;
 }
 
 bool
@@ -74,7 +130,60 @@ neAggPortRowStatus_update (
 	neAggPortEntry_t *poEntry,
 	uint8_t u8RowStatus)
 {
-	return false;
+	register bool bRetCode = false;
+	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortEntry (poEntry);
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		/* TODO */
+		
+		if (!dot3adAggPortLacpStatus_update (poDot3adAggPortData, u8RowStatus))
+		{
+			goto neAggPortRowStatus_update_cleanup;
+		}
+		
+		{
+			ifData_t *poIfData = NULL;
+			
+			if ((poIfData = ifData_getByIndexExt (poDot3adAggPortData->u32Index, true)) == NULL)
+			{
+				goto neAggPortRowStatus_update_cleanup;
+			}
+			
+			xBitmap_setBit (poIfData->oNe.au8AdminFlags, neIfAdminFlags_lag_c, 1);
+			ifData_unLock (poIfData);
+		}
+		break;
+		
+	case xRowStatus_notInService_c:
+	case xRowStatus_destroy_c:
+		/* TODO */
+		
+		{
+			ifData_t *poIfData = NULL;
+			
+			if ((poIfData = ifData_getByIndexExt (poDot3adAggPortData->u32Index, true)) == NULL)
+			{
+				goto neAggPortRowStatus_update_cleanup;
+			}
+			
+			xBitmap_setBit (poIfData->oNe.au8AdminFlags, neIfAdminFlags_lag_c, 0);
+			ifData_unLock (poIfData);
+		}
+		
+		if (!dot3adAggPortLacpStatus_update (poDot3adAggPortData, u8RowStatus))
+		{
+			goto neAggPortRowStatus_update_cleanup;
+		}
+		break;
+	}
+	
+	bRetCode = true;
+	
+neAggPortRowStatus_update_cleanup:
+	
+	return bRetCode;
 }
 
 

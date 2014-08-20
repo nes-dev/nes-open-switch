@@ -19,28 +19,53 @@
  */
 //set ts=4 sw=4
 
-#ifndef __LAG_EXT_H__
-#	define __LAG_EXT_H__
-
-#	ifdef __cplusplus
-extern "C" {
-#	endif
+#ifndef __LACP_MAIN_C__
+#	define __LACP_MAIN_C__
 
 
-#define TaskId_lag_c 0
-#define TaskId_lacp_c 1
+#include "lag_ext.h"
+#include "lacp_ext.h"
+#include "lacp_defines.h"
+#include "switch_ext.h"
+#include "lacpUtils.h"
 
-extern void *
-lag_main (
-	void *pvArgv);
-
-extern void *
-lag_start (
-	void *pvArgv);
+#include "lib/bitmap.h"
+#include "lib/sync.h"
+#include "lib/thread.h"
 
 
-#	ifdef __cplusplus
+static xThreadInfo_t oLacpThread =
+{
+	.u32Index = XTHREAD_ID (ModuleId_lag_c, TaskId_lacp_c),
+	.u8SchedPolicy = SCHED_RR,
+	.u8Priority = 1,
+	.poStart = &lacp_start,
+};
+
+
+void *
+lacp_main (
+	void *pvArgv)
+{
+	if (xThread_create (&oLacpThread) == NULL)
+	{
+		Lacp_log (xLog_err_c, "xThread_create() failed\n");
+		return NULL;
+	}
+	
+	return NULL;
 }
-#	endif
 
-#endif	// __LAG_EXT_H__
+void *
+lacp_start (
+	void *pvArgv)
+{
+	while (1)
+	{
+		xThread_sleep (1);
+	}
+	return NULL;
+}
+
+
+#endif	// __LACP_MAIN_C__

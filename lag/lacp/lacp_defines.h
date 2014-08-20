@@ -19,28 +19,25 @@
  */
 //set ts=4 sw=4
 
-#ifndef __LAG_EXT_H__
-#	define __LAG_EXT_H__
+#ifndef __LACP_DEFINES_H__
+#	define __LACP_DEFINES_H__
 
 #	ifdef __cplusplus
 extern "C" {
 #	endif
 
 
-#define TaskId_lag_c 0
-#define TaskId_lacp_c 1
+#include "lib/common.h"
 
-extern void *
-lag_main (
-	void *pvArgv);
+#define LOG_TIME_USED
+#include "lib/log.h"
 
-extern void *
-lag_start (
-	void *pvArgv);
+#define MOD_NAME "LACP"
+#define Lacp_log(_pri, _frmt, _args ...) xLog_str (MOD_NAME, _pri, _frmt, ## _args)
 
 
 #	ifdef __cplusplus
 }
 #	endif
 
-#endif	// __LAG_EXT_H__
+#endif	// __LACP_DEFINES_H__

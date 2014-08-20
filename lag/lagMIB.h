@@ -820,6 +820,28 @@ dot3adAggPortData_t * dot3adAggPortData_Group_getNextIndex (
 #define dot3adAggPortData_getByPortXEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oPortX))
 void dot3adAggPortData_removeEntry (dot3adAggPortData_t *poEntry);
 
+inline void
+	dot3adAggPortData_zeroOperState (dot3adAggPortData_t *poEntry)
+{
+	poEntry->oPort.i32ActorOperKey = 0;
+	poEntry->oPort.i32PartnerOperSystemPriority = 0;
+	memset (poEntry->oPort.au8PartnerOperSystemID, 0, sizeof (poEntry->oPort.au8PartnerOperSystemID));
+	poEntry->oPort.u16PartnerOperSystemID_len = 0;
+	poEntry->oPort.i32PartnerOperKey = 0;
+	poEntry->oPort.u32SelectedAggID = 0;
+	poEntry->oPort.u32AttachedAggID = 0;
+	poEntry->oPort.i32PartnerOperPort = 0;
+	poEntry->oPort.i32PartnerOperPortPriority = 0;
+	memset (poEntry->oPort.au8ActorOperState, 0, sizeof (poEntry->oPort.au8ActorOperState));
+	poEntry->oPort.u16ActorOperState_len = 0;
+	memset (poEntry->oPort.au8PartnerOperState, 0, sizeof (poEntry->oPort.au8PartnerOperState));
+	poEntry->oPort.u16PartnerOperState_len = 0;
+	
+	memset (&poEntry->oStats, 0, sizeof (poEntry->oStats));
+	memset (&poEntry->oDebug, 0, sizeof (poEntry->oDebug));
+	return;
+}
+
 
 
 #	ifdef __cplusplus

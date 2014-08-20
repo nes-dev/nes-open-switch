@@ -19,28 +19,33 @@
  */
 //set ts=4 sw=4
 
-#ifndef __LAG_EXT_H__
-#	define __LAG_EXT_H__
+#ifndef __LACP_UTILS_H__
+#	define __LACP_UTILS_H__
 
 #	ifdef __cplusplus
 extern "C" {
 #	endif
 
 
-#define TaskId_lag_c 0
-#define TaskId_lacp_c 1
 
-extern void *
-lag_main (
-	void *pvArgv);
+#include "lacp_ext.h"
+#include "lag/lagMIB.h"
 
-extern void *
-lag_start (
-	void *pvArgv);
+#include <stdbool.h>
+
+
+extern bool
+	dot3adAggLacpStatus_update (
+		dot3adAggData_t *poEntry,
+		uint8_t u8RowStatus);
+extern bool
+	dot3adAggPortLacpStatus_update (
+		dot3adAggPortData_t *poEntry,
+		uint8_t u8RowStatus);
 
 
 #	ifdef __cplusplus
 }
 #	endif
 
-#endif	// __LAG_EXT_H__
+#endif	// __LACP_UTILS_H__

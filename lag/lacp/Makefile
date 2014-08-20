@@ -18,9 +18,9 @@
 #*  under the License.
 #*
 
-MODULE := lag
+MODULE := lacp
 MODULE_BIN = ${MODULE}${OBJ_EXT}
-MODULE_TREE := lacp
+MODULE_TREE :=
 
 
 ifneq (${PROJECT_NAME},)
@@ -31,8 +31,8 @@ include ${MK_COMMON}
 
 CFLAGS +=
 
-SNMP_SRC := lagMIB.c
-MODULE_SRC := lag_main.c lagUtils.c ${SNMP_SRC}
+SNMP_SRC :=
+MODULE_SRC := lacp_main.c lacpUtils.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
 
