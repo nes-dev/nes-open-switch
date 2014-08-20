@@ -44,6 +44,16 @@ typedef uint8_t *xBitmap_t;
 
 #	define xBitmask_bitIndex(_bit_offset) ((_bit_offset) & 0x07)
 #	define xBitmask_bitIndexRev(_bit_offset) (~xBitmask_bitIndex (_bit_offset))
+#	define xBitmask_bitRev(_bit_mask) (\
+		(((_bit_mask) & 0x01) << 7) |\
+		(((_bit_mask) & 0x02) << 6) |\
+		(((_bit_mask) & 0x04) << 5) |\
+		(((_bit_mask) & 0x08) << 4) |\
+		(((_bit_mask) & 0x10) << 3) |\
+		(((_bit_mask) & 0x20) << 2) |\
+		(((_bit_mask) & 0x40) << 1) |\
+		(((_bit_mask) & 0x80) << 0)\
+	)
 #	define xBitmap_maskIndex(_bit_offset) ((_bit_offset) >> 3)
 #	define xBitmap_maskCount(_bit_len) (xBitmap_maskIndex (_bit_len) + xBitmask_bitIndex (_bit_len) != 0)
 
@@ -209,6 +219,10 @@ inline void
 	return;
 }
 
+
+extern void
+	xBitmap_copyFromRev (
+		xBitmask_t *poMapDst, xBitmask_t *poMapSrc, uint32_t u32BitStart, uint32_t u32BitEnd);
 
 
 #	define xBitmap_scanEq(_map1, _map2, _bit_len, _bit_idx) \
