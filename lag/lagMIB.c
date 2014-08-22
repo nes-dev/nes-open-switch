@@ -1058,8 +1058,8 @@ dot3adAggPortData_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32OperStatus = xOperStatus_notPresent_c;
-	poEntry->i32Selection = dot3adAggPortSelection_none_c;
+	poEntry->u8OperStatus = xOperStatus_notPresent_c;
+	poEntry->u8Selection = dot3adAggPortSelection_none_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
 	return poEntry;

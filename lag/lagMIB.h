@@ -787,9 +787,9 @@ typedef struct dot3adAggPortData_t
 	dot3adAggPortXEntry_t oPortX;
 	
 	uint8_t au8Flags[1];
-	int32_t i32OperStatus;
+	uint8_t u8OperStatus;
 	bool bFullDuplex;
-	int32_t i32Selection;
+	uint8_t u8Selection;
 	int32_t i32CollectorMaxDelay;
 	
 	xBTree_Node_t oBTreeNode;

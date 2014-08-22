@@ -37,6 +37,14 @@ extern void *
 lacp_start (
 	void *pvArgv);
 
+typedef struct lacpMessage_Pdu_t
+{
+	uint32_t u32IfIndex;
+	uint8_t u8Type;
+	void *pvData;
+	uint16_t u16Length;
+} lacpMessage_Pdu_t;
+
 
 #	ifdef __cplusplus
 }

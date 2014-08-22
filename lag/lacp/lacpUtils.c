@@ -40,6 +40,8 @@
 
 static bool
 	dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry);
+static bool
+	dot3adAggPortLacp_rxInit (dot3adAggPortData_t *poEntry);
 
 
 bool
@@ -189,6 +191,67 @@ dot3adAggPortLacp_lacpPduTx_cleanup:
 	return bRetCode;
 }
 
+bool
+dot3adAggPortLacp_rxInit (dot3adAggPortData_t *poEntry)
+{
+	xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_expired_c, 1);
+	xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_synchronization_c, 0);
+	xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_lacpTimeout_c, 0);
+	
+	/* TODO */
+	
+	return true;
+}
+
+void
+dot3adAggPortLacp_processPduRx (lacpMessage_Pdu_t *pMessage)
+{
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	
+	if (pMessage == NULL ||
+		(pMessage->u8Type != IeeeSlowProtocolsType_lacp_c && pMessage->u8Type != IeeeSlowProtocolsType_marker_c))
+	{
+		goto dot3adAggPortLacp_processPduRx_cleanup;
+	}
+	
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (pMessage->u32IfIndex)) == NULL)
+	{
+		goto dot3adAggPortLacp_processPduRx_cleanup;
+	}
+	
+	if (poDot3adAggPortData->u8OperStatus != xOperStatus_up_c ||
+		!poDot3adAggPortData->bFullDuplex)
+	{
+		goto dot3adAggPortLacp_processPduRx_cleanup;
+	}
+	
+	
+	switch (pMessage->u8Type)
+	{
+	default:
+		poDot3adAggPortData->oStats.u32UnknownRx++;
+		goto dot3adAggPortLacp_processPduRx_cleanup;
+		
+	case IeeeSlowProtocolsType_lacp_c:
+		/* TODO */
+		poDot3adAggPortData->oStats.u32LACPDUsRx++;
+		break;
+		
+	case IeeeSlowProtocolsType_marker_c:
+		/* TODO */
+		poDot3adAggPortData->oStats.u32MarkerPDUsRx++;
+// 		poDot3adAggPortData->oStats.u32MarkerResponsePDUsRx++;
+		break;
+	}
+	
+dot3adAggPortLacp_processPduRx_cleanup:
+	
+	if (pMessage->pvData != NULL)
+	{
+		free (pMessage->pvData);
+	}
+	return;
+}
 
 
 #endif	// __LACP_UTILS_C__
