@@ -19,14 +19,14 @@
  */
 //set ts=4 sw=4
 
-#ifndef __ETHERNETUTILS_C__
-#	define __ETHERNETUTILS_C__
+#ifndef __ETHERNET_UTILS_C__
+#	define __ETHERNET_UTILS_C__
 
 
 
 #include "ethernetUtils.h"
 #include "ieee8021BridgeMib.h"
-#include "bridge/ieee8021QBridgeMib.h"
+#include "ieee8021QBridgeMib.h"
 #include "if/ifUtils.h"
 #include "if/ifMIB.h"
 #include "hal/halEthernet.h"
@@ -45,6 +45,8 @@ bool ethernetUtilsInit (void)
 	register bool bRetCode = false;
 	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
 	
+	ifTable_wrLock ();
+	
 	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_ethernetCsmacd_c)) == NULL)
 	{
 		goto ethernetUtilsInit_cleanup;
@@ -56,8 +58,10 @@ bool ethernetUtilsInit (void)
 	
 ethernetUtilsInit_cleanup:
 	
+	ifTable_unLock ();
 	return bRetCode;
 }
+
 
 bool
 ethernet_enableModify (
@@ -154,4 +158,4 @@ ieee8021BridgeDot1dPortRowStatus_update (
 
 
 
-#endif	// __ETHERNETUTILS_C__
+#endif	// __ETHERNET_UTILS_C__

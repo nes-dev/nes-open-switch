@@ -246,7 +246,7 @@ ieee8021QBridgeTable_getByIndex (
 	register ieee8021QBridgeEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -6344,7 +6344,7 @@ ieee8021QBridgeLearningConstraintDefaultsTable_getByIndex (
 	register ieee8021QBridgeLearningConstraintDefaultsEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021QBridgeLearningConstraintDefaultsEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}

@@ -23,7 +23,6 @@
 #	define __BRIDGE_MAIN_C__
 
 
-#include "ieee8021QBridgeMib_agent.h"
 #include "ieee8021PbMib_agent.h"
 #include "ieee8021PbbMib_agent.h"
 #include "ieee8021PbbTeMib_agent.h"
@@ -51,7 +50,6 @@ void *
 bridge_main (
 	void *pvArgv)
 {
-	ieee8021QBridgeMib_init ();
 	ieee8021PbMib_init ();
 	ieee8021PbbMib_init ();
 	ieee8021PbbTeMib_init ();

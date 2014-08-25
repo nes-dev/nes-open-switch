@@ -24,6 +24,7 @@
 
 
 #include "ieee8021BridgeMib_agent.h"
+#include "ieee8021QBridgeMib_agent.h"
 #include "ethernetUtils.h"
 
 #include "switch_ext.h"
@@ -52,6 +53,7 @@ ethernet_main (
 	ethernetUtilsInit ();
 	
 	ieee8021BridgeMib_init ();
+	ieee8021QBridgeMib_init ();
 	
 	if (xThread_create (&oEthernetThread) == NULL)
 	{
