@@ -36,7 +36,6 @@
 
 static oid ieee8021CfmV2Mib_oid[] = {1,3,111,2,802,1,1,7};
 
-/* array length = OID_LENGTH + 1 */
 static oid ieee8021CfmStackTable_oid[] = {1,3,111,2,802,1,1,8,1,1,2};
 static oid ieee8021CfmDefaultMdTable_oid[] = {1,3,111,2,802,1,1,8,1,2,5};
 static oid ieee8021CfmVlanTable_oid[] = {1,3,111,2,802,1,1,8,1,3,2};

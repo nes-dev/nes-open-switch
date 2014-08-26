@@ -37,7 +37,6 @@
 static oid udp_oid[] = {1,3,6,1,2,1,7};
 static oid udpMIB_oid[] = {1,3,6,1,2,1,50};
 
-/* array length = OID_LENGTH + 1 */
 static oid udpEndpointTable_oid[] = {1,3,6,1,2,1,7,7};
 
 

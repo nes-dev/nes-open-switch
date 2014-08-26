@@ -42,8 +42,7 @@
 static oid ip_oid[] = {1,3,6,1,2,1,4};
 static oid ipMIB_oid[] = {1,3,6,1,2,1,48};
 
-/* array length = OID_LENGTH + 1 */
-static oid ipTrafficStats_oid[] = {1,3,6,1,2,1,4,31,2};
+static oid ipTrafficStats_oid[] = {1,3,6,1,2,1,4,31};
 
 static oid ipv4InterfaceTable_oid[] = {1,3,6,1,2,1,4,28};
 static oid ipv6InterfaceTable_oid[] = {1,3,6,1,2,1,4,30};
@@ -85,7 +84,7 @@ ipMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"ipTrafficStats_mapper", &ipTrafficStats_mapper,
-			ipTrafficStats_oid, OID_LENGTH (ipTrafficStats_oid) - 1,
+			ipTrafficStats_oid, OID_LENGTH (ipTrafficStats_oid),
 			HANDLER_CAN_RONLY
 		),
 		IPIFSTATSTABLELASTCHANGE,

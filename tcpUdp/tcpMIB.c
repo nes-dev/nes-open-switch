@@ -37,7 +37,6 @@
 static oid tcp_oid[] = {1,3,6,1,2,1,6};
 static oid tcpMIB_oid[] = {1,3,6,1,2,1,49};
 
-/* array length = OID_LENGTH + 1 */
 static oid tcpConnectionTable_oid[] = {1,3,6,1,2,1,6,19};
 static oid tcpListenerTable_oid[] = {1,3,6,1,2,1,6,20};
 

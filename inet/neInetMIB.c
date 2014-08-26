@@ -42,9 +42,8 @@
 
 static oid neInetMIB_oid[] = {1,3,6,1,4,1,36969,53};
 
-/* array length = OID_LENGTH + 1 */
-static oid neInetScalars_oid[] = {1,3,6,1,4,1,36969,53,1,1,1};
-static oid neIpScalars_oid[] = {1,3,6,1,4,1,36969,53,3,1,1};
+static oid neInetScalars_oid[] = {1,3,6,1,4,1,36969,53,1,1};
+static oid neIpScalars_oid[] = {1,3,6,1,4,1,36969,53,3,1};
 
 static oid neInetInterfaceTable_oid[] = {1,3,6,1,4,1,36969,53,1,2};
 static oid neInetIntRouteTable_oid[] = {1,3,6,1,4,1,36969,53,1,3};
@@ -71,7 +70,7 @@ neInetMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"neInetScalars_mapper", &neInetScalars_mapper,
-			neInetScalars_oid, OID_LENGTH (neInetScalars_oid) - 1,
+			neInetScalars_oid, OID_LENGTH (neInetScalars_oid),
 			HANDLER_CAN_RWRITE
 		),
 		NEINETFORWARDINGENABLE,
@@ -82,7 +81,7 @@ neInetMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"neIpScalars_mapper", &neIpScalars_mapper,
-			neIpScalars_oid, OID_LENGTH (neIpScalars_oid) - 1,
+			neIpScalars_oid, OID_LENGTH (neIpScalars_oid),
 			HANDLER_CAN_RWRITE
 		),
 		NEIPASN,

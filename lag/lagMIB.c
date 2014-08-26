@@ -40,8 +40,7 @@
 static oid lagMIB_oid[] = {1,2,840,10006,300,43};
 static oid neLagMIB_oid[] = {1,3,6,1,4,1,36969,71};
 
-/* array length = OID_LENGTH + 1 */
-static oid lagMIBObjects_oid[] = {1,2,840,10006,300,43,1,3};
+static oid lagMIBObjects_oid[] = {1,2,840,10006,300,43,1};
 
 static oid dot3adAggTable_oid[] = {1,2,840,10006,300,43,1,1,1};
 static oid dot3adAggPortListTable_oid[] = {1,2,840,10006,300,43,1,1,2};
@@ -71,7 +70,7 @@ lagMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"lagMIBObjects_mapper", &lagMIBObjects_mapper,
-			lagMIBObjects_oid, OID_LENGTH (lagMIBObjects_oid) - 1,
+			lagMIBObjects_oid, OID_LENGTH (lagMIBObjects_oid),
 			HANDLER_CAN_RONLY
 		),
 		DOT3ADTABLESLASTCHANGED,

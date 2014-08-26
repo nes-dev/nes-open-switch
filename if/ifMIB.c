@@ -44,8 +44,7 @@ static oid interfaces_oid[] = {1,3,6,1,2,1,2};
 static oid ifMIB_oid[] = {1,3,6,1,2,1,31};
 static oid neIfMIB_oid[] = {1,3,6,1,4,1,36969,61};
 
-/* array length = OID_LENGTH + 1 */
-static oid ifMIBObjects_oid[] = {1,3,6,1,2,1,31,1,5};
+static oid ifMIBObjects_oid[] = {1,3,6,1,2,1,31,1};
 
 static oid ifTable_oid[] = {1,3,6,1,2,1,2,2};
 static oid ifXTable_oid[] = {1,3,6,1,2,1,31,1,1};
@@ -88,7 +87,7 @@ ifMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"ifMIBObjects_mapper", &ifMIBObjects_mapper,
-			ifMIBObjects_oid, OID_LENGTH (ifMIBObjects_oid) - 1,
+			ifMIBObjects_oid, OID_LENGTH (ifMIBObjects_oid),
 			HANDLER_CAN_RONLY
 		),
 		IFTABLELASTCHANGE,

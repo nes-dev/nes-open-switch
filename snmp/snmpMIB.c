@@ -41,12 +41,11 @@ static oid snmpUsmMIB_oid[] = {1,3,6,1,6,3,15};
 static oid snmpVacmMIB_oid[] = {1,3,6,1,6,3,16};
 static oid snmpCommunityMIB_oid[] = {1,3,6,1,6,3,18};
 
-/* array length = OID_LENGTH + 1 */
-static oid snmpSet_oid[] = {1,3,6,1,6,3,1,1,6,1};
-static oid snmpTargetObjects_oid[] = {1,3,6,1,6,3,12,1,1};
-static oid usmStats_oid[] = {1,3,6,1,6,3,15,1,1,1};
-static oid usmUser_oid[] = {1,3,6,1,6,3,15,1,2,1};
-static oid vacmMIBViews_oid[] = {1,3,6,1,6,3,16,1,5,1};
+static oid snmpSet_oid[] = {1,3,6,1,6,3,1,1,6};
+static oid snmpTargetObjects_oid[] = {1,3,6,1,6,3,12,1};
+static oid usmStats_oid[] = {1,3,6,1,6,3,15,1,1};
+static oid usmUser_oid[] = {1,3,6,1,6,3,15,1,2};
+static oid vacmMIBViews_oid[] = {1,3,6,1,6,3,16,1,5};
 
 static oid snmpTargetAddrTable_oid[] = {1,3,6,1,6,3,12,1,2};
 static oid snmpTargetParamsTable_oid[] = {1,3,6,1,6,3,12,1,3};
@@ -93,7 +92,7 @@ snmpMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"snmpSet_mapper", &snmpSet_mapper,
-			snmpSet_oid, OID_LENGTH (snmpSet_oid) - 1,
+			snmpSet_oid, OID_LENGTH (snmpSet_oid),
 			HANDLER_CAN_RWRITE
 		),
 		SNMPSETSERIALNO,
@@ -104,7 +103,7 @@ snmpMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"snmpTargetObjects_mapper", &snmpTargetObjects_mapper,
-			snmpTargetObjects_oid, OID_LENGTH (snmpTargetObjects_oid) - 1,
+			snmpTargetObjects_oid, OID_LENGTH (snmpTargetObjects_oid),
 			HANDLER_CAN_RWRITE
 		),
 		SNMPTARGETSPINLOCK,
@@ -115,7 +114,7 @@ snmpMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"usmStats_mapper", &usmStats_mapper,
-			usmStats_oid, OID_LENGTH (usmStats_oid) - 1,
+			usmStats_oid, OID_LENGTH (usmStats_oid),
 			HANDLER_CAN_RONLY
 		),
 		USMSTATSUNSUPPORTEDSECLEVELS,
@@ -126,7 +125,7 @@ snmpMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"usmUser_mapper", &usmUser_mapper,
-			usmUser_oid, OID_LENGTH (usmUser_oid) - 1,
+			usmUser_oid, OID_LENGTH (usmUser_oid),
 			HANDLER_CAN_RWRITE
 		),
 		USMUSERSPINLOCK,
@@ -137,7 +136,7 @@ snmpMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"vacmMIBViews_mapper", &vacmMIBViews_mapper,
-			vacmMIBViews_oid, OID_LENGTH (vacmMIBViews_oid) - 1,
+			vacmMIBViews_oid, OID_LENGTH (vacmMIBViews_oid),
 			HANDLER_CAN_RWRITE
 		),
 		VACMVIEWSPINLOCK,

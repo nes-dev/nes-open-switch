@@ -36,10 +36,9 @@
 
 static oid clns_oid[] = {1,3,6,1,3,1};
 
-/* array length = OID_LENGTH + 1 */
-static oid clnp_oid[] = {1,3,6,1,3,1,1,1};
-static oid error_oid[] = {1,3,6,1,3,1,2,1};
-static oid esis_oid[] = {1,3,6,1,3,1,4,1};
+static oid clnp_oid[] = {1,3,6,1,3,1,1};
+static oid error_oid[] = {1,3,6,1,3,1,2};
+static oid esis_oid[] = {1,3,6,1,3,1,4};
 
 static oid clnpAddrTable_oid[] = {1,3,6,1,3,1,1,21};
 static oid clnpRoutingTable_oid[] = {1,3,6,1,3,1,1,22};
@@ -65,7 +64,7 @@ clnsMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"clnp_mapper", &clnp_mapper,
-			clnp_oid, OID_LENGTH (clnp_oid) - 1,
+			clnp_oid, OID_LENGTH (clnp_oid),
 			HANDLER_CAN_RWRITE
 		),
 		CLNPFORWARDING,
@@ -76,7 +75,7 @@ clnsMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"error_mapper", &error_mapper,
-			error_oid, OID_LENGTH (error_oid) - 1,
+			error_oid, OID_LENGTH (error_oid),
 			HANDLER_CAN_RONLY
 		),
 		CLNPINERRORS,
@@ -87,7 +86,7 @@ clnsMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"esis_mapper", &esis_mapper,
-			esis_oid, OID_LENGTH (esis_oid) - 1,
+			esis_oid, OID_LENGTH (esis_oid),
 			HANDLER_CAN_RONLY
 		),
 		ESISESHINS,

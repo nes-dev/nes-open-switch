@@ -36,9 +36,8 @@
 
 static oid ieee8021CfmMib_oid[] = {1,3,111,2,802,1,1,8};
 
-/* array length = OID_LENGTH + 1 */
-static oid dot1agCfmDefaultMd_oid[] = {1,3,111,2,802,1,1,8,1,2,1};
-static oid dot1agCfmMd_oid[] = {1,3,111,2,802,1,1,8,1,5,1};
+static oid dot1agCfmDefaultMd_oid[] = {1,3,111,2,802,1,1,8,1,2};
+static oid dot1agCfmMd_oid[] = {1,3,111,2,802,1,1,8,1,5};
 
 static oid dot1agCfmMdTable_oid[] = {1,3,111,2,802,1,1,8,1,5,2};
 static oid dot1agCfmMaNetTable_oid[] = {1,3,111,2,802,1,1,8,1,6,1};
@@ -69,7 +68,7 @@ ieee8021CfmMib_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"dot1agCfmDefaultMd_mapper", &dot1agCfmDefaultMd_mapper,
-			dot1agCfmDefaultMd_oid, OID_LENGTH (dot1agCfmDefaultMd_oid) - 1,
+			dot1agCfmDefaultMd_oid, OID_LENGTH (dot1agCfmDefaultMd_oid),
 			HANDLER_CAN_RWRITE
 		),
 		DOT1AGCFMDEFAULTMDDEFLEVEL,
@@ -80,7 +79,7 @@ ieee8021CfmMib_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"dot1agCfmMd_mapper", &dot1agCfmMd_mapper,
-			dot1agCfmMd_oid, OID_LENGTH (dot1agCfmMd_oid) - 1,
+			dot1agCfmMd_oid, OID_LENGTH (dot1agCfmMd_oid),
 			HANDLER_CAN_RONLY
 		),
 		DOT1AGCFMMDTABLENEXTINDEX,

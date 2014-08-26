@@ -38,8 +38,7 @@
 
 static oid ieee8021QBridgeMib_oid[] = {1,3,111,2,802,1,1,4};
 
-/* array length = OID_LENGTH + 1 */
-static oid ieee8021QBridgeVlan_oid[] = {1,3,111,2,802,1,1,4,1,4,1};
+static oid ieee8021QBridgeVlan_oid[] = {1,3,111,2,802,1,1,4,1,4};
 
 static oid ieee8021QBridgeTable_oid[] = {1,3,111,2,802,1,1,4,1,1,1};
 static oid ieee8021QBridgeCVlanPortTable_oid[] = {1,3,111,2,802,1,1,4,1,1,2};
@@ -79,7 +78,7 @@ ieee8021QBridgeMib_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"ieee8021QBridgeVlan_mapper", &ieee8021QBridgeVlan_mapper,
-			ieee8021QBridgeVlan_oid, OID_LENGTH (ieee8021QBridgeVlan_oid) - 1,
+			ieee8021QBridgeVlan_oid, OID_LENGTH (ieee8021QBridgeVlan_oid),
 			HANDLER_CAN_RONLY
 		),
 		IEEE8021QBRIDGEVLANNUMDELETES,

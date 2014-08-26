@@ -36,7 +36,6 @@
 
 static oid ipForward_oid[] = {1,3,6,1,2,1,4,24};
 
-/* array length = OID_LENGTH + 1 */
 static oid inetCidrRouteTable_oid[] = {1,3,6,1,2,1,4,24,7};
 
 

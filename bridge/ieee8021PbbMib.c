@@ -36,8 +36,7 @@
 
 static oid ieee8021PbbMib_oid[] = {1,3,111,2,802,1,1,9};
 
-/* array length = OID_LENGTH + 1 */
-static oid ieee8021PbbBackboneEdgeBridgeObjects_oid[] = {1,3,111,2,802,1,1,9,1,1,1,1};
+static oid ieee8021PbbBackboneEdgeBridgeObjects_oid[] = {1,3,111,2,802,1,1,9,1,1,1};
 
 static oid ieee8021PbbVipTable_oid[] = {1,3,111,2,802,1,1,9,1,1,2};
 static oid ieee8021PbbISidToVipTable_oid[] = {1,3,111,2,802,1,1,9,1,1,3};
@@ -66,7 +65,7 @@ ieee8021PbbMib_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"ieee8021PbbBackboneEdgeBridgeObjects_mapper", &ieee8021PbbBackboneEdgeBridgeObjects_mapper,
-			ieee8021PbbBackboneEdgeBridgeObjects_oid, OID_LENGTH (ieee8021PbbBackboneEdgeBridgeObjects_oid) - 1,
+			ieee8021PbbBackboneEdgeBridgeObjects_oid, OID_LENGTH (ieee8021PbbBackboneEdgeBridgeObjects_oid),
 			HANDLER_CAN_RWRITE
 		),
 		IEEE8021PBBBACKBONEEDGEBRIDGEADDRESS,
