@@ -300,15 +300,35 @@ ifData_removeEntry (ifData_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfData_BTree);
+	xRwLock_destroy (&poEntry->oLock);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
-ifData_t * 
+bool
 ifData_getByIndexExt (
-	uint32_t u32Index, bool bWrLock)
+	uint32_t u32Index, bool bWrLock,
+	ifData_t **ppoIfData)
 {
-	return NULL;
+	register ifData_t *poIfData = NULL;
+	
+	ifTable_rdLock ();
+	
+	if ((poIfData = ifData_getByIndex (u32Index)) == NULL)
+	{
+		goto ifData_getByIndexExt_cleanup;
+	}
+	
+	if (ppoIfData != NULL)
+	{
+		bWrLock ? ifData_wrLock (poIfData): ifData_rdLock (poIfData);
+		*ppoIfData = poIfData;
+	}
+	
+ifData_getByIndexExt_cleanup:
+	
+	ifTable_unLock ();
+	return poIfData != NULL;
 }
 
 bool
@@ -418,11 +438,16 @@ ifData_removeReference (
 	}
 	if (bCreate && poIfData->u32NumReferences == 0)
 	{
-		if (!neIfTable_removeExt (&poIfData->oNe))
+		xBTree_nodeRemove (&poIfData->oBTreeNode, &oIfData_BTree);
+		ifData_unLock (poIfData);
+		
+		register ifData_t *poTmpIfData = poIfData;
+		
+		poIfData = NULL;
+		if (!neIfTable_removeExt (&poTmpIfData->oNe))
 		{
 			goto ifData_removeReference_cleanup;
 		}
-		poIfData = NULL;
 	}
 	
 ifData_removeReference_success:

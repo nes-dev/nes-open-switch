@@ -146,7 +146,7 @@ neAggPortRowStatus_update (
 		{
 			ifData_t *poIfData = NULL;
 			
-			if ((poIfData = ifData_getByIndexExt (poDot3adAggPortData->u32Index, true)) == NULL)
+			if (!ifData_getByIndexExt (poDot3adAggPortData->u32Index, true, &poIfData))
 			{
 				goto neAggPortRowStatus_update_cleanup;
 			}
@@ -163,7 +163,7 @@ neAggPortRowStatus_update (
 		{
 			ifData_t *poIfData = NULL;
 			
-			if ((poIfData = ifData_getByIndexExt (poDot3adAggPortData->u32Index, true)) == NULL)
+			if (!ifData_getByIndexExt (poDot3adAggPortData->u32Index, true, &poIfData))
 			{
 				goto neAggPortRowStatus_update_cleanup;
 			}

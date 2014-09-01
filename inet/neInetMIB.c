@@ -503,7 +503,7 @@ neInetInterfaceTable_createExt (
 {
 	neInetInterfaceEntry_t *poEntry = NULL;
 	
-	if (ifData_getByIndexExt (u32IfIndex, false) == NULL)
+	if (!ifData_getByIndexExt (u32IfIndex, false, NULL))
 	{
 		return NULL;
 	}
@@ -2224,7 +2224,7 @@ neIpUnNumTable_createExt (
 {
 	neIpUnNumEntry_t *poEntry = NULL;
 	
-	if (ifData_getByIndexExt (u32IfIndex, false) == NULL)
+	if (!ifData_getByIndexExt (u32IfIndex, false, NULL))
 	{
 		goto neIpUnNumTable_createExt_cleanup;
 	}
@@ -2321,7 +2321,7 @@ neIpUnNumRowStatus_handler (
 	neIpUnNumEntry_t *poEntry,
 	int32_t u8RowStatus)
 {
-	if (ifData_getByIndexExt (poEntry->u32IfIndex, false) == NULL)
+	if (!ifData_getByIndexExt (poEntry->u32IfIndex, false, NULL))
 	{
 		goto neIpUnNumRowStatus_handler_cleanup;
 	}

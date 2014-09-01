@@ -1136,8 +1136,9 @@ ifData_t * ifData_getNextIndex (
 #define ifData_getByIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oIf))
 #define ifData_getByIfXEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oIfX))
 void ifData_removeEntry (ifData_t *poEntry);
-ifData_t * ifData_getByIndexExt (
-	uint32_t u32Index, bool bWrLock);
+bool ifData_getByIndexExt (
+	uint32_t u32Index, bool bWrLock,
+	ifData_t **ppoIfData);
 bool ifData_createReference (
 	uint32_t u32IfIndex,
 	int32_t i32Type,
