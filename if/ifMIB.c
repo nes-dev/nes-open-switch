@@ -733,18 +733,19 @@ ifAdminStatus_handler (
 		goto ifAdminStatus_handler_cleanup;
 	}
 	
-	if (poEntry->i32AdminStatus == i32AdminStatus && !bForce)
+	if (poEntry->i32AdminStatus == (i32AdminStatus & xAdminStatus_mask_c) && !bForce)
 	{
 		goto ifAdminStatus_handler_success;
 	}
-	if (poIfData->oNe.u8RowStatus != xRowStatus_active_c && poIfData->oNe.u8RowStatus != xRowStatus_notReady_c)
+	if (poIfData->oNe.u8RowStatus != xRowStatus_active_c && poIfData->oNe.u8RowStatus != xRowStatus_notReady_c &&
+		(i32AdminStatus & ~xAdminStatus_mask_c))
 	{
 		poEntry->i32AdminStatus = i32AdminStatus;
 		goto ifAdminStatus_handler_success;
 	}
 	
 	
-	switch (i32AdminStatus)
+	switch (i32AdminStatus & xAdminStatus_mask_c)
 	{
 	case xAdminStatus_up_c:
 		poEntry->i32AdminStatus = xAdminStatus_up_c;
@@ -761,7 +762,7 @@ ifAdminStatus_handler (
 			goto ifAdminStatus_handler_cleanup;
 		}
 		
-		poEntry->i32AdminStatus = xAdminStatus_down_c;
+		i32AdminStatus & xAdminStatus_fromParent_c ? false: (poEntry->i32AdminStatus = xAdminStatus_down_c);
 		
 		if (!neIfEnable_modify (poIfData, i32AdminStatus & xAdminStatus_mask_c))
 		{
@@ -1004,7 +1005,11 @@ ifTable_mapper (
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32AdminStatus = *request->requestvb->val.integer;
+				if (!ifAdminStatus_handler (table_entry, *request->requestvb->val.integer, false))
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_GENERR);
+					return SNMP_ERR_NOERROR;
+				}
 				break;
 			}
 		}
@@ -1086,7 +1091,7 @@ ifXTable_createEntry (
 	}
 	poEntry = &poIfData->oIfX;
 	
-	poEntry->i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_enabled_c;
+	poEntry->i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_disabled_c;
 	poEntry->i32PromiscuousMode = ifPromiscuousMode_false_c;
 	poEntry->i32ConnectorPresent = ifConnectorPresent_false_c;
 	
@@ -1723,7 +1728,8 @@ ifStackTable_removeHier (
 	return true;
 }
 
-bool ifStackStatus_handler (
+bool
+ifStackStatus_handler (
 	ifStackEntry_t *poEntry,
 	uint8_t u8Status)
 {
@@ -2193,6 +2199,8 @@ ifRcvAddressTable_createRegister (
 		return false;
 	}
 	
+	ifTable_rdLock ();
+	
 	if (ifData_getByIndex (u32Index) != NULL)
 	{
 		goto ifRcvAddressTable_createRegister_cleanup;
@@ -2210,6 +2218,7 @@ ifRcvAddressTable_createRegister (
 	
 ifRcvAddressTable_createRegister_cleanup:
 	
+	ifTable_unLock ();
 	return bRetCode;
 }
 
@@ -2220,6 +2229,8 @@ ifRcvAddressTable_removeRegister (
 {
 	bool bRetCode = false;
 	register ifRcvAddressEntry_t *poEntry = NULL;
+	
+	ifTable_rdLock ();
 	
 	if ((poEntry = ifRcvAddressTable_getByIndex (u32Index, pau8Address, u16Address_len)) == NULL)
 	{
@@ -2239,6 +2250,7 @@ ifRcvAddressTable_removeRegister (
 	
 ifRcvAddressTable_removeRegister_cleanup:
 	
+	ifTable_unLock ();
 	return bRetCode;
 }
 
@@ -2789,13 +2801,18 @@ neIfRowStatus_handler (
 		
 		/* TODO */
 		poEntry->u8RowStatus = xRowStatus_active_c;
+		
+		if (!ifAdminStatus_handler (&poIfData->oIf, poIfData->oIf.i32AdminStatus, true))
+		{
+			goto neIfRowStatus_handler_cleanup;
+		}
 		break;
 	}
 	
 	case xRowStatus_notInService_c:
-		if (poEntry->u8RowStatus == xRowStatus_notInService_c)
+		if (!ifAdminStatus_handler (&poIfData->oIf, xAdminStatus_down_c | xAdminStatus_fromParent_c, false))
 		{
-			goto neIfRowStatus_handler_success;
+			goto neIfRowStatus_handler_cleanup;
 		}
 		
 		/* TODO */
@@ -2811,6 +2828,11 @@ neIfRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
+		if (!ifAdminStatus_handler (&poIfData->oIf, xAdminStatus_down_c | xAdminStatus_fromParent_c, false))
+		{
+			goto neIfRowStatus_handler_cleanup;
+		}
+		
 		/* TODO */
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		break;
