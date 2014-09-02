@@ -39,9 +39,25 @@
 
 
 static bool
-	dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_init (dot3adAggPortData_t *poEntry);
 static bool
+	dot3adAggPortLacp_reset (dot3adAggPortData_t *poEntry);
+
+bool
+	dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry);
+bool
 	dot3adAggPortLacp_rxInit (dot3adAggPortData_t *poEntry);
+static bool
+	dot3adAggPortLacp_lacpPduRx (
+		dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu);
+
+static bool
+	dot3adAggPortLacp_setDefaults (dot3adAggPortData_t *poEntry);
+bool
+	dot3adAggPortLacp_checkPortSelected (
+		dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu);
+bool
+	dot3adAggPortLacp_checkDefaultSelected (dot3adAggPortData_t *poEntry);
 
 
 bool
@@ -80,6 +96,11 @@ dot3adAggPortLacpStatus_update (
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
+		if (!dot3adAggPortLacp_init (poEntry))
+		{
+			goto dot3adAggPortLacpStatus_update_cleanup;
+		}
+		
 		/* TODO */
 		
 		if (xBitmap_getBit (poEntry->oNe.au8Flags, neAggPortFlags_lacp_c))
@@ -95,6 +116,11 @@ dot3adAggPortLacpStatus_update (
 		
 	case xRowStatus_notInService_c:
 	case xRowStatus_destroy_c:
+		if (!dot3adAggPortLacp_reset (poEntry))
+		{
+			goto dot3adAggPortLacpStatus_update_cleanup;
+		}
+		
 		if (xBitmap_getBit (poEntry->oNe.au8Flags, neAggPortFlags_lacp_c))
 		{
 			/* TODO */
@@ -116,6 +142,107 @@ dot3adAggPortLacpStatus_update_cleanup:
 	return bRetCode;
 }
 
+
+bool
+dot3adAggPortLacp_init (dot3adAggPortData_t *poEntry)
+{
+	dot3adAggPortLacp_setDefaults (poEntry);
+	xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_expired_c, 0);
+	
+	poEntry->u8Selection = dot3adAggPortSelection_none_c;
+	
+	return true;
+}
+
+bool
+dot3adAggPortLacp_reset (dot3adAggPortData_t *poEntry)
+{
+	/* TODO */
+	
+	dot3adAggPortData_zeroOperState (poEntry);
+	return true;
+}
+
+bool
+dot3adAggPortLacp_stateUpdate (
+	dot3adAggPortData_t *poEntry, bool bForce)
+{
+	register bool bRetCode = false;
+	
+	xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_synchronization_c, 0);
+	
+	if (poEntry->u8OperStatus != xOperStatus_up_c || !poEntry->bFullDuplex)
+	{
+		dot3adAggPortLacp_setDefaults (poEntry);
+		
+		xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_expired_c, 0);
+		xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_aggregation_c, 0);
+		
+		poEntry->u8Selection = dot3adAggPortSelection_none_c;
+	}
+	else if (!bForce)
+	{
+		if (!dot3adAggPortLacp_rxInit (poEntry))
+		{
+			goto dot3adAggPortLacp_stateUpdate_cleanup;
+		}
+	}
+	
+	bRetCode = true;
+	
+dot3adAggPortLacp_stateUpdate_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+dot3adAggPortLacp_detachAggregator (dot3adAggPortData_t *poEntry)
+{
+	/* TODO */
+	return true;
+}
+
+bool
+dot3adAggPortLacp_attachAggregator (dot3adAggPortData_t *poEntry)
+{
+	/* TODO */
+	return true;
+}
+
+bool
+dot3adAggPortLacp_disableDisxColx (dot3adAggPortData_t *poEntry)
+{
+	/* TODO */
+	return true;
+}
+
+bool
+dot3adAggPortLacp_disableColx (dot3adAggPortData_t *poEntry)
+{
+	/* TODO */
+	return true;
+}
+
+bool
+dot3adAggPortLacp_enableColx (dot3adAggPortData_t *poEntry)
+{
+	/* TODO */
+	return true;
+}
+
+bool
+dot3adAggPortLacp_disableDisx (dot3adAggPortData_t *poEntry)
+{
+	/* TODO */
+	return true;
+}
+
+bool
+dot3adAggPortLacp_enableDisx (dot3adAggPortData_t *poEntry)
+{
+	/* TODO */
+	return true;
+}
 bool
 dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry)
 {
@@ -233,8 +360,10 @@ dot3adAggPortLacp_processPduRx (lacpMessage_Pdu_t *pMessage)
 		goto dot3adAggPortLacp_processPduRx_cleanup;
 		
 	case IeeeSlowProtocolsType_lacp_c:
-		/* TODO */
-		poDot3adAggPortData->oStats.u32LACPDUsRx++;
+		if (!dot3adAggPortLacp_lacpPduRx (poDot3adAggPortData, pMessage->pvData))
+		{
+			goto dot3adAggPortLacp_processPduRx_cleanup;
+		}
 		break;
 		
 	case IeeeSlowProtocolsType_marker_c:
@@ -252,6 +381,55 @@ dot3adAggPortLacp_processPduRx_cleanup:
 	}
 	return;
 }
+
+bool
+dot3adAggPortLacp_lacpPduRx (
+	dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu)
+{
+	return false;
+}
+
+bool
+dot3adAggPortLacp_setDefaults (dot3adAggPortData_t *poEntry)
+{
+	poEntry->oPort.i32PartnerOperSystemPriority = poEntry->oPort.i32PartnerAdminSystemPriority;
+	memcpy (poEntry->oPort.au8PartnerOperSystemID, poEntry->oPort.au8PartnerAdminSystemID, sizeof (poEntry->oPort.au8PartnerOperSystemID));
+	poEntry->oPort.i32PartnerOperKey = poEntry->oPort.i32PartnerAdminKey;
+	poEntry->oPort.i32PartnerOperPortPriority = poEntry->oPort.i32PartnerAdminPortPriority;
+	poEntry->oPort.i32PartnerOperPort = poEntry->oPort.i32PartnerAdminPort;
+	memcpy (poEntry->oPort.au8PartnerOperState, poEntry->oPort.au8PartnerAdminState, sizeof (poEntry->oPort.au8PartnerOperState));
+	
+	xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortActorOperState_defaulted_c, 1);
+	return true;
+}
+
+bool
+dot3adAggPortLacp_checkPortSelected (
+	dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu)
+{
+	return
+		poPdu->oActor.u16PortNumber == poEntry->oPort.i32PartnerOperPort &&
+		poPdu->oActor.u16PortPriority == poEntry->oPort.i32PartnerOperPortPriority &&
+		memcmp (poPdu->oActor.oSystemAddress, poEntry->oPort.au8PartnerOperSystemID, sizeof (poPdu->oActor.oSystemAddress)) == 0 &&
+		poPdu->oActor.u16SystemPriority == poEntry->oPort.i32PartnerOperSystemPriority &&
+		poPdu->oActor.u16Key == poEntry->oPort.i32PartnerOperKey &&
+		(xBitmap_getBit (poPdu->oActor.au8State, dot3adAggPortState_aggregation_c) != 0) ==
+			(xBitmap_getBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_aggregation_c) != 0);
+}
+
+bool
+dot3adAggPortLacp_checkDefaultSelected (dot3adAggPortData_t *poEntry)
+{
+	return
+		poEntry->oPort.i32PartnerAdminPort == poEntry->oPort.i32PartnerOperPort &&
+		poEntry->oPort.i32PartnerAdminPortPriority == poEntry->oPort.i32PartnerOperPortPriority &&
+		memcmp (poEntry->oPort.au8PartnerAdminSystemID, poEntry->oPort.au8PartnerOperSystemID, sizeof (poEntry->oPort.au8PartnerAdminSystemID)) == 0 &&
+		poEntry->oPort.i32PartnerAdminSystemPriority == poEntry->oPort.i32PartnerOperSystemPriority &&
+		poEntry->oPort.i32PartnerAdminKey == poEntry->oPort.i32PartnerOperKey &&
+		(xBitmap_getBitRev (poEntry->oPort.au8PartnerAdminState, dot3adAggPortState_aggregation_c) != 0) ==
+			(xBitmap_getBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_aggregation_c) != 0);
+}
+
 
 
 #endif	// __LACP_UTILS_C__

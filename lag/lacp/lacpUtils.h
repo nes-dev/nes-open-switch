@@ -43,6 +43,9 @@ extern bool
 		dot3adAggPortData_t *poEntry,
 		uint8_t u8RowStatus);
 
+extern bool
+	dot3adAggPortLacp_stateUpdate (dot3adAggPortData_t *poEntry, bool bForce);
+
 
 #	ifdef __cplusplus
 }
