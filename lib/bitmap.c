@@ -47,7 +47,32 @@ xBitmap_copyFromRev (
 		}
 		else
 		{
-			poMapDst[u16MaskIdx] = (poMapDst[u16MaskIdx] & ~xBitmask_bitMask (u16BitIdx)) | (((poMapSrc[u16MaskIdx] & xBitmask_bitMaskRev (u16BitIdx)) != 0) << xBitmask_bitIndex (u16BitIdx));
+			poMapDst[u16MaskIdx] = (poMapDst[u16MaskIdx] & ~xBitmask_bitMask (u16BitIdx)) |
+								   (((poMapSrc[u16MaskIdx] & xBitmask_bitMaskRev (u16BitIdx)) != 0) << xBitmask_bitIndex (u16BitIdx));
+		}
+	}
+	
+	return;
+}
+
+void
+xBitmap_copyToRev (
+	xBitmask_t *poMapDst, xBitmask_t *poMapSrc, uint32_t u32BitStart, uint32_t u32BitEnd)
+{
+	for (register uint16_t u16BitIdx = u32BitStart; u16BitIdx <= u32BitEnd; u16BitIdx++)\
+	{
+		register uint16_t u16MaskIdx = xBitmap_maskIndex (u16BitIdx);
+		
+		if (
+			xBitmask_bitIndex (u16BitIdx) == 0 &&
+			u16BitIdx + xBitmask_length_c - 1 <= u32BitEnd)
+		{
+			poMapDst[u16MaskIdx] = xBitmask_bitRev (poMapSrc[u16MaskIdx]);
+		}
+		else
+		{
+			poMapDst[u16MaskIdx] = (poMapDst[u16MaskIdx] & ~xBitmask_bitMaskRev (u16BitIdx)) |
+								   (((poMapSrc[u16MaskIdx] & xBitmask_bitMask (u16BitIdx)) != 0) << xBitmask_bitIndexRev (u16BitIdx));
 		}
 	}
 	

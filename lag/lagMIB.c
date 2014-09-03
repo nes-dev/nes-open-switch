@@ -33,6 +33,8 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 

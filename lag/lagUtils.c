@@ -64,6 +64,34 @@ lag_aggEnableModify (
 	return false;
 }
 
+bool
+lag_portStatusModify (
+	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+{
+	register bool bRetCode = false;
+	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	
+	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (poIfEntry->u32Index)) == NULL)
+	{
+		goto lag_portStatusModify_cleanup;
+	}
+	
+	register bool bForce = poDot3adAggPortData->u8OperStatus == i32OperStatus && bPropagate;
+	
+	poDot3adAggPortData->u8OperStatus = i32OperStatus;
+	
+	if (!dot3adAggPortLacp_stateUpdate (poDot3adAggPortData, bForce))
+	{
+		goto lag_portStatusModify_cleanup;
+	}
+	
+	bRetCode = true;
+	
+lag_portStatusModify_cleanup:
+	
+	return bRetCode;
+}
+
 
 bool
 neAggRowStatus_update (

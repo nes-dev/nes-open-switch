@@ -770,8 +770,14 @@ enum
 	dot3adAggPortFlags_count_c,
 	
 	dot3adAggPortSelection_active_c = 1,
-	dot3adAggPortSelection_standby_c = 2,
-	dot3adAggPortSelection_none_c = 3,
+	dot3adAggPortSelection_standby_c,
+	dot3adAggPortSelection_none_c,
+	
+	dot3adAggPortAggState_detached_c = 1,
+	dot3adAggPortAggState_waiting_c,
+	dot3adAggPortAggState_attached_c,
+	dot3adAggPortAggState_collecting_c,
+	dot3adAggPortAggState_distributing_c,
 };
 
 typedef struct dot3adAggPortData_t
@@ -791,6 +797,7 @@ typedef struct dot3adAggPortData_t
 	bool bFullDuplex;
 	uint8_t u8Selection;
 	int32_t i32CollectorMaxDelay;
+	uint8_t u8AggState;
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oGroup_BTreeNode;

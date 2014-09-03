@@ -223,6 +223,9 @@ inline void
 extern void
 	xBitmap_copyFromRev (
 		xBitmask_t *poMapDst, xBitmask_t *poMapSrc, uint32_t u32BitStart, uint32_t u32BitEnd);
+extern void
+	xBitmap_copyToRev (
+		xBitmask_t *poMapDst, xBitmask_t *poMapSrc, uint32_t u32BitStart, uint32_t u32BitEnd);
 
 
 #	define xBitmap_scanEq(_map1, _map2, _bit_len, _bit_idx) \
