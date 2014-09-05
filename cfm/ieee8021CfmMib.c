@@ -26,6 +26,7 @@
 #include "system/systemMIB.h"
 #include "ieee8021CfmMib.h"
 
+#include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
@@ -365,9 +366,9 @@ dot1agCfmMdEntry_t *
 dot1agCfmMdTable_createEntry (
 	uint32_t u32Index)
 {
-	dot1agCfmMdEntry_t *poEntry = NULL;
+	register dot1agCfmMdEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot1agCfmMdEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -397,7 +398,7 @@ dot1agCfmMdTable_getByIndex (
 	register dot1agCfmMdEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmMdEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -420,7 +421,7 @@ dot1agCfmMdTable_getNextIndex (
 	register dot1agCfmMdEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmMdEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -941,7 +942,22 @@ dot1agCfmMaNetTable_BTreeNodeCmp (
 		(pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex == pEntry2->u32MaIndex) ? 0: 1;
 }
 
+static int8_t
+dot1agCfmMaNetTable_Meg_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register dot1agCfmMaNetEntry_t *pEntry1 = xBTree_entry (pNode1, dot1agCfmMaNetEntry_t, oBTreeNode);
+	register dot1agCfmMaNetEntry_t *pEntry2 = xBTree_entry (pNode2, dot1agCfmMaNetEntry_t, oBTreeNode);
+	
+	return
+		(xBinCmp (pEntry1->au8Name, pEntry2->au8Name, pEntry1->u16Name_len, pEntry2->u16Name_len) == -1) ||
+		(xBinCmp (pEntry1->au8Name, pEntry2->au8Name, pEntry1->u16Name_len, pEntry2->u16Name_len) == 0 && pEntry1->u32MdIndex < pEntry2->u32MdIndex) ||
+		(xBinCmp (pEntry1->au8Name, pEntry2->au8Name, pEntry1->u16Name_len, pEntry2->u16Name_len) == 0 && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex < pEntry2->u32MaIndex) ? -1:
+		(xBinCmp (pEntry1->au8Name, pEntry2->au8Name, pEntry1->u16Name_len, pEntry2->u16Name_len) == 0 && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex == pEntry2->u32MaIndex) ? 0: 1;
+}
+
 xBTree_t oDot1agCfmMaNetTable_BTree = xBTree_initInline (&dot1agCfmMaNetTable_BTreeNodeCmp);
+xBTree_t oDot1agCfmMaNetTable_Meg_BTree = xBTree_initInline (&dot1agCfmMaNetTable_Meg_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 dot1agCfmMaNetEntry_t *
@@ -949,9 +965,9 @@ dot1agCfmMaNetTable_createEntry (
 	uint32_t u32MdIndex,
 	uint32_t u32MaIndex)
 {
-	dot1agCfmMaNetEntry_t *poEntry = NULL;
+	register dot1agCfmMaNetEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot1agCfmMaNetEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -979,7 +995,7 @@ dot1agCfmMaNetTable_getByIndex (
 	register dot1agCfmMaNetEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmMaNetEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1004,7 +1020,7 @@ dot1agCfmMaNetTable_getNextIndex (
 	register dot1agCfmMaNetEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmMaNetEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1484,9 +1500,9 @@ dot1agCfmMaMepListTable_createEntry (
 	uint32_t u32MaIndex,
 	uint32_t u32Identifier)
 {
-	dot1agCfmMaMepListEntry_t *poEntry = NULL;
+	register dot1agCfmMaMepListEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot1agCfmMaMepListEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1515,7 +1531,7 @@ dot1agCfmMaMepListTable_getByIndex (
 	register dot1agCfmMaMepListEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmMaMepListEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1542,7 +1558,7 @@ dot1agCfmMaMepListTable_getNextIndex (
 	register dot1agCfmMaMepListEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmMaMepListEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1931,7 +1947,23 @@ dot1agCfmMepTable_BTreeNodeCmp (
 		(pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex == pEntry2->u32MaIndex && pEntry1->u32Identifier == pEntry2->u32Identifier) ? 0: 1;
 }
 
+static int8_t
+dot1agCfmMepTable_If_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register dot1agCfmMepEntry_t *pEntry1 = xBTree_entry (pNode1, dot1agCfmMepEntry_t, oBTreeNode);
+	register dot1agCfmMepEntry_t *pEntry2 = xBTree_entry (pNode2, dot1agCfmMepEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32MdIndex < pEntry2->u32MdIndex) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex < pEntry2->u32MaIndex) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex == pEntry2->u32MaIndex && pEntry1->u32Identifier < pEntry2->u32Identifier) ? -1:
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex == pEntry2->u32MaIndex && pEntry1->u32Identifier == pEntry2->u32Identifier) ? 0: 1;
+}
+
 xBTree_t oDot1agCfmMepTable_BTree = xBTree_initInline (&dot1agCfmMepTable_BTreeNodeCmp);
+xBTree_t oDot1agCfmMepTable_If_BTree = xBTree_initInline (&dot1agCfmMepTable_If_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 dot1agCfmMepEntry_t *
@@ -1940,9 +1972,9 @@ dot1agCfmMepTable_createEntry (
 	uint32_t u32MaIndex,
 	uint32_t u32Identifier)
 {
-	dot1agCfmMepEntry_t *poEntry = NULL;
+	register dot1agCfmMepEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot1agCfmMepEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1968,7 +2000,7 @@ dot1agCfmMepTable_createEntry (
 	poEntry->i32TransmitLbmVlanDropEnable = dot1agCfmMepTransmitLbmVlanDropEnable_false_c;
 	poEntry->i32TransmitLbmResultOK = dot1agCfmMepTransmitLbmResultOK_true_c;
 	poEntry->i32TransmitLtmStatus = dot1agCfmMepTransmitLtmStatus_true_c;
-	/*poEntry->au8TransmitLtmFlags = dot1agCfmMepTransmitLtmFlags_{ useFDBonly }_c*/;
+	xBitmap_setBitsRev (poEntry->au8TransmitLtmFlags, 1, 1, dot1agCfmMepTransmitLtmFlags_useFDBonly_c);
 	poEntry->u32TransmitLtmTtl = 64;
 	poEntry->i32TransmitLtmResult = dot1agCfmMepTransmitLtmResult_true_c;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
@@ -1988,7 +2020,7 @@ dot1agCfmMepTable_getByIndex (
 	register dot1agCfmMepEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmMepEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2015,7 +2047,7 @@ dot1agCfmMepTable_getNextIndex (
 	register dot1agCfmMepEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmMepEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3266,9 +3298,9 @@ dot1agCfmLtrTable_createEntry (
 	uint32_t u32SeqNumber,
 	uint32_t u32ReceiveOrder)
 {
-	dot1agCfmLtrEntry_t *poEntry = NULL;
+	register dot1agCfmLtrEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot1agCfmLtrEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3299,7 +3331,7 @@ dot1agCfmLtrTable_getByIndex (
 	register dot1agCfmLtrEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmLtrEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3330,7 +3362,7 @@ dot1agCfmLtrTable_getNextIndex (
 	register dot1agCfmLtrEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmLtrEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3592,9 +3624,9 @@ dot1agCfmMepDbTable_createEntry (
 	uint32_t u32MepIdentifier,
 	uint32_t u32RMepIdentifier)
 {
-	dot1agCfmMepDbEntry_t *poEntry = NULL;
+	register dot1agCfmMepDbEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (dot1agCfmMepDbEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3626,7 +3658,7 @@ dot1agCfmMepDbTable_getByIndex (
 	register dot1agCfmMepDbEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmMepDbEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3655,7 +3687,7 @@ dot1agCfmMepDbTable_getNextIndex (
 	register dot1agCfmMepDbEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (dot1agCfmMepDbEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}

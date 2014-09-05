@@ -87,7 +87,7 @@ ieee8021CfmStackTable_init (void)
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
-		ASN_INTEGER /* index: ieee8021CfmStackifIndex */,
+		ASN_INTEGER /* index: ieee8021CfmStackIfIndex */,
 		ASN_INTEGER /* index: ieee8021CfmStackServiceSelectorType */,
 		ASN_UNSIGNED /* index: ieee8021CfmStackServiceSelectorOrNone */,
 		ASN_INTEGER /* index: ieee8021CfmStackMdLevel */,
@@ -116,12 +116,12 @@ ieee8021CfmStackTable_BTreeNodeCmp (
 	register ieee8021CfmStackEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021CfmStackEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->u32StackifIndex < pEntry2->u32StackifIndex) ||
-		(pEntry1->u32StackifIndex == pEntry2->u32StackifIndex && pEntry1->i32ServiceSelectorType < pEntry2->i32ServiceSelectorType) ||
-		(pEntry1->u32StackifIndex == pEntry2->u32StackifIndex && pEntry1->i32ServiceSelectorType == pEntry2->i32ServiceSelectorType && pEntry1->u32ServiceSelectorOrNone < pEntry2->u32ServiceSelectorOrNone) ||
-		(pEntry1->u32StackifIndex == pEntry2->u32StackifIndex && pEntry1->i32ServiceSelectorType == pEntry2->i32ServiceSelectorType && pEntry1->u32ServiceSelectorOrNone == pEntry2->u32ServiceSelectorOrNone && pEntry1->i32MdLevel < pEntry2->i32MdLevel) ||
-		(pEntry1->u32StackifIndex == pEntry2->u32StackifIndex && pEntry1->i32ServiceSelectorType == pEntry2->i32ServiceSelectorType && pEntry1->u32ServiceSelectorOrNone == pEntry2->u32ServiceSelectorOrNone && pEntry1->i32MdLevel == pEntry2->i32MdLevel && pEntry1->i32Direction < pEntry2->i32Direction) ? -1:
-		(pEntry1->u32StackifIndex == pEntry2->u32StackifIndex && pEntry1->i32ServiceSelectorType == pEntry2->i32ServiceSelectorType && pEntry1->u32ServiceSelectorOrNone == pEntry2->u32ServiceSelectorOrNone && pEntry1->i32MdLevel == pEntry2->i32MdLevel && pEntry1->i32Direction == pEntry2->i32Direction) ? 0: 1;
+		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32ServiceSelectorType < pEntry2->i32ServiceSelectorType) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32ServiceSelectorType == pEntry2->i32ServiceSelectorType && pEntry1->u32ServiceSelectorOrNone < pEntry2->u32ServiceSelectorOrNone) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32ServiceSelectorType == pEntry2->i32ServiceSelectorType && pEntry1->u32ServiceSelectorOrNone == pEntry2->u32ServiceSelectorOrNone && pEntry1->i32MdLevel < pEntry2->i32MdLevel) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32ServiceSelectorType == pEntry2->i32ServiceSelectorType && pEntry1->u32ServiceSelectorOrNone == pEntry2->u32ServiceSelectorOrNone && pEntry1->i32MdLevel == pEntry2->i32MdLevel && pEntry1->i32Direction < pEntry2->i32Direction) ? -1:
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32ServiceSelectorType == pEntry2->i32ServiceSelectorType && pEntry1->u32ServiceSelectorOrNone == pEntry2->u32ServiceSelectorOrNone && pEntry1->i32MdLevel == pEntry2->i32MdLevel && pEntry1->i32Direction == pEntry2->i32Direction) ? 0: 1;
 }
 
 xBTree_t oIeee8021CfmStackTable_BTree = xBTree_initInline (&ieee8021CfmStackTable_BTreeNodeCmp);
@@ -129,20 +129,20 @@ xBTree_t oIeee8021CfmStackTable_BTree = xBTree_initInline (&ieee8021CfmStackTabl
 /* create a new row in the (unsorted) table */
 ieee8021CfmStackEntry_t *
 ieee8021CfmStackTable_createEntry (
-	uint32_t u32StackifIndex,
+	uint32_t u32IfIndex,
 	int32_t i32ServiceSelectorType,
 	uint32_t u32ServiceSelectorOrNone,
 	int32_t i32MdLevel,
 	int32_t i32Direction)
 {
-	ieee8021CfmStackEntry_t *poEntry = NULL;
+	register ieee8021CfmStackEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021CfmStackEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	poEntry->u32StackifIndex = u32StackifIndex;
+	poEntry->u32IfIndex = u32IfIndex;
 	poEntry->i32ServiceSelectorType = i32ServiceSelectorType;
 	poEntry->u32ServiceSelectorOrNone = u32ServiceSelectorOrNone;
 	poEntry->i32MdLevel = i32MdLevel;
@@ -159,7 +159,7 @@ ieee8021CfmStackTable_createEntry (
 
 ieee8021CfmStackEntry_t *
 ieee8021CfmStackTable_getByIndex (
-	uint32_t u32StackifIndex,
+	uint32_t u32IfIndex,
 	int32_t i32ServiceSelectorType,
 	uint32_t u32ServiceSelectorOrNone,
 	int32_t i32MdLevel,
@@ -168,12 +168,12 @@ ieee8021CfmStackTable_getByIndex (
 	register ieee8021CfmStackEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021CfmStackEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32StackifIndex = u32StackifIndex;
+	poTmpEntry->u32IfIndex = u32IfIndex;
 	poTmpEntry->i32ServiceSelectorType = i32ServiceSelectorType;
 	poTmpEntry->u32ServiceSelectorOrNone = u32ServiceSelectorOrNone;
 	poTmpEntry->i32MdLevel = i32MdLevel;
@@ -190,7 +190,7 @@ ieee8021CfmStackTable_getByIndex (
 
 ieee8021CfmStackEntry_t *
 ieee8021CfmStackTable_getNextIndex (
-	uint32_t u32StackifIndex,
+	uint32_t u32IfIndex,
 	int32_t i32ServiceSelectorType,
 	uint32_t u32ServiceSelectorOrNone,
 	int32_t i32MdLevel,
@@ -199,12 +199,12 @@ ieee8021CfmStackTable_getNextIndex (
 	register ieee8021CfmStackEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021CfmStackEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32StackifIndex = u32StackifIndex;
+	poTmpEntry->u32IfIndex = u32IfIndex;
 	poTmpEntry->i32ServiceSelectorType = i32ServiceSelectorType;
 	poTmpEntry->u32ServiceSelectorOrNone = u32ServiceSelectorOrNone;
 	poTmpEntry->i32MdLevel = i32MdLevel;
@@ -258,7 +258,7 @@ ieee8021CfmStackTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, ieee8021CfmStackEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32StackifIndex);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32IfIndex);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32ServiceSelectorType);
 	idx = idx->next_variable;
@@ -413,9 +413,9 @@ ieee8021CfmDefaultMdTable_createEntry (
 	int32_t i32PrimarySelectorType,
 	uint32_t u32PrimarySelector)
 {
-	ieee8021CfmDefaultMdEntry_t *poEntry = NULL;
+	register ieee8021CfmDefaultMdEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021CfmDefaultMdEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -446,7 +446,7 @@ ieee8021CfmDefaultMdTable_getByIndex (
 	register ieee8021CfmDefaultMdEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021CfmDefaultMdEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -473,7 +473,7 @@ ieee8021CfmDefaultMdTable_getNextIndex (
 	register ieee8021CfmDefaultMdEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021CfmDefaultMdEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -819,9 +819,9 @@ ieee8021CfmVlanTable_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32Selector)
 {
-	ieee8021CfmVlanEntry_t *poEntry = NULL;
+	register ieee8021CfmVlanEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021CfmVlanEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -848,7 +848,7 @@ ieee8021CfmVlanTable_getByIndex (
 	register ieee8021CfmVlanEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021CfmVlanEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -873,7 +873,7 @@ ieee8021CfmVlanTable_getNextIndex (
 	register ieee8021CfmVlanEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021CfmVlanEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1292,9 +1292,9 @@ ieee8021CfmConfigErrorListTable_createEntry (
 	uint32_t u32Selector,
 	uint32_t u32IfIndex)
 {
-	ieee8021CfmConfigErrorListEntry_t *poEntry = NULL;
+	register ieee8021CfmConfigErrorListEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021CfmConfigErrorListEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1321,7 +1321,7 @@ ieee8021CfmConfigErrorListTable_getByIndex (
 	register ieee8021CfmConfigErrorListEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021CfmConfigErrorListEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1348,7 +1348,7 @@ ieee8021CfmConfigErrorListTable_getNextIndex (
 	register ieee8021CfmConfigErrorListEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021CfmConfigErrorListEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1543,9 +1543,9 @@ ieee8021CfmMaCompTable_createEntry (
 	uint32_t u32Dot1agCfmMdIndex,
 	uint32_t u32Dot1agCfmMaIndex)
 {
-	ieee8021CfmMaCompEntry_t *poEntry = NULL;
+	register ieee8021CfmMaCompEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021CfmMaCompEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1576,7 +1576,7 @@ ieee8021CfmMaCompTable_getByIndex (
 	register ieee8021CfmMaCompEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021CfmMaCompEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1603,7 +1603,7 @@ ieee8021CfmMaCompTable_getNextIndex (
 	register ieee8021CfmMaCompEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021CfmMaCompEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}

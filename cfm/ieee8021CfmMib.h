@@ -217,15 +217,21 @@ typedef struct dot1agCfmMaNetEntry_t
 	
 	/* Column values */
 	int32_t i32Format;
-	uint8_t au8Name[45];
+	uint8_t au8Name[48];
 	size_t u16Name_len;	/* # of uint8_t elements */
 	int32_t i32CcmInterval;
 	uint8_t u8RowStatus;
 	
+	uint8_t b3MdLevel: 3;
+	uint8_t b2MhfCreation: 2;
+	uint8_t b2MhfIdPermission: 2;
+	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oMeg_BTreeNode;
 } dot1agCfmMaNetEntry_t;
 
 extern xBTree_t oDot1agCfmMaNetTable_BTree;
+extern xBTree_t oDot1agCfmMaNetTable_Meg_BTree;
 
 /* dot1agCfmMaNetTable table mapper */
 void dot1agCfmMaNetTable_init (void);
@@ -532,9 +538,11 @@ typedef struct dot1agCfmMepEntry_t
 	int32_t i32PbbTeMismatchSinceReset;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oIf_BTreeNode;
 } dot1agCfmMepEntry_t;
 
 extern xBTree_t oDot1agCfmMepTable_BTree;
+extern xBTree_t oDot1agCfmMepTable_If_BTree;
 
 /* dot1agCfmMepTable table mapper */
 void dot1agCfmMepTable_init (void);

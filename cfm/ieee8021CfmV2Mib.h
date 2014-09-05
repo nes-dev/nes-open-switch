@@ -72,7 +72,7 @@ enum
 typedef struct ieee8021CfmStackEntry_t
 {
 	/* Index values */
-	uint32_t u32StackifIndex;
+	uint32_t u32IfIndex;
 	int32_t i32ServiceSelectorType;
 	uint32_t u32ServiceSelectorOrNone;
 	int32_t i32MdLevel;
@@ -93,19 +93,19 @@ extern xBTree_t oIeee8021CfmStackTable_BTree;
 /* ieee8021CfmStackTable table mapper */
 void ieee8021CfmStackTable_init (void);
 ieee8021CfmStackEntry_t * ieee8021CfmStackTable_createEntry (
-	uint32_t u32StackifIndex,
+	uint32_t u32IfIndex,
 	int32_t i32ServiceSelectorType,
 	uint32_t u32ServiceSelectorOrNone,
 	int32_t i32MdLevel,
 	int32_t i32Direction);
 ieee8021CfmStackEntry_t * ieee8021CfmStackTable_getByIndex (
-	uint32_t u32StackifIndex,
+	uint32_t u32IfIndex,
 	int32_t i32ServiceSelectorType,
 	uint32_t u32ServiceSelectorOrNone,
 	int32_t i32MdLevel,
 	int32_t i32Direction);
 ieee8021CfmStackEntry_t * ieee8021CfmStackTable_getNextIndex (
-	uint32_t u32StackifIndex,
+	uint32_t u32IfIndex,
 	int32_t i32ServiceSelectorType,
 	uint32_t u32ServiceSelectorOrNone,
 	int32_t i32MdLevel,
