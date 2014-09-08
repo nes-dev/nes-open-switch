@@ -55,8 +55,12 @@ static bool
 static bool
 	dot3adAggPortLacp_disableDisx (dot3adAggPortData_t *poEntry);
 
-bool
+static bool
 	dot3adAggPortLacp_detach (dot3adAggPortData_t *poEntry);
+static bool
+	dot3adAggPortLacp_setSelected (
+		dot3adAggPortData_t *poEntry, uint8_t u8Selection);
+
 bool
 	dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry);
 bool
@@ -170,7 +174,10 @@ dot3adAggPortLacp_init (dot3adAggPortData_t *poEntry)
 	dot3adAggPortLacp_setDefaults (poEntry);
 	xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_expired_c, 0);
 	
-	poEntry->u8Selection = dot3adAggPortSelection_none_c;
+	if (!dot3adAggPortLacp_setSelected (poEntry, dot3adAggPortSelection_none_c))
+	{
+		return false;
+	}
 	
 	return true;
 }
@@ -199,7 +206,10 @@ dot3adAggPortLacp_stateUpdate (
 		xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_expired_c, 0);
 		xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_aggregation_c, 0);
 		
-		poEntry->u8Selection = dot3adAggPortSelection_none_c;
+		if (!dot3adAggPortLacp_setSelected (poEntry, dot3adAggPortSelection_none_c))
+		{
+			goto dot3adAggPortLacp_stateUpdate_cleanup;
+		}
 	}
 	else if (!bForce)
 	{
@@ -327,6 +337,36 @@ dot3adAggPortLacp_enableDisx (dot3adAggPortData_t *poEntry)
 	/* TODO */
 	return true;
 }
+
+bool
+dot3adAggPortLacp_setSelected (
+	dot3adAggPortData_t *poEntry, uint8_t u8Selection)
+{
+	register bool bRetCode = false;
+	
+	if (poEntry->u8Selection != u8Selection && u8Selection == dot3adAggPortSelection_none_c &&
+		!dot3adAggPortLacp_detach (poEntry))
+	{
+		goto dot3adAggPortLacp_setSelected_cleanup;
+	}
+	
+	if (poEntry->u8AggState == dot3adAggPortAggState_detached_c && poEntry->u8Selection == dot3adAggPortSelection_none_c &&
+		(u8Selection == dot3adAggPortSelection_active_c || u8Selection == dot3adAggPortSelection_standby_c) &&
+		!dot3adAggPortLacp_setWaitTimer (poEntry))
+	{
+		goto dot3adAggPortLacp_setSelected_cleanup;
+	}
+	
+	/* TODO */
+	
+	poEntry->u8Selection = u8Selection;
+	bRetCode = true;
+	
+dot3adAggPortLacp_setSelected_cleanup:
+	
+	return bRetCode;
+}
+
 bool
 dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry)
 {
@@ -475,9 +515,10 @@ dot3adAggPortLacp_lacpPduRx (
 {
 	bool bRetCode = false;
 	
-	if (!dot3adAggPortLacp_checkPortSelected (poEntry, poPdu))
+	if (!dot3adAggPortLacp_checkPortSelected (poEntry, poPdu) &&
+		!dot3adAggPortLacp_setSelected (poEntry, dot3adAggPortSelection_none_c))
 	{
-		poEntry->u8Selection = dot3adAggPortSelection_none_c;
+		goto dot3adAggPortLacp_lacpPduRx_cleanup;
 	}
 	
 	if (!dot3adAggPortLacp_checkPartnerInfoPdu (poEntry, poPdu) &&
@@ -563,9 +604,10 @@ dot3adAggPortLacp_updatePartnerInfo (
 void
 dot3adAggPortLacp_expirePartnerInfo (dot3adAggPortData_t *poEntry)
 {
-	if (!dot3adAggPortLacp_checkDefaultSelected (poEntry))
+	if (!dot3adAggPortLacp_checkDefaultSelected (poEntry) &&
+		!dot3adAggPortLacp_setSelected (poEntry, dot3adAggPortSelection_none_c))
 	{
-		poEntry->u8Selection = dot3adAggPortSelection_none_c;
+		return;
 	}
 	
 	dot3adAggPortLacp_setDefaults (poEntry);
