@@ -255,6 +255,7 @@ typedef struct ieee8021BridgeBasePortEntry_t
 	uint8_t au8Name[255];
 	size_t u16Name_len;	/* # of uint8_t elements */
 	
+	uint8_t u8RowStatus;
 	struct ieee8021BridgeBasePortEntry_t *pOldEntry;
 	
 	xBTree_Node_t oBTreeNode;
@@ -280,6 +281,8 @@ ieee8021BridgeBasePortEntry_t *ieee8021BridgeBasePortTable_createExt (
 bool ieee8021BridgeBasePortTable_removeExt (ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortIfIndex_handler (ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortRowStatus_handler (
+	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgeBasePortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgeBasePortTable_getNext;

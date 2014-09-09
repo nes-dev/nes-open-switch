@@ -31,8 +31,6 @@
 #include "if/ifMIB.h"
 #include "hal/halEthernet.h"
 
-#include "lib/lib.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -130,28 +128,27 @@ ieee8021BridgeBaseRowStatus_update (
 }
 
 bool
+ieee8021BridgeBasePortRowStatus_update (
+	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	bRetCode = true;
+	
+//ieee8021BridgeBasePortRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021BridgeDot1dPortRowStatus_update (
 	ieee8021BridgeDot1dPortEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
 	
-	switch (u8RowStatus)
-	{
-	case xRowStatus_active_c:
-		/* TODO */
-		break;
-		
-	case xRowStatus_notInService_c:
-		break;
-		
-	case xRowStatus_destroy_c:
-		/* TODO */
-		break;
-	}
-	
 	bRetCode = true;
 	
-//ieee8021BridgeDot1dPortRowStatus_update_cleanup:
+// ieee8021BridgeDot1dPortRowStatus_update_cleanup:
 	
 	return bRetCode;
 }

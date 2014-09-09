@@ -19,8 +19,8 @@
  */
 //set ts=4 sw=4
 
-#ifndef __ETHERNETUTILS_H__
-#	define __ETHERNETUTILS_H__
+#ifndef __ETHERNET_UTILS_H__
+#	define __ETHERNET_UTILS_H__
 
 #	ifdef __cplusplus
 extern "C" {
@@ -36,11 +36,15 @@ extern "C" {
 
 bool ethernetUtilsInit (void);
 
-bool ieee8021BridgeBaseRowStatus_update (
-	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
-
-bool ieee8021BridgeDot1dPortRowStatus_update (
-	ieee8021BridgeDot1dPortEntry_t *poEntry, uint8_t u8RowStatus);
+bool
+	ieee8021BridgeBaseRowStatus_update (
+		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
+bool
+	ieee8021BridgeBasePortRowStatus_update (
+		ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
+bool
+	ieee8021BridgeDot1dPortRowStatus_update (
+		ieee8021BridgeDot1dPortEntry_t *poEntry, uint8_t u8RowStatus);
 
 
 
@@ -48,4 +52,4 @@ bool ieee8021BridgeDot1dPortRowStatus_update (
 }
 #	endif
 
-#endif	// __ETHERNETUTILS_H__
+#endif	// __ETHERNET_UTILS_H__
