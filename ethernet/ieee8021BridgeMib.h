@@ -279,6 +279,7 @@ ieee8021BridgeBasePortEntry_t *ieee8021BridgeBasePortTable_createExt (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
 bool ieee8021BridgeBasePortTable_removeExt (ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_createHier (ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortIfIndex_handler (ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortRowStatus_handler (

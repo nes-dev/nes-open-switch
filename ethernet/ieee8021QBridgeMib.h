@@ -28,6 +28,7 @@ extern "C" {
 
 
 #include "ethernet_ext.h"
+
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
@@ -170,6 +171,14 @@ ieee8021QBridgeCVlanPortEntry_t * ieee8021QBridgeCVlanPortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Number);
 void ieee8021QBridgeCVlanPortTable_removeEntry (ieee8021QBridgeCVlanPortEntry_t *poEntry);
+ieee8021QBridgeCVlanPortEntry_t * ieee8021QBridgeCVlanPortTable_createExt (
+	uint32_t u32ComponentId,
+	uint32_t u32Number);
+bool ieee8021QBridgeCVlanPortTable_removeExt (ieee8021QBridgeCVlanPortEntry_t *poEntry);
+bool ieee8021QBridgeCVlanPortTable_createHier (ieee8021QBridgeCVlanPortEntry_t *poEntry);
+bool ieee8021QBridgeCVlanPortTable_removeHier (ieee8021QBridgeCVlanPortEntry_t *poEntry);
+bool ieee8021QBridgeCVlanPortRowStatus_handler (
+	ieee8021QBridgeCVlanPortEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeCVlanPortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeCVlanPortTable_getNext;
@@ -683,7 +692,7 @@ typedef struct ieee8021QBridgeVlanStaticEntry_t
 	size_t u16Name_len;	/* # of uint8_t elements */
 	uint8_t au8EgressPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16EgressPorts_len;	/* # of uint8_t elements */
-	uint8_t au8ForbiddenEgressPorts[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t au8ForbiddenEgressPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16ForbiddenEgressPorts_len;	/* # of uint8_t elements */
 	uint8_t au8UntaggedPorts[ETHERNET_PORT_MAP_SIZE];
 	size_t u16UntaggedPorts_len;	/* # of uint8_t elements */

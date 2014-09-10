@@ -24,6 +24,7 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "system/systemMIB.h"
+#include "ieee8021BridgeMib.h"
 #include "ieee8021QBridgeMib.h"
 
 #include "lib/binaryTree.h"
@@ -954,6 +955,94 @@ ieee8021QBridgeCVlanPortTable_removeEntry (ieee8021QBridgeCVlanPortEntry_t *poEn
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021QBridgeCVlanPortTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ieee8021QBridgeCVlanPortEntry_t *
+ieee8021QBridgeCVlanPortTable_createExt (
+	uint32_t u32ComponentId,
+	uint32_t u32Number)
+{
+	ieee8021QBridgeCVlanPortEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021QBridgeCVlanPortTable_createEntry (
+		u32ComponentId,
+		u32Number);
+	if (poEntry == NULL)
+	{
+		return NULL;
+	}
+	
+	if (!ieee8021QBridgeCVlanPortTable_createHier (poEntry))
+	{
+		ieee8021QBridgeCVlanPortTable_removeEntry (poEntry);
+		return NULL;
+	}
+	
+	return poEntry;
+}
+
+bool
+ieee8021QBridgeCVlanPortTable_removeExt (ieee8021QBridgeCVlanPortEntry_t *poEntry)
+{
+	if (!ieee8021QBridgeCVlanPortTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021QBridgeCVlanPortTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021QBridgeCVlanPortTable_createHier (
+	ieee8021QBridgeCVlanPortEntry_t *poEntry)
+{
+	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
+	
+	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32ComponentId)) == NULL ||
+		(poIeee8021BridgeBaseEntry->u8RowStatus == xRowStatus_active_c && poIeee8021BridgeBaseEntry->i32ComponentType != ieee8021BridgeBaseComponentType_cVlanComponent_c))
+	{
+		goto ieee8021QBridgeCVlanPortTable_createHier_cleanup;
+	}
+	
+	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	
+	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Number)) == NULL &&
+		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_createExt (poEntry->u32ComponentId, poEntry->u32Number)) == NULL)
+	{
+		goto ieee8021QBridgeCVlanPortTable_createHier_cleanup;
+	}
+	
+	poIeee8021BridgeBasePortEntry->i32Type = ieee8021BridgeBasePortType_customerVlanPort_c;
+	
+	return true;
+	
+	
+ieee8021QBridgeCVlanPortTable_createHier_cleanup:
+	
+	ieee8021QBridgeCVlanPortTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+ieee8021QBridgeCVlanPortTable_removeHier (
+	ieee8021QBridgeCVlanPortEntry_t *poEntry)
+{
+	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	
+	if (ieee8021BridgeBaseTable_getByIndex (poEntry->u32ComponentId) == NULL)
+	{
+		goto ieee8021QBridgeCVlanPortTable_removeHier_success;
+	}
+	
+	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Number)) != NULL)
+	{
+		ieee8021BridgeBasePortTable_removeExt (poIeee8021BridgeBasePortEntry);
+	}
+	
+ieee8021QBridgeCVlanPortTable_removeHier_success:
+	
+	return true;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
