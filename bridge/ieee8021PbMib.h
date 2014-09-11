@@ -378,6 +378,14 @@ ieee8021PbCepEntry_t * ieee8021PbCepTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort);
 void ieee8021PbCepTable_removeEntry (ieee8021PbCepEntry_t *poEntry);
+ieee8021PbCepEntry_t * ieee8021PbCepTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort);
+bool ieee8021PbCepTable_removeExt (ieee8021PbCepEntry_t *poEntry);
+bool ieee8021PbCepTable_createHier (ieee8021PbCepEntry_t *poEntry);
+bool ieee8021PbCepTable_removeHier (ieee8021PbCepEntry_t *poEntry);
+bool ieee8021PbCepRowStatus_handler (
+	ieee8021PbCepEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021PbCepTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021PbCepTable_getNext;
