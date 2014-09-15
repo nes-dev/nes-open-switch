@@ -2107,7 +2107,7 @@ ieee8021PbPnpTable_createHier (
 		goto ieee8021PbPnpTable_createHier_cleanup;
 	}
 	
-	poIeee8021BridgeBasePortEntry->i32Type = ieee8021BridgeBasePortType_customerNetworkPort_c;
+	poIeee8021BridgeBasePortEntry->i32Type = ieee8021BridgeBasePortType_providerNetworkPort_c;
 	
 	return true;
 	
