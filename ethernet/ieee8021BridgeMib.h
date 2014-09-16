@@ -28,8 +28,8 @@ extern "C" {
 
 
 #include "ethernet_ext.h"
-#include "if/ifMIB.h"
 
+#include "lib/freeRange.h"
 #include "lib/binaryTree.h"
 #include "lib/sync.h"
 #include "lib/snmp.h"
@@ -130,6 +130,7 @@ typedef struct ieee8021BridgeBaseEntry_t
 	
 	uint32_t u32TpIfIndex;
 	uint32_t u32NumTpPorts;
+	xFreeRange_t oPort_FreeRange;
 	
 	xBTree_Node_t oBTreeNode;
 	xRwLock_t oLock;
@@ -187,6 +188,10 @@ Netsnmp_Node_Handler ieee8021BridgeBaseTable_mapper;
 
 enum
 {
+	ieee8021BridgeBasePort_zero_c = 0,
+	ieee8021BridgeBasePort_start_c = 1,
+	ieee8021BridgeBasePort_end_c = 0xFFFFFFFF,
+	
 	/* enums for column ieee8021BridgeBasePortCapabilities */
 	ieee8021BridgeBasePortCapabilities_dot1qDot1qTagging_c = 0,
 	ieee8021BridgeBasePortCapabilities_dot1qConfigurableAcceptableFrameTypes_c = 1,
@@ -290,6 +295,66 @@ Netsnmp_Next_Data_Point ieee8021BridgeBasePortTable_getNext;
 Netsnmp_Get_Data_Point ieee8021BridgeBasePortTable_get;
 Netsnmp_Node_Handler ieee8021BridgeBasePortTable_mapper;
 #endif	/* SNMP_SRC */
+
+inline bool
+ieee8021BridgeBasePortTable_allocateIndex (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	uint32_t *pu32Port)
+{
+	register bool bRetCode = false;
+	uint32_t u32Port = 0;
+	
+	if (poComponent == NULL || pu32Port == NULL)
+	{
+		goto ieee8021BridgeBasePortTable_allocateIndex_cleanup;
+	}
+	
+	u32Port = *pu32Port;
+	
+	if (u32Port == ieee8021BridgeBasePort_zero_c &&
+		!xFreeRange_getFreeIndex (&poComponent->oPort_FreeRange, false, 0, 0, &u32Port))
+	{
+		goto ieee8021BridgeBasePortTable_allocateIndex_cleanup;
+	}
+	
+	if (!xFreeRange_allocateIndex (&poComponent->oPort_FreeRange, u32Port))
+	{
+		goto ieee8021BridgeBasePortTable_allocateIndex_cleanup;
+	}
+	
+	*pu32Port = u32Port;
+	bRetCode = true;
+	
+ieee8021BridgeBasePortTable_allocateIndex_cleanup:
+	
+	return bRetCode;
+}
+
+inline bool
+ieee8021BridgeBasePortTable_removeIndex (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	uint32_t u32Port)
+{
+	register bool bRetCode = false;
+	
+	if (poComponent == NULL || u32Port == ieee8021BridgeBasePort_zero_c)
+	{
+		goto ieee8021BridgeBasePortTable_removeIndex_success;
+	}
+	
+	if (!xFreeRange_removeIndex (&poComponent->oPort_FreeRange, u32Port))
+	{
+		goto ieee8021BridgeBasePortTable_removeIndex_cleanup;
+	}
+	
+ieee8021BridgeBasePortTable_removeIndex_success:
+	
+	bRetCode = true;
+	
+ieee8021BridgeBasePortTable_removeIndex_cleanup:
+	
+	return bRetCode;
+}
 
 
 struct ieee8021BridgeBaseIfToPortEntry_t;
