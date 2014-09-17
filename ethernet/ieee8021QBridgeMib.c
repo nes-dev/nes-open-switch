@@ -59,7 +59,7 @@ static oid ieee8021QBridgeLearningConstraintsTable_oid[] = {1,3,111,2,802,1,1,4,
 static oid ieee8021QBridgeLearningConstraintDefaultsTable_oid[] = {1,3,111,2,802,1,1,4,1,4,9};
 static oid ieee8021QBridgeProtocolGroupTable_oid[] = {1,3,111,2,802,1,1,4,1,5,1};
 static oid ieee8021QBridgeProtocolPortTable_oid[] = {1,3,111,2,802,1,1,4,1,5,2};
-static oid ieee8021QBridgeVIDXTable_oid[] = {1,3,111,2,802,1,1,4,1,6,1};
+static oid ieee8021QBridgeVidXTable_oid[] = {1,3,111,2,802,1,1,4,1,6,1};
 static oid ieee8021QBridgeEgressVidXTable_oid[] = {1,3,111,2,802,1,1,4,1,6,2};
 
 
@@ -106,7 +106,7 @@ ieee8021QBridgeMib_init (void)
 	ieee8021QBridgeLearningConstraintDefaultsTable_init ();
 	ieee8021QBridgeProtocolGroupTable_init ();
 	ieee8021QBridgeProtocolPortTable_init ();
-	ieee8021QBridgeVIDXTable_init ();
+	ieee8021QBridgeVidXTable_init ();
 	ieee8021QBridgeEgressVidXTable_init ();
 	
 	/* register ieee8021QBridgeMib modules */
@@ -503,14 +503,14 @@ ieee8021QBridgeTable_removeHier (
 	{
 		uint32_t u32BridgeBasePort = 0;
 		int32_t i32LocalVid = 0;
-		register ieee8021QBridgeVIDXEntry_t *poIeee8021QBridgeVIDXEntry = NULL;
+		register ieee8021QBridgeVidXEntry_t *poIeee8021QBridgeVidXEntry = NULL;
 		
-		while ((poIeee8021QBridgeVIDXEntry = ieee8021QBridgeVIDXTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort, i32LocalVid)) != NULL &&
-			poIeee8021QBridgeVIDXEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
+		while ((poIeee8021QBridgeVidXEntry = ieee8021QBridgeVidXTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort, i32LocalVid)) != NULL &&
+			poIeee8021QBridgeVidXEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
 		{
-			u32BridgeBasePort = poIeee8021QBridgeVIDXEntry->u32BridgeBasePort;
-			i32LocalVid = poIeee8021QBridgeVIDXEntry->i32LocalVid;
-			ieee8021QBridgeVIDXTable_removeEntry (poIeee8021QBridgeVIDXEntry);
+			u32BridgeBasePort = poIeee8021QBridgeVidXEntry->u32BridgeBasePort;
+			i32LocalVid = poIeee8021QBridgeVidXEntry->i32LocalVid;
+			ieee8021QBridgeVidXTable_removeEntry (poIeee8021QBridgeVidXEntry);
 		}
 	}
 	
@@ -7675,18 +7675,18 @@ ieee8021QBridgeProtocolPortTable_mapper (
 	return SNMP_ERR_NOERROR;
 }
 
-/** initialize ieee8021QBridgeVIDXTable table mapper **/
+/** initialize ieee8021QBridgeVidXTable table mapper **/
 void
-ieee8021QBridgeVIDXTable_init (void)
+ieee8021QBridgeVidXTable_init (void)
 {
-	extern oid ieee8021QBridgeVIDXTable_oid[];
+	extern oid ieee8021QBridgeVidXTable_oid[];
 	netsnmp_handler_registration *reg;
 	netsnmp_iterator_info *iinfo;
 	netsnmp_table_registration_info *table_info;
 	
 	reg = netsnmp_create_handler_registration (
-		"ieee8021QBridgeVIDXTable", &ieee8021QBridgeVIDXTable_mapper,
-		ieee8021QBridgeVIDXTable_oid, OID_LENGTH (ieee8021QBridgeVIDXTable_oid),
+		"ieee8021QBridgeVidXTable", &ieee8021QBridgeVidXTable_mapper,
+		ieee8021QBridgeVidXTable_oid, OID_LENGTH (ieee8021QBridgeVidXTable_oid),
 		HANDLER_CAN_RWRITE
 		);
 		
@@ -7694,15 +7694,15 @@ ieee8021QBridgeVIDXTable_init (void)
 	netsnmp_table_helper_add_indexes (table_info,
 		ASN_UNSIGNED /* index: ieee8021BridgeBasePortComponentId */,
 		ASN_UNSIGNED /* index: ieee8021BridgeBasePort */,
-		ASN_INTEGER /* index: ieee8021QBridgeVIDXLocalVid */,
+		ASN_INTEGER /* index: ieee8021QBridgeVidXLocalVid */,
 		0);
 	table_info->min_column = IEEE8021QBRIDGEVIDXRELAYVID;
 	table_info->max_column = IEEE8021QBRIDGEVIDXROWSTATUS;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
-	iinfo->get_first_data_point = &ieee8021QBridgeVIDXTable_getFirst;
-	iinfo->get_next_data_point = &ieee8021QBridgeVIDXTable_getNext;
-	iinfo->get_data_point = &ieee8021QBridgeVIDXTable_get;
+	iinfo->get_first_data_point = &ieee8021QBridgeVidXTable_getFirst;
+	iinfo->get_next_data_point = &ieee8021QBridgeVidXTable_getNext;
+	iinfo->get_data_point = &ieee8021QBridgeVidXTable_get;
 	iinfo->table_reginfo = table_info;
 	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
 	
@@ -7712,11 +7712,11 @@ ieee8021QBridgeVIDXTable_init (void)
 }
 
 static int8_t
-ieee8021QBridgeVIDXTable_BTreeNodeCmp (
+ieee8021QBridgeVidXTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register ieee8021QBridgeVIDXEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021QBridgeVIDXEntry_t, oBTreeNode);
-	register ieee8021QBridgeVIDXEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021QBridgeVIDXEntry_t, oBTreeNode);
+	register ieee8021QBridgeVidXEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021QBridgeVidXEntry_t, oBTreeNode);
+	register ieee8021QBridgeVidXEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021QBridgeVidXEntry_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32BridgeBasePortComponentId < pEntry2->u32BridgeBasePortComponentId) ||
@@ -7725,16 +7725,16 @@ ieee8021QBridgeVIDXTable_BTreeNodeCmp (
 		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32LocalVid == pEntry2->i32LocalVid) ? 0: 1;
 }
 
-xBTree_t oIeee8021QBridgeVIDXTable_BTree = xBTree_initInline (&ieee8021QBridgeVIDXTable_BTreeNodeCmp);
+xBTree_t oIeee8021QBridgeVidXTable_BTree = xBTree_initInline (&ieee8021QBridgeVidXTable_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
-ieee8021QBridgeVIDXEntry_t *
-ieee8021QBridgeVIDXTable_createEntry (
+ieee8021QBridgeVidXEntry_t *
+ieee8021QBridgeVidXTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	int32_t i32LocalVid)
 {
-	register ieee8021QBridgeVIDXEntry_t *poEntry = NULL;
+	register ieee8021QBridgeVidXEntry_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
@@ -7744,7 +7744,7 @@ ieee8021QBridgeVIDXTable_createEntry (
 	poEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poEntry->u32BridgeBasePort = u32BridgeBasePort;
 	poEntry->i32LocalVid = i32LocalVid;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgeVIDXTable_BTree) != NULL)
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
 		return NULL;
@@ -7752,17 +7752,17 @@ ieee8021QBridgeVIDXTable_createEntry (
 	
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeVIDXTable_BTree);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree);
 	return poEntry;
 }
 
-ieee8021QBridgeVIDXEntry_t *
-ieee8021QBridgeVIDXTable_getByIndex (
+ieee8021QBridgeVidXEntry_t *
+ieee8021QBridgeVidXTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	int32_t i32LocalVid)
 {
-	register ieee8021QBridgeVIDXEntry_t *poTmpEntry = NULL;
+	register ieee8021QBridgeVidXEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -7773,23 +7773,23 @@ ieee8021QBridgeVIDXTable_getByIndex (
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
 	poTmpEntry->i32LocalVid = i32LocalVid;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeVIDXTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021QBridgeVIDXEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, ieee8021QBridgeVidXEntry_t, oBTreeNode);
 }
 
-ieee8021QBridgeVIDXEntry_t *
-ieee8021QBridgeVIDXTable_getNextIndex (
+ieee8021QBridgeVidXEntry_t *
+ieee8021QBridgeVidXTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	int32_t i32LocalVid)
 {
-	register ieee8021QBridgeVIDXEntry_t *poTmpEntry = NULL;
+	register ieee8021QBridgeVidXEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -7800,54 +7800,54 @@ ieee8021QBridgeVIDXTable_getNextIndex (
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
 	poTmpEntry->i32LocalVid = i32LocalVid;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeVIDXTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021QBridgeVIDXEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, ieee8021QBridgeVidXEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
-ieee8021QBridgeVIDXTable_removeEntry (ieee8021QBridgeVIDXEntry_t *poEntry)
+ieee8021QBridgeVidXTable_removeEntry (ieee8021QBridgeVidXEntry_t *poEntry)
 {
 	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgeVIDXTable_BTree) == NULL)
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021QBridgeVIDXTable_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
-ieee8021QBridgeVIDXTable_getFirst (
+ieee8021QBridgeVidXTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021QBridgeVIDXTable_BTree);
-	return ieee8021QBridgeVIDXTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021QBridgeVidXTable_BTree);
+	return ieee8021QBridgeVidXTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
 netsnmp_variable_list *
-ieee8021QBridgeVIDXTable_getNext (
+ieee8021QBridgeVidXTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021QBridgeVIDXEntry_t *poEntry = NULL;
+	ieee8021QBridgeVidXEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ieee8021QBridgeVIDXEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021QBridgeVidXEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BridgeBasePortComponentId);
 	idx = idx->next_variable;
@@ -7855,21 +7855,21 @@ ieee8021QBridgeVIDXTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32LocalVid);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021QBridgeVIDXTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree);
 	return put_index_data;
 }
 
 bool
-ieee8021QBridgeVIDXTable_get (
+ieee8021QBridgeVidXTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021QBridgeVIDXEntry_t *poEntry = NULL;
+	ieee8021QBridgeVidXEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	register netsnmp_variable_list *idx3 = idx2->next_variable;
 	
-	poEntry = ieee8021QBridgeVIDXTable_getByIndex (
+	poEntry = ieee8021QBridgeVidXTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer,
 		*idx3->val.integer);
@@ -7882,9 +7882,9 @@ ieee8021QBridgeVIDXTable_get (
 	return true;
 }
 
-/* ieee8021QBridgeVIDXTable table mapper */
+/* ieee8021QBridgeVidXTable table mapper */
 int
-ieee8021QBridgeVIDXTable_mapper (
+ieee8021QBridgeVidXTable_mapper (
 	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
 	netsnmp_agent_request_info *reqinfo,
@@ -7892,7 +7892,7 @@ ieee8021QBridgeVIDXTable_mapper (
 {
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
-	ieee8021QBridgeVIDXEntry_t *table_entry;
+	ieee8021QBridgeVidXEntry_t *table_entry;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -7904,7 +7904,7 @@ ieee8021QBridgeVIDXTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021QBridgeVIDXEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgeVidXEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL)
 			{
@@ -7934,7 +7934,7 @@ ieee8021QBridgeVIDXTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021QBridgeVIDXEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgeVidXEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
@@ -7966,7 +7966,7 @@ ieee8021QBridgeVIDXTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021QBridgeVIDXEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgeVidXEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
 			register netsnmp_variable_list *idx2 = idx1->next_variable;
@@ -7985,7 +7985,7 @@ ieee8021QBridgeVIDXTable_mapper (
 						return SNMP_ERR_NOERROR;
 					}
 					
-					table_entry = ieee8021QBridgeVIDXTable_createEntry (
+					table_entry = ieee8021QBridgeVidXTable_createEntry (
 						*idx1->val.integer,
 						*idx2->val.integer,
 						*idx3->val.integer);
@@ -8023,7 +8023,7 @@ ieee8021QBridgeVIDXTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021QBridgeVIDXEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgeVidXEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -8037,7 +8037,7 @@ ieee8021QBridgeVIDXTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ieee8021QBridgeVIDXTable_removeEntry (table_entry);
+					ieee8021QBridgeVidXTable_removeEntry (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -8049,7 +8049,7 @@ ieee8021QBridgeVIDXTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021QBridgeVIDXEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgeVidXEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
@@ -8073,7 +8073,7 @@ ieee8021QBridgeVIDXTable_mapper (
 		/* Check the internal consistency of an active row */
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021QBridgeVIDXEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgeVidXEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
@@ -8083,7 +8083,7 @@ ieee8021QBridgeVIDXTable_mapper (
 				{
 				case RS_ACTIVE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int ieee8021QBridgeVIDXTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					if (/* TODO : int ieee8021QBridgeVidXTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -8098,7 +8098,7 @@ ieee8021QBridgeVIDXTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021QBridgeVIDXEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgeVidXEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -8115,7 +8115,7 @@ ieee8021QBridgeVIDXTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ieee8021QBridgeVIDXTable_removeEntry (table_entry);
+					ieee8021QBridgeVidXTable_removeEntry (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -8127,7 +8127,7 @@ ieee8021QBridgeVIDXTable_mapper (
 	case MODE_SET_COMMIT:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021QBridgeVIDXEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgeVidXEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
@@ -8148,7 +8148,7 @@ ieee8021QBridgeVIDXTable_mapper (
 					break;
 					
 				case RS_DESTROY:
-					ieee8021QBridgeVIDXTable_removeEntry (table_entry);
+					ieee8021QBridgeVidXTable_removeEntry (table_entry);
 					break;
 				}
 			}

@@ -1118,7 +1118,7 @@ Netsnmp_Node_Handler ieee8021QBridgeProtocolPortTable_mapper;
 
 
 /**
- *	table ieee8021QBridgeVIDXTable definitions
+ *	table ieee8021QBridgeVidXTable definitions
  */
 #define IEEE8021QBRIDGEVIDXLOCALVID 1
 #define IEEE8021QBRIDGEVIDXRELAYVID 2
@@ -1126,17 +1126,17 @@ Netsnmp_Node_Handler ieee8021QBridgeProtocolPortTable_mapper;
 
 enum
 {
-	/* enums for column ieee8021QBridgeVIDXRowStatus */
-	ieee8021QBridgeVIDXRowStatus_active_c = 1,
-	ieee8021QBridgeVIDXRowStatus_notInService_c = 2,
-	ieee8021QBridgeVIDXRowStatus_notReady_c = 3,
-	ieee8021QBridgeVIDXRowStatus_createAndGo_c = 4,
-	ieee8021QBridgeVIDXRowStatus_createAndWait_c = 5,
-	ieee8021QBridgeVIDXRowStatus_destroy_c = 6,
+	/* enums for column ieee8021QBridgeVidXRowStatus */
+	ieee8021QBridgeVidXRowStatus_active_c = 1,
+	ieee8021QBridgeVidXRowStatus_notInService_c = 2,
+	ieee8021QBridgeVidXRowStatus_notReady_c = 3,
+	ieee8021QBridgeVidXRowStatus_createAndGo_c = 4,
+	ieee8021QBridgeVidXRowStatus_createAndWait_c = 5,
+	ieee8021QBridgeVidXRowStatus_destroy_c = 6,
 };
 
-/* table ieee8021QBridgeVIDXTable row entry data structure */
-typedef struct ieee8021QBridgeVIDXEntry_t
+/* table ieee8021QBridgeVidXTable row entry data structure */
+typedef struct ieee8021QBridgeVidXEntry_t
 {
 	/* Index values */
 	uint32_t u32BridgeBasePortComponentId;
@@ -1148,30 +1148,30 @@ typedef struct ieee8021QBridgeVIDXEntry_t
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
-} ieee8021QBridgeVIDXEntry_t;
+} ieee8021QBridgeVidXEntry_t;
 
-extern xBTree_t oIeee8021QBridgeVIDXTable_BTree;
+extern xBTree_t oIeee8021QBridgeVidXTable_BTree;
 
-/* ieee8021QBridgeVIDXTable table mapper */
-void ieee8021QBridgeVIDXTable_init (void);
-ieee8021QBridgeVIDXEntry_t * ieee8021QBridgeVIDXTable_createEntry (
+/* ieee8021QBridgeVidXTable table mapper */
+void ieee8021QBridgeVidXTable_init (void);
+ieee8021QBridgeVidXEntry_t * ieee8021QBridgeVidXTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	int32_t i32LocalVid);
-ieee8021QBridgeVIDXEntry_t * ieee8021QBridgeVIDXTable_getByIndex (
+ieee8021QBridgeVidXEntry_t * ieee8021QBridgeVidXTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	int32_t i32LocalVid);
-ieee8021QBridgeVIDXEntry_t * ieee8021QBridgeVIDXTable_getNextIndex (
+ieee8021QBridgeVidXEntry_t * ieee8021QBridgeVidXTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	int32_t i32LocalVid);
-void ieee8021QBridgeVIDXTable_removeEntry (ieee8021QBridgeVIDXEntry_t *poEntry);
+void ieee8021QBridgeVidXTable_removeEntry (ieee8021QBridgeVidXEntry_t *poEntry);
 #ifdef SNMP_SRC
-Netsnmp_First_Data_Point ieee8021QBridgeVIDXTable_getFirst;
-Netsnmp_Next_Data_Point ieee8021QBridgeVIDXTable_getNext;
-Netsnmp_Get_Data_Point ieee8021QBridgeVIDXTable_get;
-Netsnmp_Node_Handler ieee8021QBridgeVIDXTable_mapper;
+Netsnmp_First_Data_Point ieee8021QBridgeVidXTable_getFirst;
+Netsnmp_Next_Data_Point ieee8021QBridgeVidXTable_getNext;
+Netsnmp_Get_Data_Point ieee8021QBridgeVidXTable_get;
+Netsnmp_Node_Handler ieee8021QBridgeVidXTable_mapper;
 #endif	/* SNMP_SRC */
 
 
