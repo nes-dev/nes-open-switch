@@ -75,6 +75,8 @@ extern ieee8021Bridge_t oBridge;
 
 enum
 {
+	ieee8021BridgeBaseComponent_zero_c = 0,
+
 	/* enums for column ieee8021BridgeBaseComponentType */
 	ieee8021BridgeBaseComponentType_iComponent_c = 1,
 	ieee8021BridgeBaseComponentType_bComponent_c = 2,
