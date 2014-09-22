@@ -30,6 +30,8 @@ extern "C" {
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+
 #define TOBE_REPLACED 1
 
 
@@ -136,6 +138,14 @@ ieee8021PbbVipEntry_t * ieee8021PbbVipTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort);
 void ieee8021PbbVipTable_removeEntry (ieee8021PbbVipEntry_t *poEntry);
+ieee8021PbbVipEntry_t * ieee8021PbbVipTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort);
+bool ieee8021PbbVipTable_removeExt (ieee8021PbbVipEntry_t *poEntry);
+bool ieee8021PbbVipTable_createHier (ieee8021PbbVipEntry_t *poEntry);
+bool ieee8021PbbVipTable_removeHier (ieee8021PbbVipEntry_t *poEntry);
+bool ieee8021PbbVipRowStatus_handler (
+	ieee8021PbbVipEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021PbbVipTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021PbbVipTable_getNext;

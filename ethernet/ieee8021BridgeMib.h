@@ -130,6 +130,8 @@ typedef struct ieee8021BridgeBaseEntry_t
 	int32_t i32MmrpEnabledStatus;
 	uint8_t u8RowStatus;
 	
+	uint8_t au8Ports[ETHERNET_PORT_MAP_SIZE];
+	size_t u16Ports_len;	/* # of uint8_t elements */
 	uint32_t u32TpIfIndex;
 	uint32_t u32NumTpPorts;
 	xFreeRange_t oPort_FreeRange;
@@ -282,6 +284,12 @@ ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
 void ieee8021BridgeBasePortTable_removeEntry (ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_allocateIndex (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	uint32_t *pu32Port);
+bool ieee8021BridgeBasePortTable_removeIndex (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	uint32_t u32Port);
 ieee8021BridgeBasePortEntry_t *ieee8021BridgeBasePortTable_createExt (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
@@ -297,66 +305,6 @@ Netsnmp_Next_Data_Point ieee8021BridgeBasePortTable_getNext;
 Netsnmp_Get_Data_Point ieee8021BridgeBasePortTable_get;
 Netsnmp_Node_Handler ieee8021BridgeBasePortTable_mapper;
 #endif	/* SNMP_SRC */
-
-inline bool
-ieee8021BridgeBasePortTable_allocateIndex (
-	ieee8021BridgeBaseEntry_t *poComponent,
-	uint32_t *pu32Port)
-{
-	register bool bRetCode = false;
-	uint32_t u32Port = 0;
-	
-	if (poComponent == NULL || pu32Port == NULL)
-	{
-		goto ieee8021BridgeBasePortTable_allocateIndex_cleanup;
-	}
-	
-	u32Port = *pu32Port;
-	
-	if (u32Port == ieee8021BridgeBasePort_zero_c &&
-		!xFreeRange_getFreeIndex (&poComponent->oPort_FreeRange, false, 0, 0, &u32Port))
-	{
-		goto ieee8021BridgeBasePortTable_allocateIndex_cleanup;
-	}
-	
-	if (!xFreeRange_allocateIndex (&poComponent->oPort_FreeRange, u32Port))
-	{
-		goto ieee8021BridgeBasePortTable_allocateIndex_cleanup;
-	}
-	
-	*pu32Port = u32Port;
-	bRetCode = true;
-	
-ieee8021BridgeBasePortTable_allocateIndex_cleanup:
-	
-	return bRetCode;
-}
-
-inline bool
-ieee8021BridgeBasePortTable_removeIndex (
-	ieee8021BridgeBaseEntry_t *poComponent,
-	uint32_t u32Port)
-{
-	register bool bRetCode = false;
-	
-	if (poComponent == NULL || u32Port == ieee8021BridgeBasePort_zero_c)
-	{
-		goto ieee8021BridgeBasePortTable_removeIndex_success;
-	}
-	
-	if (!xFreeRange_removeIndex (&poComponent->oPort_FreeRange, u32Port))
-	{
-		goto ieee8021BridgeBasePortTable_removeIndex_cleanup;
-	}
-	
-ieee8021BridgeBasePortTable_removeIndex_success:
-	
-	bRetCode = true;
-	
-ieee8021BridgeBasePortTable_removeIndex_cleanup:
-	
-	return bRetCode;
-}
 
 
 struct ieee8021BridgeBaseIfToPortEntry_t;
