@@ -631,9 +631,11 @@ typedef struct ieee8021QBridgeVlanCurrentEntry_t
 	uint32_t u32CreationTime;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oVlan_BTreeNode;
 } ieee8021QBridgeVlanCurrentEntry_t;
 
 extern xBTree_t oIeee8021QBridgeVlanCurrentTable_BTree;
+extern xBTree_t oIeee8021QBridgeVlanCurrentTable_Vlan_BTree;
 
 /* ieee8021QBridgeVlanCurrentTable table mapper */
 void ieee8021QBridgeVlanCurrentTable_init (void);
@@ -649,7 +651,15 @@ ieee8021QBridgeVlanCurrentEntry_t * ieee8021QBridgeVlanCurrentTable_getNextIndex
 	uint32_t u32TimeMark,
 	uint32_t u32ComponentId,
 	uint32_t u32Index);
+ieee8021QBridgeVlanCurrentEntry_t * ieee8021QBridgeVlanCurrentTable_Vlan_getByIndex (
+	uint32_t u32ComponentId,
+	uint32_t u32Index);
 void ieee8021QBridgeVlanCurrentTable_removeEntry (ieee8021QBridgeVlanCurrentEntry_t *poEntry);
+ieee8021QBridgeVlanCurrentEntry_t * ieee8021QBridgeVlanCurrentTable_createExt (
+	uint32_t u32TimeMark,
+	uint32_t u32ComponentId,
+	uint32_t u32Index);
+bool ieee8021QBridgeVlanCurrentTable_removeExt (ieee8021QBridgeVlanCurrentEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeVlanCurrentTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeVlanCurrentTable_getNext;
@@ -715,6 +725,12 @@ ieee8021QBridgeVlanStaticEntry_t * ieee8021QBridgeVlanStaticTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32VlanIndex);
 void ieee8021QBridgeVlanStaticTable_removeEntry (ieee8021QBridgeVlanStaticEntry_t *poEntry);
+ieee8021QBridgeVlanStaticEntry_t * ieee8021QBridgeVlanStaticTable_createExt (
+	uint32_t u32ComponentId,
+	uint32_t u32VlanIndex);
+bool ieee8021QBridgeVlanStaticTable_removeExt (ieee8021QBridgeVlanStaticEntry_t *poEntry);
+bool ieee8021QBridgeVlanStaticTable_createHier (ieee8021QBridgeVlanStaticEntry_t *poEntry);
+bool ieee8021QBridgeVlanStaticTable_removeHier (ieee8021QBridgeVlanStaticEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeVlanStaticTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeVlanStaticTable_getNext;

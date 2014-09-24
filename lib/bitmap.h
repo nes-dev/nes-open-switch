@@ -42,6 +42,9 @@ typedef uint8_t *xBitmap_t;
 #	define xBitmask_empty_c		0x00
 #	define xBitmask_length_c	8
 
+#	define xBitmap_index_start_c	0
+#	define xBitmap_index_invalid_c	(~((uint32_t) xBitmap_index_start_c))
+
 #	define xBitmask_bitIndex(_bit_offset) ((_bit_offset) & 0x07)
 #	define xBitmask_bitIndexRev(_bit_offset) (~xBitmask_bitIndex (_bit_offset))
 #	define xBitmask_bitRev(_bit_mask) (\
@@ -228,6 +231,32 @@ extern void
 		xBitmask_t *poMapDst, xBitmask_t *poMapSrc, uint32_t u32BitStart, uint32_t u32BitEnd);
 
 
+#	define xBitmap_scanCmpRev(_poMap1, _poMap2, _u32BitStart, _u32BitEnd, _bIsEq, _u16BitIdx) \
+	for (_u16BitIdx = _u32BitStart; _u16BitIdx <= _u32BitEnd; _u16BitIdx++)\
+		if (xBitmask_bitIndexRev (_u16BitIdx) == 0 &&\
+			(_poMap1[xBitmap_maskIndex (_u16BitIdx)] == _poMap2[xBitmap_maskIndex (_u16BitIdx)]) != _bIsEq)\
+		{\
+			_u16BitIdx += (uint16_t) (xBitmask_length_c - 1);\
+			continue;\
+		}\
+		else if (\
+			((_poMap1[xBitmap_maskIndex (_u16BitIdx)] & xBitmask_bitMaskRev (_u16BitIdx)) ==\
+			 (_poMap2[xBitmap_maskIndex (_u16BitIdx)] & xBitmask_bitMaskRev (_u16BitIdx))) == _bIsEq)\
+
+
+#	define xBitmap_scanBitRangeRev(_poMap, _u32BitStart, _u32BitEnd, _bIsSet, _u16BitIdx) \
+	for (_u16BitIdx = _u32BitStart; _u16BitIdx <= _u32BitEnd; _u16BitIdx++)\
+		if (\
+			xBitmask_bitIndexRev (_u16BitIdx) == 0 &&\
+			_poMap[xBitmap_maskIndex (_u16BitIdx)] == (_bIsSet ? xBitmask_empty_c: xBitmask_full_c))\
+		{\
+			_u16BitIdx += (uint16_t) (xBitmask_length_c - 1);\
+			continue;\
+		}\
+		else if (\
+			((_poMap[xBitmap_maskIndex (_u16BitIdx)] & xBitmask_bitMaskRev (_u16BitIdx)) != 0) == _bIsSet)\
+
+
 #	define xBitmap_scanEq(_map1, _map2, _bit_len, _bit_idx) \
 	for (_bit_idx = 0; _bit_idx < _bit_len; _bit_idx++)\
 		if (\
@@ -386,6 +415,27 @@ extern void
 		}\
 		else if (\
 			(_map[xBitmap_maskIndex (_bit_idx)] & xBitmask_bitMaskRev (_bit_idx)) == 0)\
+
+inline uint32_t
+	xBitmap_checkBitRangeRev (xBitmask_t *poMap, uint32_t u32BitStart, uint32_t u32BitEnd, bool bIsSet)
+{
+	for (register uint16_t u16BitIdx = u32BitStart; u16BitIdx <= u32BitEnd; u16BitIdx++)
+	{
+		if (xBitmask_bitIndexRev (u16BitIdx) == 0 &&
+			poMap[xBitmap_maskIndex (u16BitIdx)] == (bIsSet ? xBitmask_empty_c: xBitmask_full_c))
+		{
+			u16BitIdx += (uint16_t) (xBitmask_length_c - 1);
+			continue;
+		}
+		else if (
+			((poMap[xBitmap_maskIndex (u16BitIdx)] & xBitmask_bitMaskRev (u16BitIdx)) != 0) == bIsSet)
+		{
+			return u16BitIdx;
+		}
+	}
+	
+	return xBitmap_index_invalid_c;
+}
 
 
 
