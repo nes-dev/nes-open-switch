@@ -613,6 +613,54 @@ ieee8021QBridgeTable_removeHier (
 	return true;
 }
 
+bool
+ieee8021QBridgeRowStatus_handler (
+	ieee8021QBridgeEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	if (poEntry->u8RowStatus == u8RowStatus)
+	{
+		goto ieee8021QBridgeRowStatus_handler_success;
+	}
+	
+	
+	switch (u8RowStatus & xRowStatus_mask_c)
+	{
+	case xRowStatus_active_c:
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_active_c;
+		break;
+		
+	case xRowStatus_notInService_c:
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		break;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+ieee8021QBridgeRowStatus_handler_success:
+	
+	return true;
+	
+	
+// ieee8021QBridgeRowStatus_handler_cleanup:
+// 	
+// 	return false;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021QBridgeTable_getFirst (
@@ -1028,6 +1076,7 @@ bool
 ieee8021QBridgeCVlanPortTable_removeHier (
 	ieee8021QBridgeCVlanPortEntry_t *poEntry)
 {
+	register bool bRetCode = false;
 	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 	
 	if (ieee8021BridgeBaseTable_getByIndex (poEntry->u32ComponentId) == NULL)
@@ -1035,14 +1084,110 @@ ieee8021QBridgeCVlanPortTable_removeHier (
 		goto ieee8021QBridgeCVlanPortTable_removeHier_success;
 	}
 	
-	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Number)) != NULL)
+	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Number)) != NULL &&
+		!ieee8021BridgeBasePortTable_removeExt (poIeee8021BridgeBasePortEntry))
 	{
-		ieee8021BridgeBasePortTable_removeExt (poIeee8021BridgeBasePortEntry);
+		goto ieee8021QBridgeCVlanPortTable_removeHier_cleanup;
 	}
 	
 ieee8021QBridgeCVlanPortTable_removeHier_success:
 	
+	bRetCode = true;
+	
+ieee8021QBridgeCVlanPortTable_removeHier_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021QBridgeCVlanPortRowStatus_handler (
+	ieee8021QBridgeCVlanPortEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
+	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	
+	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32ComponentId)) == NULL ||
+		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Number)) == NULL)
+	{
+		goto ieee8021QBridgeCVlanPortRowStatus_handler_cleanup;
+	}
+	
+	if (poEntry->u8RowStatus == u8RowStatus)
+	{
+		goto ieee8021QBridgeCVlanPortRowStatus_handler_success;
+	}
+	if (u8RowStatus & xRowStatus_fromParent_c &&
+		(((u8RowStatus & xRowStatus_mask_c) == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
+		 ((u8RowStatus & xRowStatus_mask_c) == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
+	{
+		goto ieee8021QBridgeCVlanPortRowStatus_handler_success;
+	}
+	
+	
+	switch (u8RowStatus & xRowStatus_mask_c)
+	{
+	case xRowStatus_active_c:
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RowStatus & xRowStatus_mask_c))
+		{
+			goto ieee8021QBridgeCVlanPortRowStatus_handler_cleanup;
+		}
+		
+		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c)
+		{
+			poEntry->u8RowStatus = xRowStatus_notReady_c;
+			goto ieee8021QBridgeCVlanPortRowStatus_handler_success;
+		}
+		
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_active_c;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c)
+		{
+			poEntry->u8RowStatus = u8RowStatus;
+			goto ieee8021QBridgeCVlanPortRowStatus_handler_success;
+		}
+		
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RowStatus & xRowStatus_mask_c))
+		{
+			goto ieee8021QBridgeCVlanPortRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		
+		poEntry->u8RowStatus =
+			poEntry->u8RowStatus == xRowStatus_active_c && (u8RowStatus & xRowStatus_fromParent_c) ? xRowStatus_notReady_c: xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		goto ieee8021QBridgeCVlanPortRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RowStatus & xRowStatus_mask_c))
+		{
+			goto ieee8021QBridgeCVlanPortRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+ieee8021QBridgeCVlanPortRowStatus_handler_success:
+	
 	return true;
+	
+	
+ieee8021QBridgeCVlanPortRowStatus_handler_cleanup:
+	
+	return u8RowStatus & xRowStatus_fromParent_c;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -1272,7 +1417,7 @@ ieee8021QBridgeCVlanPortTable_mapper (
 				{
 				case RS_ACTIVE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int ieee8021QBridgeCVlanPortTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					if (!ieee8021QBridgeCVlanPortRowStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;

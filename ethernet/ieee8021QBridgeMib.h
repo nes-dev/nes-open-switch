@@ -99,6 +99,8 @@ typedef struct ieee8021QBridgeEntry_t
 	uint32_t u32NumVlans;
 	int32_t i32MvrpEnabledStatus;
 	
+	uint8_t u8RowStatus;
+	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeEntry_t;
 
@@ -118,6 +120,8 @@ ieee8021QBridgeEntry_t * ieee8021QBridgeTable_createExt (
 bool ieee8021QBridgeTable_removeExt (ieee8021QBridgeEntry_t *poEntry);
 bool ieee8021QBridgeTable_createHier (ieee8021QBridgeEntry_t *poEntry);
 bool ieee8021QBridgeTable_removeHier (ieee8021QBridgeEntry_t *poEntry);
+bool ieee8021QBridgeRowStatus_handler (
+	ieee8021QBridgeEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeTable_getNext;
