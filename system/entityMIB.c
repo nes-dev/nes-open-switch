@@ -42,8 +42,7 @@
 static oid entityMIB_oid[] = {1,3,6,1,2,1,47};
 static oid neEntityMIB_oid[] = {1,3,6,1,4,1,36969,70};
 
-/* array length = OID_LENGTH + 1 */
-static oid entityGeneral_oid[] = {1,3,6,1,2,1,47,1,4,1};
+static oid entityGeneral_oid[] = {1,3,6,1,2,1,47,1,4};
 
 static oid entPhysicalTable_oid[] = {1,3,6,1,2,1,47,1,1,1};
 static oid entLogicalTable_oid[] = {1,3,6,1,2,1,47,1,2,1};
@@ -84,7 +83,7 @@ entityMIB_init (void)
 	netsnmp_register_scalar_group (
 		netsnmp_create_handler_registration (
 			"entityGeneral_mapper", &entityGeneral_mapper,
-			entityGeneral_oid, OID_LENGTH (entityGeneral_oid) - 1,
+			entityGeneral_oid, OID_LENGTH (entityGeneral_oid),
 			HANDLER_CAN_RONLY
 		),
 		ENTLASTCHANGETIME,
@@ -216,8 +215,8 @@ entPhysicalData_SerialNum_BTreeNodeCmp (
 	register entPhysicalData_t *pEntry2 = xBTree_entry (pNode2, entPhysicalData_t, oBTreeNode);
 	
 	return
-		(xBinCmp (pEntry1->oNe.au8SerialNum, pEntry2->oNe.au8SerialNum, pEntry1->oNe.u16SerialNum_len, pEntry2->oNe.u16SerialNum_len) == -1) ? -1:
-		(xBinCmp (pEntry1->oNe.au8SerialNum, pEntry2->oNe.au8SerialNum, pEntry1->oNe.u16SerialNum_len, pEntry2->oNe.u16SerialNum_len) == 0) ? 0: 1;
+		(xBinCmp (pEntry1->au8SerialNum, pEntry2->au8SerialNum, pEntry1->u16SerialNum_len, pEntry2->u16SerialNum_len) == -1) ? -1:
+		(xBinCmp (pEntry1->au8SerialNum, pEntry2->au8SerialNum, pEntry1->u16SerialNum_len, pEntry2->u16SerialNum_len) == 0) ? 0: 1;
 }
 
 static xBTree_t oEntPhysicalData_BTree = xBTree_initInline (&entPhysicalData_BTreeNodeCmp);
@@ -256,8 +255,8 @@ entPhysicalData_linkSerialNum (entPhysicalData_t *poEntry)
 		return false;
 	}
 	
-	memcpy (poTmpEntry->oNe.au8SerialNum, poEntry->oNe.au8SerialNum, sizeof (poEntry->oNe.au8SerialNum));
-	poTmpEntry->oNe.u16SerialNum_len = poEntry->oNe.u16SerialNum_len;
+	memcpy (poTmpEntry->au8SerialNum, poEntry->au8SerialNum, poEntry->u16SerialNum_len);
+	poTmpEntry->u16SerialNum_len = poEntry->u16SerialNum_len;
 	if (xBTree_nodeFind (&poTmpEntry->oSerialNum_BTreeNode, &oEntPhysicalData_SerialNum_BTree) != NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -305,8 +304,8 @@ entPhysicalData_getBySerialNum (
 		return NULL;
 	}
 	
-	memcpy (poTmpEntry->oNe.au8SerialNum, pu8SerialNum, u16SerialNum_len);
-	poTmpEntry->oNe.u16SerialNum_len = u16SerialNum_len;
+	memcpy (poTmpEntry->au8SerialNum, pu8SerialNum, u16SerialNum_len);
+	poTmpEntry->u16SerialNum_len = u16SerialNum_len;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oSerialNum_BTreeNode, &oEntPhysicalData_SerialNum_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -454,10 +453,7 @@ entPhysicalTable_getChassis (
 bool
 entPhysicalTable_createEntity (
 	uint32_t u32Index,
-	int32_t i32Class,
-	uint32_t u32ContainedIn,
-	uint8_t *pu8SerialNum,
-	size_t u16SerialNum_len)
+	entPhysicalEntry_t *poEntry)
 {
 	register entPhysicalData_t *poEntPhysicalData = NULL;
 	
@@ -465,7 +461,7 @@ entPhysicalTable_createEntity (
 	
 	if ((poEntPhysicalData = entPhysicalData_getByIndex (u32Index)) != NULL)
 	{
-		if (i32Class != 0 && poEntPhysicalData->oPhy.i32Class != 0 && poEntPhysicalData->oPhy.i32Class != i32Class)
+		if (poEntry->i32Class != 0 && poEntPhysicalData->oPhy.i32Class != 0 && poEntPhysicalData->oPhy.i32Class != poEntry->i32Class)
 		{
 			goto entPhysicalTable_createEntity_cleanup;
 		}
@@ -479,14 +475,16 @@ entPhysicalTable_createEntity (
 			goto entPhysicalTable_createEntity_cleanup;
 		}
 		poEntPhysicalData = entPhysicalData_getByNeEntry (poNeEntPhysicalEntry);
+		memcpy (poEntPhysicalData, poEntry, sizeof (*poEntPhysicalData));
 	}
 	
-	i32Class != 0 ? (poEntPhysicalData->oNe.i32Class = i32Class): false;
-	u32ContainedIn != 0 ? (poEntPhysicalData->oNe.u32ContainedIn = u32ContainedIn): false;
-	if (pu8SerialNum != NULL && u16SerialNum_len != 0)
+	poEntry->i32Class != 0 ? (poEntPhysicalData->oNe.i32Class = poEntry->i32Class): false;
+	poEntry->u32ContainedIn != 0 ? (poEntPhysicalData->oNe.u32ContainedIn = poEntry->u32ContainedIn): false;
+	poEntry->i32ParentRelPos != 0 ? (poEntPhysicalData->oNe.i32ParentRelPos = poEntry->i32ParentRelPos): false;
+	if (poEntry->au8SerialNum != NULL && poEntry->u16SerialNum_len != 0)
 	{
-		memcpy (poEntPhysicalData->oNe.au8SerialNum, pu8SerialNum, u16SerialNum_len);
-		poEntPhysicalData->oNe.u16SerialNum_len = u16SerialNum_len;
+		memcpy (poEntPhysicalData->au8SerialNum, poEntry->au8SerialNum, poEntry->u16SerialNum_len);
+		poEntPhysicalData->u16SerialNum_len = poEntry->u16SerialNum_len;
 	}
 	
 	if (!neEntPhysicalRowStatus_handler (&poEntPhysicalData->oNe, xRowStatus_active_c))
@@ -509,34 +507,28 @@ bool
 entPhysicalTable_removeEntity (
 	uint32_t u32Index)
 {
+	bool bRetCode = false;
 	register entPhysicalData_t *poEntPhysicalData = NULL;
 	
 	xRwLock_wrLock (&oEntityGeneral.oLock);
 	
 	if ((poEntPhysicalData = entPhysicalData_getByIndex (u32Index)) == NULL)
 	{
-		goto entPhysicalTable_removeEntity_success;
-	}
-	
-	if (!neEntPhysicalRowStatus_handler (&poEntPhysicalData->oNe, xRowStatus_notInService_c))
-	{
-		goto entPhysicalTable_removeEntity_cleanup;
-	}
-	if (!neEntPhysicalTable_removeExt (&poEntPhysicalData->oNe))
-	{
 		goto entPhysicalTable_removeEntity_cleanup;
 	}
 	
-entPhysicalTable_removeEntity_success:
+	if (!neEntPhysicalRowStatus_handler (&poEntPhysicalData->oNe, xRowStatus_destroy_c))
+	{
+		goto entPhysicalTable_removeEntity_cleanup;
+	}
+	entPhysicalData_removeEntry (poEntPhysicalData);
 	
-	xRwLock_unlock (&oEntityGeneral.oLock);
-	return true;
-	
+	bRetCode = true;
 	
 entPhysicalTable_removeEntity_cleanup:
 	
 	xRwLock_unlock (&oEntityGeneral.oLock);
-	return false;
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -2230,19 +2222,6 @@ neEntPhysicalRowStatus_handler (
 			{
 				goto neEntPhysicalRowStatus_handler_cleanup;
 			}
-		}
-		
-		if (poEntry->pOldEntry != NULL && poEntry->pOldEntry->u16SerialNum_len != 0 &&
-			xBinCmp (poEntry->au8SerialNum, poEntry->pOldEntry->au8SerialNum, poEntry->u16SerialNum_len, poEntry->pOldEntry->u16SerialNum_len) != 0)
-		{
-			xBTree_nodeRemove (&poEntPhysicalData->oSerialNum_BTreeNode, &oEntPhysicalData_SerialNum_BTree);
-		}
-		if (poEntry->u16SerialNum_len != 0 &&
-			(poEntry->pOldEntry == NULL ||
-			 xBinCmp (poEntry->au8SerialNum, poEntry->pOldEntry->au8SerialNum, poEntry->u16SerialNum_len, poEntry->pOldEntry->u16SerialNum_len) != 0) &&
-			!entPhysicalData_linkSerialNum (poEntPhysicalData))
-		{
-			goto neEntPhysicalRowStatus_handler_cleanup;
 		}
 		
 		/* TODO */

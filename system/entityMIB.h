@@ -166,10 +166,7 @@ entPhysicalEntry_t * entPhysicalTable_getNextIndex (
 void entPhysicalTable_removeEntry (entPhysicalEntry_t *poEntry);
 bool entPhysicalTable_createEntity (
 	uint32_t u32Index,
-	int32_t i32Class,
-	uint32_t u32ContainedIn,
-	uint8_t *pu8SerialNum,
-	size_t u16SerialNum_len);
+	entPhysicalEntry_t *poEntry);
 bool entPhysicalTable_removeEntity (
 	uint32_t u32Index);
 #ifdef SNMP_SRC
@@ -405,12 +402,11 @@ typedef struct neEntPhysicalEntry_t
 	/* Column values */
 	uint32_t u32ContainedIn;
 	int32_t i32Class;
+	int32_t i32ParentRelPos;
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
 	uint32_t u32ChassisIndex;
-	uint8_t au8SerialNum[32];
-	size_t u16SerialNum_len;
 	struct neEntPhysicalEntry_t *pOldEntry;
 	
 // 	xBTree_Node_t oBTreeNode;
@@ -453,6 +449,8 @@ enum
 typedef struct entPhysicalData_t
 {
 	uint32_t u32Index;
+	uint8_t au8SerialNum[32];
+	size_t u16SerialNum_len;
 	
 	neEntPhysicalEntry_t oNe;
 	entPhysicalEntry_t oPhy;

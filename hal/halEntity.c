@@ -26,6 +26,8 @@
 #include "hal_defines.h"
 #include "system/entityMIB.h"
 
+#include "lib/buffer.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -33,38 +35,73 @@
 bool
 halEntityDetect ()
 {
-	uint32_t u32Index = 0;
-	uint32_t u32ContainedIn = 0;
-	int32_t i32Class = 0;
-	uint8_t au8SerialNum[32] = {0};
-	size_t u16SerialNum_len = 0;
+	bool bRetCode = false;
+	entPhysicalEntry_t *poEntry = NULL;
+	uint32_t u32ChassisIndex = 123;
+	uint32_t u32PortIndex = 234;
 	uint8_t u8RowStatus = 0;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		goto halEntityDetect_cleanup;
+	}
 	
 	/* TODO */
 	
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
-		if (!entPhysicalTable_createEntity (u32Index, i32Class, u32ContainedIn, au8SerialNum, u16SerialNum_len))
+		*poEntry = (entPhysicalEntry_t)
+		{
+			.u32ContainedIn = 0,
+			.i32Class = entPhysicalClass_chassis_c,
+			.i32ParentRelPos = 0,
+			.au8SerialNum = "ABCDKHG",
+			.u16SerialNum_len = 7,
+		};
+		
+		if (!entPhysicalTable_createEntity (u32ChassisIndex, poEntry))
+		{
+			goto halEntityDetect_cleanup;
+		}
+		
+		*poEntry = (entPhysicalEntry_t)
+		{
+			.u32ContainedIn = u32ChassisIndex,
+			.i32Class = entPhysicalClass_port_c,
+			.i32ParentRelPos = 5,
+			.au8SerialNum = "HJHTIBGP",
+			.u16SerialNum_len = 8,
+		};
+		
+		if (!entPhysicalTable_createEntity (u32PortIndex, poEntry))
 		{
 			goto halEntityDetect_cleanup;
 		}
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!entPhysicalTable_removeEntity (u32Index))
+		if (!entPhysicalTable_removeEntity (u32PortIndex))
+		{
+			goto halEntityDetect_cleanup;
+		}
+		
+		if (!entPhysicalTable_removeEntity (u32ChassisIndex))
 		{
 			goto halEntityDetect_cleanup;
 		}
 		break;
 	}
 	
-	return true;
-	
+	bRetCode = true;
 	
 halEntityDetect_cleanup:
 	
-	return false;
+	if (poEntry != NULL)
+	{
+		xBuffer_free (poEntry);
+	}
+	return bRetCode;
 }
 
 
