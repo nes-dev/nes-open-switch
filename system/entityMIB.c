@@ -4028,6 +4028,9 @@ neEntPortTable_mapper (
 			case NEENTPORTIFINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32IfIndex);
 				break;
+			case NEENTPORTIFTYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32IfType);
+				break;
 			case NEENTPORTROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
@@ -4074,6 +4077,14 @@ neEntPortTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
+			case NEENTPORTIFTYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
 			case NEENTPORTROWSTATUS:
 				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
 				if (ret != SNMP_ERR_NOERROR)
@@ -4096,19 +4107,6 @@ neEntPortTable_mapper (
 			table_entry = (neEntPortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
-			
-			switch (table_info->colnum)
-			{
-			case NEENTPORTCHASSISINDEX:
-			case NEENTPORTPORTINDEX:
-			case NEENTPORTIFINDEX:
-				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			}
 			
 			switch (table_info->colnum)
 			{
@@ -4149,6 +4147,20 @@ neEntPortTable_mapper (
 				if (table_entry == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEENTPORTCHASSISINDEX:
+			case NEENTPORTPORTINDEX:
+			case NEENTPORTIFINDEX:
+			case NEENTPORTIFTYPE:
+				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
 				}
 				break;
 			}
@@ -4232,6 +4244,20 @@ neEntPortTable_mapper (
 				
 				table_entry->u32IfIndex = *request->requestvb->val.integer;
 				break;
+			case NEENTPORTIFTYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32IfType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32IfType, sizeof (table_entry->i32IfType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32IfType = *request->requestvb->val.integer;
+				break;
 			}
 		}
 		/* Check the internal consistency of an active row */
@@ -4282,6 +4308,9 @@ neEntPortTable_mapper (
 				break;
 			case NEENTPORTIFINDEX:
 				memcpy (&table_entry->u32IfIndex, pvOldDdata, sizeof (table_entry->u32IfIndex));
+				break;
+			case NEENTPORTIFTYPE:
+				memcpy (&table_entry->i32IfType, pvOldDdata, sizeof (table_entry->i32IfType));
 				break;
 			case NEENTPORTROWSTATUS:
 				switch (*request->requestvb->val.integer)
