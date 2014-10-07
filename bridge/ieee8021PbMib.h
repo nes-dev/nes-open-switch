@@ -30,6 +30,8 @@ extern "C" {
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+
 #define TOBE_REPLACED 1
 
 
@@ -142,7 +144,7 @@ typedef struct ieee8021PbEdgePortEntry_t
 	int32_t i32SVid;
 	
 	/* Column values */
-	int32_t i32PVID;
+	int32_t i32PVid;
 	uint32_t u32DefaultUserPriority;
 	int32_t i32AcceptableFrameTypes;
 	int32_t i32EnableIngressFiltering;
