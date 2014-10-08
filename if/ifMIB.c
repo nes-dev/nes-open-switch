@@ -1876,8 +1876,7 @@ ifStackTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					if ((*idx1->val.integer != 0 && ifTable_getByIndex (*idx1->val.integer) == NULL) ||
-						(*idx2->val.integer != 0 && ifTable_getByIndex (*idx2->val.integer) == NULL))
+					if (*idx1->val.integer == 0 || *idx2->val.integer == 0)
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -1965,8 +1964,11 @@ ifStackTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int ifStackTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
+					if (!ifStackStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -2016,15 +2018,8 @@ ifStackTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_ACTIVE:
-					table_entry->u8Status = RS_ACTIVE;
-					break;
-					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_NOTINSERVICE:
-					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:

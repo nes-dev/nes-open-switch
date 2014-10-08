@@ -27,6 +27,7 @@ extern "C" {
 
 
 
+#include "lib/lib.h"
 #include "lib/ieee802.h"
 #include "lib/binaryTree.h"
 #include "lib/sync.h"
