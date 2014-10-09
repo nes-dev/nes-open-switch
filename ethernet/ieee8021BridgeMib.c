@@ -6367,20 +6367,39 @@ ieee8021BridgeILanIfEntry_t *
 ieee8021BridgeILanIfTable_createExt (
 	uint32_t u32IfIndex)
 {
+	bool bIfReserved = u32IfIndex != ifIndex_zero_c;
 	ieee8021BridgeILanIfEntry_t *poEntry = NULL;
+	
+	if (!bIfReserved)
+	{
+		ifData_t *poILanIfData = NULL;
+		
+		if (!ifData_createReference (u32IfIndex, ifType_ilan_c, true, true, true, &poILanIfData))
+		{
+			goto ieee8021BridgeILanIfTable_createExt_cleanup;
+		}
+		
+		bIfReserved = true;
+		u32IfIndex = poILanIfData->u32Index;
+		
+		ifData_unLock (poILanIfData);
+	}
 	
 	poEntry = ieee8021BridgeILanIfTable_createEntry (
 		u32IfIndex);
 	if (poEntry == NULL)
 	{
-		return NULL;
+		goto ieee8021BridgeILanIfTable_createExt_cleanup;
 	}
 	
-	if (!ieee8021BridgeILanIfTable_createHier (poEntry))
+	if (!bIfReserved && !ieee8021BridgeILanIfTable_createHier (poEntry))
 	{
 		ieee8021BridgeILanIfTable_removeEntry (poEntry);
-		return NULL;
+		poEntry = NULL;
+		goto ieee8021BridgeILanIfTable_createExt_cleanup;
 	}
+	
+ieee8021BridgeILanIfTable_createExt_cleanup:
 	
 	return poEntry;
 }
@@ -6401,7 +6420,7 @@ bool
 ieee8021BridgeILanIfTable_createHier (
 	ieee8021BridgeILanIfEntry_t *poEntry)
 {
-	if (!ifData_createReference (poEntry->u32IfIndex, ifType_ilan_c, true, true, true, NULL))
+	if (!ifData_createReference (poEntry->u32IfIndex, ifType_ilan_c, false, true, true, NULL))
 	{
 		goto ieee8021BridgeILanIfTable_createHier_cleanup;
 	}
@@ -6420,6 +6439,13 @@ ieee8021BridgeILanIfTable_removeHier (
 	ieee8021BridgeILanIfEntry_t *poEntry)
 {
 	return ifData_removeReference (poEntry->u32IfIndex, true, true, true);
+}
+
+bool
+ieee8021BridgeILanIfRowStatus_handler (
+	ieee8021BridgeILanIfEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */

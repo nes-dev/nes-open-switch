@@ -1028,6 +1028,8 @@ ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_createExt (
 bool ieee8021BridgeILanIfTable_removeExt (ieee8021BridgeILanIfEntry_t *poEntry);
 bool ieee8021BridgeILanIfTable_createHier (ieee8021BridgeILanIfEntry_t *poEntry);
 bool ieee8021BridgeILanIfTable_removeHier (ieee8021BridgeILanIfEntry_t *poEntry);
+bool ieee8021BridgeILanIfRowStatus_handler (
+	ieee8021BridgeILanIfEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgeILanIfTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgeILanIfTable_getNext;
