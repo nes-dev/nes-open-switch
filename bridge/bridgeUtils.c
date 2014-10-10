@@ -51,12 +51,6 @@ ieee8021PbILan_createEntry (
 		goto ieee8021PbILan_createEntry_cleanup;
 	}
 	
-	if (!ifAdminStatus_handler (&poPepIfData->oIf, xAdminStatus_up_c, false) ||
-		!ifAdminStatus_handler (&poCnpIfData->oIf, xAdminStatus_up_c, false))
-	{
-		goto ieee8021PbILan_createEntry_cleanup;
-	}
-	
 	if ((poILanIfEntry = ieee8021BridgeILanIfTable_createExt (ifIndex_zero_c)) == NULL ||
 		!ieee8021BridgeILanIfRowStatus_handler (poILanIfEntry, xRowStatus_active_c))
 	{
@@ -87,6 +81,71 @@ ieee8021PbILan_createEntry_cleanup:
 		poCnpIfData != NULL ? ifData_removeReference (poCnpIfData->u32Index, true, false, true): false;
 		poILanIfEntry != NULL ? ieee8021BridgeILanIfTable_removeExt (poILanIfEntry): false;
 	}
+	
+	return bRetCode;
+}
+
+bool
+ieee8021PbILan_removeEntry (
+	ieee8021BridgeBasePortEntry_t *poCnpPortEntry,
+	ieee8021BridgeBasePortEntry_t *poPepPortEntry)
+{
+	register bool bRetCode = false;
+	register ifStackEntry_t *poIfStackEntry = NULL;
+	ieee8021BridgeILanIfEntry_t *poILanIfEntry = NULL;
+	
+	if (poPepPortEntry->u32IfIndex == 0)
+	{
+		goto ieee8021PbILan_removeEntry_cnpIf;
+	}
+	
+	if ((poIfStackEntry = ifStackTable_getNextIndex (poPepPortEntry->u32IfIndex, 0)) != NULL &&
+		poIfStackEntry->u32HigherLayer == poPepPortEntry->u32IfIndex &&
+		(poILanIfEntry = ieee8021BridgeILanIfTable_getByIndex (poIfStackEntry->u32LowerLayer)) != NULL)
+	{
+		if (!ieee8021BridgeILanIfRowStatus_handler (poILanIfEntry, xRowStatus_destroy_c) ||
+			!ieee8021BridgeILanIfTable_removeExt (poILanIfEntry))
+		{
+			goto ieee8021PbILan_removeEntry_cleanup;
+		}
+	}
+	
+	if (!ifData_removeReference (poPepPortEntry->u32IfIndex, true, false, true))
+	{
+		goto ieee8021PbILan_removeEntry_cleanup;
+	}
+	
+ieee8021PbILan_removeEntry_cnpIf:
+	
+	if (poCnpPortEntry->u32IfIndex == 0)
+	{
+		goto ieee8021PbILan_removeEntry_success;
+	}
+	
+	if ((poIfStackEntry = ifStackTable_getNextIndex (poCnpPortEntry->u32IfIndex, 0)) != NULL &&
+		poIfStackEntry->u32HigherLayer == poPepPortEntry->u32IfIndex &&
+		(poILanIfEntry = ieee8021BridgeILanIfTable_getByIndex (poIfStackEntry->u32LowerLayer)) != NULL)
+	{
+		if (!ieee8021BridgeILanIfRowStatus_handler (poILanIfEntry, xRowStatus_destroy_c) ||
+			!ieee8021BridgeILanIfTable_removeExt (poILanIfEntry))
+		{
+			goto ieee8021PbILan_removeEntry_cleanup;
+		}
+	}
+	
+	if (!ifData_removeReference (poCnpPortEntry->u32IfIndex, true, false, true))
+	{
+		goto ieee8021PbILan_removeEntry_cleanup;
+	}
+	
+ieee8021PbILan_removeEntry_success:
+	
+	poPepPortEntry->u32IfIndex = 0;
+	poCnpPortEntry->u32IfIndex = 0;
+	
+	bRetCode = true;
+	
+ieee8021PbILan_removeEntry_cleanup:
 	
 	return bRetCode;
 }

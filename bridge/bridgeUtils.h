@@ -37,6 +37,10 @@ bool
 	ieee8021PbILan_createEntry (
 		ieee8021BridgeBasePortEntry_t *poCnpPortEntry,
 		ieee8021BridgeBasePortEntry_t *poPepPortEntry);
+bool
+	ieee8021PbILan_removeEntry (
+		ieee8021BridgeBasePortEntry_t *poCnpPortEntry,
+		ieee8021BridgeBasePortEntry_t *poPepPortEntry);
 
 
 
