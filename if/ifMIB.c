@@ -335,6 +335,7 @@ bool
 ifData_createReference (
 	uint32_t u32IfIndex,
 	int32_t i32Type,
+	int32_t i32AdminStatus,
 	bool bCreate, bool bReference, bool bActivate,
 	ifData_t **ppoIfData)
 {
@@ -382,6 +383,7 @@ ifData_createReference_ifUnlock:
 	}
 	
 	i32Type != 0 ? (poIfData->oNe.i32Type = i32Type): false;
+	i32AdminStatus != 0 ? (poIfData->oIf.i32AdminStatus = i32AdminStatus): false;
 	
 	if (bReference)
 	{
@@ -618,8 +620,6 @@ ifTable_createHier (
 	ifEntry_t *poEntry)
 {
 	register ifData_t *poIfData = ifData_getByIfEntry (poEntry);
-	register ifStackEntry_t *poLowerStackEntry = NULL;
-	register ifStackEntry_t *poUpperStackEntry = NULL;
 	
 	if (ifXTable_getByIndex (poIfData->u32Index) == NULL &&
 		ifXTable_createEntry (poIfData->u32Index) == NULL)
@@ -627,28 +627,36 @@ ifTable_createHier (
 		goto ifTable_createHier_cleanup;
 	}
 	
-	if ((poLowerStackEntry = ifStackTable_getByIndex (poIfData->u32Index, 0)) == NULL &&
-		(poLowerStackEntry = ifStackTable_getNextIndex (poIfData->u32Index, 0)) != NULL &&
-		poLowerStackEntry->u32HigherLayer != poIfData->u32Index)
 	{
-		if ((poLowerStackEntry = ifStackTable_createExt (poIfData->u32Index, 0)) == NULL)
-		{
-			goto ifTable_createHier_cleanup;
-		}
+		register ifStackEntry_t *poLowerStackEntry = NULL;
 		
-		poLowerStackEntry->u8Status = ifStackStatus_active_c;
+		if ((poLowerStackEntry = ifStackTable_getByIndex (poIfData->u32Index, 0)) == NULL &&
+			(poLowerStackEntry = ifStackTable_getNextIndex (poIfData->u32Index, 0)) != NULL &&
+			poLowerStackEntry->u32HigherLayer != poIfData->u32Index)
+		{
+			if ((poLowerStackEntry = ifStackTable_createExt (poIfData->u32Index, 0)) == NULL)
+			{
+				goto ifTable_createHier_cleanup;
+			}
+			
+			poLowerStackEntry->u8Status = ifStackStatus_active_c;
+		}
 	}
 	
-	if ((poUpperStackEntry = ifStackTable_getByIndex (0, poIfData->u32Index)) == NULL &&
-		(poUpperStackEntry = ifStackTable_LToH_getNextIndex (0, poIfData->u32Index)) != NULL &&
-		poUpperStackEntry->u32LowerLayer != poIfData->u32Index)
 	{
-		if ((poUpperStackEntry = ifStackTable_createExt (0, poIfData->u32Index)) == NULL)
-		{
-			goto ifTable_createHier_cleanup;
-		}
+		register ifStackEntry_t *poUpperStackEntry = NULL;
 		
-		poUpperStackEntry->u8Status = ifStackStatus_active_c;
+		if ((poUpperStackEntry = ifStackTable_getByIndex (0, poIfData->u32Index)) == NULL &&
+			(poUpperStackEntry = ifStackTable_LToH_getNextIndex (0, poIfData->u32Index)) != NULL &&
+			poUpperStackEntry->u32LowerLayer != poIfData->u32Index)
+		{
+			if ((poUpperStackEntry = ifStackTable_createExt (0, poIfData->u32Index)) == NULL)
+			{
+				goto ifTable_createHier_cleanup;
+			}
+			
+			poUpperStackEntry->u8Status = ifStackStatus_active_c;
+		}
 	}
 	
 	{
@@ -2778,7 +2786,7 @@ neIfRowStatus_handler (
 		goto neIfRowStatus_handler_success;
 	}
 	
-	switch (u8RowStatus)
+	switch (u8RowStatus & xRowStatus_mask_c)
 	{
 	case xRowStatus_active_c:
 	{

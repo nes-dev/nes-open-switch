@@ -2547,7 +2547,7 @@ ipAddressIfIndex_handler_newIfIndex:
 		goto ipAddressIfIndex_handler_success;
 	}
 	
-	if (!ifData_createReference (poIpAddressData->oIp.u32IfIndex, 0, false, true, false, NULL))
+	if (!ifData_createReference (poIpAddressData->oIp.u32IfIndex, 0, 0, false, true, false, NULL))
 	{
 		goto ipAddressIfIndex_handler_cleanup;
 	}

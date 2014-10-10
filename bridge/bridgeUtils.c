@@ -45,8 +45,8 @@ ieee8021PbILan_createEntry (
 	ifData_t *poCnpIfData = NULL;
 	ieee8021BridgeILanIfEntry_t *poILanIfEntry = NULL;
 	
-	if (!ifData_createReference (poPepPortEntry->u32IfIndex, ifType_bridge_c, true, false, false, &poPepIfData) ||
-		!ifData_createReference (poCnpPortEntry->u32IfIndex, ifType_bridge_c, true, false, false, &poCnpIfData))
+	if (!ifData_createReference (poPepPortEntry->u32IfIndex, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poPepIfData) ||
+		!ifData_createReference (poCnpPortEntry->u32IfIndex, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poCnpIfData))
 	{
 		goto ieee8021PbILan_createEntry_cleanup;
 	}

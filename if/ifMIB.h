@@ -1143,6 +1143,7 @@ bool ifData_getByIndexExt (
 bool ifData_createReference (
 	uint32_t u32IfIndex,
 	int32_t i32Type,
+	int32_t i32AdminStatus,
 	bool bCreate, bool bReference, bool bActivate,
 	ifData_t **ppoIfData);
 bool ifData_removeReference (

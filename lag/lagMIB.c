@@ -461,7 +461,7 @@ dot3adAggTable_createHier (
 {
 	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (poEntry);
 	
-	if (!ifData_createReference (poDot3adAggData->u32Index, ifType_ieee8023adLag_c, true, true, true, NULL))
+	if (!ifData_createReference (poDot3adAggData->u32Index, ifType_ieee8023adLag_c, 0, true, true, true, NULL))
 	{
 		goto dot3adAggTable_createHier_cleanup;
 	}
@@ -1295,7 +1295,7 @@ dot3adAggPortTable_createHier (
 {
 	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortEntry (poEntry);
 	
-	if (!ifData_createReference (poDot3adAggPortData->u32Index, 0, false, true, false, NULL))
+	if (!ifData_createReference (poDot3adAggPortData->u32Index, 0, 0, false, true, false, NULL))
 	{
 		goto dot3adAggPortTable_createHier_cleanup;
 	}

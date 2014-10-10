@@ -3837,7 +3837,7 @@ neEntPortRowStatus_handler (
 		
 		ifData_t *poIfData = NULL;
 		
-		if (!ifData_createReference (poEntry->u32IfIndex, 0, false, true, false, &poIfData))
+		if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, &poIfData))
 		{
 			goto neEntPortRowStatus_handler_cleanup;
 		}

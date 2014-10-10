@@ -1365,7 +1365,7 @@ ieee8021BridgeBasePortIfIndex_handler_newIfIndex:
 	}
 	poEntry->i32External = oIeee8021BridgePhyPortInfo.poPhyPortEntry == NULL ? ieee8021BridgeBasePortExternal_false_c: ieee8021BridgeBasePortExternal_true_c;
 	
-	if (!ifData_createReference (poEntry->u32IfIndex, 0, false, true, false, NULL))
+	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
 	{
 		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
 	}
@@ -1920,7 +1920,7 @@ bool
 ieee8021BridgeBaseIfToPortTable_createHier (
 	ieee8021BridgeBaseIfToPortEntry_t *poEntry)
 {
-	if (!ifData_createReference (poEntry->u32IfIndex, 0, false, true, false, NULL))
+	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
 	{
 		goto ieee8021BridgeBaseIfToPortTable_createHier_cleanup;
 	}
@@ -2599,7 +2599,7 @@ ieee8021BridgeTpPortTable_createHier (
 		register ifStackEntry_t *poIfStackEntry = NULL;
 		ifData_t *poIfData = NULL;
 		
-		if (!ifData_createReference (ifIndex_zero_c, ifType_bridge_c, true, true, true, &poIfData))
+		if (!ifData_createReference (ifIndex_zero_c, ifType_bridge_c, 0, true, true, true, &poIfData))
 		{
 			goto ieee8021BridgeTpPortTable_createHier_cleanup;
 		}
@@ -6374,7 +6374,7 @@ ieee8021BridgeILanIfTable_createExt (
 	{
 		ifData_t *poILanIfData = NULL;
 		
-		if (!ifData_createReference (u32IfIndex, ifType_ilan_c, true, true, true, &poILanIfData))
+		if (!ifData_createReference (u32IfIndex, ifType_ilan_c, 0, true, true, false, &poILanIfData))
 		{
 			goto ieee8021BridgeILanIfTable_createExt_cleanup;
 		}
@@ -6420,7 +6420,7 @@ bool
 ieee8021BridgeILanIfTable_createHier (
 	ieee8021BridgeILanIfEntry_t *poEntry)
 {
-	if (!ifData_createReference (poEntry->u32IfIndex, ifType_ilan_c, false, true, true, NULL))
+	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
 	{
 		goto ieee8021BridgeILanIfTable_createHier_cleanup;
 	}
@@ -6445,7 +6445,29 @@ bool
 ieee8021BridgeILanIfRowStatus_handler (
 	ieee8021BridgeILanIfEntry_t *poEntry, uint8_t u8RowStatus)
 {
-	return false;
+	register bool bRetCode = false;
+	ifData_t *poILanIfData = NULL;
+	
+	if (poEntry->u8RowStatus == u8RowStatus)
+	{
+		goto ieee8021BridgeILanIfRowStatus_handler_success;
+	}
+	
+	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, false, false, &poILanIfData) ||
+		!neIfRowStatus_handler (&poILanIfData->oNe, u8RowStatus))
+	{
+		goto ieee8021BridgeILanIfRowStatus_handler_cleanup;
+	}
+	
+ieee8021BridgeILanIfRowStatus_handler_success:
+	
+	bRetCode = true;
+	
+ieee8021BridgeILanIfRowStatus_handler_cleanup:
+	
+	poILanIfData != NULL ? ifData_unLock (poILanIfData): false;
+	
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
