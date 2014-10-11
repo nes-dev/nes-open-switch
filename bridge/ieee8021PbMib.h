@@ -149,6 +149,11 @@ typedef struct ieee8021PbEdgePortEntry_t
 	int32_t i32AcceptableFrameTypes;
 	int32_t i32EnableIngressFiltering;
 	
+	uint32_t u32CComponentId;
+	uint32_t u32PepPort;
+	uint32_t u32NumCVid;
+	uint8_t u8RowStatus;
+	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbEdgePortEntry_t;
 
@@ -169,6 +174,15 @@ ieee8021PbEdgePortEntry_t * ieee8021PbEdgePortTable_getNextIndex (
 	uint32_t u32BridgeBasePort,
 	uint32_t u32SVid);
 void ieee8021PbEdgePortTable_removeEntry (ieee8021PbEdgePortEntry_t *poEntry);
+ieee8021PbEdgePortEntry_t * ieee8021PbEdgePortTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort,
+	uint32_t u32SVid);
+bool ieee8021PbEdgePortTable_removeExt (ieee8021PbEdgePortEntry_t *poEntry);
+bool ieee8021PbEdgePortTable_createHier (ieee8021PbEdgePortEntry_t *poEntry);
+bool ieee8021PbEdgePortTable_removeHier (ieee8021PbEdgePortEntry_t *poEntry);
+bool ieee8021PbEdgePortRowStatus_handler (
+	ieee8021PbEdgePortEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021PbEdgePortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021PbEdgePortTable_getNext;
@@ -274,6 +288,10 @@ ieee8021PbCnpEntry_t * ieee8021PbCnpTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort);
 void ieee8021PbCnpTable_removeEntry (ieee8021PbCnpEntry_t *poEntry);
+ieee8021PbCnpEntry_t * ieee8021PbCnpTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort);
+bool ieee8021PbCnpTable_removeExt (ieee8021PbCnpEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021PbCnpTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021PbCnpTable_getNext;

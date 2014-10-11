@@ -24,6 +24,7 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "system/systemMIB.h"
+#include "bridgeUtils.h"
 #include "ethernet/ieee8021BridgeMib.h"
 #include "ieee8021PbMib.h"
 
@@ -770,6 +771,181 @@ ieee8021PbEdgePortTable_removeEntry (ieee8021PbEdgePortEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021PbEdgePortTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ieee8021PbEdgePortEntry_t *
+ieee8021PbEdgePortTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort,
+	uint32_t u32SVid)
+{
+	ieee8021PbEdgePortEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021PbEdgePortTable_createEntry (
+		u32BridgeBasePortComponentId,
+		u32BridgeBasePort,
+		u32SVid);
+	if (poEntry == NULL)
+	{
+		return NULL;
+	}
+	
+	if (!ieee8021PbEdgePortTable_createHier (poEntry))
+	{
+		ieee8021PbEdgePortTable_removeEntry (poEntry);
+		return NULL;
+	}
+	
+	return poEntry;
+}
+
+bool
+ieee8021PbEdgePortTable_removeExt (ieee8021PbEdgePortEntry_t *poEntry)
+{
+	if (!ieee8021PbEdgePortTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021PbEdgePortTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021PbEdgePortTable_createHier (
+	ieee8021PbEdgePortEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
+	
+	if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbEdgePortTable_createHier_cleanup;
+	}
+	
+	register ieee8021BridgeBaseEntry_t *pCComponent = NULL;
+	
+	if ((pCComponent = ieee8021BridgeBaseTable_getByIndex (poIeee8021PbCepEntry->u32CComponentId)) == NULL)
+	{
+		goto ieee8021PbEdgePortTable_createHier_cleanup;
+	}
+	
+	register uint16_t u16PortIndex = 0;
+	register ieee8021PbCnpEntry_t *poIeee8021PbCnpEntry = NULL;
+	
+	while (
+		(poIeee8021PbCnpEntry = ieee8021PbCnpTable_getNextIndex (poEntry->u32BridgeBasePortComponentId, u16PortIndex)) != NULL &&
+		poIeee8021PbCnpEntry->u32BridgeBasePortComponentId == poEntry->u32BridgeBasePortComponentId &&
+		(poIeee8021PbCnpEntry->u32CComponentId != poIeee8021PbCepEntry->u32CComponentId ||
+		 poIeee8021PbCnpEntry->u32SVid != poEntry->u32SVid))
+	{
+		u16PortIndex = poIeee8021PbCnpEntry->u32BridgeBasePort;
+	}
+	
+	if ((poIeee8021PbCnpEntry == NULL ||
+		 poIeee8021PbCnpEntry->u32BridgeBasePortComponentId != poEntry->u32BridgeBasePortComponentId ||
+		 poIeee8021PbCnpEntry->u32CComponentId != poIeee8021PbCepEntry->u32CComponentId ||
+		 poIeee8021PbCnpEntry->u32SVid != poEntry->u32SVid) &&
+		(poIeee8021PbCnpEntry = ieee8021PbCnpTable_createExt (poEntry->u32BridgeBasePortComponentId, ieee8021BridgeBasePort_zero_c)) == NULL)
+	{
+		goto ieee8021PbEdgePortTable_createHier_cleanup;
+	}
+	
+	register ieee8021BridgeBasePortEntry_t *poCnpPortEntry = NULL;
+	
+	if ((poCnpPortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poIeee8021PbCnpEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbEdgePortTable_createHier_cleanup;
+	}
+	
+	register ieee8021BridgeBasePortEntry_t *poPepPortEntry = NULL;
+	
+	if ((poPepPortEntry = ieee8021BridgeBasePortTable_createExt (pCComponent->u32ComponentId, poIeee8021PbCnpEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbEdgePortTable_createHier_cleanup;
+	}
+	poPepPortEntry->i32Type = ieee8021BridgeBasePortType_providerEdgePort_c;
+	
+	poIeee8021PbCnpEntry->u32CComponentId = poIeee8021PbCepEntry->u32CComponentId;
+	poIeee8021PbCnpEntry->u32SVid = poEntry->u32SVid;
+	
+	if (!ieee8021PbILan_createEntry (poCnpPortEntry, poPepPortEntry))
+	{
+		goto ieee8021PbEdgePortTable_createHier_cleanup;
+	}
+	
+	poEntry->u32CComponentId = poIeee8021PbCepEntry->u32CComponentId;
+	poEntry->u32PepPort = poIeee8021PbCnpEntry->u32BridgeBasePort;
+	
+	bRetCode = true;
+	
+ieee8021PbEdgePortTable_createHier_cleanup:
+	
+	!bRetCode ? ieee8021PbEdgePortTable_removeHier (poEntry): false;
+	return bRetCode;
+}
+
+bool
+ieee8021PbEdgePortTable_removeHier (
+	ieee8021PbEdgePortEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
+	
+	if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbEdgePortTable_removeHier_success;
+	}
+	
+	register ieee8021BridgeBaseEntry_t *pCComponent = NULL;
+	
+	if ((pCComponent = ieee8021BridgeBaseTable_getByIndex (poIeee8021PbCepEntry->u32CComponentId)) == NULL)
+	{
+		goto ieee8021PbEdgePortTable_removeHier_cleanup;
+	}
+	
+	register ieee8021BridgeBasePortEntry_t *poPepPortEntry = NULL;
+	register ieee8021BridgeBasePortEntry_t *poCnpPortEntry = NULL;
+	
+	if ((poPepPortEntry = ieee8021BridgeBasePortTable_getByIndex (poIeee8021PbCepEntry->u32CComponentId, poEntry->u32PepPort)) == NULL ||
+		(poCnpPortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32PepPort)) == NULL)
+	{
+		goto ieee8021PbEdgePortTable_removeHier_cleanup;
+	}
+	
+	if (!ieee8021PbILan_removeEntry (poCnpPortEntry, poPepPortEntry))
+	{
+		goto ieee8021PbEdgePortTable_removeHier_cleanup;
+	}
+	
+	if (!ieee8021BridgeBasePortTable_removeExt (poPepPortEntry))
+	{
+		goto ieee8021PbEdgePortTable_removeHier_cleanup;
+	}
+	
+	register ieee8021PbCnpEntry_t *poIeee8021PbCnpEntry = NULL;
+	
+	if ((poIeee8021PbCnpEntry = ieee8021PbCnpTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32PepPort)) != NULL &&
+		!ieee8021PbCnpTable_removeExt (poIeee8021PbCnpEntry))
+	{
+		goto ieee8021PbEdgePortTable_removeHier_cleanup;
+	}
+	
+ieee8021PbEdgePortTable_removeHier_success:
+	
+	bRetCode = true;
+	
+ieee8021PbEdgePortTable_removeHier_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021PbEdgePortRowStatus_handler (
+	ieee8021PbEdgePortEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	poEntry->u8RowStatus = u8RowStatus;
+	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -1552,6 +1728,20 @@ ieee8021PbCnpTable_removeEntry (ieee8021PbCnpEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021PbCnpTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ieee8021PbCnpEntry_t *
+ieee8021PbCnpTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort)
+{
+	return NULL;
+}
+
+bool
+ieee8021PbCnpTable_removeExt (ieee8021PbCnpEntry_t *poEntry)
+{
+	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
