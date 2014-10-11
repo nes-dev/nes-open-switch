@@ -3704,7 +3704,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021PBBCBPSERVICEMAPPINGBVID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32BVid);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32BVid);
 				break;
 			case IEEE8021PBBCBPSERVICEMAPPINGDEFAULTBACKBONEDEST:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8DefaultBackboneDest, table_entry->u16DefaultBackboneDest_len);
@@ -3877,18 +3877,18 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021PBBCBPSERVICEMAPPINGBVID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32BVid))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32BVid))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32BVid, sizeof (table_entry->i32BVid));
+					memcpy (pvOldDdata, &table_entry->u32BVid, sizeof (table_entry->u32BVid));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32BVid = *request->requestvb->val.integer;
+				table_entry->u32BVid = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBBCBPSERVICEMAPPINGDEFAULTBACKBONEDEST:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8DefaultBackboneDest))) == NULL)
@@ -3980,7 +3980,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021PBBCBPSERVICEMAPPINGBVID:
-				memcpy (&table_entry->i32BVid, pvOldDdata, sizeof (table_entry->i32BVid));
+				memcpy (&table_entry->u32BVid, pvOldDdata, sizeof (table_entry->u32BVid));
 				break;
 			case IEEE8021PBBCBPSERVICEMAPPINGDEFAULTBACKBONEDEST:
 				memcpy (table_entry->au8DefaultBackboneDest, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);

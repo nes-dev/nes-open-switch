@@ -542,7 +542,7 @@ typedef struct ieee8021PbbCBPServiceMappingEntry_t
 	uint32_t u32BackboneSid;
 	
 	/* Column values */
-	int32_t i32BVid;
+	uint32_t u32BVid;
 	uint8_t au8DefaultBackboneDest[6];
 	size_t u16DefaultBackboneDest_len;	/* # of uint8_t elements */
 	uint8_t au8Type[1];

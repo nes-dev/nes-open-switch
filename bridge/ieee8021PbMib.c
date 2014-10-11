@@ -125,8 +125,8 @@ ieee8021PbCVidRegistrationTable_BTreeNodeCmp (
 	return
 		(pEntry1->u32BridgeBasePortComponentId < pEntry2->u32BridgeBasePortComponentId) ||
 		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort < pEntry2->u32BridgeBasePort) ||
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32CVid < pEntry2->i32CVid) ? -1:
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32CVid == pEntry2->i32CVid) ? 0: 1;
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32CVid < pEntry2->u32CVid) ? -1:
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32CVid == pEntry2->u32CVid) ? 0: 1;
 }
 
 xBTree_t oIeee8021PbCVidRegistrationTable_BTree = xBTree_initInline (&ieee8021PbCVidRegistrationTable_BTreeNodeCmp);
@@ -136,7 +136,7 @@ ieee8021PbCVidRegistrationEntry_t *
 ieee8021PbCVidRegistrationTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32CVid)
+	uint32_t u32CVid)
 {
 	register ieee8021PbCVidRegistrationEntry_t *poEntry = NULL;
 	
@@ -147,7 +147,7 @@ ieee8021PbCVidRegistrationTable_createEntry (
 	
 	poEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poEntry->i32CVid = i32CVid;
+	poEntry->u32CVid = u32CVid;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021PbCVidRegistrationTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -166,7 +166,7 @@ ieee8021PbCVidRegistrationEntry_t *
 ieee8021PbCVidRegistrationTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32CVid)
+	uint32_t u32CVid)
 {
 	register ieee8021PbCVidRegistrationEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -178,7 +178,7 @@ ieee8021PbCVidRegistrationTable_getByIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32CVid = i32CVid;
+	poTmpEntry->u32CVid = u32CVid;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021PbCVidRegistrationTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -193,7 +193,7 @@ ieee8021PbCVidRegistrationEntry_t *
 ieee8021PbCVidRegistrationTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32CVid)
+	uint32_t u32CVid)
 {
 	register ieee8021PbCVidRegistrationEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -205,7 +205,7 @@ ieee8021PbCVidRegistrationTable_getNextIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32CVid = i32CVid;
+	poTmpEntry->u32CVid = u32CVid;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021PbCVidRegistrationTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -259,7 +259,7 @@ ieee8021PbCVidRegistrationTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BridgeBasePort);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32CVid);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32CVid);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021PbCVidRegistrationTable_BTree);
 	return put_index_data;
@@ -321,7 +321,7 @@ ieee8021PbCVidRegistrationTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021PBCVIDREGISTRATIONSVID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SVid);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32SVid);
 				break;
 			case IEEE8021PBCVIDREGISTRATIONUNTAGGEDPEP:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32UntaggedPep);
@@ -483,18 +483,18 @@ ieee8021PbCVidRegistrationTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021PBCVIDREGISTRATIONSVID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SVid))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32SVid))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32SVid, sizeof (table_entry->i32SVid));
+					memcpy (pvOldDdata, &table_entry->u32SVid, sizeof (table_entry->u32SVid));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32SVid = *request->requestvb->val.integer;
+				table_entry->u32SVid = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBCVIDREGISTRATIONUNTAGGEDPEP:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32UntaggedPep))) == NULL)
@@ -564,7 +564,7 @@ ieee8021PbCVidRegistrationTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021PBCVIDREGISTRATIONSVID:
-				memcpy (&table_entry->i32SVid, pvOldDdata, sizeof (table_entry->i32SVid));
+				memcpy (&table_entry->u32SVid, pvOldDdata, sizeof (table_entry->u32SVid));
 				break;
 			case IEEE8021PBCVIDREGISTRATIONUNTAGGEDPEP:
 				memcpy (&table_entry->i32UntaggedPep, pvOldDdata, sizeof (table_entry->i32UntaggedPep));
@@ -667,8 +667,8 @@ ieee8021PbEdgePortTable_BTreeNodeCmp (
 	return
 		(pEntry1->u32BridgeBasePortComponentId < pEntry2->u32BridgeBasePortComponentId) ||
 		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort < pEntry2->u32BridgeBasePort) ||
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32SVid < pEntry2->i32SVid) ? -1:
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32SVid == pEntry2->i32SVid) ? 0: 1;
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32SVid < pEntry2->u32SVid) ? -1:
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32SVid == pEntry2->u32SVid) ? 0: 1;
 }
 
 xBTree_t oIeee8021PbEdgePortTable_BTree = xBTree_initInline (&ieee8021PbEdgePortTable_BTreeNodeCmp);
@@ -678,7 +678,7 @@ ieee8021PbEdgePortEntry_t *
 ieee8021PbEdgePortTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32SVid)
+	uint32_t u32SVid)
 {
 	register ieee8021PbEdgePortEntry_t *poEntry = NULL;
 	
@@ -689,7 +689,7 @@ ieee8021PbEdgePortTable_createEntry (
 	
 	poEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poEntry->i32SVid = i32SVid;
+	poEntry->u32SVid = u32SVid;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021PbEdgePortTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -707,7 +707,7 @@ ieee8021PbEdgePortEntry_t *
 ieee8021PbEdgePortTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32SVid)
+	uint32_t u32SVid)
 {
 	register ieee8021PbEdgePortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -719,7 +719,7 @@ ieee8021PbEdgePortTable_getByIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32SVid = i32SVid;
+	poTmpEntry->u32SVid = u32SVid;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021PbEdgePortTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -734,7 +734,7 @@ ieee8021PbEdgePortEntry_t *
 ieee8021PbEdgePortTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32SVid)
+	uint32_t u32SVid)
 {
 	register ieee8021PbEdgePortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -746,7 +746,7 @@ ieee8021PbEdgePortTable_getNextIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32SVid = i32SVid;
+	poTmpEntry->u32SVid = u32SVid;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021PbEdgePortTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -800,7 +800,7 @@ ieee8021PbEdgePortTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BridgeBasePort);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32SVid);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32SVid);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021PbEdgePortTable_BTree);
 	return put_index_data;
@@ -862,7 +862,7 @@ ieee8021PbEdgePortTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021PBEDGEPORTPVID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PVid);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32PVid);
 				break;
 			case IEEE8021PBEDGEPORTDEFAULTUSERPRIORITY:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32DefaultUserPriority);
@@ -959,18 +959,18 @@ ieee8021PbEdgePortTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021PBEDGEPORTPVID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PVid))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PVid))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PVid, sizeof (table_entry->i32PVid));
+					memcpy (pvOldDdata, &table_entry->u32PVid, sizeof (table_entry->u32PVid));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PVid = *request->requestvb->val.integer;
+				table_entry->u32PVid = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBEDGEPORTDEFAULTUSERPRIORITY:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32DefaultUserPriority))) == NULL)
@@ -1032,7 +1032,7 @@ ieee8021PbEdgePortTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021PBEDGEPORTPVID:
-				memcpy (&table_entry->i32PVid, pvOldDdata, sizeof (table_entry->i32PVid));
+				memcpy (&table_entry->u32PVid, pvOldDdata, sizeof (table_entry->u32PVid));
 				break;
 			case IEEE8021PBEDGEPORTDEFAULTUSERPRIORITY:
 				memcpy (&table_entry->u32DefaultUserPriority, pvOldDdata, sizeof (table_entry->u32DefaultUserPriority));
@@ -1101,9 +1101,9 @@ ieee8021PbServicePriorityRegenerationTable_BTreeNodeCmp (
 	return
 		(pEntry1->u32BridgeBasePortComponentId < pEntry2->u32BridgeBasePortComponentId) ||
 		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort < pEntry2->u32BridgeBasePort) ||
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32SVid < pEntry2->i32SVid) ||
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32SVid == pEntry2->i32SVid && pEntry1->u32ReceivedPriority < pEntry2->u32ReceivedPriority) ? -1:
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32SVid == pEntry2->i32SVid && pEntry1->u32ReceivedPriority == pEntry2->u32ReceivedPriority) ? 0: 1;
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32SVid < pEntry2->u32SVid) ||
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32SVid == pEntry2->u32SVid && pEntry1->u32ReceivedPriority < pEntry2->u32ReceivedPriority) ? -1:
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32SVid == pEntry2->u32SVid && pEntry1->u32ReceivedPriority == pEntry2->u32ReceivedPriority) ? 0: 1;
 }
 
 xBTree_t oIeee8021PbServicePriorityRegenerationTable_BTree = xBTree_initInline (&ieee8021PbServicePriorityRegenerationTable_BTreeNodeCmp);
@@ -1113,7 +1113,7 @@ ieee8021PbServicePriorityRegenerationEntry_t *
 ieee8021PbServicePriorityRegenerationTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32SVid,
+	uint32_t u32SVid,
 	uint32_t u32ReceivedPriority)
 {
 	register ieee8021PbServicePriorityRegenerationEntry_t *poEntry = NULL;
@@ -1125,7 +1125,7 @@ ieee8021PbServicePriorityRegenerationTable_createEntry (
 	
 	poEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poEntry->i32SVid = i32SVid;
+	poEntry->u32SVid = u32SVid;
 	poEntry->u32ReceivedPriority = u32ReceivedPriority;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021PbServicePriorityRegenerationTable_BTree) != NULL)
 	{
@@ -1141,7 +1141,7 @@ ieee8021PbServicePriorityRegenerationEntry_t *
 ieee8021PbServicePriorityRegenerationTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32SVid,
+	uint32_t u32SVid,
 	uint32_t u32ReceivedPriority)
 {
 	register ieee8021PbServicePriorityRegenerationEntry_t *poTmpEntry = NULL;
@@ -1154,7 +1154,7 @@ ieee8021PbServicePriorityRegenerationTable_getByIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32SVid = i32SVid;
+	poTmpEntry->u32SVid = u32SVid;
 	poTmpEntry->u32ReceivedPriority = u32ReceivedPriority;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021PbServicePriorityRegenerationTable_BTree)) == NULL)
 	{
@@ -1170,7 +1170,7 @@ ieee8021PbServicePriorityRegenerationEntry_t *
 ieee8021PbServicePriorityRegenerationTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32SVid,
+	uint32_t u32SVid,
 	uint32_t u32ReceivedPriority)
 {
 	register ieee8021PbServicePriorityRegenerationEntry_t *poTmpEntry = NULL;
@@ -1183,7 +1183,7 @@ ieee8021PbServicePriorityRegenerationTable_getNextIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32SVid = i32SVid;
+	poTmpEntry->u32SVid = u32SVid;
 	poTmpEntry->u32ReceivedPriority = u32ReceivedPriority;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021PbServicePriorityRegenerationTable_BTree)) == NULL)
 	{
@@ -1238,7 +1238,7 @@ ieee8021PbServicePriorityRegenerationTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BridgeBasePort);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32SVid);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32SVid);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ReceivedPriority);
 	*my_data_context = (void*) poEntry;
@@ -1643,7 +1643,7 @@ ieee8021PbCnpTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32CComponentId);
 				break;
 			case IEEE8021PBCNPSVID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SVid);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32SVid);
 				break;
 			case IEEE8021PBCNPROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -1803,18 +1803,18 @@ ieee8021PbCnpTable_mapper (
 				table_entry->u32CComponentId = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBCNPSVID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SVid))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32SVid))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32SVid, sizeof (table_entry->i32SVid));
+					memcpy (pvOldDdata, &table_entry->u32SVid, sizeof (table_entry->u32SVid));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32SVid = *request->requestvb->val.integer;
+				table_entry->u32SVid = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -1859,7 +1859,7 @@ ieee8021PbCnpTable_mapper (
 				memcpy (&table_entry->u32CComponentId, pvOldDdata, sizeof (table_entry->u32CComponentId));
 				break;
 			case IEEE8021PBCNPSVID:
-				memcpy (&table_entry->i32SVid, pvOldDdata, sizeof (table_entry->i32SVid));
+				memcpy (&table_entry->u32SVid, pvOldDdata, sizeof (table_entry->u32SVid));
 				break;
 			case IEEE8021PBCNPROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -3691,8 +3691,8 @@ ieee8021PbInternalInterfaceTable_BTreeNodeCmp (
 	return
 		(pEntry1->u32BridgeBasePortComponentId < pEntry2->u32BridgeBasePortComponentId) ||
 		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort < pEntry2->u32BridgeBasePort) ||
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32PbIiExternalSVid < pEntry2->i32PbIiExternalSVid) ? -1:
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32PbIiExternalSVid == pEntry2->i32PbIiExternalSVid) ? 0: 1;
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32PbIiExternalSVid < pEntry2->u32PbIiExternalSVid) ? -1:
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32PbIiExternalSVid == pEntry2->u32PbIiExternalSVid) ? 0: 1;
 }
 
 xBTree_t oIeee8021PbInternalInterfaceTable_BTree = xBTree_initInline (&ieee8021PbInternalInterfaceTable_BTreeNodeCmp);
@@ -3702,7 +3702,7 @@ ieee8021PbInternalInterfaceEntry_t *
 ieee8021PbInternalInterfaceTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32PbIiExternalSVid)
+	uint32_t u32PbIiExternalSVid)
 {
 	register ieee8021PbInternalInterfaceEntry_t *poEntry = NULL;
 	
@@ -3713,7 +3713,7 @@ ieee8021PbInternalInterfaceTable_createEntry (
 	
 	poEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poEntry->i32PbIiExternalSVid = i32PbIiExternalSVid;
+	poEntry->u32PbIiExternalSVid = u32PbIiExternalSVid;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021PbInternalInterfaceTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -3730,7 +3730,7 @@ ieee8021PbInternalInterfaceEntry_t *
 ieee8021PbInternalInterfaceTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32PbIiExternalSVid)
+	uint32_t u32PbIiExternalSVid)
 {
 	register ieee8021PbInternalInterfaceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -3742,7 +3742,7 @@ ieee8021PbInternalInterfaceTable_getByIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32PbIiExternalSVid = i32PbIiExternalSVid;
+	poTmpEntry->u32PbIiExternalSVid = u32PbIiExternalSVid;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021PbInternalInterfaceTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -3757,7 +3757,7 @@ ieee8021PbInternalInterfaceEntry_t *
 ieee8021PbInternalInterfaceTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32PbIiExternalSVid)
+	uint32_t u32PbIiExternalSVid)
 {
 	register ieee8021PbInternalInterfaceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -3769,7 +3769,7 @@ ieee8021PbInternalInterfaceTable_getNextIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32PbIiExternalSVid = i32PbIiExternalSVid;
+	poTmpEntry->u32PbIiExternalSVid = u32PbIiExternalSVid;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021PbInternalInterfaceTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -3823,7 +3823,7 @@ ieee8021PbInternalInterfaceTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BridgeBasePort);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32PbIiExternalSVid);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32PbIiExternalSVid);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021PbInternalInterfaceTable_BTree);
 	return put_index_data;
@@ -3891,7 +3891,7 @@ ieee8021PbInternalInterfaceTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PbIiInternalPortType);
 				break;
 			case IEEE8021PBIIINTERNALSVID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PbIiInternalSVid);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32PbIiInternalSVid);
 				break;
 			case IEEE8021PBIIROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8PbIiRowStatus);
@@ -4053,18 +4053,18 @@ ieee8021PbInternalInterfaceTable_mapper (
 				table_entry->i32PbIiInternalPortType = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBIIINTERNALSVID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PbIiInternalSVid))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PbIiInternalSVid))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PbIiInternalSVid, sizeof (table_entry->i32PbIiInternalSVid));
+					memcpy (pvOldDdata, &table_entry->u32PbIiInternalSVid, sizeof (table_entry->u32PbIiInternalSVid));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PbIiInternalSVid = *request->requestvb->val.integer;
+				table_entry->u32PbIiInternalSVid = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -4109,7 +4109,7 @@ ieee8021PbInternalInterfaceTable_mapper (
 				memcpy (&table_entry->i32PbIiInternalPortType, pvOldDdata, sizeof (table_entry->i32PbIiInternalPortType));
 				break;
 			case IEEE8021PBIIINTERNALSVID:
-				memcpy (&table_entry->i32PbIiInternalSVid, pvOldDdata, sizeof (table_entry->i32PbIiInternalSVid));
+				memcpy (&table_entry->u32PbIiInternalSVid, pvOldDdata, sizeof (table_entry->u32PbIiInternalSVid));
 				break;
 			case IEEE8021PBIIROWSTATUS:
 				switch (*request->requestvb->val.integer)

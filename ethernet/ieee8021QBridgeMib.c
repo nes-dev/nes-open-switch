@@ -231,7 +231,7 @@ ieee8021QBridgeTable_createEntry (
 	}
 	
 	poEntry->i32VlanVersionNumber = ieee8021QBridgeVlanVersionNumber_version2_c;
-	poEntry->i32MaxVlanId = 4095;
+	poEntry->u32MaxVlanId = 4095;
 	poEntry->u32MaxSupportedVlans = 4095;
 	poEntry->i32MvrpEnabledStatus = ieee8021QBridgeMvrpEnabledStatus_true_c;
 	
@@ -502,28 +502,28 @@ ieee8021QBridgeTable_removeHier (
 	
 	{
 		uint32_t u32BridgeBasePort = 0;
-		int32_t i32LocalVid = 0;
+		uint32_t u32LocalVid = 0;
 		register ieee8021QBridgeVidXEntry_t *poIeee8021QBridgeVidXEntry = NULL;
 		
-		while ((poIeee8021QBridgeVidXEntry = ieee8021QBridgeVidXTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort, i32LocalVid)) != NULL &&
+		while ((poIeee8021QBridgeVidXEntry = ieee8021QBridgeVidXTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort, u32LocalVid)) != NULL &&
 			poIeee8021QBridgeVidXEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
 		{
 			u32BridgeBasePort = poIeee8021QBridgeVidXEntry->u32BridgeBasePort;
-			i32LocalVid = poIeee8021QBridgeVidXEntry->i32LocalVid;
+			u32LocalVid = poIeee8021QBridgeVidXEntry->u32LocalVid;
 			ieee8021QBridgeVidXTable_removeEntry (poIeee8021QBridgeVidXEntry);
 		}
 	}
 	
 	{
 		uint32_t u32BridgeBasePort = 0;
-		int32_t i32RelayVid = 0;
+		uint32_t u32RelayVid = 0;
 		register ieee8021QBridgeEgressVidXEntry_t *poIeee8021QBridgeEgressVidXEntry = NULL;
 		
-		while ((poIeee8021QBridgeEgressVidXEntry = ieee8021QBridgeEgressVidXTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort, i32RelayVid)) != NULL &&
+		while ((poIeee8021QBridgeEgressVidXEntry = ieee8021QBridgeEgressVidXTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort, u32RelayVid)) != NULL &&
 			poIeee8021QBridgeEgressVidXEntry->u32BridgeBaseComponentId == poEntry->u32ComponentId)
 		{
 			u32BridgeBasePort = poIeee8021QBridgeEgressVidXEntry->u32BridgeBasePort;
-			i32RelayVid = poIeee8021QBridgeEgressVidXEntry->i32RelayVid;
+			u32RelayVid = poIeee8021QBridgeEgressVidXEntry->u32RelayVid;
 			ieee8021QBridgeEgressVidXTable_removeEntry (poIeee8021QBridgeEgressVidXEntry);
 		}
 	}
@@ -746,7 +746,7 @@ ieee8021QBridgeTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32VlanVersionNumber);
 				break;
 			case IEEE8021QBRIDGEMAXVLANID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32MaxVlanId);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32MaxVlanId);
 				break;
 			case IEEE8021QBRIDGEMAXSUPPORTEDVLANS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32MaxSupportedVlans);
@@ -7780,7 +7780,7 @@ ieee8021QBridgeProtocolPortTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEPROTOCOLPORTGROUPVID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32GroupVid);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32GroupVid);
 				break;
 			case IEEE8021QBRIDGEPROTOCOLPORTROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -7920,18 +7920,18 @@ ieee8021QBridgeProtocolPortTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEPROTOCOLPORTGROUPVID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32GroupVid))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32GroupVid))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32GroupVid, sizeof (table_entry->i32GroupVid));
+					memcpy (pvOldDdata, &table_entry->u32GroupVid, sizeof (table_entry->u32GroupVid));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32GroupVid = *request->requestvb->val.integer;
+				table_entry->u32GroupVid = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -7973,7 +7973,7 @@ ieee8021QBridgeProtocolPortTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEPROTOCOLPORTGROUPVID:
-				memcpy (&table_entry->i32GroupVid, pvOldDdata, sizeof (table_entry->i32GroupVid));
+				memcpy (&table_entry->u32GroupVid, pvOldDdata, sizeof (table_entry->u32GroupVid));
 				break;
 			case IEEE8021QBRIDGEPROTOCOLPORTROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -8070,8 +8070,8 @@ ieee8021QBridgeVidXTable_BTreeNodeCmp (
 	return
 		(pEntry1->u32BridgeBasePortComponentId < pEntry2->u32BridgeBasePortComponentId) ||
 		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort < pEntry2->u32BridgeBasePort) ||
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32LocalVid < pEntry2->i32LocalVid) ? -1:
-		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32LocalVid == pEntry2->i32LocalVid) ? 0: 1;
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32LocalVid < pEntry2->u32LocalVid) ? -1:
+		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32LocalVid == pEntry2->u32LocalVid) ? 0: 1;
 }
 
 xBTree_t oIeee8021QBridgeVidXTable_BTree = xBTree_initInline (&ieee8021QBridgeVidXTable_BTreeNodeCmp);
@@ -8081,7 +8081,7 @@ ieee8021QBridgeVidXEntry_t *
 ieee8021QBridgeVidXTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32LocalVid)
+	uint32_t u32LocalVid)
 {
 	register ieee8021QBridgeVidXEntry_t *poEntry = NULL;
 	
@@ -8092,7 +8092,7 @@ ieee8021QBridgeVidXTable_createEntry (
 	
 	poEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poEntry->i32LocalVid = i32LocalVid;
+	poEntry->u32LocalVid = u32LocalVid;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -8109,7 +8109,7 @@ ieee8021QBridgeVidXEntry_t *
 ieee8021QBridgeVidXTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32LocalVid)
+	uint32_t u32LocalVid)
 {
 	register ieee8021QBridgeVidXEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -8121,7 +8121,7 @@ ieee8021QBridgeVidXTable_getByIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32LocalVid = i32LocalVid;
+	poTmpEntry->u32LocalVid = u32LocalVid;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -8136,7 +8136,7 @@ ieee8021QBridgeVidXEntry_t *
 ieee8021QBridgeVidXTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32LocalVid)
+	uint32_t u32LocalVid)
 {
 	register ieee8021QBridgeVidXEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -8148,7 +8148,7 @@ ieee8021QBridgeVidXTable_getNextIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32LocalVid = i32LocalVid;
+	poTmpEntry->u32LocalVid = u32LocalVid;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -8202,7 +8202,7 @@ ieee8021QBridgeVidXTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BridgeBasePort);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32LocalVid);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32LocalVid);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021QBridgeVidXTable_BTree);
 	return put_index_data;
@@ -8264,7 +8264,7 @@ ieee8021QBridgeVidXTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEVIDXRELAYVID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RelayVid);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32RelayVid);
 				break;
 			case IEEE8021QBRIDGEVIDXROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -8404,18 +8404,18 @@ ieee8021QBridgeVidXTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEVIDXRELAYVID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32RelayVid))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32RelayVid))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32RelayVid, sizeof (table_entry->i32RelayVid));
+					memcpy (pvOldDdata, &table_entry->u32RelayVid, sizeof (table_entry->u32RelayVid));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32RelayVid = *request->requestvb->val.integer;
+				table_entry->u32RelayVid = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -8457,7 +8457,7 @@ ieee8021QBridgeVidXTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEVIDXRELAYVID:
-				memcpy (&table_entry->i32RelayVid, pvOldDdata, sizeof (table_entry->i32RelayVid));
+				memcpy (&table_entry->u32RelayVid, pvOldDdata, sizeof (table_entry->u32RelayVid));
 				break;
 			case IEEE8021QBRIDGEVIDXROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -8554,8 +8554,8 @@ ieee8021QBridgeEgressVidXTable_BTreeNodeCmp (
 	return
 		(pEntry1->u32BridgeBaseComponentId < pEntry2->u32BridgeBaseComponentId) ||
 		(pEntry1->u32BridgeBaseComponentId == pEntry2->u32BridgeBaseComponentId && pEntry1->u32BridgeBasePort < pEntry2->u32BridgeBasePort) ||
-		(pEntry1->u32BridgeBaseComponentId == pEntry2->u32BridgeBaseComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32RelayVid < pEntry2->i32RelayVid) ? -1:
-		(pEntry1->u32BridgeBaseComponentId == pEntry2->u32BridgeBaseComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->i32RelayVid == pEntry2->i32RelayVid) ? 0: 1;
+		(pEntry1->u32BridgeBaseComponentId == pEntry2->u32BridgeBaseComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32RelayVid < pEntry2->u32RelayVid) ? -1:
+		(pEntry1->u32BridgeBaseComponentId == pEntry2->u32BridgeBaseComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32RelayVid == pEntry2->u32RelayVid) ? 0: 1;
 }
 
 xBTree_t oIeee8021QBridgeEgressVidXTable_BTree = xBTree_initInline (&ieee8021QBridgeEgressVidXTable_BTreeNodeCmp);
@@ -8565,7 +8565,7 @@ ieee8021QBridgeEgressVidXEntry_t *
 ieee8021QBridgeEgressVidXTable_createEntry (
 	uint32_t u32BridgeBaseComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32RelayVid)
+	uint32_t u32RelayVid)
 {
 	register ieee8021QBridgeEgressVidXEntry_t *poEntry = NULL;
 	
@@ -8576,7 +8576,7 @@ ieee8021QBridgeEgressVidXTable_createEntry (
 	
 	poEntry->u32BridgeBaseComponentId = u32BridgeBaseComponentId;
 	poEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poEntry->i32RelayVid = i32RelayVid;
+	poEntry->u32RelayVid = u32RelayVid;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgeEgressVidXTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -8593,7 +8593,7 @@ ieee8021QBridgeEgressVidXEntry_t *
 ieee8021QBridgeEgressVidXTable_getByIndex (
 	uint32_t u32BridgeBaseComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32RelayVid)
+	uint32_t u32RelayVid)
 {
 	register ieee8021QBridgeEgressVidXEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -8605,7 +8605,7 @@ ieee8021QBridgeEgressVidXTable_getByIndex (
 	
 	poTmpEntry->u32BridgeBaseComponentId = u32BridgeBaseComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32RelayVid = i32RelayVid;
+	poTmpEntry->u32RelayVid = u32RelayVid;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeEgressVidXTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -8620,7 +8620,7 @@ ieee8021QBridgeEgressVidXEntry_t *
 ieee8021QBridgeEgressVidXTable_getNextIndex (
 	uint32_t u32BridgeBaseComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32RelayVid)
+	uint32_t u32RelayVid)
 {
 	register ieee8021QBridgeEgressVidXEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -8632,7 +8632,7 @@ ieee8021QBridgeEgressVidXTable_getNextIndex (
 	
 	poTmpEntry->u32BridgeBaseComponentId = u32BridgeBaseComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	poTmpEntry->i32RelayVid = i32RelayVid;
+	poTmpEntry->u32RelayVid = u32RelayVid;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeEgressVidXTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -8686,7 +8686,7 @@ ieee8021QBridgeEgressVidXTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BridgeBasePort);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32RelayVid);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32RelayVid);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021QBridgeEgressVidXTable_BTree);
 	return put_index_data;
@@ -8748,7 +8748,7 @@ ieee8021QBridgeEgressVidXTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEEGRESSVIDXLOCALVID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LocalVid);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32LocalVid);
 				break;
 			case IEEE8021QBRIDGEEGRESSVIDXROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -8888,18 +8888,18 @@ ieee8021QBridgeEgressVidXTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEEGRESSVIDXLOCALVID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32LocalVid))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32LocalVid))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32LocalVid, sizeof (table_entry->i32LocalVid));
+					memcpy (pvOldDdata, &table_entry->u32LocalVid, sizeof (table_entry->u32LocalVid));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32LocalVid = *request->requestvb->val.integer;
+				table_entry->u32LocalVid = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -8941,7 +8941,7 @@ ieee8021QBridgeEgressVidXTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEEGRESSVIDXLOCALVID:
-				memcpy (&table_entry->i32LocalVid, pvOldDdata, sizeof (table_entry->i32LocalVid));
+				memcpy (&table_entry->u32LocalVid, pvOldDdata, sizeof (table_entry->u32LocalVid));
 				break;
 			case IEEE8021QBRIDGEEGRESSVIDXROWSTATUS:
 				switch (*request->requestvb->val.integer)

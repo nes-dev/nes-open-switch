@@ -94,7 +94,7 @@ typedef struct ieee8021QBridgeEntry_t
 	
 	/* Column values */
 	int32_t i32VlanVersionNumber;
-	int32_t i32MaxVlanId;
+	uint32_t u32MaxVlanId;
 	uint32_t u32MaxSupportedVlans;
 	uint32_t u32NumVlans;
 	int32_t i32MvrpEnabledStatus;
@@ -1106,7 +1106,7 @@ typedef struct ieee8021QBridgeProtocolPortEntry_t
 	int32_t i32GroupId;
 	
 	/* Column values */
-	int32_t i32GroupVid;
+	uint32_t u32GroupVid;
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
@@ -1161,10 +1161,10 @@ typedef struct ieee8021QBridgeVidXEntry_t
 	/* Index values */
 	uint32_t u32BridgeBasePortComponentId;
 	uint32_t u32BridgeBasePort;
-	int32_t i32LocalVid;
+	uint32_t u32LocalVid;
 	
 	/* Column values */
-	int32_t i32RelayVid;
+	uint32_t u32RelayVid;
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
@@ -1177,15 +1177,15 @@ void ieee8021QBridgeVidXTable_init (void);
 ieee8021QBridgeVidXEntry_t * ieee8021QBridgeVidXTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32LocalVid);
+	uint32_t u32LocalVid);
 ieee8021QBridgeVidXEntry_t * ieee8021QBridgeVidXTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32LocalVid);
+	uint32_t u32LocalVid);
 ieee8021QBridgeVidXEntry_t * ieee8021QBridgeVidXTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32LocalVid);
+	uint32_t u32LocalVid);
 void ieee8021QBridgeVidXTable_removeEntry (ieee8021QBridgeVidXEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeVidXTable_getFirst;
@@ -1219,10 +1219,10 @@ typedef struct ieee8021QBridgeEgressVidXEntry_t
 	/* Index values */
 	uint32_t u32BridgeBaseComponentId;
 	uint32_t u32BridgeBasePort;
-	int32_t i32RelayVid;
+	uint32_t u32RelayVid;
 	
 	/* Column values */
-	int32_t i32LocalVid;
+	uint32_t u32LocalVid;
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
@@ -1235,15 +1235,15 @@ void ieee8021QBridgeEgressVidXTable_init (void);
 ieee8021QBridgeEgressVidXEntry_t * ieee8021QBridgeEgressVidXTable_createEntry (
 	uint32_t u32BridgeBaseComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32RelayVid);
+	uint32_t u32RelayVid);
 ieee8021QBridgeEgressVidXEntry_t * ieee8021QBridgeEgressVidXTable_getByIndex (
 	uint32_t u32BridgeBaseComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32RelayVid);
+	uint32_t u32RelayVid);
 ieee8021QBridgeEgressVidXEntry_t * ieee8021QBridgeEgressVidXTable_getNextIndex (
 	uint32_t u32BridgeBaseComponentId,
 	uint32_t u32BridgeBasePort,
-	int32_t i32RelayVid);
+	uint32_t u32RelayVid);
 void ieee8021QBridgeEgressVidXTable_removeEntry (ieee8021QBridgeEgressVidXEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeEgressVidXTable_getFirst;
