@@ -286,17 +286,17 @@ ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getNextIndex (
 	uint32_t u32Port);
 void ieee8021BridgeBasePortTable_removeEntry (ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortTable_allocateIndex (
-	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021BridgeBaseEntry_t *pComponent,
 	uint32_t *pu32Port);
 bool ieee8021BridgeBasePortTable_removeIndex (
-	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021BridgeBaseEntry_t *pComponent,
 	uint32_t u32Port);
 ieee8021BridgeBasePortEntry_t *ieee8021BridgeBasePortTable_createExt (
-	uint32_t u32ComponentId,
+	ieee8021BridgeBaseEntry_t *pComponent,
 	uint32_t u32Port);
-bool ieee8021BridgeBasePortTable_removeExt (ieee8021BridgeBasePortEntry_t *poEntry);
-bool ieee8021BridgeBasePortTable_createHier (ieee8021BridgeBasePortEntry_t *poEntry);
-bool ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_removeExt (ieee8021BridgeBaseEntry_t *pComponent, ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_createHier (ieee8021BridgeBaseEntry_t *pComponent, ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBaseEntry_t *pComponent, ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortIfIndex_handler (ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortRowStatus_handler (
 	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);

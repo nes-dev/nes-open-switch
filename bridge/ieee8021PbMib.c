@@ -860,7 +860,7 @@ ieee8021PbEdgePortTable_createHier (
 	
 	register ieee8021BridgeBasePortEntry_t *poPepPortEntry = NULL;
 	
-	if ((poPepPortEntry = ieee8021BridgeBasePortTable_createExt (pCComponent->u32ComponentId, poIeee8021PbCnpEntry->u32BridgeBasePort)) == NULL)
+	if ((poPepPortEntry = ieee8021BridgeBasePortTable_createExt (pCComponent, poIeee8021PbCnpEntry->u32BridgeBasePort)) == NULL)
 	{
 		goto ieee8021PbEdgePortTable_createHier_cleanup;
 	}
@@ -918,7 +918,7 @@ ieee8021PbEdgePortTable_removeHier (
 		goto ieee8021PbEdgePortTable_removeHier_cleanup;
 	}
 	
-	if (!ieee8021BridgeBasePortTable_removeExt (poPepPortEntry))
+	if (!ieee8021BridgeBasePortTable_removeExt (pCComponent, poPepPortEntry))
 	{
 		goto ieee8021PbEdgePortTable_removeHier_cleanup;
 	}
@@ -2294,7 +2294,7 @@ ieee8021PbPnpTable_createHier (
 	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 	
 	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL &&
-		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_createExt (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_createExt (poIeee8021BridgeBaseEntry, poEntry->u32BridgeBasePort)) == NULL)
 	{
 		goto ieee8021PbPnpTable_createHier_cleanup;
 	}
@@ -2314,21 +2314,28 @@ bool
 ieee8021PbPnpTable_removeHier (
 	ieee8021PbPnpEntry_t *poEntry)
 {
+	register bool bRetCode = false;
+	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
 	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 	
-	if (ieee8021BridgeBaseTable_getByIndex (poEntry->u32BridgeBasePortComponentId) == NULL)
+	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32BridgeBasePortComponentId)) == NULL)
 	{
 		goto ieee8021PbPnpTable_removeHier_success;
 	}
 	
-	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) != NULL)
+	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) != NULL &&
+		!ieee8021BridgeBasePortTable_removeExt (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry))
 	{
-		ieee8021BridgeBasePortTable_removeExt (poIeee8021BridgeBasePortEntry);
+		goto ieee8021PbPnpTable_removeHier_cleanup;
 	}
 	
 ieee8021PbPnpTable_removeHier_success:
 	
-	return true;
+	bRetCode = true;
+	
+ieee8021PbPnpTable_removeHier_cleanup:
+	
+	return bRetCode;
 }
 
 bool
@@ -2931,7 +2938,7 @@ ieee8021PbCepTable_createHier (
 	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 	
 	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32CComponentId, poEntry->u32BridgeBasePort)) == NULL &&
-		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_createExt (poEntry->u32CComponentId, poEntry->u32BridgeBasePort)) == NULL)
+		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_createExt (pCComponent, poEntry->u32BridgeBasePort)) == NULL)
 	{
 		goto ieee8021PbCepTable_createHier_cleanup;
 	}
@@ -2966,7 +2973,7 @@ ieee8021PbCepTable_removeHier (
 	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 	
 	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32CComponentId, poEntry->u32BridgeBasePort)) != NULL &&
-		!ieee8021BridgeBasePortTable_removeExt (poIeee8021BridgeBasePortEntry))
+		!ieee8021BridgeBasePortTable_removeExt (pCComponent, poIeee8021BridgeBasePortEntry))
 	{
 		goto ieee8021PbCepTable_removeHier_cleanup;
 	}
