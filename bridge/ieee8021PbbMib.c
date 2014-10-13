@@ -474,6 +474,7 @@ bool
 ieee8021PbbVipRowStatus_handler (
 	ieee8021PbbVipEntry_t *poEntry, uint8_t u8RowStatus)
 {
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
 	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
 	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 	
@@ -495,33 +496,26 @@ ieee8021PbbVipRowStatus_handler (
 	}
 	
 	
-	switch (u8RowStatus & xRowStatus_mask_c)
+	switch (u8RealStatus)
 	{
 	case xRowStatus_active_c:
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RowStatus & xRowStatus_mask_c))
+		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c)
+		{
+			u8RealStatus = xRowStatus_notReady_c;
+		}
+		
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RealStatus))
 		{
 			goto ieee8021PbbVipRowStatus_handler_cleanup;
 		}
 		
-		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c)
-		{
-			poEntry->u8RowStatus = xRowStatus_notReady_c;
-			goto ieee8021PbbVipRowStatus_handler_success;
-		}
-		
 		/* TODO */
 		
-		poEntry->u8RowStatus = xRowStatus_active_c;
+		poEntry->u8RowStatus = u8RealStatus;
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c)
-		{
-			poEntry->u8RowStatus = u8RowStatus;
-			goto ieee8021PbbVipRowStatus_handler_success;
-		}
-		
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RowStatus & xRowStatus_mask_c))
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RealStatus))
 		{
 			goto ieee8021PbbVipRowStatus_handler_cleanup;
 		}
@@ -540,7 +534,7 @@ ieee8021PbbVipRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RowStatus & xRowStatus_mask_c))
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RealStatus))
 		{
 			goto ieee8021PbbVipRowStatus_handler_cleanup;
 		}
@@ -4284,6 +4278,7 @@ bool
 ieee8021PbbCbpRowStatus_handler (
 	ieee8021PbbCbpEntry_t *poEntry, uint8_t u8RowStatus)
 {
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
 	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
 	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 	
@@ -4305,33 +4300,26 @@ ieee8021PbbCbpRowStatus_handler (
 	}
 	
 	
-	switch (u8RowStatus & xRowStatus_mask_c)
+	switch (u8RealStatus)
 	{
 	case xRowStatus_active_c:
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RowStatus & xRowStatus_mask_c))
+		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c)
+		{
+			u8RealStatus = xRowStatus_notReady_c;
+		}
+		
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RealStatus))
 		{
 			goto ieee8021PbbCbpRowStatus_handler_cleanup;
 		}
 		
-		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c)
-		{
-			poEntry->u8RowStatus = xRowStatus_notReady_c;
-			goto ieee8021PbbCbpRowStatus_handler_success;
-		}
-		
 		/* TODO */
 		
-		poEntry->u8RowStatus = xRowStatus_active_c;
+		poEntry->u8RowStatus = u8RealStatus;
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c)
-		{
-			poEntry->u8RowStatus = u8RowStatus;
-			goto ieee8021PbbCbpRowStatus_handler_success;
-		}
-		
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RowStatus & xRowStatus_mask_c))
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RealStatus))
 		{
 			goto ieee8021PbbCbpRowStatus_handler_cleanup;
 		}
@@ -4350,7 +4338,7 @@ ieee8021PbbCbpRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RowStatus & xRowStatus_mask_c))
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RealStatus))
 		{
 			goto ieee8021PbbCbpRowStatus_handler_cleanup;
 		}
