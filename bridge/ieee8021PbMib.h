@@ -292,6 +292,8 @@ ieee8021PbCnpEntry_t * ieee8021PbCnpTable_createExt (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort);
 bool ieee8021PbCnpTable_removeExt (ieee8021PbCnpEntry_t *poEntry);
+bool ieee8021PbCnpTable_createHier (ieee8021PbCnpEntry_t *poEntry);
+bool ieee8021PbCnpTable_removeHier (ieee8021PbCnpEntry_t *poEntry);
 bool ieee8021PbCnpRowStatus_handler (
 	ieee8021PbCnpEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC

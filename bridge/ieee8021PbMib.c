@@ -1812,13 +1812,95 @@ ieee8021PbCnpTable_createExt (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort)
 {
-	return NULL;
+	ieee8021PbCnpEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021PbCnpTable_createEntry (
+		u32BridgeBasePortComponentId,
+		u32BridgeBasePort);
+	if (poEntry == NULL)
+	{
+		return NULL;
+	}
+	
+	if (!ieee8021PbCnpTable_createHier (poEntry))
+	{
+		ieee8021PbCnpTable_removeEntry (poEntry);
+		return NULL;
+	}
+	
+	return poEntry;
 }
 
 bool
 ieee8021PbCnpTable_removeExt (ieee8021PbCnpEntry_t *poEntry)
 {
+	if (!ieee8021PbCnpTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021PbCnpTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021PbCnpTable_createHier (
+	ieee8021PbCnpEntry_t *poEntry)
+{
+	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
+	
+	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32BridgeBasePortComponentId)) == NULL ||
+		(poIeee8021BridgeBaseEntry->u8RowStatus == xRowStatus_active_c && poIeee8021BridgeBaseEntry->i32ComponentType != ieee8021BridgeBaseComponentType_iComponent_c &&
+		 poIeee8021BridgeBaseEntry->i32ComponentType != ieee8021BridgeBaseComponentType_sVlanComponent_c))
+	{
+		goto ieee8021PbCnpTable_createHier_cleanup;
+	}
+	
+	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	
+	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL &&
+		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_createExt (poIeee8021BridgeBaseEntry, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbCnpTable_createHier_cleanup;
+	}
+	
+	poIeee8021BridgeBasePortEntry->i32Type = ieee8021BridgeBasePortType_customerNetworkPort_c;
+	
+	return true;
+	
+	
+ieee8021PbCnpTable_createHier_cleanup:
+	
+	ieee8021PbCnpTable_removeHier (poEntry);
 	return false;
+}
+
+bool
+ieee8021PbCnpTable_removeHier (
+	ieee8021PbCnpEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
+	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	
+	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32BridgeBasePortComponentId)) == NULL)
+	{
+		goto ieee8021PbCnpTable_removeHier_success;
+	}
+	
+	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) != NULL &&
+		!ieee8021BridgeBasePortTable_removeExt (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry))
+	{
+		goto ieee8021PbCnpTable_removeHier_cleanup;
+	}
+	
+ieee8021PbCnpTable_removeHier_success:
+	
+	bRetCode = true;
+	
+ieee8021PbCnpTable_removeHier_cleanup:
+	
+	return bRetCode;
 }
 
 bool
