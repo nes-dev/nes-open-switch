@@ -26,8 +26,10 @@
 #include "system/systemMIB.h"
 #include "bridgeUtils.h"
 #include "ethernet/ieee8021BridgeMib.h"
+#include "ethernet/ieee8021QBridgeMib.h"
 #include "ieee8021PbMib.h"
 
+#include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
@@ -230,6 +232,108 @@ ieee8021PbCVidRegistrationTable_removeEntry (ieee8021PbCVidRegistrationEntry_t *
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021PbCVidRegistrationTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ieee8021PbCVidRegistrationEntry_t *
+ieee8021PbCVidRegistrationTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort,
+	uint32_t u32CVid)
+{
+	ieee8021PbCVidRegistrationEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021PbCVidRegistrationTable_createEntry (
+		u32BridgeBasePortComponentId,
+		u32BridgeBasePort,
+		u32CVid);
+	if (poEntry == NULL)
+	{
+		return NULL;
+	}
+	
+	if (!ieee8021PbCVidRegistrationTable_createHier (poEntry))
+	{
+		ieee8021PbCVidRegistrationTable_removeEntry (poEntry);
+		return NULL;
+	}
+	
+	return poEntry;
+}
+
+bool
+ieee8021PbCVidRegistrationTable_removeExt (ieee8021PbCVidRegistrationEntry_t *poEntry)
+{
+	if (!ieee8021PbCVidRegistrationTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021PbCVidRegistrationTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021PbCVidRegistrationTable_createHier (
+	ieee8021PbCVidRegistrationEntry_t *poEntry)
+{
+	register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
+	
+	if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbCVidRegistrationTable_createHier_cleanup;
+	}
+	
+	register ieee8021QBridgeVlanStaticEntry_t *poIeee8021QBridgeVlanStaticEntry = NULL;
+	
+	if ((poIeee8021QBridgeVlanStaticEntry = ieee8021QBridgeVlanStaticTable_createExt (poIeee8021PbCepEntry->u32CComponentId, poEntry->u32CVid)) == NULL)
+	{
+		goto ieee8021PbCVidRegistrationTable_createHier_cleanup;
+	}
+	xBitmap_setBitRev (poIeee8021QBridgeVlanStaticEntry->au8EgressPorts, poEntry->u32BridgeBasePort - 1, true);
+	
+	return true;
+	
+	
+ieee8021PbCVidRegistrationTable_createHier_cleanup:
+	
+	ieee8021PbCVidRegistrationTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+ieee8021PbCVidRegistrationTable_removeHier (
+	ieee8021PbCVidRegistrationEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
+	
+	if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbCVidRegistrationTable_removeHier_success;
+	}
+	
+	register ieee8021QBridgeVlanStaticEntry_t *poIeee8021QBridgeVlanStaticEntry = NULL;
+	
+	if ((poIeee8021QBridgeVlanStaticEntry = ieee8021QBridgeVlanStaticTable_getByIndex (poIeee8021PbCepEntry->u32CComponentId, poEntry->u32CVid)) == NULL ||
+		!ieee8021QBridgeVlanStaticTable_removeExt (poIeee8021QBridgeVlanStaticEntry))
+	{
+		goto ieee8021PbCVidRegistrationTable_removeHier_cleanup;
+	}
+	
+ieee8021PbCVidRegistrationTable_removeHier_success:
+	
+	bRetCode = true;
+	
+ieee8021PbCVidRegistrationTable_removeHier_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021PbCVidRegistrationRowStatus_handler (
+	ieee8021PbCVidRegistrationEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -3187,6 +3291,7 @@ ieee8021PbCepTable_createHier (
 	}
 	
 	poIeee8021BridgeBasePortEntry->i32Type = ieee8021BridgeBasePortType_customerEdgePort_c;
+	poEntry->u32CepPortNumber = poEntry->u32BridgeBasePort;
 	
 	bRetCode = true;
 	
