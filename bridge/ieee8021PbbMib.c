@@ -284,9 +284,9 @@ ieee8021PbbVipTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort)
 {
-	ieee8021PbbVipEntry_t *poEntry = NULL;
+	register ieee8021PbbVipEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021PbbVipEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -302,7 +302,7 @@ ieee8021PbbVipTable_createEntry (
 	poEntry->u32PipIfIndex = 0;
 	poEntry->u32ISid = 1;
 	/*poEntry->au8DefaultDstBMAC = 131046834177*/;
-	/*poEntry->au8Type = ieee8021PbbVipType_{ egress , ingress }_c*/;
+	xBitmap_setBitsRev (poEntry->au8Type, 2, 1, ieee8021PbbVipType_egress_c, ieee8021PbbVipType_ingress_c);
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->i32EnableConnectionId = ieee8021PbbVipEnableConnectionId_true_c;
 	
@@ -318,7 +318,7 @@ ieee8021PbbVipTable_getByIndex (
 	register ieee8021PbbVipEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbVipEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -343,7 +343,7 @@ ieee8021PbbVipTable_getNextIndex (
 	register ieee8021PbbVipEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbVipEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1003,9 +1003,9 @@ ieee8021PbbISidToVipEntry_t *
 ieee8021PbbISidToVipTable_createEntry (
 	uint32_t u32ISid)
 {
-	ieee8021PbbISidToVipEntry_t *poEntry = NULL;
+	register ieee8021PbbISidToVipEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021PbbISidToVipEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1028,7 +1028,7 @@ ieee8021PbbISidToVipTable_getByIndex (
 	register ieee8021PbbISidToVipEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbISidToVipEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1051,7 +1051,7 @@ ieee8021PbbISidToVipTable_getNextIndex (
 	register ieee8021PbbISidToVipEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbISidToVipEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1233,9 +1233,9 @@ ieee8021PbbPipEntry_t *
 ieee8021PbbPipTable_createEntry (
 	uint32_t u32IfIndex)
 {
-	ieee8021PbbPipEntry_t *poEntry = NULL;
+	register ieee8021PbbPipEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1266,7 +1266,7 @@ ieee8021PbbPipTable_getByIndex (
 	register ieee8021PbbPipEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1289,7 +1289,7 @@ ieee8021PbbPipTable_getNextIndex (
 	register ieee8021PbbPipEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1901,9 +1901,9 @@ ieee8021PbbPipPriorityEntry_t *
 ieee8021PbbPipPriorityTable_createEntry (
 	uint32_t u32IfIndex)
 {
-	ieee8021PbbPipPriorityEntry_t *poEntry = NULL;
+	register ieee8021PbbPipPriorityEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipPriorityEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1928,7 +1928,7 @@ ieee8021PbbPipPriorityTable_getByIndex (
 	register ieee8021PbbPipPriorityEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipPriorityEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1951,7 +1951,7 @@ ieee8021PbbPipPriorityTable_getNextIndex (
 	register ieee8021PbbPipPriorityEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipPriorityEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2287,9 +2287,9 @@ ieee8021PbbPipDecodingTable_createEntry (
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint)
 {
-	ieee8021PbbPipDecodingEntry_t *poEntry = NULL;
+	register ieee8021PbbPipDecodingEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipDecodingEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2316,7 +2316,7 @@ ieee8021PbbPipDecodingTable_getByIndex (
 	register ieee8021PbbPipDecodingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipDecodingEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2343,7 +2343,7 @@ ieee8021PbbPipDecodingTable_getNextIndex (
 	register ieee8021PbbPipDecodingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipDecodingEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2664,9 +2664,9 @@ ieee8021PbbPipEncodingTable_createEntry (
 	int32_t i32PriorityCodePoint,
 	int32_t i32DropEligible)
 {
-	ieee8021PbbPipEncodingEntry_t *poEntry = NULL;
+	register ieee8021PbbPipEncodingEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipEncodingEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2695,7 +2695,7 @@ ieee8021PbbPipEncodingTable_getByIndex (
 	register ieee8021PbbPipEncodingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipEncodingEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2724,7 +2724,7 @@ ieee8021PbbPipEncodingTable_getNextIndex (
 	register ieee8021PbbPipEncodingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbPipEncodingEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3016,9 +3016,9 @@ ieee8021PbbVipToPipMappingTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort)
 {
-	ieee8021PbbVipToPipMappingEntry_t *poEntry = NULL;
+	register ieee8021PbbVipToPipMappingEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021PbbVipToPipMappingEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3045,7 +3045,7 @@ ieee8021PbbVipToPipMappingTable_getByIndex (
 	register ieee8021PbbVipToPipMappingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbVipToPipMappingEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3070,7 +3070,7 @@ ieee8021PbbVipToPipMappingTable_getNextIndex (
 	register ieee8021PbbVipToPipMappingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbVipToPipMappingEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3517,9 +3517,9 @@ ieee8021PbbCBPServiceMappingTable_createEntry (
 	uint32_t u32BridgeBasePort,
 	uint32_t u32BackboneSid)
 {
-	ieee8021PbbCBPServiceMappingEntry_t *poEntry = NULL;
+	register ieee8021PbbCBPServiceMappingEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021PbbCBPServiceMappingEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3549,7 +3549,7 @@ ieee8021PbbCBPServiceMappingTable_getByIndex (
 	register ieee8021PbbCBPServiceMappingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbCBPServiceMappingEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3576,7 +3576,7 @@ ieee8021PbbCBPServiceMappingTable_getNextIndex (
 	register ieee8021PbbCBPServiceMappingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbCBPServiceMappingEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4093,9 +4093,9 @@ ieee8021PbbCbpTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort)
 {
-	ieee8021PbbCbpEntry_t *poEntry = NULL;
+	register ieee8021PbbCbpEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021PbbCbpEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4122,7 +4122,7 @@ ieee8021PbbCbpTable_getByIndex (
 	register ieee8021PbbCbpEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbCbpEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -4147,7 +4147,7 @@ ieee8021PbbCbpTable_getNextIndex (
 	register ieee8021PbbCbpEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021PbbCbpEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
