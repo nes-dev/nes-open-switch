@@ -33,6 +33,40 @@
 #include <stdint.h>
 
 
+static neIfTypeEnableHandler_t bridge_pipEnableModify;
+
+
+bool bridgeUtilsInit (void)
+{
+	register bool bRetCode = false;
+	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
+	
+	ifTable_wrLock ();
+	
+	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_pip_c)) == NULL)
+	{
+		goto bridgeUtilsInit_cleanup;
+	}
+	
+	poNeIfTypeEntry->pfEnableHandler = bridge_pipEnableModify;
+	
+	bRetCode = true;
+	
+bridgeUtilsInit_cleanup:
+	
+	ifTable_unLock ();
+	return bRetCode;
+}
+
+
+bool
+bridge_pipEnableModify (
+	ifData_t *poIfEntry, int32_t i32AdminStatus)
+{
+	return false;
+}
+
+
 bool
 ieee8021PbILan_createEntry (
 	ieee8021BridgeBasePortEntry_t *poCnpPortEntry,

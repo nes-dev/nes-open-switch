@@ -26,6 +26,7 @@
 #include "ieee8021PbMib_agent.h"
 #include "ieee8021PbbMib_agent.h"
 #include "ieee8021PbbTeMib_agent.h"
+#include "bridgeUtils.h"
 
 #include "switch_ext.h"
 #include "bridge_ext.h"
@@ -50,6 +51,8 @@ void *
 bridge_main (
 	void *pvArgv)
 {
+	bridgeUtilsInit ();
+	
 	ieee8021PbMib_init ();
 	ieee8021PbbMib_init ();
 	ieee8021PbbTeMib_init ();

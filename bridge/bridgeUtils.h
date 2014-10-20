@@ -33,6 +33,8 @@ extern "C" {
 #include <stdbool.h>
 
 
+bool bridgeUtilsInit (void);
+
 bool
 	ieee8021PbILan_createEntry (
 		ieee8021BridgeBasePortEntry_t *poCnpPortEntry,

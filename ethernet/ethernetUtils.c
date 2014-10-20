@@ -35,7 +35,9 @@
 #include <stdint.h>
 
 
-static neIfTypeEnableHandler_t ethernet_enableModify;
+static neIfTypeEnableHandler_t ethernet_portEnableModify;
+static neIfTypeEnableHandler_t ethernet_bridgeEnableModify;
+static neIfTypeEnableHandler_t ethernet_ilanEnableModify;
 
 
 bool ethernetUtilsInit (void)
@@ -50,7 +52,29 @@ bool ethernetUtilsInit (void)
 		goto ethernetUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfEnableHandler = ethernet_enableModify;
+	poNeIfTypeEntry->pfEnableHandler = ethernet_portEnableModify;
+	
+	
+	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_l2vlan_c)) == NULL)
+	{
+		goto ethernetUtilsInit_cleanup;
+	}
+	
+	
+	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_bridge_c)) == NULL)
+	{
+		goto ethernetUtilsInit_cleanup;
+	}
+	
+	poNeIfTypeEntry->pfEnableHandler = ethernet_bridgeEnableModify;
+	
+	
+	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_ilan_c)) == NULL)
+	{
+		goto ethernetUtilsInit_cleanup;
+	}
+	
+	poNeIfTypeEntry->pfEnableHandler = ethernet_ilanEnableModify;
 	
 	bRetCode = true;
 	
@@ -62,7 +86,7 @@ ethernetUtilsInit_cleanup:
 
 
 bool
-ethernet_enableModify (
+ethernet_portEnableModify (
 	ifData_t *poIfEntry, int32_t i32AdminStatus)
 {
 	register bool bRetCode = false;
@@ -72,7 +96,7 @@ ethernet_enableModify (
 	
 	if (!ieee8021BridgePhyPortInfo_getByIfIndex (poIfEntry->u32Index, &oEthernetPhyPortInfo))
 	{
-		goto ethernet_enableModify_cleanup;
+		goto ethernet_portEnableModify_cleanup;
 	}
 	oEthernetPhyPortInfo.poIfToPortEntry->u32IndexComponentId = 0;
 	oEthernetPhyPortInfo.poIfToPortEntry->u32IndexPort = 0;
@@ -83,22 +107,38 @@ ethernet_enableModify (
 		if (i32AdminStatus == xAdminStatus_up_c &&
 			!halEthernet_ifConfig ())
 		{
-			goto ethernet_enableModify_cleanup;
+			goto ethernet_portEnableModify_cleanup;
 		}
 		
 		if (!halEthernet_ifEnable (poIfEntry->u32Index, i32AdminStatus))
 		{
-			goto ethernet_enableModify_cleanup;
+			goto ethernet_portEnableModify_cleanup;
 		}
 	}
 	
 	bRetCode = true;
 	
-ethernet_enableModify_cleanup:
+ethernet_portEnableModify_cleanup:
 	
 	ieee8021BridgePhyPortInfo_unLock ();
 	return bRetCode;
 }
+
+
+bool
+ethernet_bridgeEnableModify (
+	ifData_t *poIfEntry, int32_t i32AdminStatus)
+{
+	return false;
+}
+
+bool
+ethernet_ilanEnableModify (
+	ifData_t *poIfEntry, int32_t i32AdminStatus)
+{
+	return false;
+}
+
 
 bool
 ieee8021BridgeBaseRowStatus_update (
