@@ -327,9 +327,17 @@ typedef struct ieee8021BridgePhyPortInfo_t
 
 #define ieee8021BridgePhyPortInfo_initInline(_u8Flags) {.u8Flags = (_u8Flags), .poIfToPortEntry = NULL, .poPhyPortEntry = NULL}
 
+bool ieee8021BridgePhyPortInfo_createExt (
+	uint32_t u32Port,
+	uint32_t u32IfIndex,
+	ieee8021BridgePhyPortInfo_t *poPhyPortInfo);
 bool ieee8021BridgePhyPortInfo_getByIfIndex (
 	uint32_t u32IfIndex,
 	ieee8021BridgePhyPortInfo_t *poPhyPortInfo);
+bool ieee8021BridgePhyPortInfo_getByPort (
+	uint32_t u32Port,
+	ieee8021BridgePhyPortInfo_t *poPhyPortInfo);
+bool ieee8021BridgePhyPortInfo_removeExt (ieee8021BridgePhyPortInfo_t *poEntry);
 	
 #define ieee8021BridgePhyPortInfo_wrLock() (xRwLock_wrLock (&oBridge.oPhyPortLock))
 #define ieee8021BridgePhyPortInfo_rdLock() (xRwLock_rdLock (&oBridge.oPhyPortLock))

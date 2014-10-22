@@ -2154,6 +2154,50 @@ ieee8021BridgePhyPortTable_removeEntry (ieee8021BridgePhyPortEntry_t *poEntry)
 }
 
 bool
+ieee8021BridgePhyPortInfo_createExt (
+	uint32_t u32Port,
+	uint32_t u32IfIndex,
+	ieee8021BridgePhyPortInfo_t *poPhyPortInfo)
+{
+	register bool bRetCode = false;
+	
+	if (u32IfIndex == 0)
+	{
+		goto ieee8021BridgePhyPortInfo_createExt_cleanup;
+	}
+	
+	if (u32Port != 0)
+	{
+		if (ieee8021BridgePhyPortTable_createExt (u32Port, u32IfIndex) == NULL)
+		{
+			goto ieee8021BridgePhyPortInfo_createExt_cleanup;
+		}
+	}
+	else
+	{
+		if (ieee8021BridgeBaseIfToPortTable_createExt (u32IfIndex) == NULL)
+		{
+			goto ieee8021BridgePhyPortInfo_createExt_cleanup;
+		}
+	}
+	
+	if (poPhyPortInfo != NULL)
+	{
+		poPhyPortInfo->u8Flags = ieee8021BridgePhyPortInfo_all_c;
+		if (!ieee8021BridgePhyPortInfo_getByIfIndex (u32IfIndex, poPhyPortInfo))
+		{
+			goto ieee8021BridgePhyPortInfo_createExt_cleanup;
+		}
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgePhyPortInfo_createExt_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021BridgePhyPortInfo_getByIfIndex (
 	uint32_t u32IfIndex,
 	ieee8021BridgePhyPortInfo_t *poPhyPortInfo)
@@ -2178,6 +2222,50 @@ ieee8021BridgePhyPortInfo_getByIfIndex_cleanup:
 	return (poIeee8021BridgeBaseIfToPortEntry == NULL ||
 			(poPhyPortInfo->u8Flags & ieee8021BridgePhyPortInfo_phyPortEntry_c &&
 			 poIeee8021BridgeBaseIfToPortEntry->u32Port != 0 && poPhyPortInfo->poPhyPortEntry == NULL)) != true;
+}
+
+bool ieee8021BridgePhyPortInfo_getByPort (
+	uint32_t u32Port,
+	ieee8021BridgePhyPortInfo_t *poPhyPortInfo)
+{
+	register ieee8021BridgePhyPortEntry_t *poIeee8021BridgePhyPortEntry = NULL;
+	
+	if ((poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_getByIndex (u32Port)) == NULL)
+	{
+		goto ieee8021BridgePhyPortInfo_getByPort_cleanup;
+	}
+	
+	poPhyPortInfo->poPhyPortEntry = poIeee8021BridgePhyPortEntry;
+	
+ieee8021BridgePhyPortInfo_getByPort_cleanup:
+	
+	return poIeee8021BridgePhyPortEntry != NULL;
+}
+
+bool ieee8021BridgePhyPortInfo_removeExt (ieee8021BridgePhyPortInfo_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (poEntry->poPhyPortEntry != NULL)
+	{
+		if (!ieee8021BridgePhyPortTable_removeExt (poEntry->poPhyPortEntry))
+		{
+			goto ieee8021BridgePhyPortInfo_removeExt_cleanup;
+		}
+	}
+	else if (poEntry->poIfToPortEntry != NULL)
+	{
+		if (!ieee8021BridgeBaseIfToPortTable_removeExt (poEntry->poIfToPortEntry))
+		{
+			goto ieee8021BridgePhyPortInfo_removeExt_cleanup;
+		}
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgePhyPortInfo_removeExt_cleanup:
+	
+	return bRetCode;
 }
 
 ieee8021BridgePhyPortEntry_t *
