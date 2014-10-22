@@ -42,6 +42,7 @@ neEntPortRowStatus_update (
 	uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
+	register neEntPortData_t *poPortData = neEntPortData_getByPortEntry (poEntry);
 	
 	switch (poEntry->i32Type)
 	{
@@ -50,15 +51,15 @@ neEntPortRowStatus_update (
 		
 	case ifType_ethernetCsmacd_c:
 	{
-		register ieee8021BridgePhyPortEntry_t *poIeee8021BridgePhyPortEntry = NULL;
+		ieee8021BridgePhyPortInfo_t oIeee8021BridgePhyPortInfo = ieee8021BridgePhyPortInfo_initInline (ieee8021BridgePhyPortInfo_all_c);
 		
 		ieee8021BridgePhyPortInfo_wrLock ();
 		
 		switch (u8RowStatus)
 		{
 		case xRowStatus_active_c:
-			if ((poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) == NULL &&
-				(poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_createExt (poEntry->u32EntPhysicalIndex, poEntry->u32IfIndex)) == NULL)
+			if (!ieee8021BridgePhyPortInfo_getByPort (poPortData->u32EntPhysicalIndex, &oIeee8021BridgePhyPortInfo) &&
+				!ieee8021BridgePhyPortInfo_createExt (poPortData->u32EntPhysicalIndex, poPortData->u32IfIndex, &oIeee8021BridgePhyPortInfo))
 			{
 				goto neEntPortRowStatus_updateEthernet_unlock;
 			}
@@ -86,8 +87,12 @@ neEntPortRowStatus_update (
 				goto neEntPortRowStatus_updateEthernet_unlock;
 			}
 			
-			if ((poIeee8021BridgePhyPortEntry = ieee8021BridgePhyPortTable_getByIndex (poEntry->u32EntPhysicalIndex)) != NULL &&
-				!ieee8021BridgePhyPortTable_removeExt (poIeee8021BridgePhyPortEntry))
+			if (!ieee8021BridgePhyPortInfo_getByPort (poPortData->u32EntPhysicalIndex, &oIeee8021BridgePhyPortInfo))
+			{
+				goto neEntPortRowStatus_updateEthernet_unlock;
+			}
+			
+			if (!ieee8021BridgePhyPortInfo_removeExt (&oIeee8021BridgePhyPortInfo))
 			{
 				goto neEntPortRowStatus_updateEthernet_unlock;
 			}
@@ -109,7 +114,6 @@ neEntPortRowStatus_updateEthernet_unlock:
 	case ifType_opticalTransport_c:
 		break;
 	}
-	
 	
 neEntPortRowStatus_update_cleanup:
 	
