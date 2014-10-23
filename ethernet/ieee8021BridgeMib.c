@@ -1366,6 +1366,7 @@ ieee8021BridgeBasePortIfIndex_handler_cleanup:
 
 bool
 ieee8021BridgeBasePortRowStatus_handler (
+	ieee8021BridgeBaseEntry_t *pComponent,
 	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
@@ -1389,7 +1390,7 @@ ieee8021BridgeBasePortRowStatus_handler (
 		
 		/* TODO */
 		
-		if (!ieee8021BridgeBasePortRowStatus_update (poEntry, u8RowStatus))
+		if (!ieee8021BridgeBasePortRowStatus_update (pComponent, poEntry, u8RowStatus))
 		{
 			goto ieee8021BridgeBasePortRowStatus_handler_cleanup;
 		}
@@ -1417,7 +1418,7 @@ ieee8021BridgeBasePortRowStatus_handler (
 			memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
 		}
 		
-		if (!ieee8021BridgeBasePortRowStatus_update (poEntry, u8RowStatus))
+		if (!ieee8021BridgeBasePortRowStatus_update (pComponent, poEntry, u8RowStatus))
 		{
 			goto ieee8021BridgeBasePortRowStatus_handler_cleanup;
 		}
@@ -1447,7 +1448,7 @@ ieee8021BridgeBasePortRowStatus_handler (
 			poEntry->pOldEntry = NULL;
 		}
 		
-		if (!ieee8021BridgeBasePortRowStatus_update (poEntry, u8RowStatus))
+		if (!ieee8021BridgeBasePortRowStatus_update (pComponent, poEntry, u8RowStatus))
 		{
 			goto ieee8021BridgeBasePortRowStatus_handler_cleanup;
 		}
@@ -7095,7 +7096,7 @@ ieee8021BridgeDot1dPortRowStatus_handler (
 			u8RealStatus = xRowStatus_notReady_c;
 		}
 		
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RealStatus))
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
 		{
 			goto ieee8021BridgeDot1dPortRowStatus_handler_cleanup;
 		}
@@ -7111,7 +7112,7 @@ ieee8021BridgeDot1dPortRowStatus_handler (
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RealStatus))
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
 		{
 			goto ieee8021BridgeDot1dPortRowStatus_handler_cleanup;
 		}
@@ -7135,7 +7136,7 @@ ieee8021BridgeDot1dPortRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBasePortEntry, u8RealStatus))
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
 		{
 			goto ieee8021BridgeDot1dPortRowStatus_handler_cleanup;
 		}

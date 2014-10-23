@@ -30,19 +30,19 @@
 #include <stdint.h>
 
 
-static bool
+/*static*/ bool
 	halEthernet_ifNotify ();
 
 
 bool
-halEthernet_ifConfig ()
+halEthernet_componentConfigure ()
 {
 	/* TODO */
 	return false;
 }
 
 bool
-halEthernet_ifEnable (uint32_t u32IfIndex, int32_t i32AdminStatus)
+halEthernet_portConfigure ()
 {
 	/* TODO */
 	return false;

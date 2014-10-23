@@ -41,6 +41,7 @@ bool
 		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021BridgeBasePortRowStatus_update (
+		ieee8021BridgeBaseEntry_t *pComponent,
 		ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021BridgeDot1dPortRowStatus_update (

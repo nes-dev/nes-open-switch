@@ -90,37 +90,16 @@ ethernet_portEnableModify (
 	ifData_t *poIfEntry, int32_t i32AdminStatus)
 {
 	register bool bRetCode = false;
-	ieee8021BridgePhyPortInfo_t oEthernetPhyPortInfo = ieee8021BridgePhyPortInfo_initInline (ieee8021BridgePhyPortInfo_ifToPortEntry_c);
 	
-	ieee8021BridgePhyPortInfo_rdLock ();
-	
-	if (!ieee8021BridgePhyPortInfo_getByIfIndex (poIfEntry->u32Index, &oEthernetPhyPortInfo))
+	if (!halEthernet_portConfigure (poIfEntry, halEthernet_portAdminState_c))
 	{
 		goto ethernet_portEnableModify_cleanup;
-	}
-	oEthernetPhyPortInfo.poIfToPortEntry->u32IndexComponentId = 0;
-	oEthernetPhyPortInfo.poIfToPortEntry->u32IndexPort = 0;
-	
-	if (oEthernetPhyPortInfo.poIfToPortEntry->u32IndexComponentId != 0 &&
-		oEthernetPhyPortInfo.poIfToPortEntry->u32IndexPort != 0)
-	{
-		if (i32AdminStatus == xAdminStatus_up_c &&
-			!halEthernet_ifConfig ())
-		{
-			goto ethernet_portEnableModify_cleanup;
-		}
-		
-		if (!halEthernet_ifEnable (poIfEntry->u32Index, i32AdminStatus))
-		{
-			goto ethernet_portEnableModify_cleanup;
-		}
 	}
 	
 	bRetCode = true;
 	
 ethernet_portEnableModify_cleanup:
 	
-	ieee8021BridgePhyPortInfo_unLock ();
 	return bRetCode;
 }
 
@@ -160,22 +139,47 @@ ieee8021BridgeBaseRowStatus_update (
 		break;
 	}
 	
+	register uint8_t u8HalOpCode =
+		u8RowStatus == xRowStatus_createAndWait_c ? halEthernet_componentCreate_c:
+		u8RowStatus == xRowStatus_active_c ? halEthernet_componentEnable_c:
+		u8RowStatus == xRowStatus_notReady_c ? halEthernet_componentDisable_c:
+		u8RowStatus == xRowStatus_notInService_c ? halEthernet_componentDisable_c:
+		u8RowStatus == xRowStatus_destroy_c ? halEthernet_componentDestroy_c: halEthernet_componentNone_c;
+		
+	if ((u8RowStatus == xRowStatus_destroy_c && poEntry->u8RowStatus == xRowStatus_active_c &&
+		 !halEthernet_componentConfigure (poEntry, halEthernet_componentDisable_c, NULL)) ||
+		!halEthernet_componentConfigure (poEntry, u8HalOpCode, NULL))
+	{
+		goto ieee8021BridgeBaseRowStatus_update_cleanup;
+	}
+	
 	bRetCode = true;
 	
-// ieee8021BridgeBaseRowStatus_update_cleanup:
+ieee8021BridgeBaseRowStatus_update_cleanup:
 	
 	return bRetCode;
 }
 
 bool
 ieee8021BridgeBasePortRowStatus_update (
+	ieee8021BridgeBaseEntry_t *pComponent,
 	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
 	
+	register uint8_t u8HalOpCode =
+		u8RowStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_active_c ? halEthernet_componentPortAttach_c:
+		u8RowStatus != xRowStatus_active_c && poEntry->u8RowStatus == xRowStatus_active_c ? halEthernet_componentPortDetach_c: halEthernet_componentNone_c;
+		
+	if (u8HalOpCode != halEthernet_componentNone_c &&
+		!halEthernet_componentConfigure (pComponent, u8HalOpCode, poEntry))
+	{
+		goto ieee8021BridgeBasePortRowStatus_update_cleanup;
+	}
+	
 	bRetCode = true;
 	
-//ieee8021BridgeBasePortRowStatus_update_cleanup:
+ieee8021BridgeBasePortRowStatus_update_cleanup:
 	
 	return bRetCode;
 }

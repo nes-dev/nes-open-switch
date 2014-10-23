@@ -31,11 +31,24 @@ extern "C" {
 #include <stdint.h>
 
 
+enum
+{
+	halEthernet_componentNone_c,
+	halEthernet_componentCreate_c,
+	halEthernet_componentEnable_c,
+	halEthernet_componentPortAttach_c,
+	halEthernet_componentPortDetach_c,
+	halEthernet_componentDisable_c,
+	halEthernet_componentDestroy_c,
+	
+	halEthernet_portAdminState_c,
+	halEthernet_portOperState_c,
+};
+
 extern bool
-	halEthernet_ifConfig ();
+	halEthernet_componentConfigure ();
 extern bool
-	halEthernet_ifEnable (
-		uint32_t u32IfIndex, int32_t i32AdminStatus);
+	halEthernet_portConfigure ();
 
 
 #	ifdef __cplusplus
