@@ -27,6 +27,9 @@
 #include "ethernetUtils.h"
 #include "ieee8021BridgeMib.h"
 #include "ieee8021QBridgeMib.h"
+#include "bridge/ieee8021PbMib.h"
+#include "bridge/ieee8021PbbMib.h"
+#include "bridge/bridgeUtils.h"
 #include "if/ifUtils.h"
 #include "if/ifMIB.h"
 #include "hal/halEthernet.h"
@@ -125,18 +128,102 @@ ieee8021BridgeBaseRowStatus_update (
 {
 	register bool bRetCode = false;
 	
-	switch (u8RowStatus)
+	register uint32_t u32Port = 0;
+	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	
+	while (
+		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getNextIndex (poEntry->u32ComponentId, u32Port)) != NULL &&
+		poIeee8021BridgeBasePortEntry->u32ComponentId == poEntry->u32ComponentId)
 	{
-	case xRowStatus_active_c:
-		/* TODO */
-		break;
+		u32Port = poIeee8021BridgeBasePortEntry->u32Port;
 		
-	case xRowStatus_notInService_c:
-		break;
+		switch (poIeee8021BridgeBasePortEntry->i32Type)
+		{
+		case ieee8021BridgeBasePortType_customerVlanPort_c:
+		{
+			register ieee8021QBridgeCVlanPortEntry_t *poIeee8021QBridgeCVlanPortEntry = NULL;
+			
+			if ((poIeee8021QBridgeCVlanPortEntry = ieee8021QBridgeCVlanPortTable_getByIndex (poEntry->u32ComponentId, u32Port)) != NULL &&
+				!ieee8021QBridgeCVlanPortRowStatus_handler (poIeee8021QBridgeCVlanPortEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				goto ieee8021BridgeBaseRowStatus_update_cleanup;
+			}
+			break;
+		}
+		case ieee8021BridgeBasePortType_providerNetworkPort_c:
+		{
+			register ieee8021PbPnpEntry_t *poIeee8021PbPnpEntry = NULL;
+			
+			if ((poIeee8021PbPnpEntry = ieee8021PbPnpTable_getByIndex (poEntry->u32ComponentId, u32Port)) != NULL &&
+				!ieee8021PbPnpRowStatus_handler (poIeee8021PbPnpEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				goto ieee8021BridgeBaseRowStatus_update_cleanup;
+			}
+			break;
+		}
+		case ieee8021BridgeBasePortType_customerNetworkPort_c:
+		{
+			register ieee8021PbCnpEntry_t *poIeee8021PbCnpEntry = NULL;
+			
+			if ((poIeee8021PbCnpEntry = ieee8021PbCnpTable_getByIndex (poEntry->u32ComponentId, u32Port)) != NULL &&
+				!ieee8021PbCnpRowStatus_handler (poIeee8021PbCnpEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				goto ieee8021BridgeBaseRowStatus_update_cleanup;
+			}
+			break;
+		}
+		case ieee8021BridgeBasePortType_customerEdgePort_c:
+		{
+			register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
+			
+			if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (poEntry->u32ComponentId, u32Port)) != NULL &&
+				!ieee8021PbCepRowStatus_handler (poIeee8021PbCepEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				goto ieee8021BridgeBaseRowStatus_update_cleanup;
+			}
+			break;
+		}
+		case ieee8021BridgeBasePortType_customerBackbonePort_c:
+		{
+			register ieee8021PbbCbpEntry_t *poIeee8021PbbCbpEntry = NULL;
+			
+			if ((poIeee8021PbbCbpEntry = ieee8021PbbCbpTable_getByIndex (poEntry->u32ComponentId, u32Port)) != NULL &&
+				!ieee8021PbbCbpRowStatus_handler (poIeee8021PbbCbpEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				goto ieee8021BridgeBaseRowStatus_update_cleanup;
+			}
+			break;
+		}
+		case ieee8021BridgeBasePortType_virtualInstancePort_c:
+		{
+			register ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry = NULL;
+			
+			if ((poIeee8021PbbVipEntry = ieee8021PbbVipTable_getByIndex (poEntry->u32ComponentId, u32Port)) != NULL &&
+				!ieee8021PbbVipRowStatus_handler (poIeee8021PbbVipEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				goto ieee8021BridgeBaseRowStatus_update_cleanup;
+			}
+			break;
+		}
+		case ieee8021BridgeBasePortType_dBridgePort_c:
+		{
+			register ieee8021BridgeDot1dPortEntry_t *poIeee8021BridgeDot1dPortEntry = NULL;
+			
+			if ((poIeee8021BridgeDot1dPortEntry = ieee8021BridgeDot1dPortTable_getByIndex (poEntry->u32ComponentId, u32Port)) != NULL &&
+				!ieee8021BridgeDot1dPortRowStatus_handler (poIeee8021BridgeDot1dPortEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				goto ieee8021BridgeBaseRowStatus_update_cleanup;
+			}
+			break;
+		}
 		
-	case xRowStatus_destroy_c:
-		/* TODO */
-		break;
+		default:
+			if (!ieee8021BridgeBasePortRowStatus_handler (poEntry, poIeee8021BridgeBasePortEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				goto ieee8021BridgeBaseRowStatus_update_cleanup;
+			}
+			break;
+		}
 	}
 	
 	register uint8_t u8HalOpCode =

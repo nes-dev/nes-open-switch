@@ -400,49 +400,15 @@ ieee8021BridgeBaseRowStatus_handler (
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
 		}
 		
-		{
-			register uint32_t u32BasePort = 0;
-			register ieee8021BridgeDot1dPortEntry_t *poIeee8021BridgeDot1dPortEntry = NULL;
-			
-			while (
-				(poIeee8021BridgeDot1dPortEntry = ieee8021BridgeDot1dPortTable_getNextIndex (poEntry->u32ComponentId, u32BasePort)) != NULL &&
-				poIeee8021BridgeDot1dPortEntry->u32BasePortComponentId == poEntry->u32ComponentId)
-			{
-				u32BasePort = poIeee8021BridgeDot1dPortEntry->u32BasePort;
-				
-				if (!ieee8021BridgeDot1dPortRowStatus_handler (poIeee8021BridgeDot1dPortEntry, u8RowStatus | xRowStatus_fromParent_c))
-				{
-					goto ieee8021BridgeBaseRowStatus_handler_cleanup;
-				}
-			}
-		}
-		
 		if (!ieee8021BridgeBaseRowStatus_update (poEntry, u8RowStatus))
 		{
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
 		}
 		
-		poEntry->u8RowStatus = xRowStatus_active_c;
+		poEntry->u8RowStatus = u8RowStatus;
 		break;
 		
 	case xRowStatus_notInService_c:
-		{
-			register uint32_t u32BasePort = 0;
-			register ieee8021BridgeDot1dPortEntry_t *poIeee8021BridgeDot1dPortEntry = NULL;
-			
-			while (
-				(poIeee8021BridgeDot1dPortEntry = ieee8021BridgeDot1dPortTable_getNextIndex (poEntry->u32ComponentId, u32BasePort)) != NULL &&
-				poIeee8021BridgeDot1dPortEntry->u32BasePortComponentId == poEntry->u32ComponentId)
-			{
-				u32BasePort = poIeee8021BridgeDot1dPortEntry->u32BasePort;
-				
-				if (!ieee8021BridgeDot1dPortRowStatus_handler (poIeee8021BridgeDot1dPortEntry, u8RowStatus | xRowStatus_fromParent_c))
-				{
-					goto ieee8021BridgeBaseRowStatus_handler_cleanup;
-				}
-			}
-		}
-		
 		if (!ieee8021BridgeBaseRowStatus_update (poEntry, u8RowStatus))
 		{
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
@@ -450,7 +416,7 @@ ieee8021BridgeBaseRowStatus_handler (
 		
 		/* TODO */
 		
-		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		poEntry->u8RowStatus = u8RowStatus;
 		break;
 		
 	case xRowStatus_createAndGo_c:
@@ -461,24 +427,6 @@ ieee8021BridgeBaseRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		{
-			register uint32_t u32BasePort = 0;
-			register ieee8021BridgeDot1dPortEntry_t *poIeee8021BridgeDot1dPortEntry = NULL;
-			
-			while (
-				(poIeee8021BridgeDot1dPortEntry = ieee8021BridgeDot1dPortTable_getNextIndex (poEntry->u32ComponentId, u32BasePort)) != NULL &&
-				poIeee8021BridgeDot1dPortEntry->u32BasePortComponentId == poEntry->u32ComponentId)
-			{
-				u32BasePort = poIeee8021BridgeDot1dPortEntry->u32BasePort;
-				
-				if (!ieee8021BridgeDot1dPortRowStatus_handler (poIeee8021BridgeDot1dPortEntry, u8RowStatus | xRowStatus_fromParent_c) ||
-					!ieee8021BridgeDot1dPortTable_removeExt (poIeee8021BridgeDot1dPortEntry))
-				{
-					goto ieee8021BridgeBaseRowStatus_handler_cleanup;
-				}
-			}
-		}
-		
 		if (!ieee8021BridgeBaseRowStatus_update (poEntry, u8RowStatus))
 		{
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
