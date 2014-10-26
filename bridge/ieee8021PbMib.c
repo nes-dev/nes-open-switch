@@ -776,7 +776,21 @@ ieee8021PbEdgePortTable_BTreeNodeCmp (
 		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32SVid == pEntry2->u32SVid) ? 0: 1;
 }
 
+static int8_t
+ieee8021PbEdgePortTable_Pep_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ieee8021PbEdgePortEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021PbEdgePortEntry_t, oBTreeNode);
+	register ieee8021PbEdgePortEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021PbEdgePortEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32CComponentId < pEntry2->u32CComponentId) ||
+		(pEntry1->u32CComponentId == pEntry2->u32CComponentId && pEntry1->u32PepPort < pEntry2->u32PepPort) ? -1:
+		(pEntry1->u32CComponentId == pEntry2->u32CComponentId && pEntry1->u32PepPort == pEntry2->u32PepPort) ? 0: 1;
+}
+
 xBTree_t oIeee8021PbEdgePortTable_BTree = xBTree_initInline (&ieee8021PbEdgePortTable_BTreeNodeCmp);
+xBTree_t oIeee8021PbEdgePortTable_Pep_BTree = xBTree_initInline (&ieee8021PbEdgePortTable_Pep_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 ieee8021PbEdgePortEntry_t *
@@ -854,6 +868,31 @@ ieee8021PbEdgePortTable_getNextIndex (
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
 	poTmpEntry->u32SVid = u32SVid;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021PbEdgePortTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ieee8021PbEdgePortEntry_t, oBTreeNode);
+}
+
+ieee8021PbEdgePortEntry_t *
+ieee8021PbEdgePortTable_Pep_getByIndex (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort)
+{
+	register ieee8021PbEdgePortEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32CComponentId = u32BridgeBasePortComponentId;
+	poTmpEntry->u32PepPort = u32BridgeBasePort;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021PbEdgePortTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
@@ -981,6 +1020,7 @@ ieee8021PbEdgePortTable_createHier (
 	
 	poEntry->u32CComponentId = poIeee8021PbCepEntry->u32CComponentId;
 	poEntry->u32PepPort = poIeee8021PbCnpEntry->u32BridgeBasePort;
+	xBTree_nodeAdd (&poEntry->oPep_BTreeNode, &oIeee8021PbEdgePortTable_Pep_BTree);
 	
 	bRetCode = true;
 	
@@ -1027,6 +1067,7 @@ ieee8021PbEdgePortTable_removeHier (
 	{
 		goto ieee8021PbEdgePortTable_removeHier_cleanup;
 	}
+	xBTree_nodeRemove (&poEntry->oPep_BTreeNode, &oIeee8021PbEdgePortTable_Pep_BTree);
 	
 	register ieee8021PbCnpEntry_t *poIeee8021PbCnpEntry = NULL;
 	
@@ -1061,13 +1102,13 @@ ieee8021PbEdgePortRowStatus_handler (
 		goto ieee8021PbEdgePortRowStatus_handler_cleanup;
 	}
 	
-	if (poEntry->u8RowStatus == u8RowStatus)
+	if (poEntry->u8RowStatus == u8RealStatus)
 	{
 		goto ieee8021PbEdgePortRowStatus_handler_success;
 	}
 	if (u8RowStatus & xRowStatus_fromParent_c &&
-		(((u8RowStatus & xRowStatus_mask_c) == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
-		 ((u8RowStatus & xRowStatus_mask_c) == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
+		((u8RealStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
+		 (u8RealStatus == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
 	{
 		goto ieee8021PbEdgePortRowStatus_handler_success;
 	}
@@ -1077,25 +1118,33 @@ ieee8021PbEdgePortRowStatus_handler (
 	{
 	case xRowStatus_active_c:
 	case xRowStatus_notReady_c:
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus) ||
-			!ieee8021PbCnpRowStatus_handler (poIeee8021PbCnpEntry, u8RealStatus))
+		if (!ieee8021PbCnpRowStatus_handler (poIeee8021PbCnpEntry, u8RealStatus))
 		{
 			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
 		}
 		
 		/* TODO */
+		
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
+		{
+			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
+		}
 		
 		poEntry->u8RowStatus = u8RealStatus;
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus) ||
-			!ieee8021PbCnpRowStatus_handler (poIeee8021PbCnpEntry, u8RealStatus))
+		if (!ieee8021PbCnpRowStatus_handler (poIeee8021PbCnpEntry, u8RealStatus))
 		{
 			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
 		}
 		
 		/* TODO */
+		
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
+		{
+			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
+		}
 		
 		poEntry->u8RowStatus =
 			poEntry->u8RowStatus == xRowStatus_active_c && (u8RowStatus & xRowStatus_fromParent_c) ? xRowStatus_notReady_c: xRowStatus_notInService_c;
@@ -1109,13 +1158,17 @@ ieee8021PbEdgePortRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus) ||
-			!ieee8021PbCnpRowStatus_handler (poIeee8021PbCnpEntry, u8RealStatus))
+		if (!ieee8021PbCnpRowStatus_handler (poIeee8021PbCnpEntry, u8RealStatus))
 		{
 			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
 		}
 		
 		/* TODO */
+		
+		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
+		{
+			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
+		}
 		
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		break;

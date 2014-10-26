@@ -164,9 +164,11 @@ typedef struct ieee8021PbEdgePortEntry_t
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oPep_BTreeNode;
 } ieee8021PbEdgePortEntry_t;
 
 extern xBTree_t oIeee8021PbEdgePortTable_BTree;
+extern xBTree_t oIeee8021PbEdgePortTable_Pep_BTree;
 
 /* ieee8021PbEdgePortTable table mapper */
 void ieee8021PbEdgePortTable_init (void);
@@ -182,6 +184,9 @@ ieee8021PbEdgePortEntry_t * ieee8021PbEdgePortTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	uint32_t u32SVid);
+ieee8021PbEdgePortEntry_t * ieee8021PbEdgePortTable_Pep_getByIndex (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort);
 void ieee8021PbEdgePortTable_removeEntry (ieee8021PbEdgePortEntry_t *poEntry);
 ieee8021PbEdgePortEntry_t * ieee8021PbEdgePortTable_createExt (
 	uint32_t u32BridgeBasePortComponentId,

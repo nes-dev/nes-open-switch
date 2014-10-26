@@ -216,6 +216,17 @@ ieee8021BridgeBaseRowStatus_update (
 			}
 			break;
 		}
+		case ieee8021BridgeBasePortType_providerEdgePort_c:
+		{
+			register ieee8021PbEdgePortEntry_t *poIeee8021PbEdgePortEntry = NULL;
+			
+			if ((poIeee8021PbEdgePortEntry = ieee8021PbEdgePortTable_Pep_getByIndex (poEntry->u32ComponentId, u32Port)) != NULL &&
+				!ieee8021PbEdgePortRowStatus_handler (poIeee8021PbEdgePortEntry, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				goto ieee8021BridgeBaseRowStatus_update_cleanup;
+			}
+			break;
+		}
 		
 		default:
 			if (!ieee8021BridgeBasePortRowStatus_handler (poEntry, poIeee8021BridgeBasePortEntry, u8RowStatus | xRowStatus_fromParent_c))
