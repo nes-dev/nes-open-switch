@@ -4418,6 +4418,7 @@ ieee8021QBridgeVlanCurrentTable_removeExt (ieee8021QBridgeVlanCurrentEntry_t *po
 
 bool
 ieee8021QBridgeVlanCurrentTable_vlanHandler (
+	ieee8021BridgeBaseEntry_t *pComponent,
 	ieee8021QBridgeVlanCurrentEntry_t *poEntry,
 	uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts)
 {
@@ -4773,7 +4774,7 @@ ieee8021QBridgeVlanStaticTable_removeHier (
 	}
 	else
 	{
-		if (!ieee8021QBridgeVlanCurrentTable_vlanHandler (poIeee8021QBridgeVlanCurrentEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts))
+		if (!ieee8021QBridgeVlanCurrentTable_vlanHandler (NULL, poIeee8021QBridgeVlanCurrentEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts))
 		{
 			goto ieee8021QBridgeVlanStaticTable_removeHier_cleanup;
 		}
@@ -4796,10 +4797,89 @@ ieee8021QBridgeVlanStaticTable_removeHier_cleanup:
 }
 
 bool
-ieee8021QBridgeVlanStaticTable_vlanHandler (
+ieee8021QBridgeVlanStaticTable_vlanUpdater (
 	ieee8021BridgeBaseEntry_t *pComponent,
 	ieee8021QBridgeVlanStaticEntry_t *poEntry,
 	uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts)
+{
+	return false;
+}
+
+bool
+ieee8021QBridgeVlanStaticTable_handler (
+	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021QBridgeVlanStaticEntry_t *poEntry,
+	uint8_t *pu8EgressPorts, uint8_t *pu8ForbiddenEgressPorts, uint8_t *pu8UntaggedPorts)
+{
+	register bool bRetCode = false;
+	register uint8_t *pu8EnabledPorts = NULL;
+	register uint8_t *pu8DisabledPorts = NULL;
+	register uint8_t *pu8UntaggedPorts2 = NULL;
+	register uint8_t *pu8TmpPorts = NULL;
+	
+	if (pu8EgressPorts == NULL && pu8ForbiddenEgressPorts == NULL && pu8UntaggedPorts == NULL)
+	{
+		goto ieee8021QBridgeVlanStaticTable_handler_success;
+	}
+	
+	pu8EgressPorts == NULL ? pu8EgressPorts = poEntry->au8EgressPorts: false;
+	pu8ForbiddenEgressPorts == NULL ? pu8ForbiddenEgressPorts = poEntry->au8ForbiddenEgressPorts: false;
+	pu8UntaggedPorts == NULL ? pu8UntaggedPorts = poEntry->au8UntaggedPorts: false;
+	
+	xBitmap_sub (pu8EgressPorts, pu8EgressPorts, pu8ForbiddenEgressPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	xBitmap_and (pu8UntaggedPorts, pu8EgressPorts, pu8UntaggedPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	
+	if ((pu8EnabledPorts = xBuffer_cAlloc (poEntry->u16EgressPorts_len)) == NULL ||
+		(pu8DisabledPorts = xBuffer_cAlloc (poEntry->u16EgressPorts_len)) == NULL ||
+		(pu8UntaggedPorts2 = xBuffer_cAlloc (poEntry->u16EgressPorts_len)) == NULL ||
+		(pu8TmpPorts = xBuffer_cAlloc (poEntry->u16EgressPorts_len)) == NULL)
+	{
+		goto ieee8021QBridgeVlanStaticTable_handler_cleanup;
+	}
+	
+	xBitmap_xor (pu8EnabledPorts, poEntry->au8EgressPorts, pu8EgressPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	xBitmap_xor (pu8TmpPorts, poEntry->au8UntaggedPorts, pu8UntaggedPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	xBitmap_and (pu8TmpPorts, pu8EgressPorts, pu8TmpPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	
+	xBitmap_and (pu8DisabledPorts, poEntry->au8EgressPorts, pu8EnabledPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	xBitmap_and (pu8EnabledPorts, pu8EgressPorts, pu8EnabledPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	xBitmap_or (pu8EnabledPorts, pu8EnabledPorts, pu8TmpPorts, xBitmap_bitLength (poEntry->u16UntaggedPorts_len));
+	xBitmap_and (pu8UntaggedPorts2, pu8UntaggedPorts, pu8EnabledPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	
+	xBuffer_free (pu8TmpPorts);
+	
+	if ((xBitmap_checkBitRange (pu8EnabledPorts, 0, xBitmap_bitLength (poEntry->u16EgressPorts_len) - 1, 1) != xBitmap_index_invalid_c ||
+		 xBitmap_checkBitRange (pu8DisabledPorts, 0, xBitmap_bitLength (poEntry->u16EgressPorts_len) - 1, 1) != xBitmap_index_invalid_c ||
+		 xBitmap_checkBitRange (pu8UntaggedPorts2, 0, xBitmap_bitLength (poEntry->u16EgressPorts_len) - 1, 1) != xBitmap_index_invalid_c) &&
+		!ieee8021QBridgeVlanStaticTable_vlanUpdater (pComponent, poEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts2))
+	{
+		goto ieee8021QBridgeVlanStaticTable_handler_cleanup;
+	}
+	
+ieee8021QBridgeVlanStaticTable_handler_success:
+	
+	memcpy (poEntry->au8EgressPorts, pu8EgressPorts, poEntry->u16EgressPorts_len);
+	memcpy (poEntry->au8ForbiddenEgressPorts, pu8ForbiddenEgressPorts, poEntry->u16ForbiddenEgressPorts_len);
+	memcpy (poEntry->au8UntaggedPorts, pu8UntaggedPorts, poEntry->u16UntaggedPorts_len);
+	
+	bRetCode = true;
+	
+ieee8021QBridgeVlanStaticTable_handler_cleanup:
+	
+	if (pu8EnabledPorts != NULL)
+	{
+		xBuffer_free (pu8EnabledPorts);
+		xBuffer_free (pu8DisabledPorts);
+		xBuffer_free (pu8UntaggedPorts2);
+	}
+	
+	return bRetCode;
+}
+
+bool
+ieee8021QBridgeVlanStaticRowStatus_handler (
+	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021QBridgeVlanStaticEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	return false;
 }
