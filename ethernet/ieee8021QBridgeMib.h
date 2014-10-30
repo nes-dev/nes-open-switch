@@ -666,6 +666,8 @@ ieee8021QBridgeVlanCurrentEntry_t * ieee8021QBridgeVlanCurrentTable_createExt (
 	uint32_t u32ComponentId,
 	uint32_t u32Index);
 bool ieee8021QBridgeVlanCurrentTable_removeExt (ieee8021QBridgeVlanCurrentEntry_t *poEntry);
+bool ieee8021QBridgeVlanCurrentTable_createHier (ieee8021QBridgeVlanCurrentEntry_t *poEntry);
+bool ieee8021QBridgeVlanCurrentTable_removeHier (ieee8021QBridgeVlanCurrentEntry_t *poEntry);
 bool ieee8021QBridgeVlanCurrentTable_vlanHandler (
 	ieee8021BridgeBaseEntry_t *pComponent,
 	ieee8021QBridgeVlanCurrentEntry_t *poEntry,

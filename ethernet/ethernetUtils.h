@@ -29,6 +29,7 @@ extern "C" {
 
 
 #include "ieee8021BridgeMib.h"
+#include "ieee8021QBridgeMib.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -46,6 +47,16 @@ bool
 bool
 	ieee8021BridgeDot1dPortRowStatus_update (
 		ieee8021BridgeDot1dPortEntry_t *poEntry, uint8_t u8RowStatus);
+bool
+	ieee8021QBridgeVlanCurrentTable_vlanUpdate (
+		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021QBridgeVlanCurrentEntry_t *poEntry,
+		uint8_t *pu8DisabledPorts, uint8_t *pu8TaggedPorts, uint8_t *pu8UntaggedPorts);
+bool
+	ieee8021QBridgeVlanStaticTable_vlanUpdate (
+		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021QBridgeVlanStaticEntry_t *poEntry,
+		uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts);
 
 
 

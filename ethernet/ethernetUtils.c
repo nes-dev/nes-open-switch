@@ -295,6 +295,24 @@ ieee8021BridgeDot1dPortRowStatus_update (
 	return bRetCode;
 }
 
+bool
+ieee8021QBridgeVlanCurrentTable_vlanUpdate (
+	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021QBridgeVlanCurrentEntry_t *poEntry,
+	uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts)
+{
+	return false;
+}
+
+bool
+ieee8021QBridgeVlanStaticTable_vlanUpdate (
+	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021QBridgeVlanStaticEntry_t *poEntry,
+	uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts)
+{
+	return false;
+}
+
 
 
 #endif	// __ETHERNET_UTILS_C__
