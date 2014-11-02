@@ -27,6 +27,8 @@ extern "C" {
 #	endif
 
 
+#include "lib/list.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -43,12 +45,27 @@ enum
 	
 	halEthernet_portAdminState_c,
 	halEthernet_portOperState_c,
+	
+	halEthernet_vlanEnable_c,
+	halEthernet_vlanOperState_c,
+	halEthernet_vlanDisable_c,
 };
+
+typedef struct halEthernet_portEntry_t
+{
+	uint32_t u32IfIndex;
+	bool bEnable;
+	bool bUntagged;
+	
+	xSList_Node_t oPNode;
+} halEthernet_portEntry_t;
 
 extern bool
 	halEthernet_componentConfigure ();
 extern bool
 	halEthernet_portConfigure ();
+extern bool
+	halEthernet_vlanConfigure ();
 
 
 #	ifdef __cplusplus

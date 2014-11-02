@@ -245,6 +245,19 @@ extern void
 		xBitmask_t *poMapDst, xBitmask_t *poMapSrc, uint32_t u32BitStart, uint32_t u32BitEnd);
 
 
+#	define xBitmap_scanCmp(_poMap1, _poMap2, _u32BitStart, _u32BitEnd, _bIsEq, _u16BitIdx) \
+	for (_u16BitIdx = _u32BitStart; _u16BitIdx <= _u32BitEnd; _u16BitIdx++)\
+		if (xBitmask_bitIndex (_u16BitIdx) == 0 &&\
+			(_poMap1[xBitmap_maskIndex (_u16BitIdx)] == _poMap2[xBitmap_maskIndex (_u16BitIdx)]) != _bIsEq)\
+		{\
+			_u16BitIdx += (uint16_t) (xBitmask_length_c - 1);\
+			continue;\
+		}\
+		else if (\
+			((_poMap1[xBitmap_maskIndex (_u16BitIdx)] & xBitmask_bitMask (_u16BitIdx)) ==\
+			 (_poMap2[xBitmap_maskIndex (_u16BitIdx)] & xBitmask_bitMask (_u16BitIdx))) == _bIsEq)\
+
+
 #	define xBitmap_scanCmpRev(_poMap1, _poMap2, _u32BitStart, _u32BitEnd, _bIsEq, _u16BitIdx) \
 	for (_u16BitIdx = _u32BitStart; _u16BitIdx <= _u32BitEnd; _u16BitIdx++)\
 		if (xBitmask_bitIndexRev (_u16BitIdx) == 0 &&\

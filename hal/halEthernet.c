@@ -49,6 +49,13 @@ halEthernet_portConfigure ()
 }
 
 bool
+halEthernet_vlanConfigure ()
+{
+	/* TODO */
+	return false;
+}
+
+bool
 halEthernet_ifNotify ()
 {
 	uint32_t u32IfIndex = 0;
