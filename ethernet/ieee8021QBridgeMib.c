@@ -55,7 +55,7 @@ static oid ieee8021QBridgeStaticMulticastTable_oid[] = {1,3,111,2,802,1,1,4,1,3,
 static oid ieee8021QBridgeVlanCurrentTable_oid[] = {1,3,111,2,802,1,1,4,1,4,2};
 static oid ieee8021QBridgeVlanStaticTable_oid[] = {1,3,111,2,802,1,1,4,1,4,3};
 static oid ieee8021QBridgeNextFreeLocalVlanTable_oid[] = {1,3,111,2,802,1,1,4,1,4,4};
-static oid ieee8021QBridgePortVlanTable_oid[] = {1,3,111,2,802,1,1,4,1,4,5};
+static oid ieee8021QBridgePortTable_oid[] = {1,3,111,2,802,1,1,4,1,4,5};
 static oid ieee8021QBridgePortVlanStatisticsTable_oid[] = {1,3,111,2,802,1,1,4,1,4,6};
 static oid ieee8021QBridgeLearningConstraintsTable_oid[] = {1,3,111,2,802,1,1,4,1,4,8};
 static oid ieee8021QBridgeLearningConstraintDefaultsTable_oid[] = {1,3,111,2,802,1,1,4,1,4,9};
@@ -102,7 +102,7 @@ ieee8021QBridgeMib_init (void)
 	ieee8021QBridgeVlanCurrentTable_init ();
 	ieee8021QBridgeVlanStaticTable_init ();
 	ieee8021QBridgeNextFreeLocalVlanTable_init ();
-	ieee8021QBridgePortVlanTable_init ();
+	ieee8021QBridgePortTable_init ();
 	ieee8021QBridgePortVlanStatisticsTable_init ();
 	ieee8021QBridgeLearningConstraintsTable_init ();
 	ieee8021QBridgeLearningConstraintDefaultsTable_init ();
@@ -581,13 +581,13 @@ ieee8021QBridgeTable_removeHier (
 	
 	{
 		uint32_t u32BridgeBasePort = 0;
-		register ieee8021QBridgePortVlanEntry_t *poIeee8021QBridgePortVlanEntry = NULL;
+		register ieee8021QBridgePortEntry_t *poIeee8021QBridgePortEntry = NULL;
 		
-		while ((poIeee8021QBridgePortVlanEntry = ieee8021QBridgePortVlanTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort)) != NULL &&
-			poIeee8021QBridgePortVlanEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
+		while ((poIeee8021QBridgePortEntry = ieee8021QBridgePortTable_getNextIndex (poEntry->u32ComponentId, u32BridgeBasePort)) != NULL &&
+			poIeee8021QBridgePortEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
 		{
-			u32BridgeBasePort = poIeee8021QBridgePortVlanEntry->u32BridgeBasePort;
-			ieee8021QBridgePortVlanTable_removeEntry (poIeee8021QBridgePortVlanEntry);
+			u32BridgeBasePort = poIeee8021QBridgePortEntry->u32BridgeBasePort;
+			ieee8021QBridgePortTable_removeEntry (poIeee8021QBridgePortEntry);
 		}
 	}
 	
@@ -5630,18 +5630,18 @@ ieee8021QBridgeNextFreeLocalVlanTable_mapper (
 	return SNMP_ERR_NOERROR;
 }
 
-/** initialize ieee8021QBridgePortVlanTable table mapper **/
+/** initialize ieee8021QBridgePortTable table mapper **/
 void
-ieee8021QBridgePortVlanTable_init (void)
+ieee8021QBridgePortTable_init (void)
 {
-	extern oid ieee8021QBridgePortVlanTable_oid[];
+	extern oid ieee8021QBridgePortTable_oid[];
 	netsnmp_handler_registration *reg;
 	netsnmp_iterator_info *iinfo;
 	netsnmp_table_registration_info *table_info;
 	
 	reg = netsnmp_create_handler_registration (
-		"ieee8021QBridgePortVlanTable", &ieee8021QBridgePortVlanTable_mapper,
-		ieee8021QBridgePortVlanTable_oid, OID_LENGTH (ieee8021QBridgePortVlanTable_oid),
+		"ieee8021QBridgePortTable", &ieee8021QBridgePortTable_mapper,
+		ieee8021QBridgePortTable_oid, OID_LENGTH (ieee8021QBridgePortTable_oid),
 		HANDLER_CAN_RWRITE
 		);
 		
@@ -5650,13 +5650,13 @@ ieee8021QBridgePortVlanTable_init (void)
 		ASN_UNSIGNED /* index: ieee8021BridgeBasePortComponentId */,
 		ASN_UNSIGNED /* index: ieee8021BridgeBasePort */,
 		0);
-	table_info->min_column = IEEE8021QBRIDGEPVID;
+	table_info->min_column = IEEE8021QBRIDGEPORTPVID;
 	table_info->max_column = IEEE8021QBRIDGEPORTRESTRICTEDVLANREGISTRATION;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
-	iinfo->get_first_data_point = &ieee8021QBridgePortVlanTable_getFirst;
-	iinfo->get_next_data_point = &ieee8021QBridgePortVlanTable_getNext;
-	iinfo->get_data_point = &ieee8021QBridgePortVlanTable_get;
+	iinfo->get_first_data_point = &ieee8021QBridgePortTable_getFirst;
+	iinfo->get_next_data_point = &ieee8021QBridgePortTable_getNext;
+	iinfo->get_data_point = &ieee8021QBridgePortTable_get;
 	iinfo->table_reginfo = table_info;
 	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
 	
@@ -5666,11 +5666,11 @@ ieee8021QBridgePortVlanTable_init (void)
 }
 
 static int8_t
-ieee8021QBridgePortVlanTable_BTreeNodeCmp (
+ieee8021QBridgePortTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register ieee8021QBridgePortVlanEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021QBridgePortVlanEntry_t, oBTreeNode);
-	register ieee8021QBridgePortVlanEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021QBridgePortVlanEntry_t, oBTreeNode);
+	register ieee8021QBridgePortEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021QBridgePortEntry_t, oBTreeNode);
+	register ieee8021QBridgePortEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021QBridgePortEntry_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32BridgeBasePortComponentId < pEntry2->u32BridgeBasePortComponentId) ||
@@ -5678,15 +5678,15 @@ ieee8021QBridgePortVlanTable_BTreeNodeCmp (
 		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort) ? 0: 1;
 }
 
-xBTree_t oIeee8021QBridgePortVlanTable_BTree = xBTree_initInline (&ieee8021QBridgePortVlanTable_BTreeNodeCmp);
+xBTree_t oIeee8021QBridgePortTable_BTree = xBTree_initInline (&ieee8021QBridgePortTable_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
-ieee8021QBridgePortVlanEntry_t *
-ieee8021QBridgePortVlanTable_createEntry (
+ieee8021QBridgePortEntry_t *
+ieee8021QBridgePortTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort)
 {
-	register ieee8021QBridgePortVlanEntry_t *poEntry = NULL;
+	register ieee8021QBridgePortEntry_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
@@ -5695,28 +5695,28 @@ ieee8021QBridgePortVlanTable_createEntry (
 	
 	poEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poEntry->u32BridgeBasePort = u32BridgeBasePort;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgePortVlanTable_BTree) != NULL)
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgePortTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
 		return NULL;
 	}
 	
-	poEntry->u32QBridgePvid = 1;
-	poEntry->i32QBridgePortAcceptableFrameTypes = ieee8021QBridgePortAcceptableFrameTypes_admitAll_c;
-	poEntry->i32QBridgePortIngressFiltering = ieee8021QBridgePortIngressFiltering_false_c;
-	poEntry->i32QBridgePortMvrpEnabledStatus = ieee8021QBridgePortMvrpEnabledStatus_true_c;
-	poEntry->i32QBridgePortRestrictedVlanRegistration = ieee8021QBridgePortRestrictedVlanRegistration_false_c;
+	poEntry->u32PVid = 1;
+	poEntry->i32AcceptableFrameTypes = ieee8021QBridgePortAcceptableFrameTypes_admitAll_c;
+	poEntry->i32IngressFiltering = ieee8021QBridgePortIngressFiltering_false_c;
+	poEntry->i32MvrpEnabledStatus = ieee8021QBridgePortMvrpEnabledStatus_true_c;
+	poEntry->i32RestrictedVlanRegistration = ieee8021QBridgePortRestrictedVlanRegistration_false_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgePortVlanTable_BTree);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgePortTable_BTree);
 	return poEntry;
 }
 
-ieee8021QBridgePortVlanEntry_t *
-ieee8021QBridgePortVlanTable_getByIndex (
+ieee8021QBridgePortEntry_t *
+ieee8021QBridgePortTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort)
 {
-	register ieee8021QBridgePortVlanEntry_t *poTmpEntry = NULL;
+	register ieee8021QBridgePortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -5726,22 +5726,22 @@ ieee8021QBridgePortVlanTable_getByIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021QBridgePortVlanTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021QBridgePortTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021QBridgePortVlanEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, ieee8021QBridgePortEntry_t, oBTreeNode);
 }
 
-ieee8021QBridgePortVlanEntry_t *
-ieee8021QBridgePortVlanTable_getNextIndex (
+ieee8021QBridgePortEntry_t *
+ieee8021QBridgePortTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort)
 {
-	register ieee8021QBridgePortVlanEntry_t *poTmpEntry = NULL;
+	register ieee8021QBridgePortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -5751,73 +5751,73 @@ ieee8021QBridgePortVlanTable_getNextIndex (
 	
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021QBridgePortVlanTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021QBridgePortTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021QBridgePortVlanEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, ieee8021QBridgePortEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
-ieee8021QBridgePortVlanTable_removeEntry (ieee8021QBridgePortVlanEntry_t *poEntry)
+ieee8021QBridgePortTable_removeEntry (ieee8021QBridgePortEntry_t *poEntry)
 {
 	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgePortVlanTable_BTree) == NULL)
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgePortTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021QBridgePortVlanTable_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021QBridgePortTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
-ieee8021QBridgePortVlanTable_getFirst (
+ieee8021QBridgePortTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021QBridgePortVlanTable_BTree);
-	return ieee8021QBridgePortVlanTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021QBridgePortTable_BTree);
+	return ieee8021QBridgePortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
 netsnmp_variable_list *
-ieee8021QBridgePortVlanTable_getNext (
+ieee8021QBridgePortTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021QBridgePortVlanEntry_t *poEntry = NULL;
+	ieee8021QBridgePortEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ieee8021QBridgePortVlanEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021QBridgePortEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BridgeBasePortComponentId);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BridgeBasePort);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021QBridgePortVlanTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021QBridgePortTable_BTree);
 	return put_index_data;
 }
 
 bool
-ieee8021QBridgePortVlanTable_get (
+ieee8021QBridgePortTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021QBridgePortVlanEntry_t *poEntry = NULL;
+	ieee8021QBridgePortEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	
-	poEntry = ieee8021QBridgePortVlanTable_getByIndex (
+	poEntry = ieee8021QBridgePortTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer);
 	if (poEntry == NULL)
@@ -5829,9 +5829,9 @@ ieee8021QBridgePortVlanTable_get (
 	return true;
 }
 
-/* ieee8021QBridgePortVlanTable table mapper */
+/* ieee8021QBridgePortTable table mapper */
 int
-ieee8021QBridgePortVlanTable_mapper (
+ieee8021QBridgePortTable_mapper (
 	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
 	netsnmp_agent_request_info *reqinfo,
@@ -5839,7 +5839,7 @@ ieee8021QBridgePortVlanTable_mapper (
 {
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
-	ieee8021QBridgePortVlanEntry_t *table_entry;
+	ieee8021QBridgePortEntry_t *table_entry;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -5851,7 +5851,7 @@ ieee8021QBridgePortVlanTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021QBridgePortVlanEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL)
 			{
@@ -5861,26 +5861,26 @@ ieee8021QBridgePortVlanTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case IEEE8021QBRIDGEPVID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32QBridgePvid);
+			case IEEE8021QBRIDGEPORTPVID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PVid);
 				break;
 			case IEEE8021QBRIDGEPORTACCEPTABLEFRAMETYPES:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32QBridgePortAcceptableFrameTypes);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32AcceptableFrameTypes);
 				break;
 			case IEEE8021QBRIDGEPORTINGRESSFILTERING:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32QBridgePortIngressFiltering);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32IngressFiltering);
 				break;
 			case IEEE8021QBRIDGEPORTMVRPENABLEDSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32QBridgePortMvrpEnabledStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32MvrpEnabledStatus);
 				break;
 			case IEEE8021QBRIDGEPORTMVRPFAILEDREGISTRATIONS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER64, table_entry->u64QBridgePortMvrpFailedRegistrations);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER64, table_entry->u64MvrpFailedRegistrations);
 				break;
 			case IEEE8021QBRIDGEPORTMVRPLASTPDUORIGIN:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8QBridgePortMvrpLastPduOrigin, table_entry->u16QBridgePortMvrpLastPduOrigin_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MvrpLastPduOrigin, table_entry->u16MvrpLastPduOrigin_len);
 				break;
 			case IEEE8021QBRIDGEPORTRESTRICTEDVLANREGISTRATION:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32QBridgePortRestrictedVlanRegistration);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RestrictedVlanRegistration);
 				break;
 				
 			default:
@@ -5896,12 +5896,12 @@ ieee8021QBridgePortVlanTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021QBridgePortVlanEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case IEEE8021QBRIDGEPVID:
+			case IEEE8021QBRIDGEPORTPVID:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -5952,7 +5952,7 @@ ieee8021QBridgePortVlanTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021QBridgePortVlanEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			if (table_entry == NULL)
@@ -5970,80 +5970,80 @@ ieee8021QBridgePortVlanTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021QBridgePortVlanEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case IEEE8021QBRIDGEPVID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32QBridgePvid))) == NULL)
+			case IEEE8021QBRIDGEPORTPVID:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PVid))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->u32QBridgePvid, sizeof (table_entry->u32QBridgePvid));
+					memcpy (pvOldDdata, &table_entry->u32PVid, sizeof (table_entry->u32PVid));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->u32QBridgePvid = *request->requestvb->val.integer;
+				table_entry->u32PVid = *request->requestvb->val.integer;
 				break;
 			case IEEE8021QBRIDGEPORTACCEPTABLEFRAMETYPES:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32QBridgePortAcceptableFrameTypes))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32AcceptableFrameTypes))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32QBridgePortAcceptableFrameTypes, sizeof (table_entry->i32QBridgePortAcceptableFrameTypes));
+					memcpy (pvOldDdata, &table_entry->i32AcceptableFrameTypes, sizeof (table_entry->i32AcceptableFrameTypes));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32QBridgePortAcceptableFrameTypes = *request->requestvb->val.integer;
+				table_entry->i32AcceptableFrameTypes = *request->requestvb->val.integer;
 				break;
 			case IEEE8021QBRIDGEPORTINGRESSFILTERING:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32QBridgePortIngressFiltering))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32IngressFiltering))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32QBridgePortIngressFiltering, sizeof (table_entry->i32QBridgePortIngressFiltering));
+					memcpy (pvOldDdata, &table_entry->i32IngressFiltering, sizeof (table_entry->i32IngressFiltering));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32QBridgePortIngressFiltering = *request->requestvb->val.integer;
+				table_entry->i32IngressFiltering = *request->requestvb->val.integer;
 				break;
 			case IEEE8021QBRIDGEPORTMVRPENABLEDSTATUS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32QBridgePortMvrpEnabledStatus))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32MvrpEnabledStatus))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32QBridgePortMvrpEnabledStatus, sizeof (table_entry->i32QBridgePortMvrpEnabledStatus));
+					memcpy (pvOldDdata, &table_entry->i32MvrpEnabledStatus, sizeof (table_entry->i32MvrpEnabledStatus));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32QBridgePortMvrpEnabledStatus = *request->requestvb->val.integer;
+				table_entry->i32MvrpEnabledStatus = *request->requestvb->val.integer;
 				break;
 			case IEEE8021QBRIDGEPORTRESTRICTEDVLANREGISTRATION:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32QBridgePortRestrictedVlanRegistration))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32RestrictedVlanRegistration))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32QBridgePortRestrictedVlanRegistration, sizeof (table_entry->i32QBridgePortRestrictedVlanRegistration));
+					memcpy (pvOldDdata, &table_entry->i32RestrictedVlanRegistration, sizeof (table_entry->i32RestrictedVlanRegistration));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32QBridgePortRestrictedVlanRegistration = *request->requestvb->val.integer;
+				table_entry->i32RestrictedVlanRegistration = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -6053,7 +6053,7 @@ ieee8021QBridgePortVlanTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021QBridgePortVlanEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021QBridgePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -6062,20 +6062,20 @@ ieee8021QBridgePortVlanTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case IEEE8021QBRIDGEPVID:
-				memcpy (&table_entry->u32QBridgePvid, pvOldDdata, sizeof (table_entry->u32QBridgePvid));
+			case IEEE8021QBRIDGEPORTPVID:
+				memcpy (&table_entry->u32PVid, pvOldDdata, sizeof (table_entry->u32PVid));
 				break;
 			case IEEE8021QBRIDGEPORTACCEPTABLEFRAMETYPES:
-				memcpy (&table_entry->i32QBridgePortAcceptableFrameTypes, pvOldDdata, sizeof (table_entry->i32QBridgePortAcceptableFrameTypes));
+				memcpy (&table_entry->i32AcceptableFrameTypes, pvOldDdata, sizeof (table_entry->i32AcceptableFrameTypes));
 				break;
 			case IEEE8021QBRIDGEPORTINGRESSFILTERING:
-				memcpy (&table_entry->i32QBridgePortIngressFiltering, pvOldDdata, sizeof (table_entry->i32QBridgePortIngressFiltering));
+				memcpy (&table_entry->i32IngressFiltering, pvOldDdata, sizeof (table_entry->i32IngressFiltering));
 				break;
 			case IEEE8021QBRIDGEPORTMVRPENABLEDSTATUS:
-				memcpy (&table_entry->i32QBridgePortMvrpEnabledStatus, pvOldDdata, sizeof (table_entry->i32QBridgePortMvrpEnabledStatus));
+				memcpy (&table_entry->i32MvrpEnabledStatus, pvOldDdata, sizeof (table_entry->i32MvrpEnabledStatus));
 				break;
 			case IEEE8021QBRIDGEPORTRESTRICTEDVLANREGISTRATION:
-				memcpy (&table_entry->i32QBridgePortRestrictedVlanRegistration, pvOldDdata, sizeof (table_entry->i32QBridgePortRestrictedVlanRegistration));
+				memcpy (&table_entry->i32RestrictedVlanRegistration, pvOldDdata, sizeof (table_entry->i32RestrictedVlanRegistration));
 				break;
 			}
 		}
