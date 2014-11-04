@@ -53,6 +53,15 @@ bool
 		ieee8021QBridgeVlanCurrentEntry_t *poEntry,
 		uint8_t *pu8DisabledPorts, uint8_t *pu8TaggedPorts, uint8_t *pu8UntaggedPorts);
 bool
+	ieee8021QBridgeVlanCurrentRowStatus_update (
+		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021QBridgeVlanCurrentEntry_t *poEntry, uint8_t u8RowStatus);
+bool
+	ieee8021QBridgeVlanStaticTable_vHandler (
+		uint32_t u32ComponentId,
+		uint32_t u32VlanIndex,
+		bool bEnable, bool bTagged, uint32_t u32Count, uint32_t u32Port, ...);
+bool
 	ieee8021QBridgeVlanStaticTable_vlanUpdate (
 		ieee8021BridgeBaseEntry_t *pComponent,
 		ieee8021QBridgeVlanStaticEntry_t *poEntry,

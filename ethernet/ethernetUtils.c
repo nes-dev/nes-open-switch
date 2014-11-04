@@ -40,6 +40,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 
 static neIfTypeEnableHandler_t ethernet_portEnableModify;
@@ -360,6 +361,102 @@ ieee8021QBridgeVlanCurrentTable_vlanUpdate_cleanup:
 			xSList_nodeRem (&poPortEntry->oPNode, &oPortList);
 			xBuffer_free (poPortEntry);
 		}
+	}
+	
+	return bRetCode;
+}
+
+bool
+ieee8021QBridgeVlanCurrentRowStatus_update (
+	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021QBridgeVlanCurrentEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	if ((u8RowStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_active_c) ||
+		(u8RowStatus != xRowStatus_active_c && poEntry->u8RowStatus == xRowStatus_active_c))
+	{
+		register uint8_t u8HalOpCode =
+			u8RowStatus == xRowStatus_active_c ? halEthernet_vlanEnable_c: halEthernet_vlanDisable_c;
+			
+		if (!halEthernet_vlanConfigure (poEntry, u8HalOpCode, NULL))
+		{
+			goto ieee8021QBridgeVlanCurrentRowStatus_update_cleanup;
+		}
+	}
+	
+	bRetCode = true;
+	
+ieee8021QBridgeVlanCurrentRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021QBridgeVlanStaticTable_vHandler (
+	uint32_t u32ComponentId,
+	uint32_t u32VlanIndex,
+	bool bEnable, bool bTagged, uint32_t u32Count, uint32_t u32Port, ...)
+{
+	register bool bRetCode = false;
+	va_list oArgs;
+	uint8_t *pu8EnabledPorts = NULL;
+	uint8_t *pu8DisabledPorts = NULL;
+	uint8_t *pu8UntaggedPorts = NULL;
+	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
+	register ieee8021QBridgeVlanStaticEntry_t *poEntry = NULL;
+	
+	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (u32ComponentId)) == NULL ||
+		(poEntry = ieee8021QBridgeVlanStaticTable_getByIndex (u32ComponentId, u32VlanIndex)) == NULL)
+	{
+		goto ieee8021QBridgeVlanStaticTable_vHandler_cleanup;
+	}
+	
+	if ((pu8EnabledPorts = xBuffer_cAlloc (poEntry->u16EgressPorts_len)) == NULL ||
+		(pu8DisabledPorts = xBuffer_cAlloc (poEntry->u16EgressPorts_len)) == NULL ||
+		(pu8UntaggedPorts = xBuffer_cAlloc (poEntry->u16EgressPorts_len)) == NULL)
+	{
+		goto ieee8021QBridgeVlanStaticTable_vHandler_cleanup;
+	}
+	
+	va_start (oArgs, u32Port);
+	
+	do
+	{
+		if (xBitmap_getBitRev (poEntry->au8ForbiddenEgressPorts, u32Port - 1) == xBitmap_index_invalid_c)
+		{
+			bEnable ? xBitmap_setBitRev (pu8EnabledPorts, u32Port, 1): xBitmap_setBitRev (pu8DisabledPorts, u32Port, 1);
+			xBitmap_setBitRev (pu8UntaggedPorts, u32Port, bEnable && !bTagged);
+		}
+		
+		u32Count--;
+		if (u32Count > 0)
+		{
+			u32Port = va_arg (oArgs, uint32_t);
+		}
+	}
+	while (u32Count > 0);
+	
+	va_end (oArgs);
+	
+	if (!ieee8021QBridgeVlanStaticTable_vlanUpdater (poIeee8021BridgeBaseEntry, poEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts))
+	{
+		goto ieee8021QBridgeVlanStaticTable_vHandler_cleanup;
+	}
+	
+	xBitmap_or (poEntry->au8EgressPorts, pu8EnabledPorts, poEntry->au8EgressPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	xBitmap_sub (poEntry->au8EgressPorts, poEntry->au8EgressPorts, pu8DisabledPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	xBitmap_or (poEntry->au8UntaggedPorts, poEntry->au8UntaggedPorts, pu8UntaggedPorts, xBitmap_bitLength (poEntry->u16EgressPorts_len));
+	
+	bRetCode = true;
+	
+ieee8021QBridgeVlanStaticTable_vHandler_cleanup:
+	
+	if (pu8EnabledPorts != NULL)
+	{
+		xBuffer_free (pu8EnabledPorts);
+		xBuffer_free (pu8DisabledPorts);
+		xBuffer_free (pu8UntaggedPorts);
 	}
 	
 	return bRetCode;

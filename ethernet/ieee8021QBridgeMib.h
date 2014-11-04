@@ -673,6 +673,9 @@ bool ieee8021QBridgeVlanCurrentTable_vlanHandler (
 	ieee8021BridgeBaseEntry_t *pComponent,
 	ieee8021QBridgeVlanCurrentEntry_t *poEntry,
 	uint8_t *pu8DisabledPorts, uint8_t *pu8TaggedPorts, uint8_t *pu8UntaggedPorts);
+bool ieee8021QBridgeVlanCurrentRowStatus_handler (
+	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021QBridgeVlanCurrentEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeVlanCurrentTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeVlanCurrentTable_getNext;
