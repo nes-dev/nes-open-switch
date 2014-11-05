@@ -463,6 +463,32 @@ ieee8021QBridgeVlanStaticTable_vHandler_cleanup:
 }
 
 bool
+ieee8021QBridgeVlanStaticRowStatus_update (
+	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021QBridgeVlanStaticEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	switch (pComponent->i32ComponentType)
+	{
+	case ieee8021BridgeBaseComponentType_iComponent_c:
+	case ieee8021BridgeBaseComponentType_bComponent_c:
+	case ieee8021BridgeBaseComponentType_sVlanComponent_c:
+		if (!ieee8021PbVlanStaticRowStatus_handler (pComponent, poEntry, u8RowStatus))
+		{
+			goto ieee8021QBridgeVlanStaticRowStatus_update_cleanup;
+		}
+		break;
+	}
+	
+	bRetCode = true;
+	
+ieee8021QBridgeVlanStaticRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021QBridgeVlanStaticTable_vlanUpdate (
 	ieee8021BridgeBaseEntry_t *pComponent,
 	ieee8021QBridgeVlanStaticEntry_t *poEntry,

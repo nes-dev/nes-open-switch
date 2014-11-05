@@ -62,6 +62,10 @@ bool
 		uint32_t u32VlanIndex,
 		bool bEnable, bool bTagged, uint32_t u32Count, uint32_t u32Port, ...);
 bool
+	ieee8021QBridgeVlanStaticRowStatus_update (
+		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021QBridgeVlanStaticEntry_t *poEntry, uint8_t u8RowStatus);
+bool
 	ieee8021QBridgeVlanStaticTable_vlanUpdate (
 		ieee8021BridgeBaseEntry_t *pComponent,
 		ieee8021QBridgeVlanStaticEntry_t *poEntry,

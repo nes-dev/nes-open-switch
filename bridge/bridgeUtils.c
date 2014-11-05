@@ -26,6 +26,7 @@
 
 #include "bridgeUtils.h"
 #include "ethernet/ieee8021BridgeMib.h"
+#include "ieee8021PbMib.h"
 #include "if/ifUtils.h"
 #include "if/ifMIB.h"
 
@@ -66,6 +67,45 @@ bridge_pipEnableModify (
 	return false;
 }
 
+bool
+ieee8021PbVlanStaticRowStatus_handler (
+	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021QBridgeVlanStaticEntry_t *poEntry,
+	uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	if (pComponent->i32ComponentType != ieee8021BridgeBaseComponentType_sVlanComponent_c)
+	{
+		goto ieee8021PbVlanStaticRowStatus_handler_success;
+	}
+	
+	register uint16_t u16PortIndex = 0;
+	
+	xBitmap_scanBitRangeRev (
+		poEntry->au8EgressPorts, 0, xBitmap_bitLength (pComponent->u16Ports_len) - 1, 1, u16PortIndex)
+	{
+		register ieee8021PbEdgePortEntry_t *poIeee8021PbEdgePortEntry = NULL;
+		
+		if ((poIeee8021PbEdgePortEntry = ieee8021PbEdgePortTable_getByIndex (pComponent->u32ComponentId, u16PortIndex + 1, poEntry->u32VlanIndex)) == NULL)
+		{
+			continue;
+		}
+		
+		if (!ieee8021PbEdgePortRowStatus_handler (poIeee8021PbEdgePortEntry, u8RowStatus))
+		{
+			goto ieee8021PbVlanStaticRowStatus_handler_cleanup;
+		}
+	}
+	
+ieee8021PbVlanStaticRowStatus_handler_success:
+	
+	bRetCode = true;
+	
+ieee8021PbVlanStaticRowStatus_handler_cleanup:
+	
+	return bRetCode;
+}
 
 bool
 ieee8021PbILan_createEntry (

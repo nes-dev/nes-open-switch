@@ -29,12 +29,18 @@ extern "C" {
 
 
 #include "ethernet/ieee8021BridgeMib.h"
+#include "ethernet/ieee8021QBridgeMib.h"
 
 #include <stdbool.h>
 
 
 bool bridgeUtilsInit (void);
 
+bool
+	ieee8021PbVlanStaticRowStatus_handler (
+		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021QBridgeVlanStaticEntry_t *poEntry,
+		uint8_t u8RowStatus);
 bool
 	ieee8021PbILan_createEntry (
 		ieee8021BridgeBasePortEntry_t *poCnpPortEntry,

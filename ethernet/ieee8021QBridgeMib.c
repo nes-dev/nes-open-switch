@@ -5045,7 +5045,76 @@ ieee8021QBridgeVlanStaticRowStatus_handler (
 	ieee8021BridgeBaseEntry_t *pComponent,
 	ieee8021QBridgeVlanStaticEntry_t *poEntry, uint8_t u8RowStatus)
 {
-	return false;
+	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
+	
+	if (poEntry->u8RowStatus == u8RealStatus)
+	{
+		goto ieee8021QBridgeVlanStaticRowStatus_handler_success;
+	}
+	if (u8RowStatus & xRowStatus_fromParent_c &&
+		((u8RealStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
+		 (u8RealStatus == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
+	{
+		goto ieee8021QBridgeVlanStaticRowStatus_handler_success;
+	}
+	
+	
+	switch (u8RealStatus)
+	{
+	case xRowStatus_active_c:
+		if (!(u8RowStatus & xRowStatus_fromParent_c) && pComponent->u8RowStatus != xRowStatus_active_c)
+		{
+			u8RealStatus = xRowStatus_notReady_c;
+		}
+		
+		/* TODO */
+		
+		if (!ieee8021QBridgeVlanStaticRowStatus_update (pComponent, poEntry, u8RealStatus))
+		{
+			goto ieee8021QBridgeVlanStaticRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!ieee8021QBridgeVlanStaticRowStatus_update (pComponent, poEntry, u8RealStatus))
+		{
+			goto ieee8021QBridgeVlanStaticRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		break;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!ieee8021QBridgeVlanStaticRowStatus_update (pComponent, poEntry, u8RealStatus))
+		{
+			goto ieee8021QBridgeVlanStaticRowStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+ieee8021QBridgeVlanStaticRowStatus_handler_success:
+	
+	bRetCode = true;
+	
+ieee8021QBridgeVlanStaticRowStatus_handler_cleanup:
+	
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
