@@ -37,6 +37,11 @@ extern "C" {
 bool bridgeUtilsInit (void);
 
 bool
+	ieee8021PbVlanStaticTable_vlanHandler (
+		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021QBridgeVlanStaticEntry_t *poEntry,
+		uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts);
+bool
 	ieee8021PbVlanStaticRowStatus_handler (
 		ieee8021BridgeBaseEntry_t *pComponent,
 		ieee8021QBridgeVlanStaticEntry_t *poEntry,

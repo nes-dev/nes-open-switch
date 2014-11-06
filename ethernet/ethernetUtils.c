@@ -494,7 +494,25 @@ ieee8021QBridgeVlanStaticTable_vlanUpdate (
 	ieee8021QBridgeVlanStaticEntry_t *poEntry,
 	uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts)
 {
-	return false;
+	register bool bRetCode = false;
+	
+	switch (pComponent->i32ComponentType)
+	{
+	case ieee8021BridgeBaseComponentType_iComponent_c:
+	case ieee8021BridgeBaseComponentType_bComponent_c:
+	case ieee8021BridgeBaseComponentType_sVlanComponent_c:
+		if (!ieee8021PbVlanStaticTable_vlanHandler (pComponent, poEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts))
+		{
+			goto ieee8021QBridgeVlanStaticTable_vlanUpdate_cleanup;
+		}
+		break;
+	}
+	
+	bRetCode = true;
+	
+ieee8021QBridgeVlanStaticTable_vlanUpdate_cleanup:
+	
+	return bRetCode;
 }
 
 

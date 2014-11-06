@@ -67,6 +67,74 @@ bridge_pipEnableModify (
 	return false;
 }
 
+
+bool
+ieee8021PbVlanStaticTable_vlanHandler (
+	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021QBridgeVlanStaticEntry_t *poEntry,
+	uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts)
+{
+	register bool bRetCode = false;
+	
+	if (pComponent->i32ComponentType != ieee8021BridgeBaseComponentType_sVlanComponent_c)
+	{
+		goto ieee8021PbVlanStaticTable_vlanHandler_success;
+	}
+	
+	register uint16_t u16PortIndex = 0;
+	
+	xBitmap_scanBitRangeRev (
+		pu8DisabledPorts, 0, xBitmap_bitLength (pComponent->u16Ports_len) - 1, 1, u16PortIndex)
+	{
+		register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
+		
+		if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (pComponent->u32ComponentId, u16PortIndex + 1)) == NULL)
+		{
+			continue;
+		}
+		
+		register ieee8021PbEdgePortEntry_t *poIeee8021PbEdgePortEntry = NULL;
+		
+		if ((poIeee8021PbEdgePortEntry = ieee8021PbEdgePortTable_getByIndex (poIeee8021PbCepEntry->u32BridgeBasePortComponentId, poIeee8021PbCepEntry->u32BridgeBasePort, poEntry->u32VlanIndex)) != NULL &&
+			!ieee8021PbEdgePortRowStatus_handler (poIeee8021PbEdgePortEntry, xRowStatus_notInService_c))
+		{
+			goto ieee8021PbVlanStaticTable_vlanHandler_cleanup;
+		}
+	}
+	
+	xBitmap_scanBitRangeRev (
+		pu8EnabledPorts, 0, xBitmap_bitLength (pComponent->u16Ports_len) - 1, 1, u16PortIndex)
+	{
+		register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
+		
+		if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (pComponent->u32ComponentId, u16PortIndex + 1)) == NULL)
+		{
+			continue;
+		}
+		
+		register ieee8021PbEdgePortEntry_t *poIeee8021PbEdgePortEntry = NULL;
+		
+		if ((poIeee8021PbEdgePortEntry = ieee8021PbEdgePortTable_getByIndex (poIeee8021PbCepEntry->u32BridgeBasePortComponentId, poIeee8021PbCepEntry->u32BridgeBasePort, poEntry->u32VlanIndex)) == NULL &&
+			(poIeee8021PbEdgePortEntry = ieee8021PbEdgePortTable_createExt (poIeee8021PbCepEntry->u32BridgeBasePortComponentId, poIeee8021PbCepEntry->u32BridgeBasePort, poEntry->u32VlanIndex)) == NULL)
+		{
+			goto ieee8021PbVlanStaticTable_vlanHandler_cleanup;
+		}
+		
+		if (!ieee8021PbEdgePortRowStatus_handler (poIeee8021PbEdgePortEntry, poEntry->u8RowStatus))
+		{
+			goto ieee8021PbVlanStaticTable_vlanHandler_cleanup;
+		}
+	}
+	
+ieee8021PbVlanStaticTable_vlanHandler_success:
+	
+	bRetCode = true;
+	
+ieee8021PbVlanStaticTable_vlanHandler_cleanup:
+	
+	return bRetCode;
+}
+
 bool
 ieee8021PbVlanStaticRowStatus_handler (
 	ieee8021BridgeBaseEntry_t *pComponent,
