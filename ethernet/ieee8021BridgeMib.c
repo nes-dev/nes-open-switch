@@ -267,7 +267,6 @@ ieee8021BridgeBaseTable_createExt (
 		goto ieee8021BridgeBaseTable_createExt_cleanup;
 	}
 	
-	
 ieee8021BridgeBaseTable_createExt_cleanup:
 	
 	return poEntry;
@@ -1657,6 +1656,133 @@ ieee8021BridgeBasePortTable_mapper (
 	}
 	
 	return SNMP_ERR_NOERROR;
+}
+
+static int8_t
+ieee8021BridgePhyData_If_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ieee8021BridgePhyData_t *pEntry1 = xBTree_entry (pNode1, ieee8021BridgePhyData_t, oIf_BTreeNode);
+	register ieee8021BridgePhyData_t *pEntry2 = xBTree_entry (pNode2, ieee8021BridgePhyData_t, oIf_BTreeNode);
+	
+	return
+		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ? -1:
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
+}
+
+static int8_t
+ieee8021BridgePhyData_Phy_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ieee8021BridgePhyData_t *pEntry1 = xBTree_entry (pNode1, ieee8021BridgePhyData_t, oPhy_BTreeNode);
+	register ieee8021BridgePhyData_t *pEntry2 = xBTree_entry (pNode2, ieee8021BridgePhyData_t, oPhy_BTreeNode);
+	
+	return
+		(pEntry1->u32PhyPort < pEntry2->u32PhyPort) ? -1:
+		(pEntry1->u32PhyPort == pEntry2->u32PhyPort) ? 0: 1;
+}
+
+xBTree_t oIeee8021BridgePhyData_If_BTree = xBTree_initInline (&ieee8021BridgePhyData_If_BTreeNodeCmp);
+xBTree_t oIeee8021BridgePhyData_Phy_BTree = xBTree_initInline (&ieee8021BridgePhyData_Phy_BTreeNodeCmp);
+
+/* create a new row in the (unsorted) table */
+ieee8021BridgePhyData_t *
+ieee8021BridgePhyData_createEntry (
+	uint32_t u32IfIndex,
+	uint32_t u32PhyPort)
+{
+	register ieee8021BridgePhyData_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32IfIndex = u32IfIndex;
+	poEntry->u32PhyPort = u32PhyPort;
+	if ((u32IfIndex != 0 && xBTree_nodeFind (&poEntry->oIf_BTreeNode, &oIeee8021BridgePhyData_If_BTree) != NULL) ||
+		(u32PhyPort != 0 && xBTree_nodeFind (&poEntry->oPhy_BTreeNode, &oIeee8021BridgePhyData_Phy_BTree) != NULL))
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	if (u32IfIndex != 0) { xBTree_nodeAdd (&poEntry->oIf_BTreeNode, &oIeee8021BridgePhyData_If_BTree); }
+	if (u32PhyPort != 0) { xBTree_nodeAdd (&poEntry->oPhy_BTreeNode, &oIeee8021BridgePhyData_Phy_BTree); }
+	
+	return poEntry;
+}
+
+ieee8021BridgePhyData_t *
+ieee8021BridgePhyData_getByIndex (
+	uint32_t u32IfIndex,
+	uint32_t u32PhyPort)
+{
+	register ieee8021BridgePhyData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->u32PhyPort = u32PhyPort;
+	if ((u32IfIndex != 0 && (poNode = xBTree_nodeFind (&poTmpEntry->oIf_BTreeNode, &oIeee8021BridgePhyData_If_BTree)) == NULL) ||
+		(u32PhyPort != 0 && (poNode = xBTree_nodeFind (&poTmpEntry->oPhy_BTreeNode, &oIeee8021BridgePhyData_Phy_BTree)) == NULL))
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return
+		u32IfIndex != 0 ? xBTree_entry (poNode, ieee8021BridgePhyData_t, oIf_BTreeNode):
+		u32PhyPort != 0 ? xBTree_entry (poNode, ieee8021BridgePhyData_t, oPhy_BTreeNode): NULL;
+}
+
+ieee8021BridgePhyData_t *
+ieee8021BridgePhyData_getNextIndex (
+	uint32_t u32IfIndex,
+	uint32_t u32PhyPort)
+{
+	register ieee8021BridgePhyData_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->u32PhyPort = u32PhyPort;
+	if ((u32IfIndex != 0 && (poNode = xBTree_nodeFindNext (&poTmpEntry->oIf_BTreeNode, &oIeee8021BridgePhyData_If_BTree)) == NULL) ||
+		(u32PhyPort != 0 && (poNode = xBTree_nodeFindNext (&poTmpEntry->oPhy_BTreeNode, &oIeee8021BridgePhyData_Phy_BTree)) == NULL))
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return
+		u32IfIndex != 0 ? xBTree_entry (poNode, ieee8021BridgePhyData_t, oIf_BTreeNode):
+		u32PhyPort != 0 ? xBTree_entry (poNode, ieee8021BridgePhyData_t, oPhy_BTreeNode): NULL;
+}
+
+/* remove a row from the table */
+void
+ieee8021BridgePhyData_removeEntry (ieee8021BridgePhyData_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oIf_BTreeNode, &oIeee8021BridgePhyData_If_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oIeee8021BridgePhyData_If_BTree);
+	xBTree_nodeRemove (&poEntry->oPhy_BTreeNode, &oIeee8021BridgePhyData_Phy_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
 }
 
 /** initialize ieee8021BridgeBaseIfToPortTable table mapper **/

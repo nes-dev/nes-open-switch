@@ -440,6 +440,40 @@ Netsnmp_Node_Handler ieee8021BridgePhyPortTable_mapper;
 #endif	/* SNMP_SRC */
 
 
+typedef struct ieee8021BridgePhyData_t
+{
+	uint32_t u32IfIndex;
+	uint32_t u32PhyPort;
+	
+	ieee8021BridgeBaseIfToPortEntry_t oIf;
+	ieee8021BridgePhyPortEntry_t oPhy;
+	
+	uint32_t u32ComponentId;
+	uint32_t u32Port;
+	uint8_t au8TypeCapabilities[2];
+	size_t u16TypeCapabilities_len;	/* # of uint8_t elements */
+	
+	xBTree_Node_t oIf_BTreeNode;
+	xBTree_Node_t oPhy_BTreeNode;
+} ieee8021BridgePhyData_t;
+
+// extern xBTree_t oIeee8021BridgePhyData_If_BTree;
+// extern xBTree_t oIeee8021BridgePhyData_Phy_BTree;
+
+ieee8021BridgePhyData_t * ieee8021BridgePhyData_createEntry (
+	uint32_t u32IfIndex,
+	uint32_t u32PhyPort);
+ieee8021BridgePhyData_t * ieee8021BridgePhyData_getByIndex (
+	uint32_t u32IfIndex,
+	uint32_t u32PhyPort);
+ieee8021BridgePhyData_t * ieee8021BridgePhyData_getNextIndex (
+	uint32_t u32IfIndex,
+	uint32_t u32PhyPort);
+#define ieee8021BridgePhyData_getByIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgePhyData_t, oIf))
+#define ieee8021BridgePhyData_getByPhyEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgePhyData_t, oPhy))
+void ieee8021BridgePhyData_removeEntry (ieee8021BridgePhyData_t *poEntry);
+
+
 /**
  *	table ieee8021BridgeTpPortTable definitions
  */
