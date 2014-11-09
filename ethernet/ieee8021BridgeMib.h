@@ -472,6 +472,12 @@ ieee8021BridgePhyData_t * ieee8021BridgePhyData_getNextIndex (
 #define ieee8021BridgePhyData_getByIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgePhyData_t, oIf))
 #define ieee8021BridgePhyData_getByPhyEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgePhyData_t, oPhy))
 void ieee8021BridgePhyData_removeEntry (ieee8021BridgePhyData_t *poEntry);
+ieee8021BridgePhyData_t * ieee8021BridgePhyData_createExt (
+	uint32_t u32IfIndex,
+	uint32_t u32PhyPort);
+bool ieee8021BridgePhyData_removeExt (ieee8021BridgePhyData_t *poEntry);
+bool ieee8021BridgePhyData_createHier (ieee8021BridgePhyData_t *poEntry);
+bool ieee8021BridgePhyData_removeHier (ieee8021BridgePhyData_t *poEntry);
 
 
 /**

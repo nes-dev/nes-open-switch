@@ -1785,6 +1785,93 @@ ieee8021BridgePhyData_removeEntry (ieee8021BridgePhyData_t *poEntry)
 	return;
 }
 
+ieee8021BridgePhyData_t *
+ieee8021BridgePhyData_createExt (
+	uint32_t u32IfIndex,
+	uint32_t u32PhyPort)
+{
+	register ieee8021BridgePhyData_t *poEntry = NULL;
+	
+	if (u32IfIndex == 0)
+	{
+		return NULL;
+	}
+	
+	poEntry = ieee8021BridgePhyData_createEntry (
+		u32IfIndex,
+		u32PhyPort);
+	if (poEntry == NULL)
+	{
+		goto ieee8021BridgePhyData_createExt_cleanup;
+	}
+	
+	if (!ieee8021BridgePhyData_createHier (poEntry))
+	{
+		ieee8021BridgePhyData_removeEntry (poEntry);
+		poEntry = NULL;
+		goto ieee8021BridgePhyData_createExt_cleanup;
+	}
+	
+	
+ieee8021BridgePhyData_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+ieee8021BridgePhyData_removeExt (ieee8021BridgePhyData_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!ieee8021BridgePhyData_removeHier (poEntry))
+	{
+		goto ieee8021BridgePhyData_removeExt_cleanup;
+	}
+	
+	ieee8021BridgePhyData_removeEntry (poEntry);
+	bRetCode = true;
+	
+	
+ieee8021BridgePhyData_removeExt_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgePhyData_createHier (
+	ieee8021BridgePhyData_t *poEntry)
+{
+	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
+	{
+		goto ieee8021BridgePhyData_createHier_cleanup;
+	}
+	
+	return true;
+	
+	
+ieee8021BridgePhyData_createHier_cleanup:
+	
+	ieee8021BridgePhyData_removeHier (poEntry);
+	return false;
+}
+
+bool
+ieee8021BridgePhyData_removeHier (
+	ieee8021BridgePhyData_t *poEntry)
+{
+	if (!ifData_removeReference (poEntry->u32IfIndex, false, true, false))
+	{
+		goto ieee8021BridgePhyData_removeHier_cleanup;
+	}
+	
+	return true;
+	
+	
+ieee8021BridgePhyData_removeHier_cleanup:
+	
+	return false;
+}
+
 /** initialize ieee8021BridgeBaseIfToPortTable table mapper **/
 void
 ieee8021BridgeBaseIfToPortTable_init (void)
