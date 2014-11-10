@@ -478,6 +478,12 @@ ieee8021BridgePhyData_t * ieee8021BridgePhyData_createExt (
 bool ieee8021BridgePhyData_removeExt (ieee8021BridgePhyData_t *poEntry);
 bool ieee8021BridgePhyData_createHier (ieee8021BridgePhyData_t *poEntry);
 bool ieee8021BridgePhyData_removeHier (ieee8021BridgePhyData_t *poEntry);
+bool ieee8021BridgePhyData_attachComponent (
+	ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poPort,
+	ieee8021BridgePhyData_t *poPhyData);
+bool ieee8021BridgePhyData_detachComponent (
+	ieee8021BridgeBasePortEntry_t *poPort,
+	ieee8021BridgePhyData_t *poPhyData);
 
 
 /**

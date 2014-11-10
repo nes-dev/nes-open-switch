@@ -1872,6 +1872,53 @@ ieee8021BridgePhyData_removeHier_cleanup:
 	return false;
 }
 
+bool
+ieee8021BridgePhyData_attachComponent (
+	ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poPort,
+	ieee8021BridgePhyData_t *poPhyData)
+{
+	register bool bRetCode = false;
+	
+	if (poComponent == NULL || poPort == NULL || poPhyData == NULL)
+	{
+		goto ieee8021BridgePhyData_attachComponent_cleanup;
+	}
+	
+	poPhyData->u32ComponentId = poPort->u32ComponentId;
+	poPhyData->u32Port = poPort->u32Port;
+	memcpy (poPort->au8Capabilities, poPhyData->au8TypeCapabilities, sizeof (poPort->au8Capabilities));
+	poPort->u32IfIndex = poPhyData->u32IfIndex;
+	poPort->i32External = poPhyData->u32PhyPort == 0 ? ieee8021BridgeBasePortExternal_false_c: ieee8021BridgeBasePortExternal_true_c;
+	bRetCode = true;
+	
+ieee8021BridgePhyData_attachComponent_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgePhyData_detachComponent (
+	ieee8021BridgeBasePortEntry_t *poPort,
+	ieee8021BridgePhyData_t *poPhyData)
+{
+	register bool bRetCode = false;
+	
+	if (poPort == NULL || poPhyData == NULL)
+	{
+		goto ieee8021BridgePhyData_detachComponent_cleanup;
+	}
+	
+	poPhyData->u32ComponentId = 0;
+	poPhyData->u32Port = 0;
+	memset (poPort->au8Capabilities, 0, sizeof (poPort->au8Capabilities));
+	poPort->i32External = ieee8021BridgeBasePortExternal_false_c;
+	bRetCode = true;
+	
+ieee8021BridgePhyData_detachComponent_cleanup:
+	
+	return bRetCode;
+}
+
 /** initialize ieee8021BridgeBaseIfToPortTable table mapper **/
 void
 ieee8021BridgeBaseIfToPortTable_init (void)
