@@ -472,6 +472,13 @@ ieee8021BridgePhyData_t * ieee8021BridgePhyData_getNextIndex (
 #define ieee8021BridgePhyData_getByIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgePhyData_t, oIf))
 #define ieee8021BridgePhyData_getByPhyEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgePhyData_t, oPhy))
 void ieee8021BridgePhyData_removeEntry (ieee8021BridgePhyData_t *poEntry);
+bool ieee8021BridgePhyData_createRegister (
+	uint32_t u32IfIndex,
+	uint32_t u32PhyPort,
+	uint32_t u32ChassisId);
+bool ieee8021BridgePhyData_removeRegister (
+	uint32_t u32IfIndex,
+	uint32_t u32PhyPort);
 ieee8021BridgePhyData_t * ieee8021BridgePhyData_createExt (
 	uint32_t u32IfIndex,
 	uint32_t u32PhyPort);
@@ -484,6 +491,10 @@ bool ieee8021BridgePhyData_attachComponent (
 bool ieee8021BridgePhyData_detachComponent (
 	ieee8021BridgeBasePortEntry_t *poPort,
 	ieee8021BridgePhyData_t *poPhyData);
+	
+#define ieee8021BridgePhyData_wrLock() (xRwLock_wrLock (&oBridge.oPhyPortLock))
+#define ieee8021BridgePhyData_rdLock() (xRwLock_rdLock (&oBridge.oPhyPortLock))
+#define ieee8021BridgePhyData_unLock() (xRwLock_unlock (&oBridge.oPhyPortLock))
 
 
 /**
