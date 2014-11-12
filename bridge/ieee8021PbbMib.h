@@ -232,13 +232,13 @@ typedef struct ieee8021PbbPipEntry_t
 	uint32_t u32IComponentId;
 	uint8_t au8VipMap[512];
 	size_t u16VipMap_len;	/* # of uint8_t elements */
-	uint8_t au8VipMap1[2048];
+	uint8_t au8VipMap1[0];
 	size_t u16VipMap1_len;	/* # of uint8_t elements */
-	uint8_t au8VipMap2[2048];
+	uint8_t au8VipMap2[0];
 	size_t u16VipMap2_len;	/* # of uint8_t elements */
-	uint8_t au8VipMap3[2048];
+	uint8_t au8VipMap3[0];
 	size_t u16VipMap3_len;	/* # of uint8_t elements */
-	uint8_t au8VipMap4[1537];
+	uint8_t au8VipMap4[0];
 	size_t u16VipMap4_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	
@@ -256,6 +256,13 @@ ieee8021PbbPipEntry_t * ieee8021PbbPipTable_getByIndex (
 ieee8021PbbPipEntry_t * ieee8021PbbPipTable_getNextIndex (
 	uint32_t u32IfIndex);
 void ieee8021PbbPipTable_removeEntry (ieee8021PbbPipEntry_t *poEntry);
+ieee8021PbbPipEntry_t * ieee8021PbbPipTable_createExt (
+	uint32_t u32IfIndex);
+bool ieee8021PbbPipTable_removeExt (ieee8021PbbPipEntry_t *poEntry);
+bool ieee8021PbbPipTable_createHier (ieee8021PbbPipEntry_t *poEntry);
+bool ieee8021PbbPipTable_removeHier (ieee8021PbbPipEntry_t *poEntry);
+bool ieee8021PbbPipRowStatus_handler (
+	ieee8021PbbPipEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021PbbPipTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021PbbPipTable_getNext;

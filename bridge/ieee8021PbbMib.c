@@ -26,6 +26,7 @@
 #include "system/systemMIB.h"
 #include "ethernet/ieee8021BridgeMib.h"
 #include "ieee8021PbbMib.h"
+#include "if/ifMIB.h"
 
 #include "lib/bitmap.h"
 #include "lib/binaryTree.h"
@@ -1318,6 +1319,113 @@ ieee8021PbbPipTable_removeEntry (ieee8021PbbPipEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021PbbPipTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ieee8021PbbPipEntry_t *
+ieee8021PbbPipTable_createExt (
+	uint32_t u32IfIndex)
+{
+	bool bIfReserved = u32IfIndex != ifIndex_zero_c;
+	ieee8021PbbPipEntry_t *poEntry = NULL;
+	
+	if (!bIfReserved)
+	{
+		ifData_t *poPipIfData = NULL;
+		
+		if (!ifData_createReference (u32IfIndex, ifType_pip_c, 0, true, true, false, &poPipIfData))
+		{
+			goto ieee8021PbbPipTable_createExt_cleanup;
+		}
+		
+		bIfReserved = true;
+		u32IfIndex = poPipIfData->u32Index;
+		
+		ifData_unLock (poPipIfData);
+	}
+	
+	poEntry = ieee8021PbbPipTable_createEntry (
+		u32IfIndex);
+	if (poEntry == NULL)
+	{
+		goto ieee8021PbbPipTable_createExt_cleanup;
+	}
+	
+	if (!bIfReserved && !ieee8021PbbPipTable_createHier (poEntry))
+	{
+		ieee8021PbbPipTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto ieee8021PbbPipTable_createExt_cleanup;
+	}
+	
+ieee8021PbbPipTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+ieee8021PbbPipTable_removeExt (ieee8021PbbPipEntry_t *poEntry)
+{
+	if (!ieee8021PbbPipTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021PbbPipTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021PbbPipTable_createHier (
+	ieee8021PbbPipEntry_t *poEntry)
+{
+	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
+	{
+		goto ieee8021PbbPipTable_createHier_cleanup;
+	}
+	
+	return true;
+	
+	
+ieee8021PbbPipTable_createHier_cleanup:
+	
+	ieee8021PbbPipTable_removeHier (poEntry);
+	return false;
+}
+
+bool
+ieee8021PbbPipTable_removeHier (
+	ieee8021PbbPipEntry_t *poEntry)
+{
+	return ifData_removeReference (poEntry->u32IfIndex, true, true, true);
+}
+
+bool
+ieee8021PbbPipRowStatus_handler (
+	ieee8021PbbPipEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	ifData_t *poPipIfData = NULL;
+	
+	if (poEntry->u8RowStatus == u8RowStatus)
+	{
+		goto ieee8021PbbPipRowStatus_handler_success;
+	}
+	
+	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, false, false, &poPipIfData) ||
+		!neIfRowStatus_handler (&poPipIfData->oNe, u8RowStatus))
+	{
+		goto ieee8021PbbPipRowStatus_handler_cleanup;
+	}
+	
+ieee8021PbbPipRowStatus_handler_success:
+	
+	bRetCode = true;
+	
+ieee8021PbbPipRowStatus_handler_cleanup:
+	
+	poPipIfData != NULL ? ifData_unLock (poPipIfData): false;
+	
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
