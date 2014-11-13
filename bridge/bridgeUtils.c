@@ -376,6 +376,38 @@ ieee8021PbbILan_removeEntry_cleanup:
 	return bRetCode;
 }
 
+bool
+ieee8021PbbVipToPipMappingRowStatus_update (
+	ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry,
+	ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register ieee8021PbbPipEntry_t *poIeee8021PbbPipEntry = NULL;
+	
+	if (poIeee8021PbbVipEntry == NULL)
+	{
+		goto ieee8021PbbVipToPipMappingRowStatus_update_success;
+	}
+	
+	if ((poIeee8021PbbPipEntry = ieee8021PbbPipTable_getByIndex (poEntry->u32PipIfIndex)) == NULL)
+	{
+		goto ieee8021PbbVipToPipMappingRowStatus_update_cleanup;
+	}
+	
+	/* TODO */
+	
+	xBitmap_setBitRev (poIeee8021PbbPipEntry->au8VipMap, poEntry->u32BridgeBasePort - 1, 1);
+	poIeee8021PbbVipEntry->u32PipIfIndex = poEntry->u32PipIfIndex;
+	
+ieee8021PbbVipToPipMappingRowStatus_update_success:
+	
+	bRetCode = true;
+	
+ieee8021PbbVipToPipMappingRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
 
 
 #endif	// __BRIDGEUTILS_C__

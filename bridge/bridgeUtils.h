@@ -30,6 +30,7 @@ extern "C" {
 
 #include "ethernet/ieee8021BridgeMib.h"
 #include "ethernet/ieee8021QBridgeMib.h"
+#include "ieee8021PbbMib.h"
 
 #include <stdbool.h>
 
@@ -63,6 +64,10 @@ bool
 	ieee8021PbbILan_removeEntry (
 		ieee8021BridgeBasePortEntry_t *poCbpPortEntry,
 		ieee8021BridgeBasePortEntry_t *poVipPortEntry);
+bool
+	ieee8021PbbVipToPipMappingRowStatus_update (
+		ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry,
+		ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus);
 
 
 

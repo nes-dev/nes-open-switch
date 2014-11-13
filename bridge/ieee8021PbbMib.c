@@ -24,6 +24,7 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "system/systemMIB.h"
+#include "bridgeUtils.h"
 #include "ethernet/ieee8021BridgeMib.h"
 #include "ieee8021PbbMib.h"
 #include "if/ifMIB.h"
@@ -3208,6 +3209,85 @@ ieee8021PbbVipToPipMappingTable_removeEntry (ieee8021PbbVipToPipMappingEntry_t *
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021PbbVipToPipMappingTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+bool
+ieee8021PbbVipToPipMappingRowStatus_handler (
+	ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
+	register ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry = NULL;
+	
+	poIeee8021PbbVipEntry = ieee8021PbbVipTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort);
+	
+	if (poEntry->u8RowStatus == u8RealStatus)
+	{
+		goto ieee8021PbbVipToPipMappingRowStatus_handler_success;
+	}
+	if (u8RowStatus & xRowStatus_fromParent_c &&
+		((u8RealStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
+		 (u8RealStatus == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
+	{
+		goto ieee8021PbbVipToPipMappingRowStatus_handler_success;
+	}
+	
+	
+	switch (u8RealStatus)
+	{
+	case xRowStatus_active_c:
+		if (poEntry->u32PipIfIndex == 0)
+		{
+			goto ieee8021PbbVipToPipMappingRowStatus_handler_cleanup;
+		}
+		
+		if (!(u8RowStatus & xRowStatus_fromParent_c) && (poIeee8021PbbVipEntry == NULL || poIeee8021PbbVipEntry->u8RowStatus != xRowStatus_active_c))
+		{
+			u8RealStatus = xRowStatus_notReady_c;
+		}
+		
+		if (!ieee8021PbbVipToPipMappingRowStatus_update (poIeee8021PbbVipEntry, poEntry, u8RealStatus))
+		{
+			goto ieee8021PbbVipToPipMappingRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!ieee8021PbbVipToPipMappingRowStatus_update (poIeee8021PbbVipEntry, poEntry, u8RealStatus))
+		{
+			goto ieee8021PbbVipToPipMappingRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus =
+			poEntry->u8RowStatus == xRowStatus_active_c && (u8RowStatus & xRowStatus_fromParent_c) ? xRowStatus_notReady_c: xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		goto ieee8021PbbVipToPipMappingRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!ieee8021PbbVipToPipMappingRowStatus_update (poIeee8021PbbVipEntry, poEntry, u8RealStatus))
+		{
+			goto ieee8021PbbVipToPipMappingRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+ieee8021PbbVipToPipMappingRowStatus_handler_success:
+	
+	return true;
+	
+	
+ieee8021PbbVipToPipMappingRowStatus_handler_cleanup:
+	
+	return u8RowStatus & xRowStatus_fromParent_c;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */

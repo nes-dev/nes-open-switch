@@ -507,6 +507,8 @@ ieee8021PbbVipToPipMappingEntry_t * ieee8021PbbVipToPipMappingTable_getNextIndex
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort);
 void ieee8021PbbVipToPipMappingTable_removeEntry (ieee8021PbbVipToPipMappingEntry_t *poEntry);
+bool ieee8021PbbVipToPipMappingRowStatus_handler (
+	ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021PbbVipToPipMappingTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021PbbVipToPipMappingTable_getNext;
