@@ -44,6 +44,11 @@ neEntPortRowStatus_update (
 	register bool bRetCode = false;
 	register neEntPortData_t *poPortData = neEntPortData_getByPortEntry (poEntry);
 	
+	if (poPortData->u32ChassisIndex == 0)
+	{
+		goto neEntPortRowStatus_update_cleanup;
+	}
+	
 	switch (poEntry->i32Type)
 	{
 	default:
@@ -51,60 +56,46 @@ neEntPortRowStatus_update (
 		
 	case ifType_ethernetCsmacd_c:
 	{
-		ieee8021BridgePhyPortInfo_t oIeee8021BridgePhyPortInfo = ieee8021BridgePhyPortInfo_initInline (ieee8021BridgePhyPortInfo_all_c);
-		
-		ieee8021BridgePhyPortInfo_wrLock ();
-		
 		switch (u8RowStatus)
 		{
 		case xRowStatus_active_c:
-			if (!ieee8021BridgePhyPortInfo_getByPort (poPortData->u32EntPhysicalIndex, &oIeee8021BridgePhyPortInfo) &&
-				!ieee8021BridgePhyPortInfo_createExt (poPortData->u32EntPhysicalIndex, poPortData->u32IfIndex, &oIeee8021BridgePhyPortInfo))
+			if (!ieee8021BridgePhyData_createRegister (poPortData->u32IfIndex, poPortData->u32EntPhysicalIndex, poPortData->u32ChassisIndex))
 			{
-				goto neEntPortRowStatus_updateEthernet_unlock;
+				goto neEntPortRowStatus_update_cleanup;
 			}
 			
-			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_notPresent_c, true, false))
+			if (!neIfStatus_modify (poPortData->u32IfIndex, xOperStatus_notPresent_c, true, false))
 			{
-				goto neEntPortRowStatus_updateEthernet_unlock;
+				goto neEntPortRowStatus_update_cleanup;
 			}
 			
 			/* TODO */
 			break;
 			
 		case xRowStatus_notInService_c:
-			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_down_c, true, false))
+			if (!neIfStatus_modify (poPortData->u32IfIndex, xOperStatus_down_c, true, false))
 			{
-				goto neEntPortRowStatus_updateEthernet_unlock;
+				goto neEntPortRowStatus_update_cleanup;
 			}
 			
 			/* TODO */
 			break;
 			
 		case xRowStatus_destroy_c:
-			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_notPresent_c, true, false))
+			if (!neIfStatus_modify (poPortData->u32IfIndex, xOperStatus_notPresent_c, true, false))
 			{
-				goto neEntPortRowStatus_updateEthernet_unlock;
+				goto neEntPortRowStatus_update_cleanup;
 			}
 			
-			if (!ieee8021BridgePhyPortInfo_getByPort (poPortData->u32EntPhysicalIndex, &oIeee8021BridgePhyPortInfo))
+			if (!ieee8021BridgePhyData_removeRegister (poPortData->u32IfIndex, poPortData->u32EntPhysicalIndex))
 			{
-				goto neEntPortRowStatus_updateEthernet_unlock;
-			}
-			
-			if (!ieee8021BridgePhyPortInfo_removeExt (&oIeee8021BridgePhyPortInfo))
-			{
-				goto neEntPortRowStatus_updateEthernet_unlock;
+				goto neEntPortRowStatus_update_cleanup;
 			}
 			
 			/* TODO */
 			break;
 		}
 		
-		bRetCode = true;
-		
-neEntPortRowStatus_updateEthernet_unlock:
-		ieee8021BridgePhyPortInfo_unLock ();
 		break;
 	}
 	
@@ -114,6 +105,8 @@ neEntPortRowStatus_updateEthernet_unlock:
 	case ifType_opticalTransport_c:
 		break;
 	}
+	
+	bRetCode = true;
 	
 neEntPortRowStatus_update_cleanup:
 	
