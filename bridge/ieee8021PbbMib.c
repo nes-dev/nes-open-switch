@@ -3251,9 +3251,26 @@ ieee8021PbbVipToPipMappingRowStatus_handler (
 		}
 		
 		poEntry->u8RowStatus = u8RealStatus;
+		
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
 		break;
 		
 	case xRowStatus_notInService_c:
+		if (poEntry->pOldEntry != NULL ||
+			(poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+		{
+			goto ieee8021PbbVipToPipMappingRowStatus_handler_cleanup;
+		}
+		
+		if (poEntry->pOldEntry != NULL)
+		{
+			memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
+		}
+		
 		if (!ieee8021PbbVipToPipMappingRowStatus_update (poIeee8021PbbVipEntry, poEntry, u8RealStatus))
 		{
 			goto ieee8021PbbVipToPipMappingRowStatus_handler_cleanup;
@@ -3271,6 +3288,12 @@ ieee8021PbbVipToPipMappingRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
+		
 		if (!ieee8021PbbVipToPipMappingRowStatus_update (poIeee8021PbbVipEntry, poEntry, u8RealStatus))
 		{
 			goto ieee8021PbbVipToPipMappingRowStatus_handler_cleanup;

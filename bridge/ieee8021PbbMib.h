@@ -490,6 +490,8 @@ typedef struct ieee8021PbbVipToPipMappingEntry_t
 	uint8_t u8StorageType;
 	uint8_t u8RowStatus;
 	
+	struct ieee8021PbbVipToPipMappingEntry_t *pOldEntry;
+	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbVipToPipMappingEntry_t;
 

@@ -389,15 +389,44 @@ ieee8021PbbVipToPipMappingRowStatus_update (
 		goto ieee8021PbbVipToPipMappingRowStatus_update_success;
 	}
 	
-	if ((poIeee8021PbbPipEntry = ieee8021PbbPipTable_getByIndex (poEntry->u32PipIfIndex)) == NULL)
+	if (poEntry->pOldEntry != NULL && poEntry->pOldEntry->u32PipIfIndex == poEntry->u32PipIfIndex)
+	{
+		goto ieee8021PbbVipToPipMappingRowStatus_update_success;
+	}
+	
+	if (poEntry->pOldEntry == NULL || poEntry->pOldEntry->u32PipIfIndex == 0)
+	{
+		goto ieee8021PbbVipToPipMappingRowStatus_update_newPipIfIndex;
+	}
+	
+	if ((poIeee8021PbbPipEntry = ieee8021PbbPipTable_getByIndex (poEntry->pOldEntry->u32PipIfIndex)) == NULL)
 	{
 		goto ieee8021PbbVipToPipMappingRowStatus_update_cleanup;
 	}
 	
-	/* TODO */
+	xBitmap_setBitRev (poIeee8021PbbPipEntry->au8VipMap, poEntry->u32BridgeBasePort - 1, 0);
+	poEntry->pOldEntry->u32PipIfIndex = 0;
 	
-	xBitmap_setBitRev (poIeee8021PbbPipEntry->au8VipMap, poEntry->u32BridgeBasePort - 1, 1);
-	poIeee8021PbbVipEntry->u32PipIfIndex = poEntry->u32PipIfIndex;
+	
+ieee8021PbbVipToPipMappingRowStatus_update_newPipIfIndex:
+	
+	if (poEntry->u32PipIfIndex == 0)
+	{
+		goto ieee8021PbbVipToPipMappingRowStatus_update_cleanup;
+	}
+	
+	if (poIeee8021PbbVipEntry->u8RowStatus == xRowStatus_notInService_c)
+	{
+		if ((poIeee8021PbbPipEntry = ieee8021PbbPipTable_getByIndex (poEntry->u32PipIfIndex)) == NULL)
+		{
+			goto ieee8021PbbVipToPipMappingRowStatus_update_cleanup;
+		}
+		
+		/* TODO */
+		
+		xBitmap_setBitRev (poIeee8021PbbPipEntry->au8VipMap, poEntry->u32BridgeBasePort - 1, 1);
+		poIeee8021PbbVipEntry->u32PipIfIndex = poEntry->u32PipIfIndex;
+	}
 	
 ieee8021PbbVipToPipMappingRowStatus_update_success:
 	
