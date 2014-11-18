@@ -278,7 +278,21 @@ ieee8021PbbVipTable_BTreeNodeCmp (
 		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort) ? 0: 1;
 }
 
+static int8_t
+ieee8021PbbVipTable_ISid_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ieee8021PbbVipEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021PbbVipEntry_t, oISid_BTreeNode);
+	register ieee8021PbbVipEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021PbbVipEntry_t, oISid_BTreeNode);
+	
+	return
+		(pEntry1->u32ChassisId < pEntry2->u32ChassisId) ||
+		(pEntry1->u32ChassisId == pEntry2->u32ChassisId && pEntry1->u32ISid < pEntry2->u32ISid) ? -1:
+		(pEntry1->u32ChassisId == pEntry2->u32ChassisId && pEntry1->u32ISid == pEntry2->u32ISid) ? 0: 1;
+}
+
 xBTree_t oIeee8021PbbVipTable_BTree = xBTree_initInline (&ieee8021PbbVipTable_BTreeNodeCmp);
+xBTree_t oIeee8021PbbVipTable_ISid_BTree = xBTree_initInline (&ieee8021PbbVipTable_ISid_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 ieee8021PbbVipEntry_t *
@@ -360,6 +374,56 @@ ieee8021PbbVipTable_getNextIndex (
 	
 	xBuffer_free (poTmpEntry);
 	return xBTree_entry (poNode, ieee8021PbbVipEntry_t, oBTreeNode);
+}
+
+ieee8021PbbVipEntry_t *
+ieee8021PbbVipTable_ISid_getByIndex (
+	uint32_t u32ChassisId,
+	uint32_t u32ISid)
+{
+	register ieee8021PbbVipEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32ChassisId = u32ChassisId;
+	poTmpEntry->u32ISid = u32ISid;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oISid_BTreeNode, &oIeee8021PbbVipTable_ISid_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ieee8021PbbVipEntry_t, oISid_BTreeNode);
+}
+
+ieee8021PbbVipEntry_t *
+ieee8021PbbVipTable_ISid_getNextIndex (
+	uint32_t u32ChassisId,
+	uint32_t u32ISid)
+{
+	register ieee8021PbbVipEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32ChassisId = u32ChassisId;
+	poTmpEntry->u32ISid = u32ISid;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oISid_BTreeNode, &oIeee8021PbbVipTable_ISid_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ieee8021PbbVipEntry_t, oISid_BTreeNode);
 }
 
 /* remove a row from the table */
@@ -1228,7 +1292,21 @@ ieee8021PbbPipTable_BTreeNodeCmp (
 		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
 }
 
+static int8_t
+ieee8021PbbPipTable_Comp_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ieee8021PbbPipEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021PbbPipEntry_t, oComp_BTreeNode);
+	register ieee8021PbbPipEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021PbbPipEntry_t, oComp_BTreeNode);
+	
+	return
+		(pEntry1->u32IComponentId < pEntry2->u32IComponentId) ||
+		(pEntry1->u32IComponentId == pEntry2->u32IComponentId && pEntry1->u32IfIndex < pEntry2->u32IfIndex) ? -1:
+		(pEntry1->u32IComponentId == pEntry2->u32IComponentId && pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
+}
+
 xBTree_t oIeee8021PbbPipTable_BTree = xBTree_initInline (&ieee8021PbbPipTable_BTreeNodeCmp);
+xBTree_t oIeee8021PbbPipTable_Comp_BTree = xBTree_initInline (&ieee8021PbbPipTable_Comp_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 ieee8021PbbPipEntry_t *
@@ -1305,6 +1383,31 @@ ieee8021PbbPipTable_getNextIndex (
 	
 	xBuffer_free (poTmpEntry);
 	return xBTree_entry (poNode, ieee8021PbbPipEntry_t, oBTreeNode);
+}
+
+ieee8021PbbPipEntry_t *
+ieee8021PbbPipTable_Comp_getNextIndex (
+	uint32_t u32IComponentId,
+	uint32_t u32IfIndex)
+{
+	register ieee8021PbbPipEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32IComponentId = u32IComponentId;
+	poTmpEntry->u32IfIndex = u32IfIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oComp_BTreeNode, &oIeee8021PbbPipTable_Comp_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ieee8021PbbPipEntry_t, oComp_BTreeNode);
 }
 
 /* remove a row from the table */

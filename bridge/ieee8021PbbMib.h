@@ -121,10 +121,13 @@ typedef struct ieee8021PbbVipEntry_t
 	uint8_t u8RowStatus;
 	int32_t i32EnableConnectionId;
 	
+	uint32_t u32ChassisId;
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oISid_BTreeNode;
 } ieee8021PbbVipEntry_t;
 
 extern xBTree_t oIeee8021PbbVipTable_BTree;
+extern xBTree_t oIeee8021PbbVipTable_ISid_BTree;
 
 /* ieee8021PbbVipTable table mapper */
 void ieee8021PbbVipTable_init (void);
@@ -137,6 +140,12 @@ ieee8021PbbVipEntry_t * ieee8021PbbVipTable_getByIndex (
 ieee8021PbbVipEntry_t * ieee8021PbbVipTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort);
+ieee8021PbbVipEntry_t * ieee8021PbbVipTable_ISid_getByIndex (
+	uint32_t u32ChassisId,
+	uint32_t u32ISid);
+ieee8021PbbVipEntry_t * ieee8021PbbVipTable_ISid_getNextIndex (
+	uint32_t u32ChassisId,
+	uint32_t u32ISid);
 void ieee8021PbbVipTable_removeEntry (ieee8021PbbVipEntry_t *poEntry);
 ieee8021PbbVipEntry_t * ieee8021PbbVipTable_createExt (
 	uint32_t u32BridgeBasePortComponentId,
@@ -242,10 +251,12 @@ typedef struct ieee8021PbbPipEntry_t
 	size_t u16VipMap4_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	
+	xBTree_Node_t oComp_BTreeNode;
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbPipEntry_t;
 
 extern xBTree_t oIeee8021PbbPipTable_BTree;
+extern xBTree_t oIeee8021PbbPipTable_Comp_BTree;
 
 /* ieee8021PbbPipTable table mapper */
 void ieee8021PbbPipTable_init (void);
@@ -254,6 +265,9 @@ ieee8021PbbPipEntry_t * ieee8021PbbPipTable_createEntry (
 ieee8021PbbPipEntry_t * ieee8021PbbPipTable_getByIndex (
 	uint32_t u32IfIndex);
 ieee8021PbbPipEntry_t * ieee8021PbbPipTable_getNextIndex (
+	uint32_t u32IfIndex);
+ieee8021PbbPipEntry_t * ieee8021PbbPipTable_Comp_getNextIndex (
+	uint32_t u32IComponentId,
 	uint32_t u32IfIndex);
 void ieee8021PbbPipTable_removeEntry (ieee8021PbbPipEntry_t *poEntry);
 ieee8021PbbPipEntry_t * ieee8021PbbPipTable_createExt (
