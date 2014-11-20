@@ -40,12 +40,12 @@ bool bridgeUtilsInit (void);
 
 bool
 	ieee8021PbVlanStaticTable_vlanHandler (
-		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgeVlanStaticEntry_t *poEntry,
 		uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts);
 bool
 	ieee8021PbVlanStaticRowStatus_handler (
-		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgeVlanStaticEntry_t *poEntry,
 		uint8_t u8RowStatus);
 bool
@@ -68,6 +68,10 @@ bool
 bool
 	ieee8021PbCVidRegistrationRowStatus_update (
 		ieee8021PbCVidRegistrationEntry_t *poEntry, uint8_t u8RowStatus);
+bool
+	ieee8021PbbVipRowStatus_update (
+		ieee8021BridgeBaseEntry_t *poComponent,
+		ieee8021PbbVipEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021PbbVipToPipMappingRowStatus_update (
 		ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry,

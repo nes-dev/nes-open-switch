@@ -122,6 +122,8 @@ typedef struct ieee8021PbbVipEntry_t
 	int32_t i32EnableConnectionId;
 	
 	uint32_t u32ChassisId;
+	struct ieee8021PbbVipEntry_t *pOldEntry;
+	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oISid_BTreeNode;
 } ieee8021PbbVipEntry_t;

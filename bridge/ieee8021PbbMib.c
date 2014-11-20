@@ -565,9 +565,19 @@ ieee8021PbbVipRowStatus_handler (
 	switch (u8RealStatus)
 	{
 	case xRowStatus_active_c:
+		if (poEntry->u32ISid == 0)
+		{
+			goto ieee8021PbbVipRowStatus_handler_cleanup;
+		}
+		
 		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c)
 		{
 			u8RealStatus = xRowStatus_notReady_c;
+		}
+		
+		if (!ieee8021PbbVipRowStatus_update (poIeee8021BridgeBaseEntry, poEntry, u8RealStatus))
+		{
+			goto ieee8021PbbVipRowStatus_handler_cleanup;
 		}
 		
 		/* TODO */
@@ -578,9 +588,31 @@ ieee8021PbbVipRowStatus_handler (
 		}
 		
 		poEntry->u8RowStatus = u8RealStatus;
+		
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
 		break;
 		
 	case xRowStatus_notInService_c:
+		if (poEntry->pOldEntry != NULL ||
+			(poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+		{
+			goto ieee8021PbbVipRowStatus_handler_cleanup;
+		}
+		
+		if (poEntry->pOldEntry != NULL)
+		{
+			memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
+		}
+		
+		if (!ieee8021PbbVipRowStatus_update (poIeee8021BridgeBaseEntry, poEntry, u8RealStatus))
+		{
+			goto ieee8021PbbVipRowStatus_handler_cleanup;
+		}
+		
 		/* TODO */
 		
 		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
@@ -600,6 +632,17 @@ ieee8021PbbVipRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
+		
+		if (!ieee8021PbbVipRowStatus_update (poIeee8021BridgeBaseEntry, poEntry, u8RealStatus))
+		{
+			goto ieee8021PbbVipRowStatus_handler_cleanup;
+		}
+		
 		/* TODO */
 		
 		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))

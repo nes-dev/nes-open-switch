@@ -449,6 +449,73 @@ ieee8021PbCVidRegistrationRowStatus_update_cleanup:
 }
 
 bool
+ieee8021PbbVipRowStatus_update (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021PbbVipEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	
+	if (poEntry->pOldEntry != NULL && poEntry->pOldEntry->u32ISid == poEntry->u32ISid)
+	{
+		goto ieee8021PbbVipRowStatus_update_updatePipIfIndex;
+	}
+	
+	if (poEntry->pOldEntry == NULL || poEntry->pOldEntry->u32ISid == 0)
+	{
+		goto ieee8021PbbVipRowStatus_update_newISid;
+	}
+	
+	xBTree_nodeRemove (&poEntry->oISid_BTreeNode, &oIeee8021PbbVipTable_ISid_BTree);
+	poEntry->pOldEntry->u32ISid = 0;
+	
+ieee8021PbbVipRowStatus_update_newISid:
+	
+	if (poEntry->u32ISid == 0)
+	{
+		goto ieee8021PbbVipRowStatus_update_cleanup;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oISid_BTreeNode, &oIeee8021PbbVipTable_ISid_BTree);
+	
+	
+ieee8021PbbVipRowStatus_update_updatePipIfIndex:
+	
+	if (poEntry->u32PipIfIndex != 0)
+	{
+		goto ieee8021PbbVipRowStatus_update_success;
+	}
+	
+	register ieee8021PbbPipEntry_t *poIeee8021PbbPipEntry = NULL;
+	register ieee8021PbbVipToPipMappingEntry_t *poIeee8021PbbVipToPipMappingEntry =
+		ieee8021PbbVipToPipMappingTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort);
+		
+	if (poIeee8021PbbVipToPipMappingEntry != NULL && poIeee8021PbbVipToPipMappingEntry->u8RowStatus == xRowStatus_active_c &&
+		(poIeee8021PbbPipEntry = ieee8021PbbPipTable_getByIndex (poIeee8021PbbVipToPipMappingEntry->u32PipIfIndex)) == NULL)
+	{
+		goto ieee8021PbbVipRowStatus_update_cleanup;
+	}
+	else if (
+		(poIeee8021PbbPipEntry = ieee8021PbbPipTable_Comp_getNextIndex (poEntry->u32BridgeBasePortComponentId, 0)) == NULL ||
+		poIeee8021PbbPipEntry->u32IComponentId != poEntry->u32BridgeBasePortComponentId)
+	{
+		goto ieee8021PbbVipRowStatus_update_cleanup;
+	}
+	
+	xBitmap_setBitRev (poIeee8021PbbPipEntry->au8VipMap, poEntry->u32BridgeBasePort - 1, 1);
+	poEntry->u32PipIfIndex = poIeee8021PbbPipEntry->u32IfIndex;
+	
+	
+ieee8021PbbVipRowStatus_update_success:
+	
+	bRetCode = true;
+	
+ieee8021PbbVipRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021PbbVipToPipMappingRowStatus_update (
 	ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry,
 	ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus)
