@@ -26,9 +26,14 @@
 
 #include "bridgeUtils.h"
 #include "ethernet/ieee8021BridgeMib.h"
+#include "ethernet/ieee8021QBridgeMib.h"
 #include "ieee8021PbMib.h"
+#include "ieee8021PbbMib.h"
+#include "ethernet/ethernetUtils.h"
 #include "if/ifUtils.h"
 #include "if/ifMIB.h"
+
+#include "lib/bitmap.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -372,6 +377,73 @@ ieee8021PbbILan_removeEntry_success:
 	bRetCode = true;
 	
 ieee8021PbbILan_removeEntry_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021PbCVidRegistrationRowStatus_update (
+	ieee8021PbCVidRegistrationEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	if ((poEntry->u8RowStatus == xRowStatus_active_c && u8RowStatus == xRowStatus_active_c) ||
+		(poEntry->u8RowStatus != xRowStatus_active_c && u8RowStatus != xRowStatus_active_c))
+	{
+		goto ieee8021PbCVidRegistrationRowStatus_update_success;
+	}
+	
+	register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
+	
+	if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbCVidRegistrationRowStatus_update_cleanup;
+	}
+	
+	register ieee8021BridgeBaseEntry_t *poCComponent = NULL;
+	
+	if ((poCComponent = ieee8021BridgeBaseTable_getByIndex (poIeee8021PbCepEntry->u32CComponentId)) == NULL)
+	{
+		goto ieee8021PbCVidRegistrationRowStatus_update_cleanup;
+	}
+	
+	register ieee8021QBridgeVlanStaticEntry_t *poCVlanStaticEntry = NULL;
+	
+	if ((poCVlanStaticEntry = ieee8021QBridgeVlanStaticTable_getByIndex (poIeee8021PbCepEntry->u32CComponentId, poEntry->u32CVid)) == NULL)
+	{
+		goto ieee8021PbCVidRegistrationRowStatus_update_cleanup;
+	}
+	
+	register ieee8021PbEdgePortEntry_t *poIeee8021PbEdgePortEntry = NULL;
+	
+	if ((poIeee8021PbEdgePortEntry = ieee8021PbEdgePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort, poEntry->u32SVid)) != NULL &&
+		!ieee8021QBridgeVlanStaticTable_vHandler (
+			poIeee8021PbCepEntry->u32CComponentId, poEntry->u32CVid,
+			u8RowStatus == xRowStatus_active_c, poEntry->i32UntaggedPep == ieee8021PbCVidRegistrationUntaggedPep_true_c, 1, poIeee8021PbEdgePortEntry->u32PepPort))
+	{
+		goto ieee8021PbCVidRegistrationRowStatus_update_cleanup;
+	}
+	
+	if (u8RowStatus == xRowStatus_active_c)
+	{
+		xBitmap_setBitRev (poCVlanStaticEntry->au8UntaggedPorts, poEntry->u32BridgeBasePort - 1, poEntry->i32UntaggedCep == ieee8021PbCVidRegistrationUntaggedCep_true_c);
+	}
+	
+	if (!ieee8021QBridgeVlanStaticRowStatus_handler (poCComponent, poCVlanStaticEntry, u8RowStatus))
+	{
+		goto ieee8021PbCVidRegistrationRowStatus_update_cleanup;
+	}
+	
+	if (poIeee8021PbEdgePortEntry != NULL)
+	{
+		u8RowStatus == xRowStatus_active_c ? poIeee8021PbEdgePortEntry->u32NumCVid++: poIeee8021PbEdgePortEntry->u32NumCVid--;
+	}
+	
+ieee8021PbCVidRegistrationRowStatus_update_success:
+	
+	bRetCode = true;
+	
+ieee8021PbCVidRegistrationRowStatus_update_cleanup:
 	
 	return bRetCode;
 }

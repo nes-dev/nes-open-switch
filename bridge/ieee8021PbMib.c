@@ -333,7 +333,92 @@ bool
 ieee8021PbCVidRegistrationRowStatus_handler (
 	ieee8021PbCVidRegistrationEntry_t *poEntry, uint8_t u8RowStatus)
 {
-	return false;
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
+	register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
+	
+	if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbCVidRegistrationRowStatus_handler_cleanup;
+	}
+	
+	if (poEntry->u8RowStatus == u8RealStatus)
+	{
+		goto ieee8021PbCVidRegistrationRowStatus_handler_success;
+	}
+	if (u8RowStatus & xRowStatus_fromParent_c &&
+		((u8RealStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
+		 (u8RealStatus == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
+	{
+		goto ieee8021PbCVidRegistrationRowStatus_handler_success;
+	}
+	
+	
+	switch (u8RealStatus)
+	{
+	case xRowStatus_active_c:
+	{
+		register ieee8021QBridgeVlanStaticEntry_t *poSVlanStaticEntry = NULL;
+		
+		if (poEntry->u32SVid == 0 ||
+			(poSVlanStaticEntry = ieee8021QBridgeVlanStaticTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32SVid)) == NULL)
+		{
+			goto ieee8021PbCVidRegistrationRowStatus_handler_cleanup;
+		}
+		
+		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021PbCepEntry->u8RowStatus != xRowStatus_active_c)
+		{
+			u8RealStatus = xRowStatus_notReady_c;
+		}
+		
+		/* TODO */
+		
+		if (!ieee8021PbCVidRegistrationRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto ieee8021PbCVidRegistrationRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+	}
+	case xRowStatus_notInService_c:
+		/* TODO */
+		
+		if (!ieee8021PbCVidRegistrationRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto ieee8021PbCVidRegistrationRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus =
+			poEntry->u8RowStatus == xRowStatus_active_c && (u8RowStatus & xRowStatus_fromParent_c) ? xRowStatus_notReady_c: xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		goto ieee8021PbCVidRegistrationRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		/* TODO */
+		
+		if (!ieee8021PbCVidRegistrationRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto ieee8021PbCVidRegistrationRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+ieee8021PbCVidRegistrationRowStatus_handler_success:
+	
+	return true;
+	
+	
+ieee8021PbCVidRegistrationRowStatus_handler_cleanup:
+	
+	return u8RowStatus & xRowStatus_fromParent_c;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
