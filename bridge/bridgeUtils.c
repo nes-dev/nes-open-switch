@@ -182,37 +182,58 @@ ieee8021PbVlanStaticRowStatus_handler_cleanup:
 
 bool
 ieee8021PbILan_createEntry (
-	ieee8021BridgeBasePortEntry_t *poCnpPortEntry,
-	ieee8021BridgeBasePortEntry_t *poPepPortEntry)
+	ieee8021BridgeBaseEntry_t *poSComponent, ieee8021BridgeBasePortEntry_t *poCnpPort,
+	ieee8021BridgeBaseEntry_t *poCComponent, ieee8021BridgeBasePortEntry_t *poPepPort)
 {
 	register bool bRetCode = false;
+	register bool bPhyLocked = false;
 	ifData_t *poPepIfData = NULL;
-	register ifStackEntry_t *poPepIfStackEntry = NULL;
-	register ieee8021BridgeILanIfEntry_t *poILanIfEntry = NULL;
+	register ieee8021BridgePhyData_t *poPepPhyData = NULL;
+	register ieee8021BridgePhyData_t *poCnpPhyData = NULL;
+	register ieee8021BridgeILanIfEntry_t *poCnpILanEntry = NULL;
 	
-	if (poCnpPortEntry == NULL || poPepPortEntry == NULL)
+	if (poCnpPort == NULL || poPepPort == NULL)
 	{
 		goto ieee8021PbILan_createEntry_cleanup;
 	}
 	
-	if (!ifData_createReference (poPepPortEntry->u32IfIndex, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poPepIfData))
+	if (!ifData_createReference (ifIndex_zero_c, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poPepIfData))
 	{
 		goto ieee8021PbILan_createEntry_cleanup;
 	}
 	
-	if ((poILanIfEntry = ieee8021BridgeILanIfTable_createExt (ifIndex_zero_c)) == NULL ||
-		!ieee8021BridgeILanIfRowStatus_handler (poILanIfEntry, xRowStatus_active_c))
+	if ((poCnpILanEntry = ieee8021BridgeILanIfTable_createRegister (ifIndex_zero_c)) == NULL)
 	{
 		goto ieee8021PbILan_createEntry_cleanup;
 	}
 	
-	if ((poPepIfStackEntry = ifStackTable_createExt (poPepIfData->u32Index, poILanIfEntry->u32IfIndex)) == NULL || !ifStackStatus_handler (poPepIfStackEntry, xRowStatus_active_c))
+	if (!ifStackTable_createRegister (poPepIfData->u32Index, poCnpILanEntry->u32IfIndex))
 	{
 		goto ieee8021PbILan_createEntry_cleanup;
 	}
 	
-	poPepPortEntry->u32IfIndex = poPepIfData->u32Index;
-	poCnpPortEntry->u32IfIndex = poILanIfEntry->u32IfIndex;
+	ieee8021BridgePhyData_wrLock ();
+	bPhyLocked = true;
+	
+	if ((poPepPhyData = ieee8021BridgePhyData_createExt (poPepIfData->u32Index, 0)) == NULL)
+	{
+		goto ieee8021PbILan_createEntry_cleanup;
+	}
+	
+	if ((poCnpPhyData = ieee8021BridgePhyData_createExt (poCnpILanEntry->u32IfIndex, 0)) == NULL)
+	{
+		goto ieee8021PbILan_createEntry_cleanup;
+	}
+	
+	if (!ieee8021BridgePhyData_attachComponent (poCComponent, poPepPort, poPepPhyData))
+	{
+		goto ieee8021PbILan_createEntry_cleanup;
+	}
+	
+	if (!ieee8021BridgePhyData_attachComponent (poSComponent, poCnpPort, poCnpPhyData))
+	{
+		goto ieee8021PbILan_createEntry_cleanup;
+	}
 	
 	bRetCode = true;
 	
@@ -222,52 +243,97 @@ ieee8021PbILan_createEntry_cleanup:
 	
 	if (!bRetCode)
 	{
-		poPepIfStackEntry != NULL ? ifStackTable_removeExt (poPepIfStackEntry): false;
+		if (poPepPhyData != NULL && poPepPort->u32IfIndex == poPepPhyData->u32IfIndex)
+		{
+			ieee8021BridgePhyData_detachComponent (poPepPort, poPepPhyData);
+			ieee8021BridgePhyData_removeExt (poPepPhyData);
+		}
 		poPepIfData != NULL ? ifData_removeReference (poPepIfData->u32Index, true, false, true): false;
-		poILanIfEntry != NULL ? ieee8021BridgeILanIfTable_removeExt (poILanIfEntry): false;
+		if (poCnpPhyData != NULL && poCnpPort->u32IfIndex == poCnpPhyData->u32IfIndex)
+		{
+			ieee8021BridgePhyData_detachComponent (poCnpPort, poCnpPhyData);
+			ieee8021BridgePhyData_removeExt (poCnpPhyData);
+		}
+		poCnpILanEntry != NULL ? ieee8021BridgeILanIfTable_removeRegister (poCnpILanEntry->u32IfIndex): false;
 	}
+	
+	bPhyLocked ? ieee8021BridgePhyData_unLock (): false;
 	
 	return bRetCode;
 }
 
 bool
 ieee8021PbILan_removeEntry (
-	ieee8021BridgeBasePortEntry_t *poCnpPortEntry,
-	ieee8021BridgeBasePortEntry_t *poPepPortEntry)
+	ieee8021BridgeBaseEntry_t *poSComponent, ieee8021BridgeBasePortEntry_t *poCnpPort,
+	ieee8021BridgeBaseEntry_t *poCComponent, ieee8021BridgeBasePortEntry_t *poPepPort)
 {
 	register bool bRetCode = false;
-	ieee8021BridgeILanIfEntry_t *poILanIfEntry = NULL;
 	
-	if (poPepPortEntry->u32IfIndex == 0)
+	
+	ieee8021BridgePhyData_wrLock ();
+	
+	if (poPepPort->u32IfIndex != 0)
+	{
+		register ieee8021BridgePhyData_t *poPepPhyData = NULL;
+		
+		if ((poPepPhyData = ieee8021BridgePhyData_getByIndex (poPepPort->u32IfIndex, 0)) == NULL ||
+			!ieee8021BridgePhyData_detachComponent (poPepPort, poPepPhyData) ||
+			!ieee8021BridgePhyData_removeExt (poPepPhyData))
+		{
+			goto ieee8021PbILan_removeEntry_phyCleanup;
+		}
+	}
+	
+	if (poCnpPort->u32IfIndex != 0)
+	{
+		register ieee8021BridgePhyData_t *poCnpPhyData = NULL;
+		
+		if ((poCnpPhyData = ieee8021BridgePhyData_getByIndex (poCnpPort->u32IfIndex, 0)) == NULL ||
+			!ieee8021BridgePhyData_detachComponent (poCnpPort, poCnpPhyData) ||
+			!ieee8021BridgePhyData_removeExt (poCnpPhyData))
+		{
+			goto ieee8021PbILan_removeEntry_phyCleanup;
+		}
+	}
+	
+	bRetCode = true;
+	
+ieee8021PbILan_removeEntry_phyCleanup:
+	
+	ieee8021BridgePhyData_unLock ();
+	if (!bRetCode)
+	{
+		goto ieee8021PbILan_removeEntry_cleanup;
+	}
+	bRetCode = false;
+	
+	
+	if (poPepPort->u32IfIndex == 0)
 	{
 		goto ieee8021PbILan_removeEntry_cnpIf;
 	}
 	
-	if (!ifData_removeReference (poPepPortEntry->u32IfIndex, true, false, true))
+	if (!ifData_removeReference (poPepPort->u32IfIndex, true, false, true))
 	{
 		goto ieee8021PbILan_removeEntry_cleanup;
 	}
 	
 ieee8021PbILan_removeEntry_cnpIf:
 	
-	if (poCnpPortEntry->u32IfIndex == 0)
+	if (poCnpPort->u32IfIndex == 0)
 	{
 		goto ieee8021PbILan_removeEntry_success;
 	}
 	
-	if ((poILanIfEntry = ieee8021BridgeILanIfTable_getByIndex (poCnpPortEntry->u32IfIndex)) != NULL)
+	if (!ieee8021BridgeILanIfTable_removeRegister (poCnpPort->u32IfIndex))
 	{
-		if (!ieee8021BridgeILanIfRowStatus_handler (poILanIfEntry, xRowStatus_destroy_c) ||
-			!ieee8021BridgeILanIfTable_removeExt (poILanIfEntry))
-		{
-			goto ieee8021PbILan_removeEntry_cleanup;
-		}
+		goto ieee8021PbILan_removeEntry_success;
 	}
 	
 ieee8021PbILan_removeEntry_success:
 	
-	poPepPortEntry->u32IfIndex = 0;
-	poCnpPortEntry->u32IfIndex = 0;
+	poPepPort->u32IfIndex = 0;
+	poCnpPort->u32IfIndex = 0;
 	
 	bRetCode = true;
 	

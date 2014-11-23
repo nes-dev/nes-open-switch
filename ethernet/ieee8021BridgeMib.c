@@ -6504,6 +6504,66 @@ ieee8021BridgeILanIfTable_removeEntry (ieee8021BridgeILanIfEntry_t *poEntry)
 }
 
 ieee8021BridgeILanIfEntry_t *
+ieee8021BridgeILanIfTable_createRegister (
+	uint32_t u32IfIndex)
+{
+	bool bRetCode = false;
+	register ieee8021BridgeILanIfEntry_t *poEntry = NULL;
+	
+	ieee8021Bridge_wrLock ();
+	
+	if ((poEntry = ieee8021BridgeILanIfTable_createExt (u32IfIndex)) == NULL)
+	{
+		goto ieee8021BridgeILanIfTable_createRegister_cleanup;
+	}
+	
+	if (!ieee8021BridgeILanIfRowStatus_handler (poEntry, xRowStatus_active_c))
+	{
+		goto ieee8021BridgeILanIfTable_createRegister_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgeILanIfTable_createRegister_cleanup:
+	
+	!bRetCode && poEntry != NULL ? ieee8021BridgeILanIfTable_removeExt (poEntry): false;
+	ieee8021Bridge_unLock ();
+	
+	return bRetCode ? poEntry: NULL;
+}
+
+bool
+ieee8021BridgeILanIfTable_removeRegister (
+	uint32_t u32IfIndex)
+{
+	bool bRetCode = false;
+	register ieee8021BridgeILanIfEntry_t *poEntry = NULL;
+	
+	ieee8021Bridge_wrLock ();
+	
+	if ((poEntry = ieee8021BridgeILanIfTable_getByIndex (u32IfIndex)) == NULL)
+	{
+		goto ieee8021BridgeILanIfTable_removeRegister_success;
+	}
+	
+	if (!ieee8021BridgeILanIfRowStatus_handler (poEntry, xRowStatus_destroy_c) ||
+		!ieee8021BridgeILanIfTable_removeExt (poEntry))
+	{
+		goto ieee8021BridgeILanIfTable_removeRegister_cleanup;
+	}
+	
+ieee8021BridgeILanIfTable_removeRegister_success:
+	
+	bRetCode = true;
+	
+ieee8021BridgeILanIfTable_removeRegister_cleanup:
+	
+	ieee8021Bridge_unLock ();
+	
+	return bRetCode;
+}
+
+ieee8021BridgeILanIfEntry_t *
 ieee8021BridgeILanIfTable_createExt (
 	uint32_t u32IfIndex)
 {

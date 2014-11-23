@@ -1054,6 +1054,10 @@ ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_getByIndex (
 ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_getNextIndex (
 	uint32_t u32IfIndex);
 void ieee8021BridgeILanIfTable_removeEntry (ieee8021BridgeILanIfEntry_t *poEntry);
+ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_createRegister (
+	uint32_t u32IfIndex);
+bool ieee8021BridgeILanIfTable_removeRegister (
+	uint32_t u32IfIndex);
 ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_createExt (
 	uint32_t u32IfIndex);
 bool ieee8021BridgeILanIfTable_removeExt (ieee8021BridgeILanIfEntry_t *poEntry);

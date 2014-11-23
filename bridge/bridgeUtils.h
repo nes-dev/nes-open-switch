@@ -50,12 +50,12 @@ bool
 		uint8_t u8RowStatus);
 bool
 	ieee8021PbILan_createEntry (
-		ieee8021BridgeBasePortEntry_t *poCnpPortEntry,
-		ieee8021BridgeBasePortEntry_t *poPepPortEntry);
+		ieee8021BridgeBaseEntry_t *poSComponent, ieee8021BridgeBasePortEntry_t *poCnpPort,
+		ieee8021BridgeBaseEntry_t *poCComponent, ieee8021BridgeBasePortEntry_t *poPepPort);
 bool
 	ieee8021PbILan_removeEntry (
-		ieee8021BridgeBasePortEntry_t *poCnpPortEntry,
-		ieee8021BridgeBasePortEntry_t *poPepPortEntry);
+		ieee8021BridgeBaseEntry_t *poSComponent, ieee8021BridgeBasePortEntry_t *poCnpPort,
+		ieee8021BridgeBaseEntry_t *poCComponent, ieee8021BridgeBasePortEntry_t *poPepPort);
 bool
 	ieee8021PbbILan_createEntry (
 		ieee8021BridgeBasePortEntry_t *poCbpPortEntry,

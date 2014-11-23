@@ -55,6 +55,7 @@ typedef struct interfaces_t
 	int32_t i32IfNumber;
 	
 	xRwLock_t oIfLock;
+	xRwLock_t oStackLock;
 } interfaces_t;
 
 extern interfaces_t oInterfaces;
@@ -82,6 +83,10 @@ Netsnmp_Node_Handler ifMIBObjects_mapper;
 #define ifTable_wrLock() (xRwLock_wrLock (&oInterfaces.oIfLock))
 #define ifTable_rdLock() (xRwLock_rdLock (&oInterfaces.oIfLock))
 #define ifTable_unLock() (xRwLock_unlock (&oInterfaces.oIfLock))
+
+#define ifStack_wrLock() (xRwLock_wrLock (&oInterfaces.oStackLock))
+#define ifStack_rdLock() (xRwLock_rdLock (&oInterfaces.oStackLock))
+#define ifStack_unLock() (xRwLock_unlock (&oInterfaces.oStackLock))
 
 
 
@@ -597,6 +602,12 @@ ifStackEntry_t * ifStackTable_LToH_getNextIndex (
 	uint32_t u32HigherLayer,
 	uint32_t u32LowerLayer);
 void ifStackTable_removeEntry (ifStackEntry_t *poEntry);
+bool ifStackTable_createRegister (
+	uint32_t u32HigherLayer,
+	uint32_t u32LowerLayer);
+bool ifStackTable_removeRegister (
+	uint32_t u32HigherLayer,
+	uint32_t u32LowerLayer);
 ifStackEntry_t * ifStackTable_createExt (
 	uint32_t u32HigherLayer,
 	uint32_t u32LowerLayer);

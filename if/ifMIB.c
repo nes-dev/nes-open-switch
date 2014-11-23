@@ -1634,6 +1634,85 @@ ifStackTable_removeEntry (ifStackEntry_t *poEntry)
 	return;
 }
 
+bool
+ifStackTable_createRegister (
+	uint32_t u32HigherLayer,
+	uint32_t u32LowerLayer)
+{
+	register bool bRetCode = false;
+	register bool bIfLocked = false;
+	register ifStackEntry_t *poEntry = NULL;
+	
+	if (u32HigherLayer == 0 || u32LowerLayer == 0)
+	{
+		return false;
+	}
+	
+	ifStack_wrLock ();
+	
+	if ((poEntry = ifStackTable_getByIndex (u32HigherLayer, u32LowerLayer)) == NULL &&
+		(poEntry = ifStackTable_createEntry (u32HigherLayer, u32LowerLayer)) == NULL)
+	{
+		goto ifStackTable_createRegister_cleanup;
+	}
+	
+	ifTable_rdLock ();
+	bIfLocked = true;
+	
+	if (!ifStackStatus_handler (poEntry, xRowStatus_active_c))
+	{
+		goto ifStackTable_createRegister_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ifStackTable_createRegister_cleanup:
+	
+	bIfLocked ? ifTable_unLock (): false;
+	ifStack_unLock ();
+	
+	return bRetCode;
+}
+
+bool
+ifStackTable_removeRegister (
+	uint32_t u32HigherLayer,
+	uint32_t u32LowerLayer)
+{
+	register bool bRetCode = false;
+	register bool bIfLocked = false;
+	register ifStackEntry_t *poEntry = NULL;
+	
+	if (u32HigherLayer == 0 || u32LowerLayer == 0)
+	{
+		return false;
+	}
+	
+	ifStack_wrLock ();
+	
+	if ((poEntry = ifStackTable_getByIndex (u32HigherLayer, u32LowerLayer)) == NULL)
+	{
+		goto ifStackTable_removeRegister_cleanup;
+	}
+	
+	ifTable_rdLock ();
+	bIfLocked = true;
+	
+	if (!ifStackStatus_handler (poEntry, xRowStatus_destroy_c))
+	{
+		goto ifStackTable_removeRegister_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ifStackTable_removeRegister_cleanup:
+	
+	bIfLocked ? ifTable_unLock (): false;
+	ifStack_unLock ();
+	
+	return bRetCode;
+}
+
 ifStackEntry_t *
 ifStackTable_createExt (
 	uint32_t u32HigherLayer,
