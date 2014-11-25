@@ -58,13 +58,13 @@ bool
 		ieee8021BridgeBaseEntry_t *poCComponent, ieee8021BridgeBasePortEntry_t *poPepPort);
 bool
 	ieee8021PbbILan_createEntry (
-		ieee8021BridgeBasePortEntry_t *poCbpPortEntry,
+		ieee8021BridgeBaseEntry_t *poBComponent, ieee8021BridgeBasePortEntry_t *poCbpPort,
 		uint32_t u32PipIfIndex,
-		ieee8021BridgeBasePortEntry_t *poVipPortEntry);
+		ieee8021BridgeBaseEntry_t *poIComponent, ieee8021BridgeBasePortEntry_t *poVipPort);
 bool
 	ieee8021PbbILan_removeEntry (
-		ieee8021BridgeBasePortEntry_t *poCbpPortEntry,
-		ieee8021BridgeBasePortEntry_t *poVipPortEntry);
+		ieee8021BridgeBaseEntry_t *poBComponent, ieee8021BridgeBasePortEntry_t *poCbpPort,
+		ieee8021BridgeBaseEntry_t *poIComponent, ieee8021BridgeBasePortEntry_t *poVipPort);
 bool
 	ieee8021PbCVidRegistrationRowStatus_update (
 		ieee8021PbCVidRegistrationEntry_t *poEntry, uint8_t u8RowStatus);
