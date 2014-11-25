@@ -74,7 +74,6 @@ bool
 		ieee8021PbbVipEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021PbbVipToPipMappingRowStatus_update (
-		ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry,
 		ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus);
 
 
