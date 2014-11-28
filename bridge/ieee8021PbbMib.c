@@ -481,8 +481,8 @@ bool
 ieee8021PbbVipTable_createHier (
 	ieee8021PbbVipEntry_t *poEntry)
 {
+	register bool bRetCode = false;
 	register bool bPhyLocked = false;
-	ifData_t *poVipIfData = NULL;
 	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
 	
 	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32BridgeBasePortComponentId)) == NULL ||
@@ -502,30 +502,34 @@ ieee8021PbbVipTable_createHier (
 	poIeee8021BridgeBasePortEntry->i32Type = ieee8021BridgeBasePortType_virtualInstancePort_c;
 	
 	
+	ifData_t *poVipIfData = NULL;
+	
 	if (!ifData_createReference (ifIndex_zero_c, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poVipIfData))
 	{
 		goto ieee8021PbbVipTable_createHier_cleanup;
 	}
 	
+	poIeee8021BridgeBasePortEntry->u32IfIndex = poVipIfData->u32Index;
+	ifData_unLock (poVipIfData);
+	
 	ieee8021BridgePhyData_wrLock ();
 	bPhyLocked = true;
 	
-	if (ieee8021BridgePhyData_createExt (poVipIfData->u32Index, 0) == NULL)
+	register ieee8021BridgePhyData_t *poVipPhyData = NULL;
+	
+	if ((poVipPhyData = ieee8021BridgePhyData_createExt (poIeee8021BridgeBasePortEntry->u32IfIndex, 0)) == NULL)
 	{
 		goto ieee8021PbbVipTable_createHier_cleanup;
 	}
+	xBitmap_setBitRev (poVipPhyData->au8TypeCapabilities, ieee8021BridgeBasePortTypeCapabilities_virtualInstancePort_c, 1);
 	
-	poIeee8021BridgeBasePortEntry->u32IfIndex = poVipIfData->u32Index;
-	
-	return true;
-	
+	bRetCode = true;
 	
 ieee8021PbbVipTable_createHier_cleanup:
 	
-	poVipIfData != NULL ? ifData_unLock (poVipIfData): false;
 	bPhyLocked ? ieee8021BridgePhyData_unLock (): false;
-	ieee8021PbbVipTable_removeHier (poEntry);
-	return false;
+	!bRetCode ? ieee8021PbbVipTable_removeHier (poEntry): false;
+	return bRetCode;
 }
 
 bool
@@ -559,12 +563,12 @@ ieee8021PbbVipTable_removeHier (
 	if ((poVipPhyData = ieee8021BridgePhyData_getByIndex (poIeee8021BridgeBasePortEntry->u32IfIndex, 0)) == NULL ||
 		!ieee8021BridgePhyData_removeExt (poVipPhyData))
 	{
-		goto ieee8021PbbVipTable_removeHier_phyCleanup;
+		goto ieee8021PbbVipTable_removeHier_phyUnlock;
 	}
 	
 	bRetCode = true;
 	
-ieee8021PbbVipTable_removeHier_phyCleanup:
+ieee8021PbbVipTable_removeHier_phyUnlock:
 	
 	ieee8021BridgePhyData_unLock ();
 	if (!bRetCode)
@@ -1538,7 +1542,7 @@ ieee8021PbbPipTable_createExt (
 	{
 		ifData_t *poPipIfData = NULL;
 		
-		if (!ifData_createReference (u32IfIndex, ifType_pip_c, 0, true, true, false, &poPipIfData))
+		if (!ifData_createReference (u32IfIndex, ifType_pip_c, ifAdminStatus_up_c, true, true, false, &poPipIfData))
 		{
 			goto ieee8021PbbPipTable_createExt_cleanup;
 		}
@@ -1556,7 +1560,7 @@ ieee8021PbbPipTable_createExt (
 		goto ieee8021PbbPipTable_createExt_cleanup;
 	}
 	
-	if (!bIfReserved && !ieee8021PbbPipTable_createHier (poEntry))
+	if (!ieee8021PbbPipTable_createHier (poEntry, bIfReserved))
 	{
 		ieee8021PbbPipTable_removeEntry (poEntry);
 		poEntry = NULL;
@@ -1582,27 +1586,84 @@ ieee8021PbbPipTable_removeExt (ieee8021PbbPipEntry_t *poEntry)
 
 bool
 ieee8021PbbPipTable_createHier (
-	ieee8021PbbPipEntry_t *poEntry)
+	ieee8021PbbPipEntry_t *poEntry, bool bIfReserved)
 {
-	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
+	register bool bRetCode = false;
+	register bool bPhyLocked = false;
+	
+	if (!bIfReserved && !ifData_createReference (poEntry->u32IfIndex, 0, ifAdminStatus_up_c, true, true, false, NULL))
 	{
 		goto ieee8021PbbPipTable_createHier_cleanup;
 	}
 	
-	return true;
+	ieee8021BridgePhyData_wrLock ();
+	bPhyLocked = true;
 	
+	register ieee8021BridgePhyData_t *poPipPhyData = NULL;
+	
+	if ((poPipPhyData = ieee8021BridgePhyData_getByIndex (poEntry->u32IfIndex, 0)) == NULL ||
+		(poPipPhyData = ieee8021BridgePhyData_createExt (poEntry->u32IfIndex, 0)) == NULL)
+	{
+		goto ieee8021PbbPipTable_createHier_cleanup;
+	}
+	
+	poEntry->bExternal = poPipPhyData->u32PhyPort != 0;
+	xBitmap_setBitRev (poPipPhyData->au8TypeCapabilities, ieee8021BridgeBasePortTypeCapabilities_providerInstancePort_c, 1);
+	
+	bRetCode = true;
 	
 ieee8021PbbPipTable_createHier_cleanup:
 	
-	ieee8021PbbPipTable_removeHier (poEntry);
-	return false;
+	bPhyLocked ? ieee8021BridgePhyData_unLock (): false;
+	!bRetCode ? ieee8021PbbPipTable_removeHier (poEntry): false;
+	return bRetCode;
 }
 
 bool
 ieee8021PbbPipTable_removeHier (
 	ieee8021PbbPipEntry_t *poEntry)
 {
-	return ifData_removeReference (poEntry->u32IfIndex, true, true, true);
+	register bool bRetCode = false;
+	
+	if (!poEntry->bExternal)
+	{
+		goto ieee8021PbbPipTable_removeHier_removeIf;
+	}
+	
+	ieee8021BridgePhyData_wrLock ();
+	
+	register ieee8021BridgePhyData_t *poPipPhyData = NULL;
+	
+	if ((poPipPhyData = ieee8021BridgePhyData_getByIndex (poEntry->u32IfIndex, 0)) != NULL &&
+		!ieee8021BridgePhyData_removeExt (poPipPhyData))
+	{
+		goto ieee8021PbbPipTable_removeHier_phyUnlock;
+	}
+	
+	bRetCode = true;
+	
+ieee8021PbbPipTable_removeHier_phyUnlock:
+	
+	ieee8021BridgePhyData_unLock ();
+	if (!bRetCode)
+	{
+		goto ieee8021PbbPipTable_removeHier_cleanup;
+	}
+	bRetCode = false;
+	
+	
+ieee8021PbbPipTable_removeHier_removeIf:
+	
+	if (!ifData_removeReference (poEntry->u32IfIndex, true, true, true))
+	{
+		goto ieee8021PbbPipTable_removeHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021PbbPipTable_removeHier_cleanup:
+	
+	return bRetCode;
 }
 
 bool

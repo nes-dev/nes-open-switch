@@ -213,6 +213,7 @@ enum
 	ieee8021BridgeBasePortTypeCapabilities_stationFacingBridgePort_c = 8,
 	ieee8021BridgeBasePortTypeCapabilities_uplinkAccessPort_c = 9,
 	ieee8021BridgeBasePortTypeCapabilities_uplinkRelayPort_c = 10,
+	ieee8021BridgeBasePortTypeCapabilities_providerInstancePort_c = 12,
 
 	/* enums for column ieee8021BridgeBasePortType */
 	ieee8021BridgeBasePortType_none_c = 1,
@@ -228,6 +229,7 @@ enum
 	ieee8021BridgeBasePortType_uplinkAccessPort_c = 11,
 	ieee8021BridgeBasePortType_uplinkRelayPort_c = 12,
 	ieee8021BridgeBasePortType_providerEdgePort_c = 101,
+	ieee8021BridgeBasePortType_providerInstancePort_c = 14,
 
 	/* enums for column ieee8021BridgeBasePortExternal */
 	ieee8021BridgeBasePortExternal_true_c = 1,
