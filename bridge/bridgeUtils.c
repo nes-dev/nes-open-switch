@@ -740,6 +740,33 @@ ieee8021PbbVipToPipMappingRowStatus_update_cleanup:
 	return bRetCode;
 }
 
+bool
+ieee8021PbbCbpRowStatus_update (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021PbbCbpEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	
+	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbbCbpRowStatus_update_cleanup;
+	}
+	
+	if (!ieee8021BridgeBasePortRowStatus_handler (poComponent, poIeee8021BridgeBasePortEntry, u8RowStatus))
+	{
+		goto ieee8021PbbCbpRowStatus_update_cleanup;
+	}
+	
+	/* TODO */
+	
+	bRetCode = true;
+	
+ieee8021PbbCbpRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
 
 
 #endif	// __BRIDGEUTILS_C__

@@ -75,6 +75,10 @@ bool
 bool
 	ieee8021PbbVipToPipMappingRowStatus_update (
 		ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus);
+bool
+	ieee8021PbbCbpRowStatus_update (
+		ieee8021BridgeBaseEntry_t *poComponent,
+		ieee8021PbbCbpEntry_t *poEntry, uint8_t u8RowStatus);
 
 
 
