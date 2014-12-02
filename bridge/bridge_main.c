@@ -27,6 +27,7 @@
 #include "ieee8021PbbMib_agent.h"
 #include "ieee8021PbbTeMib_agent.h"
 #include "mefUniEvcMib_agent.h"
+#include "mefEnniOvcMib_agent.h"
 #include "bridgeUtils.h"
 
 #include "switch_ext.h"
@@ -58,6 +59,7 @@ bridge_main (
 	ieee8021PbbMib_init ();
 	ieee8021PbbTeMib_init ();
 	mefUniEvcMib_init ();
+	mefEnniOvcMib_init ();
 	
 	if (xThread_create (&oBridgeThread) == NULL)
 	{
