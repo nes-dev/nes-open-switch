@@ -538,7 +538,7 @@ Netsnmp_Node_Handler ieee8021PbbVipToPipMappingTable_mapper;
 
 
 /**
- *	table ieee8021PbbCBPServiceMappingTable definitions
+ *	table ieee8021PbbCbpServiceMappingTable definitions
  */
 #define IEEE8021PBBCBPSERVICEMAPPINGBACKBONESID 1
 #define IEEE8021PBBCBPSERVICEMAPPINGBVID 2
@@ -549,21 +549,21 @@ Netsnmp_Node_Handler ieee8021PbbVipToPipMappingTable_mapper;
 
 enum
 {
-	/* enums for column ieee8021PbbCBPServiceMappingType */
-	ieee8021PbbCBPServiceMappingType_ingress_c = 0,
-	ieee8021PbbCBPServiceMappingType_egress_c = 1,
+	/* enums for column ieee8021PbbCbpServiceMappingType */
+	ieee8021PbbCbpServiceMappingType_ingress_c = 0,
+	ieee8021PbbCbpServiceMappingType_egress_c = 1,
 
-	/* enums for column ieee8021PbbCBPServiceMappingRowStatus */
-	ieee8021PbbCBPServiceMappingRowStatus_active_c = 1,
-	ieee8021PbbCBPServiceMappingRowStatus_notInService_c = 2,
-	ieee8021PbbCBPServiceMappingRowStatus_notReady_c = 3,
-	ieee8021PbbCBPServiceMappingRowStatus_createAndGo_c = 4,
-	ieee8021PbbCBPServiceMappingRowStatus_createAndWait_c = 5,
-	ieee8021PbbCBPServiceMappingRowStatus_destroy_c = 6,
+	/* enums for column ieee8021PbbCbpServiceMappingRowStatus */
+	ieee8021PbbCbpServiceMappingRowStatus_active_c = 1,
+	ieee8021PbbCbpServiceMappingRowStatus_notInService_c = 2,
+	ieee8021PbbCbpServiceMappingRowStatus_notReady_c = 3,
+	ieee8021PbbCbpServiceMappingRowStatus_createAndGo_c = 4,
+	ieee8021PbbCbpServiceMappingRowStatus_createAndWait_c = 5,
+	ieee8021PbbCbpServiceMappingRowStatus_destroy_c = 6,
 };
 
-/* table ieee8021PbbCBPServiceMappingTable row entry data structure */
-typedef struct ieee8021PbbCBPServiceMappingEntry_t
+/* table ieee8021PbbCbpServiceMappingTable row entry data structure */
+typedef struct ieee8021PbbCbpServiceMappingEntry_t
 {
 	/* Index values */
 	uint32_t u32BridgeBasePortComponentId;
@@ -580,30 +580,37 @@ typedef struct ieee8021PbbCBPServiceMappingEntry_t
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
-} ieee8021PbbCBPServiceMappingEntry_t;
+} ieee8021PbbCbpServiceMappingEntry_t;
 
-extern xBTree_t oIeee8021PbbCBPServiceMappingTable_BTree;
+extern xBTree_t oIeee8021PbbCbpServiceMappingTable_BTree;
 
-/* ieee8021PbbCBPServiceMappingTable table mapper */
-void ieee8021PbbCBPServiceMappingTable_init (void);
-ieee8021PbbCBPServiceMappingEntry_t * ieee8021PbbCBPServiceMappingTable_createEntry (
+/* ieee8021PbbCbpServiceMappingTable table mapper */
+void ieee8021PbbCbpServiceMappingTable_init (void);
+ieee8021PbbCbpServiceMappingEntry_t * ieee8021PbbCbpServiceMappingTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	uint32_t u32BackboneSid);
-ieee8021PbbCBPServiceMappingEntry_t * ieee8021PbbCBPServiceMappingTable_getByIndex (
+ieee8021PbbCbpServiceMappingEntry_t * ieee8021PbbCbpServiceMappingTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	uint32_t u32BackboneSid);
-ieee8021PbbCBPServiceMappingEntry_t * ieee8021PbbCBPServiceMappingTable_getNextIndex (
+ieee8021PbbCbpServiceMappingEntry_t * ieee8021PbbCbpServiceMappingTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	uint32_t u32BackboneSid);
-void ieee8021PbbCBPServiceMappingTable_removeEntry (ieee8021PbbCBPServiceMappingEntry_t *poEntry);
+void ieee8021PbbCbpServiceMappingTable_removeEntry (ieee8021PbbCbpServiceMappingEntry_t *poEntry);
+ieee8021PbbCbpServiceMappingEntry_t * ieee8021PbbCbpServiceMappingTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort,
+	uint32_t u32BackboneSid);
+bool ieee8021PbbCbpServiceMappingTable_removeExt (ieee8021PbbCbpServiceMappingEntry_t *poEntry);
+bool ieee8021PbbCbpServiceMappingTable_createHier (ieee8021PbbCbpServiceMappingEntry_t *poEntry);
+bool ieee8021PbbCbpServiceMappingTable_removeHier (ieee8021PbbCbpServiceMappingEntry_t *poEntry);
 #ifdef SNMP_SRC
-Netsnmp_First_Data_Point ieee8021PbbCBPServiceMappingTable_getFirst;
-Netsnmp_Next_Data_Point ieee8021PbbCBPServiceMappingTable_getNext;
-Netsnmp_Get_Data_Point ieee8021PbbCBPServiceMappingTable_get;
-Netsnmp_Node_Handler ieee8021PbbCBPServiceMappingTable_mapper;
+Netsnmp_First_Data_Point ieee8021PbbCbpServiceMappingTable_getFirst;
+Netsnmp_Next_Data_Point ieee8021PbbCbpServiceMappingTable_getNext;
+Netsnmp_Get_Data_Point ieee8021PbbCbpServiceMappingTable_get;
+Netsnmp_Node_Handler ieee8021PbbCbpServiceMappingTable_mapper;
 #endif	/* SNMP_SRC */
 
 

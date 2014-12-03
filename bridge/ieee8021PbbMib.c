@@ -51,7 +51,7 @@ static oid ieee8021PbbPipPriorityTable_oid[] = {1,3,111,2,802,1,1,9,1,1,5};
 static oid ieee8021PbbPipDecodingTable_oid[] = {1,3,111,2,802,1,1,9,1,1,6};
 static oid ieee8021PbbPipEncodingTable_oid[] = {1,3,111,2,802,1,1,9,1,1,7};
 static oid ieee8021PbbVipToPipMappingTable_oid[] = {1,3,111,2,802,1,1,9,1,1,8};
-static oid ieee8021PbbCBPServiceMappingTable_oid[] = {1,3,111,2,802,1,1,9,1,1,9};
+static oid ieee8021PbbCbpServiceMappingTable_oid[] = {1,3,111,2,802,1,1,9,1,1,9};
 static oid ieee8021PbbCbpTable_oid[] = {1,3,111,2,802,1,1,9,1,1,10};
 
 
@@ -87,7 +87,7 @@ ieee8021PbbMib_init (void)
 	ieee8021PbbPipDecodingTable_init ();
 	ieee8021PbbPipEncodingTable_init ();
 	ieee8021PbbVipToPipMappingTable_init ();
-	ieee8021PbbCBPServiceMappingTable_init ();
+	ieee8021PbbCbpServiceMappingTable_init ();
 	ieee8021PbbCbpTable_init ();
 	
 	/* register ieee8021PbbMib modules */
@@ -3904,18 +3904,18 @@ ieee8021PbbVipToPipMappingTable_mapper (
 	return SNMP_ERR_NOERROR;
 }
 
-/** initialize ieee8021PbbCBPServiceMappingTable table mapper **/
+/** initialize ieee8021PbbCbpServiceMappingTable table mapper **/
 void
-ieee8021PbbCBPServiceMappingTable_init (void)
+ieee8021PbbCbpServiceMappingTable_init (void)
 {
-	extern oid ieee8021PbbCBPServiceMappingTable_oid[];
+	extern oid ieee8021PbbCbpServiceMappingTable_oid[];
 	netsnmp_handler_registration *reg;
 	netsnmp_iterator_info *iinfo;
 	netsnmp_table_registration_info *table_info;
 	
 	reg = netsnmp_create_handler_registration (
-		"ieee8021PbbCBPServiceMappingTable", &ieee8021PbbCBPServiceMappingTable_mapper,
-		ieee8021PbbCBPServiceMappingTable_oid, OID_LENGTH (ieee8021PbbCBPServiceMappingTable_oid),
+		"ieee8021PbbCbpServiceMappingTable", &ieee8021PbbCbpServiceMappingTable_mapper,
+		ieee8021PbbCbpServiceMappingTable_oid, OID_LENGTH (ieee8021PbbCbpServiceMappingTable_oid),
 		HANDLER_CAN_RWRITE
 		);
 		
@@ -3923,15 +3923,15 @@ ieee8021PbbCBPServiceMappingTable_init (void)
 	netsnmp_table_helper_add_indexes (table_info,
 		ASN_UNSIGNED /* index: ieee8021BridgeBasePortComponentId */,
 		ASN_UNSIGNED /* index: ieee8021BridgeBasePort */,
-		ASN_UNSIGNED /* index: ieee8021PbbCBPServiceMappingBackboneSid */,
+		ASN_UNSIGNED /* index: ieee8021PbbCbpServiceMappingBackboneSid */,
 		0);
 	table_info->min_column = IEEE8021PBBCBPSERVICEMAPPINGBVID;
 	table_info->max_column = IEEE8021PBBCBPSERVICEMAPPINGROWSTATUS;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
-	iinfo->get_first_data_point = &ieee8021PbbCBPServiceMappingTable_getFirst;
-	iinfo->get_next_data_point = &ieee8021PbbCBPServiceMappingTable_getNext;
-	iinfo->get_data_point = &ieee8021PbbCBPServiceMappingTable_get;
+	iinfo->get_first_data_point = &ieee8021PbbCbpServiceMappingTable_getFirst;
+	iinfo->get_next_data_point = &ieee8021PbbCbpServiceMappingTable_getNext;
+	iinfo->get_data_point = &ieee8021PbbCbpServiceMappingTable_get;
 	iinfo->table_reginfo = table_info;
 	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
 	
@@ -3941,11 +3941,11 @@ ieee8021PbbCBPServiceMappingTable_init (void)
 }
 
 static int8_t
-ieee8021PbbCBPServiceMappingTable_BTreeNodeCmp (
+ieee8021PbbCbpServiceMappingTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register ieee8021PbbCBPServiceMappingEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021PbbCBPServiceMappingEntry_t, oBTreeNode);
-	register ieee8021PbbCBPServiceMappingEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021PbbCBPServiceMappingEntry_t, oBTreeNode);
+	register ieee8021PbbCbpServiceMappingEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021PbbCbpServiceMappingEntry_t, oBTreeNode);
+	register ieee8021PbbCbpServiceMappingEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021PbbCbpServiceMappingEntry_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32BridgeBasePortComponentId < pEntry2->u32BridgeBasePortComponentId) ||
@@ -3954,16 +3954,16 @@ ieee8021PbbCBPServiceMappingTable_BTreeNodeCmp (
 		(pEntry1->u32BridgeBasePortComponentId == pEntry2->u32BridgeBasePortComponentId && pEntry1->u32BridgeBasePort == pEntry2->u32BridgeBasePort && pEntry1->u32BackboneSid == pEntry2->u32BackboneSid) ? 0: 1;
 }
 
-xBTree_t oIeee8021PbbCBPServiceMappingTable_BTree = xBTree_initInline (&ieee8021PbbCBPServiceMappingTable_BTreeNodeCmp);
+xBTree_t oIeee8021PbbCbpServiceMappingTable_BTree = xBTree_initInline (&ieee8021PbbCbpServiceMappingTable_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
-ieee8021PbbCBPServiceMappingEntry_t *
-ieee8021PbbCBPServiceMappingTable_createEntry (
+ieee8021PbbCbpServiceMappingEntry_t *
+ieee8021PbbCbpServiceMappingTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	uint32_t u32BackboneSid)
 {
-	register ieee8021PbbCBPServiceMappingEntry_t *poEntry = NULL;
+	register ieee8021PbbCbpServiceMappingEntry_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
@@ -3973,7 +3973,7 @@ ieee8021PbbCBPServiceMappingTable_createEntry (
 	poEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poEntry->u32BridgeBasePort = u32BridgeBasePort;
 	poEntry->u32BackboneSid = u32BackboneSid;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021PbbCBPServiceMappingTable_BTree) != NULL)
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021PbbCbpServiceMappingTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
 		return NULL;
@@ -3982,17 +3982,17 @@ ieee8021PbbCBPServiceMappingTable_createEntry (
 	poEntry->u32LocalSid = 1;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbCBPServiceMappingTable_BTree);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbCbpServiceMappingTable_BTree);
 	return poEntry;
 }
 
-ieee8021PbbCBPServiceMappingEntry_t *
-ieee8021PbbCBPServiceMappingTable_getByIndex (
+ieee8021PbbCbpServiceMappingEntry_t *
+ieee8021PbbCbpServiceMappingTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	uint32_t u32BackboneSid)
 {
-	register ieee8021PbbCBPServiceMappingEntry_t *poTmpEntry = NULL;
+	register ieee8021PbbCbpServiceMappingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -4003,23 +4003,23 @@ ieee8021PbbCBPServiceMappingTable_getByIndex (
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
 	poTmpEntry->u32BackboneSid = u32BackboneSid;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021PbbCBPServiceMappingTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021PbbCbpServiceMappingTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021PbbCBPServiceMappingEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, ieee8021PbbCbpServiceMappingEntry_t, oBTreeNode);
 }
 
-ieee8021PbbCBPServiceMappingEntry_t *
-ieee8021PbbCBPServiceMappingTable_getNextIndex (
+ieee8021PbbCbpServiceMappingEntry_t *
+ieee8021PbbCbpServiceMappingTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
 	uint32_t u32BackboneSid)
 {
-	register ieee8021PbbCBPServiceMappingEntry_t *poTmpEntry = NULL;
+	register ieee8021PbbCbpServiceMappingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -4030,54 +4030,119 @@ ieee8021PbbCBPServiceMappingTable_getNextIndex (
 	poTmpEntry->u32BridgeBasePortComponentId = u32BridgeBasePortComponentId;
 	poTmpEntry->u32BridgeBasePort = u32BridgeBasePort;
 	poTmpEntry->u32BackboneSid = u32BackboneSid;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021PbbCBPServiceMappingTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021PbbCbpServiceMappingTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021PbbCBPServiceMappingEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, ieee8021PbbCbpServiceMappingEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
-ieee8021PbbCBPServiceMappingTable_removeEntry (ieee8021PbbCBPServiceMappingEntry_t *poEntry)
+ieee8021PbbCbpServiceMappingTable_removeEntry (ieee8021PbbCbpServiceMappingEntry_t *poEntry)
 {
 	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021PbbCBPServiceMappingTable_BTree) == NULL)
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021PbbCbpServiceMappingTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021PbbCBPServiceMappingTable_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021PbbCbpServiceMappingTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
+ieee8021PbbCbpServiceMappingEntry_t *
+ieee8021PbbCbpServiceMappingTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort,
+	uint32_t u32BackboneSid)
+{
+	ieee8021PbbCbpServiceMappingEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021PbbCbpServiceMappingTable_createEntry (
+		u32BridgeBasePortComponentId,
+		u32BridgeBasePort,
+		u32BackboneSid);
+	if (poEntry == NULL)
+	{
+		return NULL;
+	}
+	
+	if (!ieee8021PbbCbpServiceMappingTable_createHier (poEntry))
+	{
+		ieee8021PbbCbpServiceMappingTable_removeEntry (poEntry);
+		return NULL;
+	}
+	
+	return poEntry;
+}
+
+bool
+ieee8021PbbCbpServiceMappingTable_removeExt (ieee8021PbbCbpServiceMappingEntry_t *poEntry)
+{
+	if (!ieee8021PbbCbpServiceMappingTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021PbbCbpServiceMappingTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021PbbCbpServiceMappingTable_createHier (
+	ieee8021PbbCbpServiceMappingEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register ieee8021PbbCbpEntry_t *poIeee8021PbbCbpEntry = NULL;
+	
+	if ((poIeee8021PbbCbpEntry = ieee8021PbbCbpTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbbCbpServiceMappingTable_createHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021PbbCbpServiceMappingTable_createHier_cleanup:
+	
+	!bRetCode ? ieee8021PbbCbpServiceMappingTable_removeHier (poEntry): false;
+	return bRetCode;
+}
+
+bool
+ieee8021PbbCbpServiceMappingTable_removeHier (
+	ieee8021PbbCbpServiceMappingEntry_t *poEntry)
+{
+	return true;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
-ieee8021PbbCBPServiceMappingTable_getFirst (
+ieee8021PbbCbpServiceMappingTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021PbbCBPServiceMappingTable_BTree);
-	return ieee8021PbbCBPServiceMappingTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021PbbCbpServiceMappingTable_BTree);
+	return ieee8021PbbCbpServiceMappingTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
 netsnmp_variable_list *
-ieee8021PbbCBPServiceMappingTable_getNext (
+ieee8021PbbCbpServiceMappingTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021PbbCBPServiceMappingEntry_t *poEntry = NULL;
+	ieee8021PbbCbpServiceMappingEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ieee8021PbbCBPServiceMappingEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021PbbCbpServiceMappingEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BridgeBasePortComponentId);
 	idx = idx->next_variable;
@@ -4085,21 +4150,21 @@ ieee8021PbbCBPServiceMappingTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BackboneSid);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021PbbCBPServiceMappingTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021PbbCbpServiceMappingTable_BTree);
 	return put_index_data;
 }
 
 bool
-ieee8021PbbCBPServiceMappingTable_get (
+ieee8021PbbCbpServiceMappingTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021PbbCBPServiceMappingEntry_t *poEntry = NULL;
+	ieee8021PbbCbpServiceMappingEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	register netsnmp_variable_list *idx3 = idx2->next_variable;
 	
-	poEntry = ieee8021PbbCBPServiceMappingTable_getByIndex (
+	poEntry = ieee8021PbbCbpServiceMappingTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer,
 		*idx3->val.integer);
@@ -4112,9 +4177,9 @@ ieee8021PbbCBPServiceMappingTable_get (
 	return true;
 }
 
-/* ieee8021PbbCBPServiceMappingTable table mapper */
+/* ieee8021PbbCbpServiceMappingTable table mapper */
 int
-ieee8021PbbCBPServiceMappingTable_mapper (
+ieee8021PbbCbpServiceMappingTable_mapper (
 	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
 	netsnmp_agent_request_info *reqinfo,
@@ -4122,7 +4187,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 {
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
-	ieee8021PbbCBPServiceMappingEntry_t *table_entry;
+	ieee8021PbbCbpServiceMappingEntry_t *table_entry;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -4134,7 +4199,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021PbbCBPServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021PbbCbpServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL)
 			{
@@ -4173,7 +4238,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021PbbCBPServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021PbbCbpServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
@@ -4229,7 +4294,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021PbbCBPServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021PbbCbpServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
 			register netsnmp_variable_list *idx2 = idx1->next_variable;
@@ -4248,7 +4313,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 						return SNMP_ERR_NOERROR;
 					}
 					
-					table_entry = ieee8021PbbCBPServiceMappingTable_createEntry (
+					table_entry = ieee8021PbbCbpServiceMappingTable_createEntry (
 						*idx1->val.integer,
 						*idx2->val.integer,
 						*idx3->val.integer);
@@ -4286,7 +4351,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021PbbCBPServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021PbbCbpServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -4300,7 +4365,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ieee8021PbbCBPServiceMappingTable_removeEntry (table_entry);
+					ieee8021PbbCbpServiceMappingTable_removeEntry (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -4312,7 +4377,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021PbbCBPServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021PbbCbpServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
@@ -4386,7 +4451,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 		/* Check the internal consistency of an active row */
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021PbbCBPServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021PbbCbpServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
@@ -4396,7 +4461,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 				{
 				case RS_ACTIVE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int ieee8021PbbCBPServiceMappingTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					if (/* TODO : int ieee8021PbbCbpServiceMappingTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -4411,7 +4476,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021PbbCBPServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021PbbCbpServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -4439,7 +4504,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					ieee8021PbbCBPServiceMappingTable_removeEntry (table_entry);
+					ieee8021PbbCbpServiceMappingTable_removeEntry (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -4451,7 +4516,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 	case MODE_SET_COMMIT:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021PbbCBPServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (ieee8021PbbCbpServiceMappingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
@@ -4472,7 +4537,7 @@ ieee8021PbbCBPServiceMappingTable_mapper (
 					break;
 					
 				case RS_DESTROY:
-					ieee8021PbbCBPServiceMappingTable_removeEntry (table_entry);
+					ieee8021PbbCbpServiceMappingTable_removeEntry (table_entry);
 					break;
 				}
 			}
