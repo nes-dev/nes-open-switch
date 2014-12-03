@@ -633,6 +633,8 @@ typedef struct ieee8021PbbCbpEntry_t
 	/* Column values */
 	uint8_t u8RowStatus;
 	
+	bool bExternal;
+	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbCbpEntry_t;
 

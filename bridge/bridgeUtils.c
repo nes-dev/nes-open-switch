@@ -753,10 +753,84 @@ ieee8021PbbCbpRowStatus_update (
 		goto ieee8021PbbCbpRowStatus_update_cleanup;
 	}
 	
+	
+	if (u8RowStatus == xRowStatus_active_c && poIeee8021BridgeBasePortEntry->u32IfIndex == 0)
+	{
+		register bool bPhyLocked = false;
+		register uint32_t u32CbpIfIndex = 0;
+		ifData_t *poCbpIfData = NULL;
+		
+		if (!ifData_createReference (ifIndex_zero_c, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poCbpIfData))
+		{
+			goto ieee8021PbbCbpRowStatus_update_phyUpCleanup;
+		}
+		
+		u32CbpIfIndex = poCbpIfData->u32Index;
+		ifData_unLock (poCbpIfData);
+		
+		ieee8021BridgePhyData_wrLock ();
+		bPhyLocked = true;
+		
+		register ieee8021BridgePhyData_t *poCbpPhyData = NULL;
+		
+		if ((poCbpPhyData = ieee8021BridgePhyData_createExt (u32CbpIfIndex, 0)) == NULL)
+		{
+			goto ieee8021PbbCbpRowStatus_update_phyUpCleanup;
+		}
+		xBitmap_setBitRev (poCbpPhyData->au8TypeCapabilities, ieee8021BridgeBasePortTypeCapabilities_customerBackbonePort_c, 1);
+		
+		poIeee8021BridgeBasePortEntry->u32IfIndex = u32CbpIfIndex;
+		poEntry->bExternal = false;
+		bRetCode = true;
+		
+ieee8021PbbCbpRowStatus_update_phyUpCleanup:
+		
+		bPhyLocked ? ieee8021BridgePhyData_unLock (): false;
+		if (!bRetCode)
+		{
+			goto ieee8021PbbCbpRowStatus_update_cleanup;
+		}
+	}
+	
+	
 	if (!ieee8021BridgeBasePortRowStatus_handler (poComponent, poIeee8021BridgeBasePortEntry, u8RowStatus))
 	{
 		goto ieee8021PbbCbpRowStatus_update_cleanup;
 	}
+	
+	
+	if (u8RowStatus == xRowStatus_destroy_c && poIeee8021BridgeBasePortEntry->u32IfIndex != 0 && !poEntry->bExternal)
+	{
+		ieee8021BridgePhyData_wrLock ();
+		
+		register ieee8021BridgePhyData_t *poCbpPhyData = NULL;
+		
+		if ((poCbpPhyData = ieee8021BridgePhyData_getByIndex (poIeee8021BridgeBasePortEntry->u32IfIndex, 0)) == NULL ||
+			!ieee8021BridgePhyData_removeExt (poCbpPhyData))
+		{
+			goto ieee8021PbbCbpRowStatus_update_phyDownCleanup;
+		}
+		
+		bRetCode = true;
+		
+ieee8021PbbCbpRowStatus_update_phyDownCleanup:
+		
+		ieee8021BridgePhyData_unLock ();
+		if (!bRetCode)
+		{
+			goto ieee8021PbbCbpRowStatus_update_cleanup;
+		}
+		bRetCode = false;
+		
+		if (!ifData_removeReference (poIeee8021BridgeBasePortEntry->u32IfIndex, true, false, true))
+		{
+			goto ieee8021PbbCbpRowStatus_update_cleanup;
+		}
+		
+		poIeee8021BridgeBasePortEntry->u32IfIndex = 0;
+		poEntry->bExternal = true;
+	}
+	
 	
 	/* TODO */
 	

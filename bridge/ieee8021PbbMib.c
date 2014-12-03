@@ -4554,6 +4554,7 @@ ieee8021PbbCbpTable_createEntry (
 		return NULL;
 	}
 	
+	poEntry->bExternal = true;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbCbpTable_BTree);
