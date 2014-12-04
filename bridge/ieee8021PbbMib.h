@@ -254,6 +254,7 @@ typedef struct ieee8021PbbPipEntry_t
 	uint8_t u8RowStatus;
 	
 	bool bExternal;
+	uint32_t u32ChassisId;
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oComp_BTreeNode;
@@ -579,6 +580,8 @@ typedef struct ieee8021PbbCbpServiceMappingEntry_t
 	uint32_t u32LocalSid;
 	uint8_t u8RowStatus;
 	
+	struct ieee8021PbbCbpServiceMappingEntry_t *pOldEntry;
+	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbCbpServiceMappingEntry_t;
 
@@ -606,6 +609,8 @@ ieee8021PbbCbpServiceMappingEntry_t * ieee8021PbbCbpServiceMappingTable_createEx
 bool ieee8021PbbCbpServiceMappingTable_removeExt (ieee8021PbbCbpServiceMappingEntry_t *poEntry);
 bool ieee8021PbbCbpServiceMappingTable_createHier (ieee8021PbbCbpServiceMappingEntry_t *poEntry);
 bool ieee8021PbbCbpServiceMappingTable_removeHier (ieee8021PbbCbpServiceMappingEntry_t *poEntry);
+bool ieee8021PbbCbpServiceMappingRowStatus_handler (
+	ieee8021PbbCbpServiceMappingEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021PbbCbpServiceMappingTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021PbbCbpServiceMappingTable_getNext;
@@ -641,6 +646,7 @@ typedef struct ieee8021PbbCbpEntry_t
 	uint8_t u8RowStatus;
 	
 	bool bExternal;
+	uint32_t u32ChassisId;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbCbpEntry_t;

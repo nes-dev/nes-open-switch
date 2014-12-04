@@ -130,6 +130,7 @@ typedef struct ieee8021BridgeBaseEntry_t
 	int32_t i32MmrpEnabledStatus;
 	uint8_t u8RowStatus;
 	
+	uint32_t u32ChassisId;
 	uint8_t au8Ports[ETHERNET_PORT_MAP_SIZE];
 	size_t u16Ports_len;	/* # of uint8_t elements */
 	uint32_t u32TpIfIndex;
@@ -213,6 +214,7 @@ enum
 	ieee8021BridgeBasePortTypeCapabilities_stationFacingBridgePort_c = 8,
 	ieee8021BridgeBasePortTypeCapabilities_uplinkAccessPort_c = 9,
 	ieee8021BridgeBasePortTypeCapabilities_uplinkRelayPort_c = 10,
+	ieee8021BridgeBasePortTypeCapabilities_providerEdgePort_c = 11,
 	ieee8021BridgeBasePortTypeCapabilities_providerInstancePort_c = 12,
 
 	/* enums for column ieee8021BridgeBasePortType */
@@ -228,7 +230,7 @@ enum
 	ieee8021BridgeBasePortType_stationFacingBridgePort_c = 10,
 	ieee8021BridgeBasePortType_uplinkAccessPort_c = 11,
 	ieee8021BridgeBasePortType_uplinkRelayPort_c = 12,
-	ieee8021BridgeBasePortType_providerEdgePort_c = 101,
+	ieee8021BridgeBasePortType_providerEdgePort_c = 13,
 	ieee8021BridgeBasePortType_providerInstancePort_c = 14,
 
 	/* enums for column ieee8021BridgeBasePortExternal */
@@ -288,22 +290,22 @@ ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getNextIndex (
 	uint32_t u32Port);
 void ieee8021BridgeBasePortTable_removeEntry (ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortTable_allocateIndex (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	uint32_t *pu32Port);
 bool ieee8021BridgeBasePortTable_removeIndex (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	uint32_t u32Port);
 ieee8021BridgeBasePortEntry_t *ieee8021BridgeBasePortTable_createExt (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	uint32_t u32Port);
-bool ieee8021BridgeBasePortTable_removeExt (ieee8021BridgeBaseEntry_t *pComponent, ieee8021BridgeBasePortEntry_t *poEntry);
-bool ieee8021BridgeBasePortTable_createHier (ieee8021BridgeBaseEntry_t *pComponent, ieee8021BridgeBasePortEntry_t *poEntry);
-bool ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBaseEntry_t *pComponent, ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_removeExt (ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_createHier (ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortIfIndex_handler (
 	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortRowStatus_handler (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgeBasePortTable_getFirst;
@@ -416,6 +418,7 @@ typedef struct ieee8021BridgePhyData_t
 	
 	uint32_t u32ComponentId;
 	uint32_t u32Port;
+	uint32_t u32ChassisId;
 	uint8_t au8TypeCapabilities[2];
 	size_t u16TypeCapabilities_len;	/* # of uint8_t elements */
 	

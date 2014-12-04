@@ -601,7 +601,8 @@ ieee8021PbbVipRowStatus_update (
 	
 ieee8021PbbVipRowStatus_update_newISid:
 	
-	if (poEntry->u32ISid == 0)
+	if (poEntry->u32ISid == 0 ||
+		ieee8021PbbVipTable_ISid_getByIndex (poEntry->u32ChassisId, poEntry->u32ISid) != NULL)
 	{
 		goto ieee8021PbbVipRowStatus_update_cleanup;
 	}
@@ -736,6 +737,125 @@ ieee8021PbbVipToPipMappingRowStatus_update_updateVip:
 	bRetCode = true;
 	
 ieee8021PbbVipToPipMappingRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021PbbCbpServiceMappingRowStatus_update (
+	ieee8021PbbCbpEntry_t *poCbpPort,
+	ieee8021PbbCbpServiceMappingEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	
+	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbbCbpServiceMappingRowStatus_update_cleanup;
+	}
+	
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		goto ieee8021PbbCbpServiceMappingRowStatus_update_updateLocal;
+		
+	case xRowStatus_notInService_c:
+	case xRowStatus_destroy_c:
+		if (poEntry->pOldEntry == NULL)
+		{
+			if ((poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+			{
+				goto ieee8021PbbCbpServiceMappingRowStatus_update_cleanup;
+			}
+			memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
+		}
+		
+		if (u8RowStatus == xRowStatus_destroy_c)
+		{
+			poEntry->u32LocalSid = 0;
+			goto ieee8021PbbCbpServiceMappingRowStatus_update_updateLocal;
+		}
+		else
+		{
+			goto ieee8021PbbCbpServiceMappingRowStatus_update_success;
+		}
+		break;
+	}
+	
+	
+ieee8021PbbCbpServiceMappingRowStatus_update_updateLocal:
+	
+	
+	if (poCbpPort->bExternal ||
+		(poEntry->pOldEntry != NULL && poEntry->pOldEntry->u32LocalSid == poEntry->u32LocalSid))
+	{
+		goto ieee8021PbbCbpServiceMappingRowStatus_update_sidDone;
+	}
+	
+	if (poEntry->pOldEntry == NULL || poEntry->pOldEntry->u32LocalSid == 0)
+	{
+		goto ieee8021PbbCbpServiceMappingRowStatus_update_newSid;
+	}
+	
+	{
+		register ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry = NULL;
+		
+		if ((poIeee8021PbbVipEntry = ieee8021PbbVipTable_ISid_getByIndex (poCbpPort->u32ChassisId, poEntry->pOldEntry->u32LocalSid)) != NULL)
+		{
+			goto ieee8021PbbCbpServiceMappingRowStatus_update_cleanup;
+		}
+		
+		if (!ifStackTable_removeRegister (poIeee8021PbbVipEntry->u32PipIfIndex, poIeee8021BridgeBasePortEntry->u32IfIndex))
+		{
+			goto ieee8021PbbCbpServiceMappingRowStatus_update_cleanup;
+		}
+		
+		poEntry->pOldEntry->u32LocalSid = 0;
+	}
+	
+ieee8021PbbCbpServiceMappingRowStatus_update_newSid:
+	
+	if (poEntry->u32LocalSid == 0)
+	{
+		goto ieee8021PbbCbpServiceMappingRowStatus_update_sidDone;
+	}
+	
+	{
+		register ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry = NULL;
+		
+		if ((poIeee8021PbbVipEntry = ieee8021PbbVipTable_ISid_getByIndex (poCbpPort->u32ChassisId, poEntry->u32LocalSid)) != NULL)
+		{
+			goto ieee8021PbbCbpServiceMappingRowStatus_update_cleanup;
+		}
+		
+		if (!ifStackTable_createRegister (poIeee8021PbbVipEntry->u32PipIfIndex, poIeee8021BridgeBasePortEntry->u32IfIndex))
+		{
+			goto ieee8021PbbCbpServiceMappingRowStatus_update_cleanup;
+		}
+	}
+	
+ieee8021PbbCbpServiceMappingRowStatus_update_sidDone:
+	
+	/* TODO */
+	
+ieee8021PbbCbpServiceMappingRowStatus_update_success:
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+	case xRowStatus_destroy_c:
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
+		break;
+	}
+	
+	bRetCode = true;
+	
+ieee8021PbbCbpServiceMappingRowStatus_update_cleanup:
 	
 	return bRetCode;
 }
