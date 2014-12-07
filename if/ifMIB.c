@@ -1629,7 +1629,7 @@ ifStackTable_removeEntry (ifStackEntry_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfStackTable_BTree);
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfStackTable_LToH_BTree);
+	xBTree_nodeRemove (&poEntry->oLToH_BTreeNode, &oIfStackTable_LToH_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
@@ -1651,7 +1651,7 @@ ifStackTable_createRegister (
 	ifStack_wrLock ();
 	
 	if ((poEntry = ifStackTable_getByIndex (u32HigherLayer, u32LowerLayer)) == NULL &&
-		(poEntry = ifStackTable_createEntry (u32HigherLayer, u32LowerLayer)) == NULL)
+		(poEntry = ifStackTable_createExt (u32HigherLayer, u32LowerLayer)) == NULL)
 	{
 		goto ifStackTable_createRegister_cleanup;
 	}
@@ -1699,6 +1699,14 @@ ifStackTable_removeRegister (
 	bIfLocked = true;
 	
 	if (!ifStackStatus_handler (poEntry, xRowStatus_destroy_c))
+	{
+		goto ifStackTable_removeRegister_cleanup;
+	}
+	
+	ifTable_unLock ();
+	bIfLocked = false;
+	
+	if (!ifStackTable_removeExt (poEntry))
 	{
 		goto ifStackTable_removeRegister_cleanup;
 	}
@@ -2272,7 +2280,7 @@ ifRcvAddressTable_createRegister (
 	uint32_t u32Index,
 	uint8_t *pau8Address, size_t u16Address_len)
 {
-	bool bRetCode = false;
+	register bool bRetCode = false;
 	register ifRcvAddressEntry_t *poEntry = NULL;
 	
 	if (u32Index == ifIndex_zero_c ||
@@ -2309,7 +2317,7 @@ ifRcvAddressTable_removeRegister (
 	uint32_t u32Index,
 	uint8_t *pau8Address, size_t u16Address_len)
 {
-	bool bRetCode = false;
+	register bool bRetCode = false;
 	register ifRcvAddressEntry_t *poEntry = NULL;
 	
 	ifTable_rdLock ();

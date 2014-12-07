@@ -38,6 +38,8 @@ extern "C" {
 
 
 typedef bool (neIfTypeEnableHandler_t) (ifData_t *poIfEntry, int32_t i32AdminStatus);
+typedef bool (neIfTypeStatusHandler_t) (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked);
+typedef bool (neIfTypeStatusModifier_t) (ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate);
 
 typedef struct neIfTypeEntry_t
 {
@@ -45,18 +47,52 @@ typedef struct neIfTypeEntry_t
 	int32_t i32Type;
 	
 	neIfTypeEnableHandler_t *pfEnableHandler;
+	neIfTypeStatusHandler_t *pfStatusTx;
+	neIfTypeStatusModifier_t *pfStatusModifier;
 	
 	xBTree_Node_t oBTreeNode;
 } neIfTypeEntry_t;
 
+neIfTypeEntry_t * neIfTypeTable_createEntry (
+	int32_t i32Type);
+neIfTypeEntry_t * neIfTypeTable_getByIndex (
+	int32_t i32Type);
+void neIfTypeTable_removeEntry (neIfTypeEntry_t *poEntry);
 neIfTypeEntry_t * neIfTypeTable_createExt (
 	int32_t i32Type);
+bool neIfTypeTable_removeExt (neIfTypeEntry_t *poEntry);
 
+
+typedef struct neIfStatusEntry_t
+{
+	int32_t i32Type;
+	int32_t i32OperStatus;
+	uint32_t u32Index;
+	
+	xBTree_Node_t oBTreeNode;
+} neIfStatusEntry_t;
+
+extern int8_t neIfStatus_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree);
+	
+neIfStatusEntry_t * neIfStatus_createEntry (
+	int32_t i32Type,
+	int32_t i32OperStatus,
+	uint32_t u32Index,
+	xBTree_t *pIfStatus_BTree);
+void neIfStatus_removeEntry (
+	neIfStatusEntry_t *poEntry,
+	xBTree_t *pIfStatus_BTree);
+	
+typedef xBTree_t neIfStatus_list_t;
+#define neIfStatus_list_init() xBTree_initInline (&neIfStatus_BTreeNodeCmp)
 bool neIfStatus_modify (
 	uint32_t u32IfIndex, int32_t i32OperStatus,
 	bool bPropagate, bool bLocked);
+extern neIfTypeStatusHandler_t neIfStatus_change;
 
 extern neIfTypeEnableHandler_t neIfEnable_modify;
+extern neIfTypeStatusHandler_t neIfTypeStatusRx;
 
 
 #	ifdef __cplusplus
