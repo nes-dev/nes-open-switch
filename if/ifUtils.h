@@ -40,6 +40,17 @@ extern "C" {
 typedef bool (neIfTypeEnableHandler_t) (ifData_t *poIfEntry, int32_t i32AdminStatus);
 typedef bool (neIfTypeStatusHandler_t) (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked);
 typedef bool (neIfTypeStatusModifier_t) (ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate);
+typedef bool (neIfTypeStackHandler_t) (ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry, uint8_t u8Action, bool bLocked);
+
+enum
+{
+	neIfTypeStack_actionLowerIf_c           = 0x01,
+	neIfTypeStack_actionHigherIf_c          = 0x02,
+	neIfTypeStack_actionPreProcess_c        = 0x04,
+	neIfTypeStack_actionPostProcess_c       = 0x08,
+	neIfTypeStack_actionAdd_c               = 0x10,
+	neIfTypeStack_actionRemove_c            = 0x20,
+};
 
 typedef struct neIfTypeEntry_t
 {
@@ -49,15 +60,13 @@ typedef struct neIfTypeEntry_t
 	neIfTypeEnableHandler_t *pfEnableHandler;
 	neIfTypeStatusHandler_t *pfStatusTx;
 	neIfTypeStatusModifier_t *pfStatusModifier;
+	neIfTypeStackHandler_t *pfStackHandler;
 	
 	xBTree_Node_t oBTreeNode;
 } neIfTypeEntry_t;
 
-neIfTypeEntry_t * neIfTypeTable_createEntry (
-	int32_t i32Type);
 neIfTypeEntry_t * neIfTypeTable_getByIndex (
 	int32_t i32Type);
-void neIfTypeTable_removeEntry (neIfTypeEntry_t *poEntry);
 neIfTypeEntry_t * neIfTypeTable_createExt (
 	int32_t i32Type);
 bool neIfTypeTable_removeExt (neIfTypeEntry_t *poEntry);
@@ -93,6 +102,7 @@ extern neIfTypeStatusHandler_t neIfStatus_change;
 
 extern neIfTypeEnableHandler_t neIfEnable_modify;
 extern neIfTypeStatusHandler_t neIfTypeStatusRx;
+extern neIfTypeStackHandler_t neIfTypeStackModify;
 
 
 #	ifdef __cplusplus
