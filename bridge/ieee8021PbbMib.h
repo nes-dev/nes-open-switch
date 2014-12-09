@@ -509,8 +509,6 @@ typedef struct ieee8021PbbVipToPipMappingEntry_t
 	uint8_t u8StorageType;
 	uint8_t u8RowStatus;
 	
-	struct ieee8021PbbVipToPipMappingEntry_t *pOldEntry;
-	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbVipToPipMappingEntry_t;
 
@@ -528,6 +526,12 @@ ieee8021PbbVipToPipMappingEntry_t * ieee8021PbbVipToPipMappingTable_getNextIndex
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort);
 void ieee8021PbbVipToPipMappingTable_removeEntry (ieee8021PbbVipToPipMappingEntry_t *poEntry);
+ieee8021PbbVipToPipMappingEntry_t * ieee8021PbbVipToPipMappingTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort);
+bool ieee8021PbbVipToPipMappingTable_removeExt (ieee8021PbbVipToPipMappingEntry_t *poEntry);
+bool ieee8021PbbVipToPipMappingTable_createHier (ieee8021PbbVipToPipMappingEntry_t *poEntry);
+bool ieee8021PbbVipToPipMappingTable_removeHier (ieee8021PbbVipToPipMappingEntry_t *poEntry);
 bool ieee8021PbbVipToPipMappingRowStatus_handler (
 	ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC

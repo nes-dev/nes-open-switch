@@ -75,13 +75,13 @@ bridge_pipEnableModify (
 
 bool
 ieee8021PbVlanStaticTable_vlanHandler (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021QBridgeVlanStaticEntry_t *poEntry,
 	uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts)
 {
 	register bool bRetCode = false;
 	
-	if (pComponent->i32ComponentType != ieee8021BridgeBaseComponentType_sVlanComponent_c)
+	if (poComponent->i32ComponentType != ieee8021BridgeBaseComponentType_sVlanComponent_c)
 	{
 		goto ieee8021PbVlanStaticTable_vlanHandler_success;
 	}
@@ -89,11 +89,11 @@ ieee8021PbVlanStaticTable_vlanHandler (
 	register uint16_t u16PortIndex = 0;
 	
 	xBitmap_scanBitRangeRev (
-		pu8DisabledPorts, 0, xBitmap_bitLength (pComponent->u16Ports_len) - 1, 1, u16PortIndex)
+		pu8DisabledPorts, 0, xBitmap_bitLength (poComponent->u16Ports_len) - 1, 1, u16PortIndex)
 	{
 		register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
 		
-		if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (pComponent->u32ComponentId, u16PortIndex + 1)) == NULL)
+		if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (poComponent->u32ComponentId, u16PortIndex + 1)) == NULL)
 		{
 			continue;
 		}
@@ -108,11 +108,11 @@ ieee8021PbVlanStaticTable_vlanHandler (
 	}
 	
 	xBitmap_scanBitRangeRev (
-		pu8EnabledPorts, 0, xBitmap_bitLength (pComponent->u16Ports_len) - 1, 1, u16PortIndex)
+		pu8EnabledPorts, 0, xBitmap_bitLength (poComponent->u16Ports_len) - 1, 1, u16PortIndex)
 	{
 		register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
 		
-		if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (pComponent->u32ComponentId, u16PortIndex + 1)) == NULL)
+		if ((poIeee8021PbCepEntry = ieee8021PbCepTable_getByIndex (poComponent->u32ComponentId, u16PortIndex + 1)) == NULL)
 		{
 			continue;
 		}
@@ -142,13 +142,13 @@ ieee8021PbVlanStaticTable_vlanHandler_cleanup:
 
 bool
 ieee8021PbVlanStaticRowStatus_handler (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021QBridgeVlanStaticEntry_t *poEntry,
 	uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
 	
-	if (pComponent->i32ComponentType != ieee8021BridgeBaseComponentType_sVlanComponent_c)
+	if (poComponent->i32ComponentType != ieee8021BridgeBaseComponentType_sVlanComponent_c)
 	{
 		goto ieee8021PbVlanStaticRowStatus_handler_success;
 	}
@@ -156,11 +156,11 @@ ieee8021PbVlanStaticRowStatus_handler (
 	register uint16_t u16PortIndex = 0;
 	
 	xBitmap_scanBitRangeRev (
-		poEntry->au8EgressPorts, 0, xBitmap_bitLength (pComponent->u16Ports_len) - 1, 1, u16PortIndex)
+		poEntry->au8EgressPorts, 0, xBitmap_bitLength (poComponent->u16Ports_len) - 1, 1, u16PortIndex)
 	{
 		register ieee8021PbEdgePortEntry_t *poIeee8021PbEdgePortEntry = NULL;
 		
-		if ((poIeee8021PbEdgePortEntry = ieee8021PbEdgePortTable_getByIndex (pComponent->u32ComponentId, u16PortIndex + 1, poEntry->u32VlanIndex)) == NULL)
+		if ((poIeee8021PbEdgePortEntry = ieee8021PbEdgePortTable_getByIndex (poComponent->u32ComponentId, u16PortIndex + 1, poEntry->u32VlanIndex)) == NULL)
 		{
 			continue;
 		}
@@ -651,88 +651,14 @@ ieee8021PbbVipToPipMappingRowStatus_update (
 	ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8RowStatus == xRowStatus_destroy_c ? xRowStatus_notInService_c: u8RowStatus;
+	register ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry = NULL;
 	
-	
-	switch (u8RowStatus)
+	if ((poIeee8021PbbVipEntry = ieee8021PbbVipTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) != NULL &&
+		!ieee8021PbbVipRowStatus_handler (poIeee8021PbbVipEntry, u8RealStatus | xRowStatus_fromParent_c))
 	{
-	case xRowStatus_notInService_c:
-	case xRowStatus_destroy_c:
-		if (poEntry->pOldEntry == NULL)
-		{
-			if ((poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
-			{
-				goto ieee8021PbbVipToPipMappingRowStatus_update_cleanup;
-			}
-			memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
-		}
-		
-		if (u8RowStatus == xRowStatus_destroy_c)
-		{
-			poEntry->u32PipIfIndex = 0;
-		}
-		break;
+		goto ieee8021PbbVipToPipMappingRowStatus_update_cleanup;
 	}
-	
-	
-	if (poEntry->pOldEntry != NULL && poEntry->pOldEntry->u32PipIfIndex == poEntry->u32PipIfIndex)
-	{
-		goto ieee8021PbbVipToPipMappingRowStatus_update_updateVip;
-	}
-	
-	if (poEntry->pOldEntry == NULL || poEntry->pOldEntry->u32PipIfIndex == 0)
-	{
-		goto ieee8021PbbVipToPipMappingRowStatus_update_newPipIfIndex;
-	}
-	
-	{
-		register ieee8021PbbPipEntry_t *poIeee8021PbbPipEntry = NULL;
-		
-		if ((poIeee8021PbbPipEntry = ieee8021PbbPipTable_getByIndex (poEntry->pOldEntry->u32PipIfIndex)) != NULL)
-		{
-			xBitmap_setBitRev (poIeee8021PbbPipEntry->au8VipMap, poEntry->u32BridgeBasePort - 1, 0);
-		}
-	}
-	
-	poEntry->pOldEntry->u32PipIfIndex = 0;
-	
-ieee8021PbbVipToPipMappingRowStatus_update_newPipIfIndex:
-	
-	if (poEntry->u32PipIfIndex != 0)
-	{
-		register ieee8021PbbPipEntry_t *poIeee8021PbbPipEntry = NULL;
-		
-		if ((poIeee8021PbbPipEntry = ieee8021PbbPipTable_getByIndex (poEntry->u32PipIfIndex)) == NULL)
-		{
-			goto ieee8021PbbVipToPipMappingRowStatus_update_cleanup;
-		}
-		xBitmap_setBitRev (poIeee8021PbbPipEntry->au8VipMap, poEntry->u32BridgeBasePort - 1, 1);
-	}
-	
-	
-	switch (u8RowStatus)
-	{
-	case xRowStatus_active_c:
-	case xRowStatus_destroy_c:
-		if (poEntry->pOldEntry != NULL)
-		{
-			xBuffer_free (poEntry->pOldEntry);
-			poEntry->pOldEntry = NULL;
-		}
-		break;
-	}
-	
-	
-ieee8021PbbVipToPipMappingRowStatus_update_updateVip:
-	{
-		register ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry = NULL;
-		
-		if ((poIeee8021PbbVipEntry = ieee8021PbbVipTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) != NULL &&
-			!ieee8021PbbVipRowStatus_handler (poIeee8021PbbVipEntry, u8RowStatus | xRowStatus_fromParent_c))
-		{
-			goto ieee8021PbbVipToPipMappingRowStatus_update_cleanup;
-		}
-	}
-	
 	
 	bRetCode = true;
 	

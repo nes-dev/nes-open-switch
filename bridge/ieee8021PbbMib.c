@@ -3482,6 +3482,69 @@ ieee8021PbbVipToPipMappingTable_removeEntry (ieee8021PbbVipToPipMappingEntry_t *
 	return;
 }
 
+ieee8021PbbVipToPipMappingEntry_t *
+ieee8021PbbVipToPipMappingTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort)
+{
+	ieee8021PbbVipToPipMappingEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021PbbVipToPipMappingTable_createEntry (
+		u32BridgeBasePortComponentId,
+		u32BridgeBasePort);
+	if (poEntry == NULL)
+	{
+		return NULL;
+	}
+	
+	if (!ieee8021PbbVipToPipMappingTable_createHier (poEntry))
+	{
+		ieee8021PbbVipToPipMappingTable_removeEntry (poEntry);
+		return NULL;
+	}
+	
+	return poEntry;
+}
+
+bool
+ieee8021PbbVipToPipMappingTable_removeExt (ieee8021PbbVipToPipMappingEntry_t *poEntry)
+{
+	if (!ieee8021PbbVipToPipMappingTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021PbbVipToPipMappingTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021PbbVipToPipMappingTable_createHier (
+	ieee8021PbbVipToPipMappingEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register ieee8021PbbVipEntry_t *poIeee8021PbbVipEntry = NULL;
+	
+	if ((poIeee8021PbbVipEntry = ieee8021PbbVipTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbbVipToPipMappingTable_createHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021PbbVipToPipMappingTable_createHier_cleanup:
+	
+	!bRetCode ? ieee8021PbbVipToPipMappingTable_removeHier (poEntry): false;
+	return bRetCode;
+}
+
+bool
+ieee8021PbbVipToPipMappingTable_removeHier (
+	ieee8021PbbVipToPipMappingEntry_t *poEntry)
+{
+	return true;
+}
+
 bool
 ieee8021PbbVipToPipMappingRowStatus_handler (
 	ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus)
