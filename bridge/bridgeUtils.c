@@ -803,29 +803,25 @@ ieee8021PbbCbpRowStatus_update (
 	if (u8RowStatus == xRowStatus_active_c && poIeee8021BridgeBasePortEntry->u32IfIndex == 0)
 	{
 		register bool bPhyLocked = false;
-		register uint32_t u32CbpIfIndex = 0;
-		ifData_t *poCbpIfData = NULL;
+		register ieee8021BridgeILanIfEntry_t *poCbpILanEntry = NULL;
 		
-		if (!ifData_createReference (ifIndex_zero_c, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poCbpIfData))
+		if ((poCbpILanEntry = ieee8021BridgeILanIfTable_createRegister (ifIndex_zero_c)) == NULL)
 		{
 			goto ieee8021PbbCbpRowStatus_update_phyUpCleanup;
 		}
-		
-		u32CbpIfIndex = poCbpIfData->u32Index;
-		ifData_unLock (poCbpIfData);
 		
 		ieee8021BridgePhyData_wrLock ();
 		bPhyLocked = true;
 		
 		register ieee8021BridgePhyData_t *poCbpPhyData = NULL;
 		
-		if ((poCbpPhyData = ieee8021BridgePhyData_createExt (u32CbpIfIndex, 0)) == NULL)
+		if ((poCbpPhyData = ieee8021BridgePhyData_createExt (poCbpILanEntry->u32IfIndex, 0)) == NULL)
 		{
 			goto ieee8021PbbCbpRowStatus_update_phyUpCleanup;
 		}
 		xBitmap_setBitRev (poCbpPhyData->au8TypeCapabilities, ieee8021BridgeBasePortTypeCapabilities_customerBackbonePort_c, 1);
 		
-		poIeee8021BridgeBasePortEntry->u32IfIndex = u32CbpIfIndex;
+		poIeee8021BridgeBasePortEntry->u32IfIndex = poCbpILanEntry->u32IfIndex;
 		poEntry->bExternal = false;
 		bRetCode = true;
 		
@@ -868,7 +864,7 @@ ieee8021PbbCbpRowStatus_update_phyDownCleanup:
 		}
 		bRetCode = false;
 		
-		if (!ifData_removeReference (poIeee8021BridgeBasePortEntry->u32IfIndex, true, false, true))
+		if (!ieee8021BridgeILanIfTable_removeRegister (poIeee8021BridgeBasePortEntry->u32IfIndex))
 		{
 			goto ieee8021PbbCbpRowStatus_update_cleanup;
 		}
