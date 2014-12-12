@@ -692,6 +692,29 @@ ieee8021PbbPipTable_attachComponent_cleanup:
 }
 
 bool
+ieee8021PbbPipRowStatus_update (
+	ieee8021PbbPipEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	ifData_t *poPipIfData = NULL;
+	
+	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, false, false, &poPipIfData) ||
+		!ifAdminStatus_handler (&poPipIfData->oIf, u8RowStatus == xRowStatus_active_c ? ifAdminStatus_up_c: ifAdminStatus_down_c, false))
+	{
+		goto ieee8021PbbPipRowStatus_update_cleanup;
+	}
+	
+	/* TODO */
+	
+	bRetCode = true;
+	
+ieee8021PbbPipRowStatus_update_cleanup:
+	
+	poPipIfData != NULL ? ifData_unLock (poPipIfData): false;
+	return bRetCode;
+}
+
+bool
 ieee8021PbbVipToPipMappingRowStatus_update (
 	ieee8021PbbVipToPipMappingEntry_t *poEntry, uint8_t u8RowStatus)
 {

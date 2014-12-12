@@ -1676,17 +1676,61 @@ ieee8021PbbPipRowStatus_handler (
 	ieee8021PbbPipEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
-	ifData_t *poPipIfData = NULL;
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
 	
-	if (poEntry->u8RowStatus == u8RowStatus)
+	if (poEntry->u8RowStatus == u8RealStatus)
+	{
+		goto ieee8021PbbPipRowStatus_handler_success;
+	}
+	if (u8RowStatus & xRowStatus_fromParent_c &&
+		((u8RealStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
+		 (u8RealStatus == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
 	{
 		goto ieee8021PbbPipRowStatus_handler_success;
 	}
 	
-	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, false, false, &poPipIfData) ||
-		!neIfRowStatus_handler (&poPipIfData->oNe, u8RowStatus))
+	
+	switch (u8RealStatus)
 	{
+	case xRowStatus_active_c:
+		if (poEntry->u32IComponentId == 0)
+		{
+			u8RealStatus = xRowStatus_notReady_c;
+		}
+		
+		if (!ieee8021PbbPipRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto ieee8021PbbPipRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!ieee8021PbbPipRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto ieee8021PbbPipRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus =
+			poEntry->u8RowStatus == xRowStatus_active_c && (u8RowStatus & xRowStatus_fromParent_c) ? xRowStatus_notReady_c: xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
 		goto ieee8021PbbPipRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!ieee8021PbbPipRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto ieee8021PbbPipRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
 	}
 	
 ieee8021PbbPipRowStatus_handler_success:
@@ -1695,9 +1739,7 @@ ieee8021PbbPipRowStatus_handler_success:
 	
 ieee8021PbbPipRowStatus_handler_cleanup:
 	
-	poPipIfData != NULL ? ifData_unLock (poPipIfData): false;
-	
-	return bRetCode;
+	return bRetCode || (u8RowStatus & xRowStatus_fromParent_c);
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
