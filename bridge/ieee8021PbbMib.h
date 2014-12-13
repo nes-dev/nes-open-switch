@@ -255,6 +255,8 @@ typedef struct ieee8021PbbPipEntry_t
 	
 	bool bExternal;
 	uint32_t u32ChassisId;
+	uint32_t u32PipPort;
+	uint16_t u16NumVipPorts;
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oComp_BTreeNode;

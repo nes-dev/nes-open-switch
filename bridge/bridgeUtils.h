@@ -77,6 +77,9 @@ bool
 		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021PbbPipEntry_t *poEntry);
 bool
+	ieee8021PbbPipTable_detachComponent (
+		ieee8021PbbPipEntry_t *poEntry);
+bool
 	ieee8021PbbPipRowStatus_update (
 		ieee8021PbbPipEntry_t *poEntry, uint8_t u8RowStatus);
 bool
