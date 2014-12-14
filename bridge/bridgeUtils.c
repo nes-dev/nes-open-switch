@@ -343,175 +343,6 @@ ieee8021PbILan_removeEntry_cleanup:
 }
 
 bool
-ieee8021PbbILan_createEntry (
-	ieee8021BridgeBaseEntry_t *poBComponent, ieee8021BridgeBasePortEntry_t *poCbpPort,
-	uint32_t u32PipIfIndex,
-	ieee8021BridgeBaseEntry_t *poIComponent, ieee8021BridgeBasePortEntry_t *poVipPort)
-{
-	register bool bRetCode = false;
-	register bool bPhyLocked = false;
-	ifData_t *poVipIfData = NULL;
-	register ieee8021BridgePhyData_t *poVipPhyData = NULL;
-	register ieee8021BridgePhyData_t *poCbpPhyData = NULL;
-	register ieee8021BridgeILanIfEntry_t *poCbpILanEntry = NULL;
-	
-	if (poCbpPort == NULL || u32PipIfIndex == 0 || poVipPort == NULL)
-	{
-		goto ieee8021PbbILan_createEntry_cleanup;
-	}
-	
-	if (!ifData_createReference (ifIndex_zero_c, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poVipIfData))
-	{
-		goto ieee8021PbbILan_createEntry_cleanup;
-	}
-	
-	if ((poCbpILanEntry = ieee8021BridgeILanIfTable_createRegister (ifIndex_zero_c)) == NULL)
-	{
-		goto ieee8021PbbILan_createEntry_cleanup;
-	}
-	
-	if (!ifStackTable_createRegister (poVipIfData->u32Index, u32PipIfIndex) ||
-		!ifStackTable_createRegister (u32PipIfIndex, poCbpILanEntry->u32IfIndex))
-	{
-		goto ieee8021PbbILan_createEntry_cleanup;
-	}
-	
-	ieee8021BridgePhyData_wrLock ();
-	bPhyLocked = true;
-	
-	if ((poVipPhyData = ieee8021BridgePhyData_createExt (poVipIfData->u32Index, 0)) == NULL)
-	{
-		goto ieee8021PbbILan_createEntry_cleanup;
-	}
-	
-	if ((poCbpPhyData = ieee8021BridgePhyData_createExt (poCbpILanEntry->u32IfIndex, 0)) == NULL)
-	{
-		goto ieee8021PbbILan_createEntry_cleanup;
-	}
-	
-	if (!ieee8021BridgePhyData_attachComponent (poIComponent, poVipPort, poVipPhyData))
-	{
-		goto ieee8021PbbILan_createEntry_cleanup;
-	}
-	
-	if (!ieee8021BridgePhyData_attachComponent (poBComponent, poCbpPort, poCbpPhyData))
-	{
-		goto ieee8021PbbILan_createEntry_cleanup;
-	}
-	
-	bRetCode = true;
-	
-ieee8021PbbILan_createEntry_cleanup:
-	
-	poVipIfData != NULL ? ifData_unLock (poVipIfData): false;
-	
-	if (!bRetCode)
-	{
-		if (poVipPhyData != NULL && poVipPort->u32IfIndex == poVipPhyData->u32IfIndex)
-		{
-			ieee8021BridgePhyData_detachComponent (poVipPort, poVipPhyData);
-			ieee8021BridgePhyData_removeExt (poVipPhyData);
-		}
-		poVipIfData != NULL ? ifData_removeReference (poVipIfData->u32Index, true, false, true): false;
-		if (poCbpPhyData != NULL && poCbpPort->u32IfIndex == poCbpPhyData->u32IfIndex)
-		{
-			ieee8021BridgePhyData_detachComponent (poCbpPort, poCbpPhyData);
-			ieee8021BridgePhyData_removeExt (poCbpPhyData);
-		}
-		poCbpILanEntry != NULL ? ieee8021BridgeILanIfTable_removeRegister (poCbpILanEntry->u32IfIndex): false;
-	}
-	
-	bPhyLocked ? ieee8021BridgePhyData_unLock (): false;
-	
-	return bRetCode;
-}
-
-bool
-ieee8021PbbILan_removeEntry (
-	ieee8021BridgeBaseEntry_t *poBComponent, ieee8021BridgeBasePortEntry_t *poCbpPort,
-	ieee8021BridgeBaseEntry_t *poIComponent, ieee8021BridgeBasePortEntry_t *poVipPort)
-{
-	register bool bRetCode = false;
-	
-	
-	ieee8021BridgePhyData_wrLock ();
-	
-	if (poVipPort->u32IfIndex != 0)
-	{
-		register ieee8021BridgePhyData_t *poVipPhyData = NULL;
-		
-		if ((poVipPhyData = ieee8021BridgePhyData_getByIndex (poVipPort->u32IfIndex, 0)) == NULL ||
-			!ieee8021BridgePhyData_detachComponent (poVipPort, poVipPhyData) ||
-			!ieee8021BridgePhyData_removeExt (poVipPhyData))
-		{
-			goto ieee8021PbbILan_removeEntry_phyCleanup;
-		}
-	}
-	
-	if (poCbpPort->u32IfIndex != 0)
-	{
-		register ieee8021BridgePhyData_t *poCbpPhyData = NULL;
-		
-		if ((poCbpPhyData = ieee8021BridgePhyData_getByIndex (poCbpPort->u32IfIndex, 0)) == NULL ||
-			!ieee8021BridgePhyData_detachComponent (poCbpPort, poCbpPhyData) ||
-			!ieee8021BridgePhyData_removeExt (poCbpPhyData))
-		{
-			goto ieee8021PbbILan_removeEntry_phyCleanup;
-		}
-	}
-	
-	bRetCode = true;
-	
-ieee8021PbbILan_removeEntry_phyCleanup:
-	
-	ieee8021BridgePhyData_unLock ();
-	if (!bRetCode)
-	{
-		goto ieee8021PbbILan_removeEntry_cleanup;
-	}
-	bRetCode = false;
-	
-	
-	if (poVipPort->u32IfIndex == 0)
-	{
-		goto ieee8021PbbILan_removeEntry_cbpIf;
-	}
-	
-	if (!ifData_removeReference (poVipPort->u32IfIndex, true, false, true))
-	{
-		goto ieee8021PbbILan_removeEntry_cleanup;
-	}
-	
-ieee8021PbbILan_removeEntry_cbpIf:
-	
-	if (poCbpPort->u32IfIndex == 0)
-	{
-		goto ieee8021PbbILan_removeEntry_success;
-	}
-	
-	if (!ieee8021BridgeILanIfTable_removeRegister (poCbpPort->u32IfIndex))
-	{
-		goto ieee8021PbbILan_removeEntry_success;
-	}
-	
-	if (!ifData_removeReference (poCbpPort->u32IfIndex, true, false, true))
-	{
-		goto ieee8021PbbILan_removeEntry_cleanup;
-	}
-	
-ieee8021PbbILan_removeEntry_success:
-	
-	poVipPort->u32IfIndex = 0;
-	poCbpPort->u32IfIndex = 0;
-	
-	bRetCode = true;
-	
-ieee8021PbbILan_removeEntry_cleanup:
-	
-	return bRetCode;
-}
-
-bool
 ieee8021PbCVidRegistrationRowStatus_update (
 	ieee8021PbCVidRegistrationEntry_t *poEntry, uint8_t u8RowStatus)
 {
@@ -581,14 +412,57 @@ ieee8021PbCVidRegistrationRowStatus_update_cleanup:
 bool
 ieee8021PbbVipRowStatus_update (
 	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021PbbVipToPipMappingEntry_t *poVipToPipMappingEntry,
 	ieee8021PbbVipEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
 	
+	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	
+	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	{
+		goto ieee8021PbbVipRowStatus_update_cleanup;
+	}
+	
+	register uint32_t u32PipIfIndex = poVipToPipMappingEntry != NULL && poVipToPipMappingEntry->u8RowStatus == xRowStatus_active_c ? poVipToPipMappingEntry->u32PipIfIndex: 0;
+	
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		goto ieee8021PbbVipRowStatus_update_updateLocal;
+		
+	case xRowStatus_notInService_c:
+	case xRowStatus_destroy_c:
+		if (poEntry->pOldEntry == NULL)
+		{
+			if ((poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+			{
+				goto ieee8021PbbVipRowStatus_update_cleanup;
+			}
+			memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
+		}
+		
+		if (u8RowStatus == xRowStatus_destroy_c)
+		{
+			u32PipIfIndex = 0;
+			poEntry->u32ISid = 0;
+			goto ieee8021PbbVipRowStatus_update_updateLocal;
+		}
+		else
+		{
+			goto ieee8021PbbVipRowStatus_update_updateBase;
+		}
+		break;
+	}
+	
+	
+ieee8021PbbVipRowStatus_update_updateLocal:
+	
 	
 	if (poEntry->pOldEntry != NULL && poEntry->pOldEntry->u32ISid == poEntry->u32ISid)
 	{
-		goto ieee8021PbbVipRowStatus_update_updatePipIfIndex;
+		goto ieee8021PbbVipRowStatus_update_iSidDone;
 	}
 	
 	if (poEntry->pOldEntry == NULL || poEntry->pOldEntry->u32ISid == 0)
@@ -609,35 +483,94 @@ ieee8021PbbVipRowStatus_update_newISid:
 	
 	xBTree_nodeAdd (&poEntry->oISid_BTreeNode, &oIeee8021PbbVipTable_ISid_BTree);
 	
+ieee8021PbbVipRowStatus_update_iSidDone:
 	
-ieee8021PbbVipRowStatus_update_updatePipIfIndex:
 	
-	if (poEntry->u32PipIfIndex != 0)
+	if (poEntry->pOldEntry != NULL && poEntry->pOldEntry->u32PipIfIndex == u32PipIfIndex)
 	{
-		goto ieee8021PbbVipRowStatus_update_success;
+		goto ieee8021PbbVipRowStatus_update_pipIfIndexDone;
 	}
 	
-	register ieee8021PbbPipEntry_t *poIeee8021PbbPipEntry = NULL;
-	register ieee8021PbbVipToPipMappingEntry_t *poIeee8021PbbVipToPipMappingEntry =
-		ieee8021PbbVipToPipMappingTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort);
+	if (poEntry->pOldEntry == NULL || poEntry->pOldEntry->u32PipIfIndex == 0)
+	{
+		goto ieee8021PbbVipRowStatus_update_newPipIfIndex;
+	}
+	
+	if (!ifStackTable_removeRegister (poIeee8021BridgeBasePortEntry->u32IfIndex, poEntry->pOldEntry->u32PipIfIndex))
+	{
+		goto ieee8021PbbVipRowStatus_update_cleanup;
+	}
+	
+	{
+		register ieee8021PbbPipEntry_t *poIeee8021PbbPipEntry = NULL;
 		
-	if (poIeee8021PbbVipToPipMappingEntry != NULL && poIeee8021PbbVipToPipMappingEntry->u8RowStatus == xRowStatus_active_c &&
-		(poIeee8021PbbPipEntry = ieee8021PbbPipTable_getByIndex (poIeee8021PbbVipToPipMappingEntry->u32PipIfIndex)) == NULL)
+		if ((poIeee8021PbbPipEntry = ieee8021PbbPipTable_getByIndex (poEntry->pOldEntry->u32PipIfIndex)) != NULL)
+		{
+			xBitmap_setBitRev (poIeee8021PbbPipEntry->au8VipMap, poEntry->u32BridgeBasePort - 1, 0);
+			poIeee8021PbbPipEntry->u16NumVipPorts != 0 ? poIeee8021PbbPipEntry->u16NumVipPorts--: false;
+		}
+	}
+	
+	poEntry->pOldEntry->u32PipIfIndex = 0;
+	
+ieee8021PbbVipRowStatus_update_newPipIfIndex:
+	
+	if (u32PipIfIndex == 0)
+	{
+		goto ieee8021PbbVipRowStatus_update_pipIfIndexDone;
+	}
+	
+	{
+		register ieee8021PbbPipEntry_t *poIeee8021PbbPipEntry = NULL;
+		
+		if ((poIeee8021PbbPipEntry = ieee8021PbbPipTable_getByIndex (u32PipIfIndex)) == NULL)
+		{
+			goto ieee8021PbbVipRowStatus_update_cleanup;
+		}
+		
+		if ((poIeee8021PbbPipEntry->u32IComponentId != 0 && poIeee8021PbbPipEntry->u32IComponentId != poEntry->u32BridgeBasePortComponentId) ||
+			(poIeee8021PbbPipEntry->u32ChassisId != 0 && poIeee8021PbbPipEntry->u32ChassisId != poEntry->u32ChassisId))
+		{
+			goto ieee8021PbbVipRowStatus_update_cleanup;
+		}
+		
+		if (poIeee8021PbbPipEntry->u32IComponentId == 0 && !ieee8021PbbPipTable_attachComponent (poComponent, poIeee8021PbbPipEntry))
+		{
+			goto ieee8021PbbVipRowStatus_update_cleanup;
+		}
+		
+		if (!ifStackTable_createRegister (poIeee8021BridgeBasePortEntry->u32IfIndex, u32PipIfIndex))
+		{
+			goto ieee8021PbbVipRowStatus_update_cleanup;
+		}
+		
+		xBitmap_setBitRev (poIeee8021PbbPipEntry->au8VipMap, poEntry->u32BridgeBasePort - 1, 1);
+		poIeee8021PbbPipEntry->u16NumVipPorts++;
+		poEntry->u32PipIfIndex = u32PipIfIndex;
+	}
+	
+ieee8021PbbVipRowStatus_update_pipIfIndexDone:
+	
+	
+ieee8021PbbVipRowStatus_update_updateBase:
+	
+	if (!ieee8021BridgeBasePortRowStatus_handler (poComponent, poIeee8021BridgeBasePortEntry, u8RowStatus))
 	{
 		goto ieee8021PbbVipRowStatus_update_cleanup;
 	}
-	else if (
-		(poIeee8021PbbPipEntry = ieee8021PbbPipTable_Comp_getNextIndex (poEntry->u32BridgeBasePortComponentId, 0)) == NULL ||
-		poIeee8021PbbPipEntry->u32IComponentId != poEntry->u32BridgeBasePortComponentId)
+	
+	
+	switch (u8RowStatus)
 	{
-		goto ieee8021PbbVipRowStatus_update_cleanup;
+	case xRowStatus_active_c:
+	case xRowStatus_destroy_c:
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
+		break;
 	}
-	
-	xBitmap_setBitRev (poIeee8021PbbPipEntry->au8VipMap, poEntry->u32BridgeBasePort - 1, 1);
-	poEntry->u32PipIfIndex = poIeee8021PbbPipEntry->u32IfIndex;
-	
-	
-ieee8021PbbVipRowStatus_update_success:
 	
 	bRetCode = true;
 	

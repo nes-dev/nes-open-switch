@@ -57,20 +57,12 @@ bool
 		ieee8021BridgeBaseEntry_t *poSComponent, ieee8021BridgeBasePortEntry_t *poCnpPort,
 		ieee8021BridgeBaseEntry_t *poCComponent, ieee8021BridgeBasePortEntry_t *poPepPort);
 bool
-	ieee8021PbbILan_createEntry (
-		ieee8021BridgeBaseEntry_t *poBComponent, ieee8021BridgeBasePortEntry_t *poCbpPort,
-		uint32_t u32PipIfIndex,
-		ieee8021BridgeBaseEntry_t *poIComponent, ieee8021BridgeBasePortEntry_t *poVipPort);
-bool
-	ieee8021PbbILan_removeEntry (
-		ieee8021BridgeBaseEntry_t *poBComponent, ieee8021BridgeBasePortEntry_t *poCbpPort,
-		ieee8021BridgeBaseEntry_t *poIComponent, ieee8021BridgeBasePortEntry_t *poVipPort);
-bool
 	ieee8021PbCVidRegistrationRowStatus_update (
 		ieee8021PbCVidRegistrationEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021PbbVipRowStatus_update (
 		ieee8021BridgeBaseEntry_t *poComponent,
+		ieee8021PbbVipToPipMappingEntry_t *poVipToPipMappingEntry,
 		ieee8021PbbVipEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021PbbPipTable_attachComponent (

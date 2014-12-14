@@ -607,15 +607,16 @@ bool
 ieee8021PbbVipRowStatus_handler (
 	ieee8021PbbVipEntry_t *poEntry, uint8_t u8RowStatus)
 {
+	register bool bRetCode = false;
 	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
 	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
-	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	register ieee8021PbbVipToPipMappingEntry_t *poIeee8021PbbVipToPipMappingEntry = NULL;
 	
-	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32BridgeBasePortComponentId)) == NULL ||
-		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort)) == NULL)
+	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32BridgeBasePortComponentId)) == NULL)
 	{
 		goto ieee8021PbbVipRowStatus_handler_cleanup;
 	}
+	poIeee8021PbbVipToPipMappingEntry = ieee8021PbbVipToPipMappingTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort);
 	
 	if (poEntry->u8RowStatus == u8RealStatus)
 	{
@@ -641,48 +642,22 @@ ieee8021PbbVipRowStatus_handler (
 		{
 			u8RealStatus = xRowStatus_notReady_c;
 		}
-		
-		if (!ieee8021PbbVipRowStatus_update (poIeee8021BridgeBaseEntry, poEntry, u8RealStatus))
+		if ((poIeee8021PbbVipToPipMappingEntry == NULL || poIeee8021PbbVipToPipMappingEntry->u8RowStatus != xRowStatus_active_c || poIeee8021PbbVipToPipMappingEntry->u32PipIfIndex == 0) ||
+			xBitmap_checkBitRange (poEntry->au8DefaultDstBMAC, 0, xBitmap_bitLength (poEntry->u16DefaultDstBMAC_len) - 1, 1) == xBitmap_index_invalid_c)
 		{
-			goto ieee8021PbbVipRowStatus_handler_cleanup;
+			u8RealStatus = xRowStatus_notReady_c;
 		}
 		
-		/* TODO */
-		
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
+		if (!ieee8021PbbVipRowStatus_update (poIeee8021BridgeBaseEntry, poIeee8021PbbVipToPipMappingEntry, poEntry, u8RealStatus))
 		{
 			goto ieee8021PbbVipRowStatus_handler_cleanup;
 		}
 		
 		poEntry->u8RowStatus = u8RealStatus;
-		
-		if (poEntry->pOldEntry != NULL)
-		{
-			xBuffer_free (poEntry->pOldEntry);
-			poEntry->pOldEntry = NULL;
-		}
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (poEntry->pOldEntry != NULL ||
-			(poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
-		{
-			goto ieee8021PbbVipRowStatus_handler_cleanup;
-		}
-		
-		if (poEntry->pOldEntry != NULL)
-		{
-			memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
-		}
-		
-		if (!ieee8021PbbVipRowStatus_update (poIeee8021BridgeBaseEntry, poEntry, u8RealStatus))
-		{
-			goto ieee8021PbbVipRowStatus_handler_cleanup;
-		}
-		
-		/* TODO */
-		
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
+		if (!ieee8021PbbVipRowStatus_update (poIeee8021BridgeBaseEntry, poIeee8021PbbVipToPipMappingEntry, poEntry, u8RealStatus))
 		{
 			goto ieee8021PbbVipRowStatus_handler_cleanup;
 		}
@@ -699,20 +674,7 @@ ieee8021PbbVipRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (poEntry->pOldEntry != NULL)
-		{
-			xBuffer_free (poEntry->pOldEntry);
-			poEntry->pOldEntry = NULL;
-		}
-		
-		if (!ieee8021PbbVipRowStatus_update (poIeee8021BridgeBaseEntry, poEntry, u8RealStatus))
-		{
-			goto ieee8021PbbVipRowStatus_handler_cleanup;
-		}
-		
-		/* TODO */
-		
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
+		if (!ieee8021PbbVipRowStatus_update (poIeee8021BridgeBaseEntry, poIeee8021PbbVipToPipMappingEntry, poEntry, u8RealStatus))
 		{
 			goto ieee8021PbbVipRowStatus_handler_cleanup;
 		}
@@ -723,12 +685,11 @@ ieee8021PbbVipRowStatus_handler (
 	
 ieee8021PbbVipRowStatus_handler_success:
 	
-	return true;
-	
+	bRetCode = true;
 	
 ieee8021PbbVipRowStatus_handler_cleanup:
 	
-	return u8RowStatus & xRowStatus_fromParent_c;
+	return bRetCode || (u8RowStatus & xRowStatus_fromParent_c);
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
