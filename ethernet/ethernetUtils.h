@@ -42,19 +42,19 @@ bool
 		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021BridgeBasePortRowStatus_update (
-		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021BridgeDot1dPortRowStatus_update (
 		ieee8021BridgeDot1dPortEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021QBridgeVlanCurrentTable_vlanUpdate (
-		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgeVlanCurrentEntry_t *poEntry,
 		uint8_t *pu8DisabledPorts, uint8_t *pu8TaggedPorts, uint8_t *pu8UntaggedPorts);
 bool
 	ieee8021QBridgeVlanCurrentRowStatus_update (
-		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgeVlanCurrentEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021QBridgeVlanStaticTable_vHandler (
@@ -63,13 +63,17 @@ bool
 		bool bEnable, bool bTagged, uint32_t u32Count, uint32_t u32Port, ...);
 bool
 	ieee8021QBridgeVlanStaticRowStatus_update (
-		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgeVlanStaticEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021QBridgeVlanStaticTable_vlanUpdate (
-		ieee8021BridgeBaseEntry_t *pComponent,
+		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgeVlanStaticEntry_t *poEntry,
 		uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts);
+bool
+	ieee8021QBridgePortRowStatus_update (
+		ieee8021BridgeBaseEntry_t *poComponent,
+		ieee8021QBridgePortEntry_t *poEntry, uint8_t u8RowStatus);
 
 
 

@@ -5852,6 +5852,7 @@ ieee8021QBridgePortTable_createEntry (
 	poEntry->i32IngressFiltering = ieee8021QBridgePortIngressFiltering_false_c;
 	poEntry->i32MvrpEnabledStatus = ieee8021QBridgePortMvrpEnabledStatus_true_c;
 	poEntry->i32RestrictedVlanRegistration = ieee8021QBridgePortRestrictedVlanRegistration_false_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgePortTable_BTree);
 	return poEntry;
@@ -5920,6 +5921,97 @@ ieee8021QBridgePortTable_removeEntry (ieee8021QBridgePortEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021QBridgePortTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ieee8021QBridgePortEntry_t *
+ieee8021QBridgePortTable_createExt (
+	uint32_t u32BridgeBasePortComponentId,
+	uint32_t u32BridgeBasePort)
+{
+	ieee8021QBridgePortEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021QBridgePortTable_createEntry (
+		u32BridgeBasePortComponentId,
+		u32BridgeBasePort);
+	if (poEntry == NULL)
+	{
+		return NULL;
+	}
+	
+	return poEntry;
+}
+
+bool
+ieee8021QBridgePortTable_removeExt (ieee8021QBridgePortEntry_t *poEntry)
+{
+	ieee8021QBridgePortTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021QBridgePortRowStatus_handler (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021QBridgePortEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
+	
+	if (poEntry->u8RowStatus == u8RealStatus)
+	{
+		goto ieee8021QBridgePortRowStatus_handler_success;
+	}
+	
+	switch (u8RealStatus)
+	{
+	case xRowStatus_active_c:
+	case xRowStatus_notReady_c:
+		if (poEntry->u32PVid == 0)
+		{
+			goto ieee8021QBridgePortRowStatus_handler_cleanup;
+		}
+		
+		if (!ieee8021QBridgePortRowStatus_update (poComponent, poEntry, u8RealStatus))
+		{
+			goto ieee8021QBridgePortRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!ieee8021QBridgePortRowStatus_update (poComponent, poEntry, u8RealStatus))
+		{
+			goto ieee8021QBridgePortRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		goto ieee8021QBridgePortRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!ieee8021QBridgePortRowStatus_update (poComponent, poEntry, u8RealStatus))
+		{
+			goto ieee8021QBridgePortRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+ieee8021QBridgePortRowStatus_handler_success:
+	
+	bRetCode = true;
+	
+ieee8021QBridgePortRowStatus_handler_cleanup:
+	
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
