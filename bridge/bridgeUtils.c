@@ -32,6 +32,7 @@
 #include "ethernet/ethernetUtils.h"
 #include "if/ifUtils.h"
 #include "if/ifMIB.h"
+#include "hal/halEthernet.h"
 
 #include "lib/bitmap.h"
 
@@ -928,7 +929,19 @@ ieee8021PbbCbpRowStatus_update_phyUpCleanup:
 	}
 	
 	
+	if (u8RowStatus != xRowStatus_active_c &&
+		!ieee8021BridgeXPortRowStatus_halUpdate (poComponent, poEntry, ieee8021BridgeBasePortType_customerBackbonePort_c, poEntry->u8RowStatus, u8RowStatus))
+	{
+		goto ieee8021PbbCbpRowStatus_update_cleanup;
+	}
+	
 	if (!ieee8021BridgeBasePortRowStatus_handler (poComponent, poIeee8021BridgeBasePortEntry, u8RowStatus))
+	{
+		goto ieee8021PbbCbpRowStatus_update_cleanup;
+	}
+	
+	if (u8RowStatus == xRowStatus_active_c &&
+		!ieee8021BridgeXPortRowStatus_halUpdate (poComponent, poEntry, ieee8021BridgeBasePortType_customerBackbonePort_c, poEntry->u8RowStatus, u8RowStatus))
 	{
 		goto ieee8021PbbCbpRowStatus_update_cleanup;
 	}

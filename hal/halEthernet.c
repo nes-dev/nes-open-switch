@@ -49,6 +49,13 @@ halEthernet_portConfigure ()
 }
 
 bool
+halEthernet_ifConfigure ()
+{
+	/* TODO */
+	return false;
+}
+
+bool
 halEthernet_vlanConfigure ()
 {
 	/* TODO */

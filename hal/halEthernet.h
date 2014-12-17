@@ -45,6 +45,10 @@ enum
 	
 	halEthernet_portAdminState_c,
 	halEthernet_portOperState_c,
+	halEthernet_portNone_c,
+	halEthernet_portEnable_c,
+	halEthernet_portDisable_c,
+	halEthernet_portDestroy_c,
 	
 	halEthernet_vlanEnable_c,
 	halEthernet_vlanOperState_c,
@@ -64,6 +68,8 @@ extern bool
 	halEthernet_componentConfigure ();
 extern bool
 	halEthernet_portConfigure ();
+extern bool
+	halEthernet_ifConfigure ();
 extern bool
 	halEthernet_vlanConfigure ();
 
