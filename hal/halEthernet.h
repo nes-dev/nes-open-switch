@@ -53,6 +53,10 @@ enum
 	halEthernet_vlanEnable_c,
 	halEthernet_vlanOperState_c,
 	halEthernet_vlanDisable_c,
+	
+	halEthernet_sidNone_c,
+	halEthernet_sidEnable_c,
+	halEthernet_sidDisable_c,
 };
 
 typedef struct halEthernet_portEntry_t
@@ -72,6 +76,8 @@ extern bool
 	halEthernet_ifConfigure ();
 extern bool
 	halEthernet_vlanConfigure ();
+extern bool
+	halEthernet_cbpSidConfigure ();
 
 
 #	ifdef __cplusplus

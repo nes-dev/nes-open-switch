@@ -74,6 +74,11 @@ bridge_pipEnableModify (
 }
 
 
+static bool
+	ieee8021PbbCbpSidRowStatus_halUpdate (
+		ieee8021PbbCbpServiceMappingEntry_t *poEntry, uint8_t u8RowStatus);
+
+
 bool
 ieee8021PbVlanStaticTable_vlanHandler (
 	ieee8021BridgeBaseEntry_t *poComponent,
@@ -806,6 +811,11 @@ ieee8021PbbCbpServiceMappingRowStatus_update (
 	
 ieee8021PbbCbpServiceMappingRowStatus_update_updateLocal:
 	
+	if (u8RowStatus != xRowStatus_active_c && !ieee8021PbbCbpSidRowStatus_halUpdate (poEntry, u8RowStatus))
+	{
+		goto ieee8021PbbCbpServiceMappingRowStatus_update_cleanup;
+	}
+	
 	
 	if (poCbpPort->bExternal ||
 		(poEntry->pOldEntry != NULL && poEntry->pOldEntry->u32LocalSid == poEntry->u32LocalSid))
@@ -857,7 +867,12 @@ ieee8021PbbCbpServiceMappingRowStatus_update_newSid:
 	
 ieee8021PbbCbpServiceMappingRowStatus_update_sidDone:
 	
-	/* TODO */
+	
+	if (u8RowStatus == xRowStatus_active_c && !ieee8021PbbCbpSidRowStatus_halUpdate (poEntry, u8RowStatus))
+	{
+		goto ieee8021PbbCbpServiceMappingRowStatus_update_cleanup;
+	}
+	
 	
 ieee8021PbbCbpServiceMappingRowStatus_update_success:
 	
@@ -876,6 +891,27 @@ ieee8021PbbCbpServiceMappingRowStatus_update_success:
 	bRetCode = true;
 	
 ieee8021PbbCbpServiceMappingRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021PbbCbpSidRowStatus_halUpdate (
+	ieee8021PbbCbpServiceMappingEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register uint8_t u8HalOpCode =
+		u8RowStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_active_c ? halEthernet_sidEnable_c:
+		u8RowStatus != xRowStatus_active_c && poEntry->u8RowStatus == xRowStatus_active_c ? halEthernet_sidDisable_c: halEthernet_sidNone_c;
+		
+	if (u8HalOpCode != halEthernet_sidNone_c && !halEthernet_cbpSidConfigure (poEntry, u8HalOpCode, NULL))
+	{
+		goto ieee8021PbbCbpSidRowStatus_halUpdate_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021PbbCbpSidRowStatus_halUpdate_cleanup:
 	
 	return bRetCode;
 }

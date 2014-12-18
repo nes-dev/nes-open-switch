@@ -63,6 +63,13 @@ halEthernet_vlanConfigure ()
 }
 
 bool
+halEthernet_cbpSidConfigure ()
+{
+	/* TODO */
+	return false;
+}
+
+bool
 halEthernet_ifNotify ()
 {
 	uint32_t u32IfIndex = 0;
