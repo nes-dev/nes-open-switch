@@ -41,6 +41,8 @@
 
 
 static neIfTypeEnableHandler_t bridge_pipEnableModify;
+static neIfTypeStatusModifier_t bridge_pipStatusModify;
+static neIfTypeStackHandler_t bridge_pipStackModify;
 
 
 bool bridgeUtilsInit (void)
@@ -56,6 +58,8 @@ bool bridgeUtilsInit (void)
 	}
 	
 	poNeIfTypeEntry->pfEnableHandler = bridge_pipEnableModify;
+	poNeIfTypeEntry->pfStatusModifier = bridge_pipStatusModify;
+	poNeIfTypeEntry->pfStackHandler = bridge_pipStackModify;
 	
 	bRetCode = true;
 	
@@ -71,6 +75,21 @@ bridge_pipEnableModify (
 	ifData_t *poIfEntry, int32_t i32AdminStatus)
 {
 	return false;
+}
+
+bool
+bridge_pipStatusModify (
+	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+{
+	return false;
+}
+
+bool
+bridge_pipStackModify (
+	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	uint8_t u8Action, bool isLocked)
+{
+	return true;
 }
 
 
