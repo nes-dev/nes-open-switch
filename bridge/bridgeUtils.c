@@ -447,12 +447,22 @@ ieee8021PbCepRowStatus_update (
 		goto ieee8021PbCepRowStatus_update_cleanup;
 	}
 	
+	if (u8RowStatus != xRowStatus_active_c &&
+		!ieee8021BridgeXPortRowStatus_halUpdate (poComponent, poEntry, ieee8021BridgeBasePortType_customerEdgePort_c, poEntry->u8RowStatus, u8RowStatus))
+	{
+		goto ieee8021PbCepRowStatus_update_cleanup;
+	}
+	
 	if (!ieee8021BridgeBasePortRowStatus_handler (poComponent, poIeee8021BridgeBasePortEntry, u8RowStatus))
 	{
 		goto ieee8021PbCepRowStatus_update_cleanup;
 	}
 	
-	/* TODO */
+	if (u8RowStatus == xRowStatus_active_c &&
+		!ieee8021BridgeXPortRowStatus_halUpdate (poComponent, poEntry, ieee8021BridgeBasePortType_customerEdgePort_c, poEntry->u8RowStatus, u8RowStatus))
+	{
+		goto ieee8021PbCepRowStatus_update_cleanup;
+	}
 	
 	bRetCode = true;
 	
