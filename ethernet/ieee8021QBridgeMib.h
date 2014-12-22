@@ -30,6 +30,7 @@ extern "C" {
 #include "ethernet_ext.h"
 
 #include "lib/binaryTree.h"
+#include "lib/sync.h"
 #include "lib/snmp.h"
 
 #include <stdbool.h>
@@ -77,6 +78,8 @@ Netsnmp_Node_Handler ieee8021QBridgeVlan_mapper;
 
 enum
 {
+	ieee8021QBridgeVlanIndex_all_c = 0xFFFFFFFF,
+	
 	/* enums for column ieee8021QBridgeVlanVersionNumber */
 	ieee8021QBridgeVlanVersionNumber_version1_c = 1,
 	ieee8021QBridgeVlanVersionNumber_version2_c = 2,
@@ -1035,6 +1038,11 @@ ieee8021QBridgeLearningConstraintDefaultsEntry_t * ieee8021QBridgeLearningConstr
 ieee8021QBridgeLearningConstraintDefaultsEntry_t * ieee8021QBridgeLearningConstraintDefaultsTable_getNextIndex (
 	uint32_t u32ComponentId);
 void ieee8021QBridgeLearningConstraintDefaultsTable_removeEntry (ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry);
+ieee8021QBridgeLearningConstraintDefaultsEntry_t *ieee8021QBridgeLearningConstraintDefaultsTable_createExt (
+	uint32_t u32ComponentId);
+bool ieee8021QBridgeLearningConstraintDefaultsTable_removeExt (ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry);
+bool ieee8021QBridgeLearningConstraintDefaultsTable_createHier (ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry);
+bool ieee8021QBridgeLearningConstraintDefaultsTable_removeHier (ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeLearningConstraintDefaultsTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeLearningConstraintDefaultsTable_getNext;

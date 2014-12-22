@@ -31,6 +31,7 @@
 #include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
+#include "lib/sync.h"
 #include "lib/snmp.h"
 
 #include <stdbool.h>
@@ -7200,6 +7201,80 @@ ieee8021QBridgeLearningConstraintDefaultsTable_removeEntry (ieee8021QBridgeLearn
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021QBridgeLearningConstraintDefaultsTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+ieee8021QBridgeLearningConstraintDefaultsEntry_t *
+ieee8021QBridgeLearningConstraintDefaultsTable_createExt (
+	uint32_t u32ComponentId)
+{
+	ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry = NULL;
+	
+	poEntry = ieee8021QBridgeLearningConstraintDefaultsTable_createEntry (
+		u32ComponentId);
+	if (poEntry == NULL)
+	{
+		goto ieee8021QBridgeLearningConstraintDefaultsTable_createExt_cleanup;
+	}
+	
+	if (!ieee8021QBridgeLearningConstraintDefaultsTable_createHier (poEntry))
+	{
+		ieee8021QBridgeLearningConstraintDefaultsTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto ieee8021QBridgeLearningConstraintDefaultsTable_createExt_cleanup;
+	}
+	
+ieee8021QBridgeLearningConstraintDefaultsTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+ieee8021QBridgeLearningConstraintDefaultsTable_removeExt (ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry)
+{
+	if (!ieee8021QBridgeLearningConstraintDefaultsTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021QBridgeLearningConstraintDefaultsTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021QBridgeLearningConstraintDefaultsTable_createHier (ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (ieee8021QBridgeLearningConstraintsTable_getByIndex (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set) == NULL &&
+		ieee8021QBridgeLearningConstraintsTable_createEntry (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set) == NULL)
+	{
+		goto ieee8021QBridgeLearningConstraintDefaultsTable_createHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021QBridgeLearningConstraintDefaultsTable_createHier_cleanup:
+	
+	!bRetCode ? ieee8021QBridgeLearningConstraintDefaultsTable_removeHier (poEntry): false;
+	return bRetCode;
+}
+
+bool
+ieee8021QBridgeLearningConstraintDefaultsTable_removeHier (ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register ieee8021QBridgeLearningConstraintsEntry_t *poIeee8021QBridgeLearningConstraintsEntry = NULL;
+	
+	if ((poIeee8021QBridgeLearningConstraintsEntry = ieee8021QBridgeLearningConstraintsTable_getByIndex (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set)) != NULL)
+	{
+		ieee8021QBridgeLearningConstraintsTable_removeEntry (poIeee8021QBridgeLearningConstraintsEntry);
+	}
+	
+	bRetCode = true;
+	
+// ieee8021QBridgeLearningConstraintDefaultsTable_removeHier_cleanup:
+	
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
