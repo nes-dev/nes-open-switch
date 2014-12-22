@@ -1,3 +1,11 @@
+<p align="center" >
+    <a href="https://plus.google.com/105236054684418980818" rel="publisher">
+    <img src="https://lh3.googleusercontent.com/-BG0WKlNqXzc/VI4W7Q2s8cI/AAAAAAAAAUM/al7oMaYej0I/s256-no/nes-open-switch-2.png" alt="NES Open Switch" title="NES Open Switch">
+    </a><br>
+    <a href="https://plus.google.com/105236054684418980818" rel="publisher">Home page</a>
+</p>
+
+<hr>
 
 <a href="https://plus.google.com/105236054684418980818" rel="publisher"></a>
 Copyright (c) 2013, 2014
@@ -16,10 +24,11 @@ The primary scope of NES Open Switch is the development of a protocol stack for
 research and educational purposes. Industry standard protocols are bundled in
 NES Open Switch, which can be extended for future development of these
 technologies, so that new extensions can be rapidly prototyped. Only protocols
-standardized by industry standard bodies (ISO, ITU-T, IETF) are implemented in
-NES Open Switch. Proprietary extensions of the protocols are not the target for
-NES Open Switch. Usage of this implementation in a production environment or
-it's profitability are not the immediate focus of NES Open Switch.
+standardized by industry standard bodies (ISO, ITU-T, IETF) or recognized by
+industry associations (MEF) are implemented in NES Open Switch. Proprietary
+extensions of the protocols are not the target for NES Open Switch. Usage of
+this implementation in a production environment or it's profitability are not
+the immediate focus of NES Open Switch.
 
 NES Open Switch is capable of handling current network technologies like
 Ethernet, SDH/Sonet, OTN and WDM. Some of these supporting modules are under
