@@ -15,10 +15,11 @@ The primary scope of NES Open Switch is the development of a protocol stack for
 research and educational purposes. Industry standard protocols are bundled in
 NES Open Switch, which can be extended for future development of these
 technologies, so that new extensions can be rapidly prototyped. Only protocols
-standardized by industry standard bodies (ISO, ITU-T, IETF) are implemented in
-NES Open Switch. Proprietary extensions of the protocols are not the target for
-NES Open Switch. Usage of this implementation in a production environment or
-it's profitability are not the immediate focus of NES Open Switch.
+standardized by industry standard bodies (ISO, ITU-T, IETF) or recognized by
+industry associations (MEF) are implemented in NES Open Switch. Proprietary
+extensions of the protocols are not the target for NES Open Switch. Usage of
+this implementation in a production environment or it's profitability are not
+the immediate focus of NES Open Switch.
 
 NES Open Switch is capable of handling current network technologies like
 Ethernet, SDH/Sonet, OTN and WDM. Some of these supporting modules are under
