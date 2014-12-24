@@ -661,7 +661,19 @@ ieee8021PbbVipRowStatus_update_pipIfIndexDone:
 	
 ieee8021PbbVipRowStatus_update_updateBase:
 	
+	if (u8RowStatus != xRowStatus_active_c &&
+		!ieee8021BridgeXPortRowStatus_halUpdate (poComponent, poEntry, ieee8021BridgeBasePortType_virtualInstancePort_c, poEntry->u8RowStatus, u8RowStatus))
+	{
+		goto ieee8021PbbVipRowStatus_update_cleanup;
+	}
+	
 	if (!ieee8021BridgeBasePortRowStatus_handler (poComponent, poIeee8021BridgeBasePortEntry, u8RowStatus))
+	{
+		goto ieee8021PbbVipRowStatus_update_cleanup;
+	}
+	
+	if (u8RowStatus == xRowStatus_active_c &&
+		!ieee8021BridgeXPortRowStatus_halUpdate (poComponent, poEntry, ieee8021BridgeBasePortType_virtualInstancePort_c, poEntry->u8RowStatus, u8RowStatus))
 	{
 		goto ieee8021PbbVipRowStatus_update_cleanup;
 	}
