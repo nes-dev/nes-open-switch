@@ -60,6 +60,9 @@ bool
 	ieee8021PbCVidRegistrationRowStatus_update (
 		ieee8021PbCVidRegistrationEntry_t *poEntry, uint8_t u8RowStatus);
 bool
+	ieee8021PbEdgePortRowStatus_update (
+		ieee8021PbEdgePortEntry_t *poEntry, uint8_t u8RowStatus);
+bool
 	ieee8021PbCepRowStatus_update (
 		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021PbCepEntry_t *poEntry, uint8_t u8RowStatus);

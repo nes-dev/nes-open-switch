@@ -333,6 +333,7 @@ bool
 ieee8021PbCVidRegistrationRowStatus_handler (
 	ieee8021PbCVidRegistrationEntry_t *poEntry, uint8_t u8RowStatus)
 {
+	register bool bRetCode = false;
 	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
 	register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
 	
@@ -370,8 +371,6 @@ ieee8021PbCVidRegistrationRowStatus_handler (
 			u8RealStatus = xRowStatus_notReady_c;
 		}
 		
-		/* TODO */
-		
 		if (!ieee8021PbCVidRegistrationRowStatus_update (poEntry, u8RealStatus))
 		{
 			goto ieee8021PbCVidRegistrationRowStatus_handler_cleanup;
@@ -381,8 +380,6 @@ ieee8021PbCVidRegistrationRowStatus_handler (
 		break;
 	}
 	case xRowStatus_notInService_c:
-		/* TODO */
-		
 		if (!ieee8021PbCVidRegistrationRowStatus_update (poEntry, u8RealStatus))
 		{
 			goto ieee8021PbCVidRegistrationRowStatus_handler_cleanup;
@@ -400,8 +397,6 @@ ieee8021PbCVidRegistrationRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		/* TODO */
-		
 		if (!ieee8021PbCVidRegistrationRowStatus_update (poEntry, u8RealStatus))
 		{
 			goto ieee8021PbCVidRegistrationRowStatus_handler_cleanup;
@@ -413,12 +408,11 @@ ieee8021PbCVidRegistrationRowStatus_handler (
 	
 ieee8021PbCVidRegistrationRowStatus_handler_success:
 	
-	return true;
-	
+	bRetCode = true;
 	
 ieee8021PbCVidRegistrationRowStatus_handler_cleanup:
 	
-	return u8RowStatus & xRowStatus_fromParent_c;
+	return bRetCode || (u8RowStatus & xRowStatus_fromParent_c);
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -1179,17 +1173,8 @@ bool
 ieee8021PbEdgePortRowStatus_handler (
 	ieee8021PbEdgePortEntry_t *poEntry, uint8_t u8RowStatus)
 {
+	register bool bRetCode = false;
 	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
-	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
-	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
-	register ieee8021PbCnpEntry_t *poIeee8021PbCnpEntry = NULL;
-	
-	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32CComponentId)) == NULL ||
-		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32CComponentId, poEntry->u32PepPort)) == NULL ||
-		(poIeee8021PbCnpEntry = ieee8021PbCnpTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32PepPort)) != NULL)
-	{
-		goto ieee8021PbEdgePortRowStatus_handler_cleanup;
-	}
 	
 	if (poEntry->u8RowStatus == u8RealStatus)
 	{
@@ -1207,14 +1192,7 @@ ieee8021PbEdgePortRowStatus_handler (
 	{
 	case xRowStatus_active_c:
 	case xRowStatus_notReady_c:
-		if (!ieee8021PbCnpRowStatus_handler (poIeee8021PbCnpEntry, u8RealStatus))
-		{
-			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
-		}
-		
-		/* TODO */
-		
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
+		if (!ieee8021PbEdgePortRowStatus_update (poEntry, u8RealStatus))
 		{
 			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
 		}
@@ -1223,14 +1201,7 @@ ieee8021PbEdgePortRowStatus_handler (
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!ieee8021PbCnpRowStatus_handler (poIeee8021PbCnpEntry, u8RealStatus))
-		{
-			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
-		}
-		
-		/* TODO */
-		
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
+		if (!ieee8021PbEdgePortRowStatus_update (poEntry, u8RealStatus))
 		{
 			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
 		}
@@ -1247,14 +1218,7 @@ ieee8021PbEdgePortRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!ieee8021PbCnpRowStatus_handler (poIeee8021PbCnpEntry, u8RealStatus))
-		{
-			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
-		}
-		
-		/* TODO */
-		
-		if (!ieee8021BridgeBasePortRowStatus_handler (poIeee8021BridgeBaseEntry, poIeee8021BridgeBasePortEntry, u8RealStatus))
+		if (!ieee8021PbEdgePortRowStatus_update (poEntry, u8RealStatus))
 		{
 			goto ieee8021PbEdgePortRowStatus_handler_cleanup;
 		}
@@ -1265,12 +1229,11 @@ ieee8021PbEdgePortRowStatus_handler (
 	
 ieee8021PbEdgePortRowStatus_handler_success:
 	
-	return true;
-	
+	bRetCode = true;
 	
 ieee8021PbEdgePortRowStatus_handler_cleanup:
 	
-	return u8RowStatus & xRowStatus_fromParent_c;
+	return bRetCode || (u8RowStatus & xRowStatus_fromParent_c);
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
