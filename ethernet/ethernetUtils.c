@@ -43,9 +43,19 @@
 #include <stdarg.h>
 
 
-static neIfTypeEnableHandler_t ethernet_portEnableModify;
-static neIfTypeEnableHandler_t ethernet_bridgeEnableModify;
-static neIfTypeEnableHandler_t ethernet_ilanEnableModify;
+static neIfTypeEnableHandler_t ieee8021If_ethernetEnableModify;
+static neIfTypeStatusModifier_t ieee8021If_ethernetStatusModify;
+static neIfTypeStackHandler_t ieee8021If_ethernetStackModify;
+
+static neIfTypeStackHandler_t ieee8021If_l2vlanStackModify;
+
+static neIfTypeEnableHandler_t ieee8021If_bridgeEnableModify;
+static neIfTypeStatusModifier_t ieee8021If_bridgeStatusModify;
+static neIfTypeStackHandler_t ieee8021If_bridgeStackModify;
+
+static neIfTypeEnableHandler_t ieee8021If_ilanEnableModify;
+static neIfTypeStatusModifier_t ieee8021If_ilanStatusModify;
+static neIfTypeStackHandler_t ieee8021If_ilanStackModify;
 
 
 bool ethernetUtilsInit (void)
@@ -60,7 +70,9 @@ bool ethernetUtilsInit (void)
 		goto ethernetUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfEnableHandler = ethernet_portEnableModify;
+	poNeIfTypeEntry->pfEnableHandler = ieee8021If_ethernetEnableModify;
+	poNeIfTypeEntry->pfStatusModifier = ieee8021If_ethernetStatusModify;
+	poNeIfTypeEntry->pfStackHandler = ieee8021If_ethernetStackModify;
 	
 	
 	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_l2vlan_c)) == NULL)
@@ -68,13 +80,17 @@ bool ethernetUtilsInit (void)
 		goto ethernetUtilsInit_cleanup;
 	}
 	
+	poNeIfTypeEntry->pfStackHandler = ieee8021If_l2vlanStackModify;
+	
 	
 	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_bridge_c)) == NULL)
 	{
 		goto ethernetUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfEnableHandler = ethernet_bridgeEnableModify;
+	poNeIfTypeEntry->pfEnableHandler = ieee8021If_bridgeEnableModify;
+	poNeIfTypeEntry->pfStatusModifier = ieee8021If_bridgeStatusModify;
+	poNeIfTypeEntry->pfStackHandler = ieee8021If_bridgeStackModify;
 	
 	
 	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_ilan_c)) == NULL)
@@ -82,7 +98,9 @@ bool ethernetUtilsInit (void)
 		goto ethernetUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfEnableHandler = ethernet_ilanEnableModify;
+	poNeIfTypeEntry->pfEnableHandler = ieee8021If_ilanEnableModify;
+	poNeIfTypeEntry->pfStatusModifier = ieee8021If_ilanStatusModify;
+	poNeIfTypeEntry->pfStackHandler = ieee8021If_ilanStackModify;
 	
 	bRetCode = true;
 	
@@ -94,37 +112,91 @@ ethernetUtilsInit_cleanup:
 
 
 bool
-ethernet_portEnableModify (
+ieee8021If_ethernetEnableModify (
 	ifData_t *poIfEntry, int32_t i32AdminStatus)
 {
 	register bool bRetCode = false;
 	
-	if (!halEthernet_ifConfigure (poIfEntry, halEthernet_portAdminState_c))
+	if (!halEthernet_ifConfigure (poIfEntry, halEthernet_ifAdminState_c))
 	{
-		goto ethernet_portEnableModify_cleanup;
+		goto ieee8021If_ethernetEnableModify_cleanup;
 	}
 	
 	bRetCode = true;
 	
-ethernet_portEnableModify_cleanup:
+ieee8021If_ethernetEnableModify_cleanup:
 	
 	return bRetCode;
 }
 
+bool
+ieee8021If_ethernetStatusModify (
+	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+{
+	return false;
+}
 
 bool
-ethernet_bridgeEnableModify (
+ieee8021If_ethernetStackModify (
+	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	uint8_t u8Action, bool isLocked)
+{
+	return true;
+}
+
+bool
+ieee8021If_l2vlanStackModify (
+	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	uint8_t u8Action, bool isLocked)
+{
+	return true;
+}
+
+bool
+ieee8021If_bridgeEnableModify (
 	ifData_t *poIfEntry, int32_t i32AdminStatus)
 {
 	return false;
 }
 
 bool
-ethernet_ilanEnableModify (
+ieee8021If_bridgeStatusModify (
+	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+{
+	return false;
+}
+
+bool
+ieee8021If_bridgeStackModify (
+	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	uint8_t u8Action, bool isLocked)
+{
+	return true;
+}
+
+bool
+ieee8021If_ilanEnableModify (
 	ifData_t *poIfEntry, int32_t i32AdminStatus)
 {
 	return false;
 }
+
+bool
+ieee8021If_ilanStatusModify (
+	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+{
+	return false;
+}
+
+bool
+ieee8021If_ilanStackModify (
+	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	uint8_t u8Action, bool isLocked)
+{
+	return true;
+}
+
+
 
 
 bool

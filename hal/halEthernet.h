@@ -50,6 +50,9 @@ enum
 	halEthernet_portDisable_c,
 	halEthernet_portDestroy_c,
 	
+	halEthernet_ifAdminState_c,
+	halEthernet_ifOperState_c,
+	
 	halEthernet_vlanEnable_c,
 	halEthernet_vlanOperState_c,
 	halEthernet_vlanDisable_c,
