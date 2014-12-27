@@ -199,6 +199,13 @@ Netsnmp_Node_Handler ieee8021QBridgeCVlanPortTable_mapper;
 #define IEEE8021QBRIDGEFDBLEARNEDENTRYDISCARDS 4
 #define IEEE8021QBRIDGEFDBAGINGTIME 5
 
+enum
+{
+	ieee8021QBridgeFdbId_zero_c = 0,
+	ieee8021QBridgeFdbId_start_c = 1,
+	ieee8021QBridgeFdbId_end_c = 0xFFFF,
+};
+
 /* table ieee8021QBridgeFdbTable row entry data structure */
 typedef struct ieee8021QBridgeFdbEntry_t
 {
@@ -210,6 +217,8 @@ typedef struct ieee8021QBridgeFdbEntry_t
 	uint32_t u32DynamicCount;
 	uint64_t u64LearnedEntryDiscards;
 	int32_t i32AgingTime;
+	
+	uint32_t u32NumVlans;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeFdbEntry_t;
@@ -228,6 +237,10 @@ ieee8021QBridgeFdbEntry_t * ieee8021QBridgeFdbTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Id);
 void ieee8021QBridgeFdbTable_removeEntry (ieee8021QBridgeFdbEntry_t *poEntry);
+ieee8021QBridgeFdbEntry_t *ieee8021QBridgeFdbTable_createExt (
+	uint32_t u32ComponentId,
+	uint32_t u32Id);
+bool ieee8021QBridgeFdbTable_removeExt (ieee8021QBridgeFdbEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeFdbTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeFdbTable_getNext;
@@ -992,6 +1005,13 @@ ieee8021QBridgeLearningConstraintsEntry_t * ieee8021QBridgeLearningConstraintsTa
 	uint32_t u32Vlan,
 	int32_t i32Set);
 void ieee8021QBridgeLearningConstraintsTable_removeEntry (ieee8021QBridgeLearningConstraintsEntry_t *poEntry);
+ieee8021QBridgeLearningConstraintsEntry_t *ieee8021QBridgeLearningConstraintsTable_createExt (
+	uint32_t u32ComponentId,
+	uint32_t u32Vlan,
+	int32_t i32Set);
+bool ieee8021QBridgeLearningConstraintsTable_removeExt (ieee8021QBridgeLearningConstraintsEntry_t *poEntry);
+bool ieee8021QBridgeLearningConstraintsTable_createHier (ieee8021QBridgeLearningConstraintsEntry_t *poEntry);
+bool ieee8021QBridgeLearningConstraintsTable_removeHier (ieee8021QBridgeLearningConstraintsEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeLearningConstraintsTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeLearningConstraintsTable_getNext;

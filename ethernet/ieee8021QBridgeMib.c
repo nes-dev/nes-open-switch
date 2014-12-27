@@ -1580,6 +1580,39 @@ ieee8021QBridgeFdbTable_removeEntry (ieee8021QBridgeFdbEntry_t *poEntry)
 	return;
 }
 
+ieee8021QBridgeFdbEntry_t *
+ieee8021QBridgeFdbTable_createExt (
+	uint32_t u32ComponentId,
+	uint32_t u32Id)
+{
+	ieee8021QBridgeFdbEntry_t *poEntry = NULL;
+	
+	if (u32Id < ieee8021QBridgeFdbId_start_c || u32Id > ieee8021QBridgeFdbId_end_c)
+	{
+		goto ieee8021QBridgeFdbTable_createExt_cleanup;
+	}
+	
+	poEntry = ieee8021QBridgeFdbTable_createEntry (
+		u32ComponentId,
+		u32Id);
+	if (poEntry == NULL)
+	{
+		goto ieee8021QBridgeFdbTable_createExt_cleanup;
+	}
+	
+ieee8021QBridgeFdbTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+ieee8021QBridgeFdbTable_removeExt (ieee8021QBridgeFdbEntry_t *poEntry)
+{
+	ieee8021QBridgeFdbTable_removeEntry (poEntry);
+	
+	return true;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021QBridgeFdbTable_getFirst (
@@ -6735,6 +6768,95 @@ ieee8021QBridgeLearningConstraintsTable_removeEntry (ieee8021QBridgeLearningCons
 	return;
 }
 
+ieee8021QBridgeLearningConstraintsEntry_t *
+ieee8021QBridgeLearningConstraintsTable_createExt (
+	uint32_t u32ComponentId,
+	uint32_t u32Vlan,
+	int32_t i32Set)
+{
+	ieee8021QBridgeLearningConstraintsEntry_t *poEntry = NULL;
+	
+	if (i32Set < ieee8021QBridgeFdbId_start_c || i32Set > ieee8021QBridgeFdbId_end_c)
+	{
+		goto ieee8021QBridgeLearningConstraintsTable_createExt_cleanup;
+	}
+	
+	poEntry = ieee8021QBridgeLearningConstraintsTable_createEntry (
+		u32ComponentId,
+		u32Vlan,
+		i32Set);
+	if (poEntry == NULL)
+	{
+		goto ieee8021QBridgeLearningConstraintsTable_createExt_cleanup;
+	}
+	
+	if (!ieee8021QBridgeLearningConstraintsTable_createHier (poEntry))
+	{
+		ieee8021QBridgeLearningConstraintsTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto ieee8021QBridgeLearningConstraintsTable_createExt_cleanup;
+	}
+	
+ieee8021QBridgeLearningConstraintsTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+ieee8021QBridgeLearningConstraintsTable_removeExt (ieee8021QBridgeLearningConstraintsEntry_t *poEntry)
+{
+	if (!ieee8021QBridgeLearningConstraintsTable_removeHier (poEntry))
+	{
+		return false;
+	}
+	ieee8021QBridgeLearningConstraintsTable_removeEntry (poEntry);
+	
+	return true;
+}
+
+bool
+ieee8021QBridgeLearningConstraintsTable_createHier (ieee8021QBridgeLearningConstraintsEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register ieee8021QBridgeFdbEntry_t *poIeee8021QBridgeFdbEntry = NULL;
+	
+	if ((poIeee8021QBridgeFdbEntry = ieee8021QBridgeFdbTable_getByIndex (poEntry->u32ComponentId, poEntry->i32Set)) == NULL &&
+		(poIeee8021QBridgeFdbEntry = ieee8021QBridgeFdbTable_createExt (poEntry->u32ComponentId, poEntry->i32Set)) == NULL)
+	{
+		goto ieee8021QBridgeLearningConstraintsTable_createHier_cleanup;
+	}
+	poEntry->u32Vlan != ieee8021QBridgeVlanIndex_all_c ? poIeee8021QBridgeFdbEntry->u32NumVlans++: false;
+	
+	bRetCode = true;
+	
+ieee8021QBridgeLearningConstraintsTable_createHier_cleanup:
+	
+	!bRetCode ? ieee8021QBridgeLearningConstraintsTable_removeHier (poEntry): false;
+	return bRetCode;
+}
+
+bool
+ieee8021QBridgeLearningConstraintsTable_removeHier (ieee8021QBridgeLearningConstraintsEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	register ieee8021QBridgeFdbEntry_t *poIeee8021QBridgeFdbEntry = NULL;
+	
+	if ((poIeee8021QBridgeFdbEntry = ieee8021QBridgeFdbTable_getByIndex (poEntry->u32ComponentId, poEntry->i32Set)) != NULL)
+	{
+		poEntry->u32Vlan != ieee8021QBridgeVlanIndex_all_c && poIeee8021QBridgeFdbEntry->u32NumVlans > 0 ? poIeee8021QBridgeFdbEntry->u32NumVlans--: false;
+		if (poIeee8021QBridgeFdbEntry->u32NumVlans == 0 && !ieee8021QBridgeFdbTable_removeExt (poIeee8021QBridgeFdbEntry))
+		{
+			goto ieee8021QBridgeLearningConstraintsTable_removeHier_cleanup;
+		}
+	}
+	
+	bRetCode = true;
+	
+ieee8021QBridgeLearningConstraintsTable_removeHier_cleanup:
+	
+	return bRetCode;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021QBridgeLearningConstraintsTable_getFirst (
@@ -7246,7 +7368,7 @@ ieee8021QBridgeLearningConstraintDefaultsTable_createHier (ieee8021QBridgeLearni
 	register bool bRetCode = false;
 	
 	if (ieee8021QBridgeLearningConstraintsTable_getByIndex (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set) == NULL &&
-		ieee8021QBridgeLearningConstraintsTable_createEntry (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set) == NULL)
+		ieee8021QBridgeLearningConstraintsTable_createExt (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set) == NULL)
 	{
 		goto ieee8021QBridgeLearningConstraintDefaultsTable_createHier_cleanup;
 	}
@@ -7265,14 +7387,15 @@ ieee8021QBridgeLearningConstraintDefaultsTable_removeHier (ieee8021QBridgeLearni
 	register bool bRetCode = false;
 	register ieee8021QBridgeLearningConstraintsEntry_t *poIeee8021QBridgeLearningConstraintsEntry = NULL;
 	
-	if ((poIeee8021QBridgeLearningConstraintsEntry = ieee8021QBridgeLearningConstraintsTable_getByIndex (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set)) != NULL)
+	if ((poIeee8021QBridgeLearningConstraintsEntry = ieee8021QBridgeLearningConstraintsTable_getByIndex (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set)) != NULL &&
+		!ieee8021QBridgeLearningConstraintsTable_removeExt (poIeee8021QBridgeLearningConstraintsEntry))
 	{
-		ieee8021QBridgeLearningConstraintsTable_removeEntry (poIeee8021QBridgeLearningConstraintsEntry);
+		goto ieee8021QBridgeLearningConstraintDefaultsTable_removeHier_cleanup;
 	}
 	
 	bRetCode = true;
 	
-// ieee8021QBridgeLearningConstraintDefaultsTable_removeHier_cleanup:
+ieee8021QBridgeLearningConstraintDefaultsTable_removeHier_cleanup:
 	
 	return bRetCode;
 }
