@@ -87,6 +87,7 @@ Netsnmp_Node_Handler entityGeneral_mapper;
 #define ENTPHYSICALISFRU 16
 #define ENTPHYSICALMFGDATE 17
 #define ENTPHYSICALURIS 18
+#define ENTPHYSICALUUID 19
 
 enum
 {
@@ -103,6 +104,8 @@ enum
 	entPhysicalClass_port_c = 10,
 	entPhysicalClass_stack_c = 11,
 	entPhysicalClass_cpu_c = 12,
+	entPhysicalClass_energyObject_c = 13,
+	entPhysicalClass_battery_c = 14,
 
 	/* enums for column entPhysicalIsFRU */
 	entPhysicalIsFRU_true_c = 1,
@@ -146,6 +149,8 @@ typedef struct entPhysicalEntry_t
 	size_t u16MfgDate_len;	/* # of uint8_t elements */
 	uint8_t au8Uris[/* TODO: , OCTETSTR, "" */ TOBE_REPLACED];
 	size_t u16Uris_len;	/* # of uint8_t elements */
+	uint8_t au8UUID[16];
+	size_t u16UUID_len;	/* # of uint8_t elements */
 	
 // 	xBTree_Node_t oBTreeNode;
 } entPhysicalEntry_t;
@@ -243,7 +248,7 @@ typedef struct entLPMappingEntry_t
 {
 	/* Index values */
 // 	uint32_t u32LogicalIndex;
-// 	uint32_t u32LPPhysicalIndex;
+// 	uint32_t u32PhysicalIndex;
 	
 	/* Column values */
 	
@@ -256,13 +261,13 @@ extern xBTree_t oEntLPMappingTable_BTree;
 void entLPMappingTable_init (void);
 entLPMappingEntry_t * entLPMappingTable_createEntry (
 	uint32_t u32LogicalIndex,
-	uint32_t u32LPPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 entLPMappingEntry_t * entLPMappingTable_getByIndex (
 	uint32_t u32LogicalIndex,
-	uint32_t u32LPPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 entLPMappingEntry_t * entLPMappingTable_getNextIndex (
 	uint32_t u32LogicalIndex,
-	uint32_t u32LPPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 void entLPMappingTable_removeEntry (entLPMappingEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point entLPMappingTable_getFirst;
@@ -283,7 +288,7 @@ typedef struct entAliasMappingEntry_t
 {
 	/* Index values */
 	uint32_t u32PhysicalIndex;
-	uint32_t u32AliasLogicalIndexOrZero;
+	uint32_t u32LogicalIndexOrZero;
 	
 	/* Column values */
 	xOid_t aoIdentifier[128];
@@ -298,13 +303,13 @@ extern xBTree_t oEntAliasMappingTable_BTree;
 void entAliasMappingTable_init (void);
 entAliasMappingEntry_t * entAliasMappingTable_createEntry (
 	uint32_t u32PhysicalIndex,
-	uint32_t u32AliasLogicalIndexOrZero);
+	uint32_t u32LogicalIndexOrZero);
 entAliasMappingEntry_t * entAliasMappingTable_getByIndex (
 	uint32_t u32PhysicalIndex,
-	uint32_t u32AliasLogicalIndexOrZero);
+	uint32_t u32LogicalIndexOrZero);
 entAliasMappingEntry_t * entAliasMappingTable_getNextIndex (
 	uint32_t u32PhysicalIndex,
-	uint32_t u32AliasLogicalIndexOrZero);
+	uint32_t u32LogicalIndexOrZero);
 void entAliasMappingTable_removeEntry (entAliasMappingEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point entAliasMappingTable_getFirst;
@@ -376,6 +381,8 @@ enum
 	neEntPhysicalClass_port_c = 10,
 	neEntPhysicalClass_stack_c = 11,
 	neEntPhysicalClass_cpu_c = 12,
+	neEntPhysicalClass_energyObject_c = 13,
+	neEntPhysicalClass_battery_c = 14,
 
 	/* enums for column neEntPhysicalRowStatus */
 	neEntPhysicalRowStatus_active_c = 1,
@@ -637,7 +644,7 @@ enum
 typedef struct entLPMappingData_t
 {
 	uint32_t u32LogicalIndex;
-	uint32_t u32LPPhysicalIndex;
+	uint32_t u32PhysicalIndex;
 	
 	neEntLPMappingEntry_t oNe;
 	entLPMappingEntry_t oLp;
@@ -651,13 +658,13 @@ typedef struct entLPMappingData_t
 
 entLPMappingData_t * entLPMappingData_createEntry (
 	uint32_t u32LogicalIndex,
-	uint32_t u32LPPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 entLPMappingData_t * entLPMappingData_getByIndex (
 	uint32_t u32LogicalIndex,
-	uint32_t u32LPPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 entLPMappingData_t * entLPMappingData_getNextIndex (
 	uint32_t u32LogicalIndex,
-	uint32_t u32LPPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 #define entLPMappingData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entLPMappingData_t, oNe))
 #define entLPMappingData_getByLpEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entLPMappingData_t, oLp))
 void entLPMappingData_removeEntry (entLPMappingData_t *poEntry);
