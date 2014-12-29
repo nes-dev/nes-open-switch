@@ -204,6 +204,7 @@ enum
 	ieee8021QBridgeFdbId_zero_c = 0,
 	ieee8021QBridgeFdbId_start_c = 1,
 	ieee8021QBridgeFdbId_end_c = 0xFFFF,
+	ieee8021QBridgeFdbId_default_c = ieee8021QBridgeFdbId_start_c,
 };
 
 /* table ieee8021QBridgeFdbTable row entry data structure */

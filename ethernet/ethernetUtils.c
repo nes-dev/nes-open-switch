@@ -491,18 +491,84 @@ ieee8021QBridgeVlanCurrentRowStatus_update (
 	ieee8021QBridgeVlanCurrentEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
+	register bool bNewFdbSkip = false;
+	register ieee8021QBridgeFdbEntry_t *poIeee8021QBridgeFdbEntry = NULL;
 	
-	if ((u8RowStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_active_c) ||
-		(u8RowStatus != xRowStatus_active_c && poEntry->u8RowStatus == xRowStatus_active_c))
+	if (poEntry->u32FdbId != 0 && (poIeee8021QBridgeFdbEntry = ieee8021QBridgeFdbTable_getByIndex (poEntry->u32ComponentId, poEntry->u32FdbId)) == NULL)
 	{
-		register uint8_t u8HalOpCode =
-			u8RowStatus == xRowStatus_active_c ? halEthernet_vlanEnable_c: halEthernet_vlanDisable_c;
-			
-		if (!halEthernet_vlanConfigure (poEntry, u8HalOpCode, NULL))
-		{
-			goto ieee8021QBridgeVlanCurrentRowStatus_update_cleanup;
-		}
+		goto ieee8021QBridgeVlanCurrentRowStatus_update_cleanup;
 	}
+	
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		goto ieee8021QBridgeVlanCurrentRowStatus_update_updateLocal;
+		
+	case xRowStatus_notInService_c:
+	case xRowStatus_destroy_c:
+		bNewFdbSkip = true;
+		break;
+	}
+	
+	
+ieee8021QBridgeVlanCurrentRowStatus_update_updateLocal:
+	
+	if (u8RowStatus != xRowStatus_active_c && poEntry->u8RowStatus == xRowStatus_active_c &&
+		!halEthernet_vlanConfigure (poEntry, halEthernet_vlanDisable_c, NULL, poIeee8021QBridgeFdbEntry))
+	{
+		goto ieee8021QBridgeVlanCurrentRowStatus_update_cleanup;
+	}
+	
+	
+	if (poEntry->u32FdbId == 0)
+	{
+		goto ieee8021QBridgeVlanCurrentRowStatus_update_newFdb;
+	}
+	
+	poEntry->u32FdbId = 0;
+	poIeee8021QBridgeFdbEntry->u32NumVlans--;
+	
+ieee8021QBridgeVlanCurrentRowStatus_update_newFdb:
+	
+	if (bNewFdbSkip)
+	{
+		goto ieee8021QBridgeVlanCurrentRowStatus_update_fdbDone;
+	}
+	
+	register uint32_t u32FdbId = 0;
+	register ieee8021QBridgeLearningConstraintsEntry_t *poIeee8021QBridgeLearningConstraintsEntry = NULL;
+	
+	if ((poIeee8021QBridgeLearningConstraintsEntry = ieee8021QBridgeLearningConstraintsTable_getNextIndex (poEntry->u32ComponentId, poEntry->u32Index, 0)) != NULL &&
+		poEntry->u32ComponentId == poIeee8021QBridgeLearningConstraintsEntry->u32ComponentId && poEntry->u32Index == poIeee8021QBridgeLearningConstraintsEntry->u32Vlan)
+	{
+		u32FdbId = poIeee8021QBridgeLearningConstraintsEntry->i32Set;
+	}
+	
+	register ieee8021QBridgeLearningConstraintDefaultsEntry_t *poIeee8021QBridgeLearningConstraintDefaultsEntry = NULL;
+	
+	if (u32FdbId == 0 && (poIeee8021QBridgeLearningConstraintDefaultsEntry = ieee8021QBridgeLearningConstraintDefaultsTable_getByIndex (poEntry->u32ComponentId)) != NULL)
+	{
+		u32FdbId = poIeee8021QBridgeLearningConstraintDefaultsEntry->i32Set;
+	}
+	
+	if (u32FdbId == 0 || (poIeee8021QBridgeFdbEntry = ieee8021QBridgeFdbTable_getByIndex (poEntry->u32ComponentId, u32FdbId)) == NULL)
+	{
+		goto ieee8021QBridgeVlanCurrentRowStatus_update_cleanup;
+	}
+	
+	poEntry->u32FdbId = u32FdbId;
+	poIeee8021QBridgeFdbEntry->u32NumVlans++;
+	
+ieee8021QBridgeVlanCurrentRowStatus_update_fdbDone:
+	
+	
+	if (u8RowStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_active_c &&
+		!halEthernet_vlanConfigure (poEntry, halEthernet_vlanEnable_c, NULL, poIeee8021QBridgeFdbEntry))
+	{
+		goto ieee8021QBridgeVlanCurrentRowStatus_update_cleanup;
+	}
+	
 	
 	bRetCode = true;
 	

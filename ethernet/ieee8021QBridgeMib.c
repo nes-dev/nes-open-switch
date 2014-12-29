@@ -4306,7 +4306,6 @@ ieee8021QBridgeVlanCurrentTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->u32FdbId = 0;	/* TODO */
 	poEntry->u16EgressPorts_len = ETHERNET_PORT_MAP_SIZE;
 	poEntry->u16UntaggedPorts_len = ETHERNET_PORT_MAP_SIZE;
 	poEntry->i32Status = ieee8021QBridgeVlanStatus_dynamicMvrp_c;
