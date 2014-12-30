@@ -53,6 +53,10 @@ bool
 		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021BridgeDot1dPortEntry_t *poEntry, uint8_t u8RowStatus);
 bool
+	ieee8021QBridgeCVlanPortRowStatus_update (
+		ieee8021BridgeBaseEntry_t *poComponent,
+		ieee8021QBridgeCVlanPortEntry_t *poEntry, uint8_t u8RowStatus);
+bool
 	ieee8021QBridgeVlanCurrentTable_vlanUpdate (
 		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgeVlanCurrentEntry_t *poEntry,

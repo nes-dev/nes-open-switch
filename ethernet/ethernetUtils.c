@@ -419,6 +419,43 @@ ieee8021BridgeDot1dPortRowStatus_update_cleanup:
 }
 
 bool
+ieee8021QBridgeCVlanPortRowStatus_update (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021QBridgeCVlanPortEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
+	
+	if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Number)) == NULL)
+	{
+		goto ieee8021QBridgeCVlanPortRowStatus_update_cleanup;
+	}
+	
+	if (u8RowStatus != xRowStatus_active_c &&
+		!ieee8021BridgeXPortRowStatus_halUpdate (poComponent, poEntry, ieee8021BridgeBasePortType_customerVlanPort_c, poEntry->u8RowStatus, u8RowStatus))
+	{
+		goto ieee8021QBridgeCVlanPortRowStatus_update_cleanup;
+	}
+	
+	if (!ieee8021BridgeBasePortRowStatus_handler (poComponent, poIeee8021BridgeBasePortEntry, u8RowStatus))
+	{
+		goto ieee8021QBridgeCVlanPortRowStatus_update_cleanup;
+	}
+	
+	if (u8RowStatus == xRowStatus_active_c &&
+		!ieee8021BridgeXPortRowStatus_halUpdate (poComponent, poEntry, ieee8021BridgeBasePortType_customerVlanPort_c, poEntry->u8RowStatus, u8RowStatus))
+	{
+		goto ieee8021QBridgeCVlanPortRowStatus_update_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021QBridgeCVlanPortRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021QBridgeVlanCurrentTable_vlanUpdate (
 	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021QBridgeVlanCurrentEntry_t *poEntry,
