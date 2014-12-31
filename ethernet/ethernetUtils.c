@@ -462,21 +462,21 @@ ieee8021QBridgeVlanCurrentTable_vlanUpdate (
 	uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts)
 {
 	register bool bRetCode = false;
-	xSList_Head_t oPortList;
+	xSList_Head_t oIfList;
 	
 	if (poEntry->u8RowStatus != xRowStatus_active_c)
 	{
 		goto ieee8021QBridgeVlanCurrentTable_vlanUpdate_success;
 	}
 	
-	xSList_headInit (&oPortList);
+	xSList_headInit (&oIfList);
 	
 	register uint16_t u16PortIndex = 0;
 	
 	xBitmap_scanCmp (
 		pu8EnabledPorts, pu8DisabledPorts, 0, xBitmap_bitLength (poEntry->u16EgressPorts_len) - 1, 0, u16PortIndex)
 	{
-		register halEthernet_portEntry_t *poPortEntry = NULL;
+		register halEthernet_ifEntry_t *poIfEntry = NULL;
 		register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 		
 		if ((poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getByIndex (poEntry->u32ComponentId, u16PortIndex + 1)) == NULL ||
@@ -485,18 +485,19 @@ ieee8021QBridgeVlanCurrentTable_vlanUpdate (
 			continue;
 		}
 		
-		if ((poPortEntry = xBuffer_cAlloc (sizeof (*poPortEntry))) == NULL)
+		if ((poIfEntry = xBuffer_cAlloc (sizeof (*poIfEntry))) == NULL)
 		{
 			continue;
 		}
 		
-		poPortEntry->u32IfIndex = poIeee8021BridgeBasePortEntry->u32IfIndex;
-		poPortEntry->bEnable = xBitmap_getBitRev (pu8EnabledPorts, u16PortIndex) != 0;
-		poPortEntry->bUntagged = xBitmap_getBitRev (pu8UntaggedPorts, u16PortIndex) != 0;
-		xSList_push (&poPortEntry->oPNode, &oPortList);
+		poIfEntry->u32IfIndex = poIeee8021BridgeBasePortEntry->u32IfIndex;
+		xBitmap_getBitRev (pu8DisabledPorts, u16PortIndex) != 0 ? xBitmap_setBit (poIfEntry->au8Flags, halEthernet_if_bVlanDisable, 1): 0;
+		xBitmap_getBitRev (pu8EnabledPorts, u16PortIndex) != 0 ? xBitmap_setBit (poIfEntry->au8Flags, halEthernet_if_bVlanEnable, 1): 0;
+		xBitmap_getBitRev (pu8UntaggedPorts, u16PortIndex) != 0 ? xBitmap_setBit (poIfEntry->au8Flags, halEthernet_if_bVlanUntagged, 1): 0;
+		xSList_push (&poIfEntry->oNode, &oIfList);
 	}
 	
-	if (oPortList.u32NumNode != 0 && !halEthernet_vlanConfigure (poEntry, halEthernet_vlanOperState_c, &oPortList))
+	if (oIfList.u32NumNode != 0 && !halEthernet_vlanConfigure (poEntry, halEthernet_vlanOperState_c, &oIfList, NULL))
 	{
 		goto ieee8021QBridgeVlanCurrentTable_vlanUpdate_cleanup;
 	}
@@ -510,12 +511,12 @@ ieee8021QBridgeVlanCurrentTable_vlanUpdate_cleanup:
 		register xSList_Node_t *poCurrNode = NULL;
 		register xSList_Node_t *poNextNode = NULL;
 		
-		xSList_scanTailSafe (poCurrNode, poNextNode, &oPortList)
+		xSList_scanTailSafe (poCurrNode, poNextNode, &oIfList)
 		{
-			register halEthernet_portEntry_t *poPortEntry = xSList_entry (poCurrNode, halEthernet_portEntry_t, oPNode);
+			register halEthernet_ifEntry_t *poIfEntry = xSList_entry (poCurrNode, halEthernet_ifEntry_t, oNode);
 			
-			xSList_nodeRem (&poPortEntry->oPNode, &oPortList);
-			xBuffer_free (poPortEntry);
+			xSList_nodeRem (&poIfEntry->oNode, &oIfList);
+			xBuffer_free (poIfEntry);
 		}
 	}
 	

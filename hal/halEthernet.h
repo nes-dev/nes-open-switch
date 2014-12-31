@@ -43,8 +43,6 @@ enum
 	halEthernet_componentDisable_c,
 	halEthernet_componentDestroy_c,
 	
-	halEthernet_portAdminState_c,
-	halEthernet_portOperState_c,
 	halEthernet_portNone_c,
 	halEthernet_portEnable_c,
 	halEthernet_portDisable_c,
@@ -60,16 +58,20 @@ enum
 	halEthernet_sidNone_c,
 	halEthernet_sidEnable_c,
 	halEthernet_sidDisable_c,
+	
+	halEthernet_if_bVlanDisable = 0,
+	halEthernet_if_bVlanEnable,
+	halEthernet_if_bVlanUntagged,
 };
 
-typedef struct halEthernet_portEntry_t
+typedef struct halEthernet_ifEntry_t
 {
 	uint32_t u32IfIndex;
-	bool bEnable;
-	bool bUntagged;
 	
-	xSList_Node_t oPNode;
-} halEthernet_portEntry_t;
+	uint8_t au8Flags[1];
+	
+	xSList_Node_t oNode;
+} halEthernet_ifEntry_t;
 
 extern bool
 	halEthernet_componentConfigure ();
