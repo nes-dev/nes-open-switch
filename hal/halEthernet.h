@@ -47,6 +47,9 @@ enum
 	halEthernet_portEnable_c,
 	halEthernet_portDisable_c,
 	halEthernet_portDestroy_c,
+	halEthernet_portQEnable_c,
+	halEthernet_portQDisable_c,
+	halEthernet_portQDestroy_c,
 	
 	halEthernet_ifAdminState_c,
 	halEthernet_ifOperState_c,

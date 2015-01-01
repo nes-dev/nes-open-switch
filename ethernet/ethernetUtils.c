@@ -197,6 +197,10 @@ ieee8021If_ilanStackModify (
 }
 
 
+static bool
+	ieee8021QBridgePortRowStatus_halUpdate (
+		ieee8021BridgeBaseEntry_t *poComponent,
+		ieee8021QBridgePortEntry_t *poEntry, uint8_t u8RowStatus);
 
 
 bool
@@ -745,11 +749,37 @@ ieee8021QBridgePortRowStatus_update (
 {
 	register bool bRetCode = false;
 	
-	/* TODO */
+	if (ieee8021QBridgePortRowStatus_halUpdate (poComponent, poEntry, u8RowStatus))
+	{
+		goto ieee8021QBridgePortRowStatus_update_cleanup;
+	}
 	
 	bRetCode = true;
 	
-//ieee8021QBridgePortRowStatus_update_cleanup:
+ieee8021QBridgePortRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021QBridgePortRowStatus_halUpdate (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021QBridgePortEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register uint8_t u8HalOpCode =
+		u8RowStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_active_c ? halEthernet_portQEnable_c:
+		u8RowStatus != xRowStatus_active_c && poEntry->u8RowStatus == xRowStatus_active_c ? halEthernet_portQDisable_c: halEthernet_portNone_c;
+		
+	if ((u8HalOpCode != halEthernet_portNone_c && !halEthernet_portConfigure (poComponent, u8HalOpCode, ieee8021BridgeBasePortType_none_c, poEntry)) ||
+		(u8RowStatus == xRowStatus_destroy_c && !halEthernet_portConfigure (poComponent, halEthernet_portQDestroy_c, ieee8021BridgeBasePortType_none_c, poEntry)))
+	{
+		goto ieee8021QBridgePortRowStatus_halUpdate_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021QBridgePortRowStatus_halUpdate_cleanup:
 	
 	return bRetCode;
 }
