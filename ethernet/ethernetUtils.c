@@ -204,6 +204,42 @@ static bool
 
 
 bool
+ieee8021BridgeBaseTable_hierUpdate (
+	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (ieee8021QBridgeTable_getByIndex (poEntry->u32ComponentId) == NULL &&
+			ieee8021QBridgeTable_createExt (poEntry->u32ComponentId) == NULL)
+		{
+			goto ieee8021BridgeBaseTable_hierUpdate_cleanup;
+		}
+		break;
+		
+	case xRowStatus_destroy_c:
+	{
+		register ieee8021QBridgeEntry_t *poIeee8021QBridgeEntry = NULL;
+		
+		if ((poIeee8021QBridgeEntry = ieee8021QBridgeTable_getByIndex (poEntry->u32ComponentId)) != NULL &&
+			!ieee8021QBridgeTable_removeExt (poIeee8021QBridgeEntry))
+		{
+			goto ieee8021BridgeBaseTable_hierUpdate_cleanup;
+		}
+		break;
+	}
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgeBaseTable_hierUpdate_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021BridgeBaseRowStatus_update (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus)
 {
@@ -334,6 +370,42 @@ ieee8021BridgeBaseRowStatus_update (
 	bRetCode = true;
 	
 ieee8021BridgeBaseRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgeBasePortTable_hierUpdate (
+	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (ieee8021QBridgePortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port) == NULL &&
+			ieee8021QBridgePortTable_createExt (poEntry->u32ComponentId, poEntry->u32Port) == NULL)
+		{
+			goto ieee8021BridgeBasePortTable_hierUpdate_cleanup;
+		}
+		break;
+		
+	case xRowStatus_destroy_c:
+	{
+		register ieee8021QBridgePortEntry_t *poIeee8021QBridgePortEntry = NULL;
+		
+		if ((poIeee8021QBridgePortEntry = ieee8021QBridgePortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port)) != NULL &&
+			!ieee8021QBridgePortTable_removeExt (poIeee8021QBridgePortEntry))
+		{
+			goto ieee8021BridgeBasePortTable_hierUpdate_cleanup;
+		}
+		break;
+	}
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgeBasePortTable_hierUpdate_cleanup:
 	
 	return bRetCode;
 }

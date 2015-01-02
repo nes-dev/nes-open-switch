@@ -38,12 +38,18 @@ extern "C" {
 bool ethernetUtilsInit (void);
 
 bool
+	ieee8021BridgeBaseTable_hierUpdate (
+		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
+bool
 	ieee8021BridgeBaseRowStatus_update (
 		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021BridgeXPortRowStatus_halUpdate (
 		ieee8021BridgeBaseEntry_t *poComponent,
 		void *pvEntry, int32_t i32Type, uint8_t u8CurStatus, uint8_t u8RowStatus);
+bool
+	ieee8021BridgeBasePortTable_hierUpdate (
+		ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	ieee8021BridgeBasePortRowStatus_update (
 		ieee8021BridgeBaseEntry_t *poComponent,
