@@ -1992,12 +1992,12 @@ neEntPhysicalTable_init (void)
 /* create a new row in the (unsorted) table */
 neEntPhysicalEntry_t *
 neEntPhysicalTable_createEntry (
-	uint32_t u32EntPhysicalIndex)
+	uint32_t u32Index)
 {
 	register neEntPhysicalEntry_t *poEntry = NULL;
 	register entPhysicalData_t *poEntPhysicalData = NULL;
 	
-	if ((poEntPhysicalData = entPhysicalData_createEntry (u32EntPhysicalIndex)) == NULL)
+	if ((poEntPhysicalData = entPhysicalData_createEntry (u32Index)) == NULL)
 	{
 		return NULL;
 	}
@@ -2012,11 +2012,11 @@ neEntPhysicalTable_createEntry (
 
 neEntPhysicalEntry_t *
 neEntPhysicalTable_getByIndex (
-	uint32_t u32EntPhysicalIndex)
+	uint32_t u32Index)
 {
 	register entPhysicalData_t *poEntPhysicalData = NULL;
 	
-	if ((poEntPhysicalData = entPhysicalData_getByIndex (u32EntPhysicalIndex)) == NULL ||
+	if ((poEntPhysicalData = entPhysicalData_getByIndex (u32Index)) == NULL ||
 		!xBitmap_getBit (poEntPhysicalData->au8Flags, entPhysicalFlags_neCreated_c))
 	{
 		return NULL;
@@ -2027,11 +2027,11 @@ neEntPhysicalTable_getByIndex (
 
 neEntPhysicalEntry_t *
 neEntPhysicalTable_getNextIndex (
-	uint32_t u32EntPhysicalIndex)
+	uint32_t u32Index)
 {
 	register entPhysicalData_t *poEntPhysicalData = NULL;
 	
-	if ((poEntPhysicalData = entPhysicalData_getNextIndex (u32EntPhysicalIndex)) == NULL ||
+	if ((poEntPhysicalData = entPhysicalData_getNextIndex (u32Index)) == NULL ||
 		!xBitmap_getBit (poEntPhysicalData->au8Flags, entPhysicalFlags_neCreated_c))
 	{
 		return NULL;
@@ -2055,12 +2055,12 @@ neEntPhysicalTable_removeEntry (neEntPhysicalEntry_t *poEntry)
 
 neEntPhysicalEntry_t *
 neEntPhysicalTable_createExt (
-	uint32_t u32EntPhysicalIndex)
+	uint32_t u32Index)
 {
 	neEntPhysicalEntry_t *poEntry = NULL;
 	
 	poEntry = neEntPhysicalTable_createEntry (
-		u32EntPhysicalIndex);
+		u32Index);
 	if (poEntry == NULL)
 	{
 		goto neEntPhysicalTable_createExt_cleanup;
@@ -2754,12 +2754,12 @@ neEntLogicalTable_init (void)
 /* create a new row in the (unsorted) table */
 neEntLogicalEntry_t *
 neEntLogicalTable_createEntry (
-	uint32_t u32EntLogicalIndex)
+	uint32_t u32Index)
 {
 	register neEntLogicalEntry_t *poEntry = NULL;
 	register entLogicalData_t *poEntLogicalData = NULL;
 	
-	if ((poEntLogicalData = entLogicalData_createEntry (u32EntLogicalIndex)) == NULL)
+	if ((poEntLogicalData = entLogicalData_createEntry (u32Index)) == NULL)
 	{
 		return NULL;
 	}
@@ -2774,11 +2774,11 @@ neEntLogicalTable_createEntry (
 
 neEntLogicalEntry_t *
 neEntLogicalTable_getByIndex (
-	uint32_t u32EntLogicalIndex)
+	uint32_t u32Index)
 {
 	register entLogicalData_t *poEntLogicalData = NULL;
 	
-	if ((poEntLogicalData = entLogicalData_getByIndex (u32EntLogicalIndex)) == NULL ||
+	if ((poEntLogicalData = entLogicalData_getByIndex (u32Index)) == NULL ||
 		!xBitmap_getBit (poEntLogicalData->au8Flags, entLogicalFlags_neCreated_c))
 	{
 		return NULL;
@@ -2789,11 +2789,11 @@ neEntLogicalTable_getByIndex (
 
 neEntLogicalEntry_t *
 neEntLogicalTable_getNextIndex (
-	uint32_t u32EntLogicalIndex)
+	uint32_t u32Index)
 {
 	register entLogicalData_t *poEntLogicalData = NULL;
 	
-	if ((poEntLogicalData = entLogicalData_getNextIndex (u32EntLogicalIndex)) == NULL ||
+	if ((poEntLogicalData = entLogicalData_getNextIndex (u32Index)) == NULL ||
 		!xBitmap_getBit (poEntLogicalData->au8Flags, entLogicalFlags_neCreated_c))
 	{
 		return NULL;

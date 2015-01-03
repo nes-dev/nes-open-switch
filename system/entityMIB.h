@@ -404,7 +404,7 @@ enum
 typedef struct neEntPhysicalEntry_t
 {
 	/* Index values */
-// 	uint32_t u32EntPhysicalIndex;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint32_t u32ContainedIn;
@@ -424,14 +424,14 @@ extern xBTree_t oNeEntPhysicalTable_BTree;
 /* neEntPhysicalTable table mapper */
 void neEntPhysicalTable_init (void);
 neEntPhysicalEntry_t * neEntPhysicalTable_createEntry (
-	uint32_t u32EntPhysicalIndex);
+	uint32_t u32Index);
 neEntPhysicalEntry_t * neEntPhysicalTable_getByIndex (
-	uint32_t u32EntPhysicalIndex);
+	uint32_t u32Index);
 neEntPhysicalEntry_t * neEntPhysicalTable_getNextIndex (
-	uint32_t u32EntPhysicalIndex);
+	uint32_t u32Index);
 void neEntPhysicalTable_removeEntry (neEntPhysicalEntry_t *poEntry);
 neEntPhysicalEntry_t * neEntPhysicalTable_createExt (
-	uint32_t u32EntPhysicalIndex);
+	uint32_t u32Index);
 bool neEntPhysicalTable_removeExt (neEntPhysicalEntry_t *poEntry);
 bool neEntPhysicalTable_createHier (neEntPhysicalEntry_t *poEntry);
 bool neEntPhysicalTable_removeHier (neEntPhysicalEntry_t *poEntry);
@@ -514,7 +514,7 @@ enum
 typedef struct neEntLogicalEntry_t
 {
 	/* Index values */
-// 	uint32_t u32EntLogicalIndex;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t u8RowStatus;
@@ -528,11 +528,11 @@ extern xBTree_t oNeEntLogicalTable_BTree;
 /* neEntLogicalTable table mapper */
 void neEntLogicalTable_init (void);
 neEntLogicalEntry_t * neEntLogicalTable_createEntry (
-	uint32_t u32EntLogicalIndex);
+	uint32_t u32Index);
 neEntLogicalEntry_t * neEntLogicalTable_getByIndex (
-	uint32_t u32EntLogicalIndex);
+	uint32_t u32Index);
 neEntLogicalEntry_t * neEntLogicalTable_getNextIndex (
-	uint32_t u32EntLogicalIndex);
+	uint32_t u32Index);
 void neEntLogicalTable_removeEntry (neEntLogicalEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neEntLogicalTable_getFirst;
@@ -603,7 +603,7 @@ typedef struct neEntLPMappingEntry_t
 {
 	/* Index values */
 // 	uint32_t u32EntLogicalIndex;
-// 	uint32_t u32EntLPPhysicalIndex;
+// 	uint32_t u32PhysicalIndex;
 	
 	/* Column values */
 	uint8_t u8RowStatus;
@@ -618,13 +618,13 @@ extern xBTree_t oNeEntLPMappingTable_BTree;
 void neEntLPMappingTable_init (void);
 neEntLPMappingEntry_t * neEntLPMappingTable_createEntry (
 	uint32_t u32EntLogicalIndex,
-	uint32_t u32EntLPPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 neEntLPMappingEntry_t * neEntLPMappingTable_getByIndex (
 	uint32_t u32EntLogicalIndex,
-	uint32_t u32EntLPPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 neEntLPMappingEntry_t * neEntLPMappingTable_getNextIndex (
 	uint32_t u32EntLogicalIndex,
-	uint32_t u32EntLPPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 void neEntLPMappingTable_removeEntry (neEntLPMappingEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neEntLPMappingTable_getFirst;
