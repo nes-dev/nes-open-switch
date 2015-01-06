@@ -62,7 +62,7 @@ static oid entConfigChange_oid[] = {1,3,6,1,2,1,47,2,0,1};
 
 #if 0
 static bool entPhysicalTable_getChassis (
-	uint32_t u32EntPhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
+	uint32_t u32PhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
 	uint32_t *pu32ChassisIndex);
 #endif
 
@@ -419,10 +419,10 @@ entPhysicalTable_removeEntry (entPhysicalEntry_t *poEntry)
 
 bool
 entPhysicalTable_getChassis (
-	uint32_t u32EntPhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
+	uint32_t u32PhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
 	uint32_t *pu32ChassisIndex)
 {
-	xUnused (u32EntPhysicalIndex);
+	xUnused (u32PhysicalIndex);
 	
 	if (i32Class == entPhysicalClass_stack_c ||
 		i32Class == entPhysicalClass_chassis_c ||
@@ -3177,13 +3177,13 @@ neEntLPMappingTable_init (void)
 /* create a new row in the (unsorted) table */
 neEntLPMappingEntry_t *
 neEntLPMappingTable_createEntry (
-	uint32_t u32EntLogicalIndex,
+	uint32_t u32LogicalIndex,
 	uint32_t u32EntLPPhysicalIndex)
 {
 	register neEntLPMappingEntry_t *poEntry = NULL;
 	register entLPMappingData_t *poEntLPMappingData = NULL;
 	
-	if ((poEntLPMappingData = entLPMappingData_createEntry (u32EntLogicalIndex, u32EntLPPhysicalIndex)) == NULL)
+	if ((poEntLPMappingData = entLPMappingData_createEntry (u32LogicalIndex, u32EntLPPhysicalIndex)) == NULL)
 	{
 		return NULL;
 	}
@@ -3198,12 +3198,12 @@ neEntLPMappingTable_createEntry (
 
 neEntLPMappingEntry_t *
 neEntLPMappingTable_getByIndex (
-	uint32_t u32EntLogicalIndex,
+	uint32_t u32LogicalIndex,
 	uint32_t u32EntLPPhysicalIndex)
 {
 	register entLPMappingData_t *poEntLPMappingData = NULL;
 	
-	if ((poEntLPMappingData = entLPMappingData_getByIndex (u32EntLogicalIndex, u32EntLPPhysicalIndex)) == NULL ||
+	if ((poEntLPMappingData = entLPMappingData_getByIndex (u32LogicalIndex, u32EntLPPhysicalIndex)) == NULL ||
 		!xBitmap_getBit (poEntLPMappingData->au8Flags, entLPMappingFlags_neCreated_c))
 	{
 		return NULL;
@@ -3214,12 +3214,12 @@ neEntLPMappingTable_getByIndex (
 
 neEntLPMappingEntry_t *
 neEntLPMappingTable_getNextIndex (
-	uint32_t u32EntLogicalIndex,
+	uint32_t u32LogicalIndex,
 	uint32_t u32EntLPPhysicalIndex)
 {
 	register entLPMappingData_t *poEntLPMappingData = NULL;
 	
-	if ((poEntLPMappingData = entLPMappingData_getNextIndex (u32EntLogicalIndex, u32EntLPPhysicalIndex)) == NULL ||
+	if ((poEntLPMappingData = entLPMappingData_getNextIndex (u32LogicalIndex, u32EntLPPhysicalIndex)) == NULL ||
 		!xBitmap_getBit (poEntLPMappingData->au8Flags, entLPMappingFlags_neCreated_c))
 	{
 		return NULL;
@@ -3611,8 +3611,8 @@ neEntPortData_BTreeNodeCmp (
 	register neEntPortData_t *pEntry2 = xBTree_entry (pNode2, neEntPortData_t, oBTreeNode);
 	
 	return
-		(pEntry1->u32EntPhysicalIndex < pEntry2->u32EntPhysicalIndex) ? -1:
-		(pEntry1->u32EntPhysicalIndex == pEntry2->u32EntPhysicalIndex) ? 0: 1;
+		(pEntry1->u32PhysicalIndex < pEntry2->u32PhysicalIndex) ? -1:
+		(pEntry1->u32PhysicalIndex == pEntry2->u32PhysicalIndex) ? 0: 1;
 }
 
 static int8_t
@@ -3647,7 +3647,7 @@ static xBTree_t oNeEntPortData_Map_BTree = xBTree_initInline (&neEntPortData_Map
 /* create a new row in the (unsorted) table */
 neEntPortData_t *
 neEntPortData_createEntry (
-	uint32_t u32EntPhysicalIndex)
+	uint32_t u32PhysicalIndex)
 {
 	register neEntPortData_t *poEntry = NULL;
 	
@@ -3656,7 +3656,7 @@ neEntPortData_createEntry (
 		return NULL;
 	}
 	
-	poEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	poEntry->u32PhysicalIndex = u32PhysicalIndex;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortData_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -3673,7 +3673,7 @@ neEntPortData_createEntry (
 
 neEntPortData_t *
 neEntPortData_getByIndex (
-	uint32_t u32EntPhysicalIndex)
+	uint32_t u32PhysicalIndex)
 {
 	register neEntPortData_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -3683,7 +3683,7 @@ neEntPortData_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntPortData_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -3696,7 +3696,7 @@ neEntPortData_getByIndex (
 
 neEntPortData_t *
 neEntPortData_getNextIndex (
-	uint32_t u32EntPhysicalIndex)
+	uint32_t u32PhysicalIndex)
 {
 	register neEntPortData_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -3706,7 +3706,7 @@ neEntPortData_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->u32EntPhysicalIndex = u32EntPhysicalIndex;
+	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntPortData_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -3735,12 +3735,12 @@ neEntPortData_removeEntry (neEntPortData_t *poEntry)
 /* create a new row in the (unsorted) table */
 neEntPortEntry_t *
 neEntPortTable_createEntry (
-	uint32_t u32EntPhysicalIndex)
+	uint32_t u32PhysicalIndex)
 {
 	register neEntPortEntry_t *poEntry = NULL;
 	register neEntPortData_t *poNeEntPort = NULL;
 	
-	if ((poNeEntPort = neEntPortData_createEntry (u32EntPhysicalIndex)) == NULL)
+	if ((poNeEntPort = neEntPortData_createEntry (u32PhysicalIndex)) == NULL)
 	{
 		return NULL;
 	}
@@ -3756,11 +3756,11 @@ neEntPortTable_createEntry (
 
 neEntPortEntry_t *
 neEntPortTable_getByIndex (
-	uint32_t u32EntPhysicalIndex)
+	uint32_t u32PhysicalIndex)
 {
 	register neEntPortData_t *poNeEntPort = NULL;
 	
-	if ((poNeEntPort = neEntPortData_getByIndex (u32EntPhysicalIndex)) == NULL ||
+	if ((poNeEntPort = neEntPortData_getByIndex (u32PhysicalIndex)) == NULL ||
 		!xBitmap_getBit (poNeEntPort->au8Flags, neEntPortFlags_portCreated_c))
 	{
 		return NULL;
@@ -3771,11 +3771,11 @@ neEntPortTable_getByIndex (
 
 neEntPortEntry_t *
 neEntPortTable_getNextIndex (
-	uint32_t u32EntPhysicalIndex)
+	uint32_t u32PhysicalIndex)
 {
 	register neEntPortData_t *poNeEntPort = NULL;
 	
-	if ((poNeEntPort = neEntPortData_getNextIndex (u32EntPhysicalIndex)) == NULL ||
+	if ((poNeEntPort = neEntPortData_getNextIndex (u32PhysicalIndex)) == NULL ||
 		!xBitmap_getBit (poNeEntPort->au8Flags, neEntPortFlags_portCreated_c))
 	{
 		return NULL;
@@ -3962,7 +3962,7 @@ neEntPortTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, neEntPortData_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32EntPhysicalIndex);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PhysicalIndex);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntPortData_BTree);
 	return put_index_data;
@@ -4523,7 +4523,7 @@ neEntChassisPortTable_mapper (
 			switch (table_info->colnum)
 			{
 			case NEENTCHASSISPORTENTINDEX:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, poNeEntPortData->u32EntPhysicalIndex);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, poNeEntPortData->u32PhysicalIndex);
 				break;
 				
 			default:

@@ -602,7 +602,7 @@ enum
 typedef struct neEntLPMappingEntry_t
 {
 	/* Index values */
-// 	uint32_t u32EntLogicalIndex;
+// 	uint32_t u32LogicalIndex;
 // 	uint32_t u32PhysicalIndex;
 	
 	/* Column values */
@@ -617,13 +617,13 @@ extern xBTree_t oNeEntLPMappingTable_BTree;
 /* neEntLPMappingTable table mapper */
 void neEntLPMappingTable_init (void);
 neEntLPMappingEntry_t * neEntLPMappingTable_createEntry (
-	uint32_t u32EntLogicalIndex,
+	uint32_t u32LogicalIndex,
 	uint32_t u32PhysicalIndex);
 neEntLPMappingEntry_t * neEntLPMappingTable_getByIndex (
-	uint32_t u32EntLogicalIndex,
+	uint32_t u32LogicalIndex,
 	uint32_t u32PhysicalIndex);
 neEntLPMappingEntry_t * neEntLPMappingTable_getNextIndex (
-	uint32_t u32EntLogicalIndex,
+	uint32_t u32LogicalIndex,
 	uint32_t u32PhysicalIndex);
 void neEntLPMappingTable_removeEntry (neEntLPMappingEntry_t *poEntry);
 #ifdef SNMP_SRC
@@ -968,7 +968,7 @@ enum
 typedef struct neEntPortEntry_t
 {
 	/* Index values */
-	uint32_t u32EntPhysicalIndex;
+	uint32_t u32PhysicalIndex;
 	
 	/* Column values */
 	uint32_t u32ChassisIndex;
@@ -992,11 +992,11 @@ extern xBTree_t oNeEntPortTable_Id_BTree;
 /* neEntPortTable table mapper */
 void neEntPortTable_init (void);
 neEntPortEntry_t * neEntPortTable_createEntry (
-	uint32_t u32EntPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 neEntPortEntry_t * neEntPortTable_getByIndex (
-	uint32_t u32EntPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 neEntPortEntry_t * neEntPortTable_getNextIndex (
-	uint32_t u32EntPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 void neEntPortTable_removeEntry (neEntPortEntry_t *poEntry);
 bool neEntPortRowStatus_handler (
 	neEntPortEntry_t *poEntry,
@@ -1060,7 +1060,7 @@ enum
 
 typedef struct neEntPortData_t
 {
-	uint32_t u32EntPhysicalIndex;
+	uint32_t u32PhysicalIndex;
 	uint32_t u32ChassisIndex;
 	uint32_t u32PortIndex;
 	uint32_t u32IfIndex;
@@ -1080,11 +1080,11 @@ typedef struct neEntPortData_t
 // extern xBTree_t oNeEntPortData_Map_BTree;
 
 neEntPortData_t * neEntPortData_createEntry (
-	uint32_t u32EntPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 neEntPortData_t * neEntPortData_getByIndex (
-	uint32_t u32EntPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 neEntPortData_t * neEntPortData_getNextIndex (
-	uint32_t u32EntPhysicalIndex);
+	uint32_t u32PhysicalIndex);
 #define neEntPortData_getByPortEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), neEntPortData_t, oPort))
 #define neEntPortData_getByMapEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), neEntPortData_t, oMap))
 void neEntPortData_removeEntry (neEntPortData_t *poEntry);

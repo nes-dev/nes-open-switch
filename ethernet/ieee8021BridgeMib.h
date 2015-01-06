@@ -339,14 +339,14 @@ typedef struct ieee8021BridgeBaseIfToPortEntry_t
 /* ieee8021BridgeBaseIfToPortTable table mapper */
 void ieee8021BridgeBaseIfToPortTable_init (void);
 ieee8021BridgeBaseIfToPortEntry_t * ieee8021BridgeBaseIfToPortTable_createEntry (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 ieee8021BridgeBaseIfToPortEntry_t * ieee8021BridgeBaseIfToPortTable_getByIndex (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 ieee8021BridgeBaseIfToPortEntry_t * ieee8021BridgeBaseIfToPortTable_getNextIndex (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 void ieee8021BridgeBaseIfToPortTable_removeEntry (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
 ieee8021BridgeBaseIfToPortEntry_t *ieee8021BridgeBaseIfToPortTable_createExt (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 bool ieee8021BridgeBaseIfToPortTable_removeExt (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
 bool ieee8021BridgeBaseIfToPortTable_createHier (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
 bool ieee8021BridgeBaseIfToPortTable_removeHier (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
@@ -1040,7 +1040,7 @@ enum
 typedef struct ieee8021BridgeILanIfEntry_t
 {
 	/* Index values */
-	uint32_t u32IfIndex;
+	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t u8RowStatus;
@@ -1053,18 +1053,18 @@ extern xBTree_t oIeee8021BridgeILanIfTable_BTree;
 /* ieee8021BridgeILanIfTable table mapper */
 void ieee8021BridgeILanIfTable_init (void);
 ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_createEntry (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_getByIndex (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_getNextIndex (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 void ieee8021BridgeILanIfTable_removeEntry (ieee8021BridgeILanIfEntry_t *poEntry);
 ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_createRegister (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 bool ieee8021BridgeILanIfTable_removeRegister (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 ieee8021BridgeILanIfEntry_t * ieee8021BridgeILanIfTable_createExt (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 bool ieee8021BridgeILanIfTable_removeExt (ieee8021BridgeILanIfEntry_t *poEntry);
 bool ieee8021BridgeILanIfTable_createHier (ieee8021BridgeILanIfEntry_t *poEntry);
 bool ieee8021BridgeILanIfTable_removeHier (ieee8021BridgeILanIfEntry_t *poEntry);

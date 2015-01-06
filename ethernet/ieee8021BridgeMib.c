@@ -2143,8 +2143,8 @@ ieee8021BridgeBaseIfToPortTable_BTreeNodeCmp (
 	register ieee8021BridgeBaseIfToPortEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021BridgeBaseIfToPortEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ? -1:
-		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
+		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
 }
 
 xBTree_t oIeee8021BridgeBaseIfToPortTable_BTree = xBTree_initInline (&ieee8021BridgeBaseIfToPortTable_BTreeNodeCmp);
@@ -2152,7 +2152,7 @@ xBTree_t oIeee8021BridgeBaseIfToPortTable_BTree = xBTree_initInline (&ieee8021Br
 /* create a new row in the (unsorted) table */
 ieee8021BridgeBaseIfToPortEntry_t *
 ieee8021BridgeBaseIfToPortTable_createEntry (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	register ieee8021BridgeBaseIfToPortEntry_t *poEntry = NULL;
 	
@@ -2161,7 +2161,7 @@ ieee8021BridgeBaseIfToPortTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->u32IfIndex = u32IfIndex;
+	poEntry->u32Index = u32Index;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgeBaseIfToPortTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -2174,7 +2174,7 @@ ieee8021BridgeBaseIfToPortTable_createEntry (
 
 ieee8021BridgeBaseIfToPortEntry_t *
 ieee8021BridgeBaseIfToPortTable_getByIndex (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	register ieee8021BridgeBaseIfToPortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -2184,7 +2184,7 @@ ieee8021BridgeBaseIfToPortTable_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->u32Index = u32Index;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021BridgeBaseIfToPortTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -2197,7 +2197,7 @@ ieee8021BridgeBaseIfToPortTable_getByIndex (
 
 ieee8021BridgeBaseIfToPortEntry_t *
 ieee8021BridgeBaseIfToPortTable_getNextIndex (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	register ieee8021BridgeBaseIfToPortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -2207,7 +2207,7 @@ ieee8021BridgeBaseIfToPortTable_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->u32Index = u32Index;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021BridgeBaseIfToPortTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -6444,8 +6444,8 @@ ieee8021BridgeILanIfTable_BTreeNodeCmp (
 	register ieee8021BridgeILanIfEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021BridgeILanIfEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ? -1:
-		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
+		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
 }
 
 xBTree_t oIeee8021BridgeILanIfTable_BTree = xBTree_initInline (&ieee8021BridgeILanIfTable_BTreeNodeCmp);
@@ -6453,7 +6453,7 @@ xBTree_t oIeee8021BridgeILanIfTable_BTree = xBTree_initInline (&ieee8021BridgeIL
 /* create a new row in the (unsorted) table */
 ieee8021BridgeILanIfEntry_t *
 ieee8021BridgeILanIfTable_createEntry (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	register ieee8021BridgeILanIfEntry_t *poEntry = NULL;
 	
@@ -6462,7 +6462,7 @@ ieee8021BridgeILanIfTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->u32IfIndex = u32IfIndex;
+	poEntry->u32Index = u32Index;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgeILanIfTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -6477,7 +6477,7 @@ ieee8021BridgeILanIfTable_createEntry (
 
 ieee8021BridgeILanIfEntry_t *
 ieee8021BridgeILanIfTable_getByIndex (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	register ieee8021BridgeILanIfEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -6487,7 +6487,7 @@ ieee8021BridgeILanIfTable_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->u32Index = u32Index;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021BridgeILanIfTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -6500,7 +6500,7 @@ ieee8021BridgeILanIfTable_getByIndex (
 
 ieee8021BridgeILanIfEntry_t *
 ieee8021BridgeILanIfTable_getNextIndex (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	register ieee8021BridgeILanIfEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -6510,7 +6510,7 @@ ieee8021BridgeILanIfTable_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->u32Index = u32Index;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021BridgeILanIfTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -6653,7 +6653,7 @@ bool
 ieee8021BridgeILanIfTable_createHier (
 	ieee8021BridgeILanIfEntry_t *poEntry)
 {
-	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
+	if (!ifData_createReference (poEntry->u32Index, 0, 0, false, true, false, NULL))
 	{
 		goto ieee8021BridgeILanIfTable_createHier_cleanup;
 	}
@@ -6671,7 +6671,7 @@ bool
 ieee8021BridgeILanIfTable_removeHier (
 	ieee8021BridgeILanIfEntry_t *poEntry)
 {
-	return ifData_removeReference (poEntry->u32IfIndex, true, true, true);
+	return ifData_removeReference (poEntry->u32Index, true, true, true);
 }
 
 bool
@@ -6686,7 +6686,7 @@ ieee8021BridgeILanIfRowStatus_handler (
 		goto ieee8021BridgeILanIfRowStatus_handler_success;
 	}
 	
-	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, false, false, &poILanIfData) ||
+	if (!ifData_createReference (poEntry->u32Index, 0, 0, false, false, false, &poILanIfData) ||
 		!neIfRowStatus_handler (&poILanIfData->oNe, u8RowStatus))
 	{
 		goto ieee8021BridgeILanIfRowStatus_handler_cleanup;
@@ -6727,7 +6727,7 @@ ieee8021BridgeILanIfTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgeILanIfEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32IfIndex);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgeILanIfTable_BTree);
 	return put_index_data;
