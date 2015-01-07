@@ -1989,24 +1989,43 @@ neEntPhysicalTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
+static int8_t
+neEntPhysicalTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntPhysicalEntry_t *pEntry1 = xBTree_entry (pNode1, neEntPhysicalEntry_t, oBTreeNode);
+	register neEntPhysicalEntry_t *pEntry2 = xBTree_entry (pNode2, neEntPhysicalEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+xBTree_t oNeEntPhysicalTable_BTree = xBTree_initInline (&neEntPhysicalTable_BTreeNodeCmp);
+
 /* create a new row in the (unsorted) table */
 neEntPhysicalEntry_t *
 neEntPhysicalTable_createEntry (
 	uint32_t u32Index)
 {
 	register neEntPhysicalEntry_t *poEntry = NULL;
-	register entPhysicalData_t *poEntPhysicalData = NULL;
 	
-	if ((poEntPhysicalData = entPhysicalData_createEntry (u32Index)) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
-	poEntry = &poEntPhysicalData->oNe;
+	
+	poEntry->u32Index = u32Index;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPhysicalTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
 	
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neEntPhysicalStorageType_nonVolatile_c;
 	
-	xBitmap_setBit (poEntPhysicalData->au8Flags, entPhysicalFlags_neCreated_c, 1);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntPhysicalTable_BTree);
 	return poEntry;
 }
 
@@ -2014,42 +2033,60 @@ neEntPhysicalEntry_t *
 neEntPhysicalTable_getByIndex (
 	uint32_t u32Index)
 {
-	register entPhysicalData_t *poEntPhysicalData = NULL;
+	register neEntPhysicalEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poEntPhysicalData = entPhysicalData_getByIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poEntPhysicalData->au8Flags, entPhysicalFlags_neCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poEntPhysicalData->oNe;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntPhysicalTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPhysicalEntry_t, oBTreeNode);
 }
 
 neEntPhysicalEntry_t *
 neEntPhysicalTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register entPhysicalData_t *poEntPhysicalData = NULL;
+	register neEntPhysicalEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poEntPhysicalData = entPhysicalData_getNextIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poEntPhysicalData->au8Flags, entPhysicalFlags_neCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poEntPhysicalData->oNe;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntPhysicalTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPhysicalEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
 neEntPhysicalTable_removeEntry (neEntPhysicalEntry_t *poEntry)
 {
-	if (poEntry == NULL)
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPhysicalTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	entPhysicalData_removeEntry (entPhysicalData_getByNeEntry (poEntry));
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntPhysicalTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -2075,8 +2112,8 @@ neEntPhysicalTable_createExt (
 	
 	oEntityGeneral.u32LastChangeTime++;	/* TODO */
 	
-	
 neEntPhysicalTable_createExt_cleanup:
+	
 	return poEntry;
 }
 
@@ -2090,12 +2127,12 @@ neEntPhysicalTable_removeExt (neEntPhysicalEntry_t *poEntry)
 		goto neEntPhysicalTable_removeExt_cleanup;
 	}
 	neEntPhysicalTable_removeEntry (poEntry);
-	bRetCode = true;
 	
 	oEntityGeneral.u32LastChangeTime--;	/* TODO */
-	
+	bRetCode = true;
 	
 neEntPhysicalTable_removeExt_cleanup:
+	
 	return bRetCode;
 }
 
@@ -2103,10 +2140,8 @@ bool
 neEntPhysicalTable_createHier (
 	neEntPhysicalEntry_t *poEntry)
 {
-	register entPhysicalData_t *poEntPhysicalData = entPhysicalData_getByNeEntry (poEntry);
-	
-	if (entPhysicalTable_getByIndex (poEntPhysicalData->u32Index) == NULL &&
-		entPhysicalTable_createEntry (poEntPhysicalData->u32Index) == NULL)
+	if (entPhysicalTable_getByIndex (poEntry->u32Index) == NULL &&
+		entPhysicalTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto neEntPhysicalTable_createHier_cleanup;
 	}
@@ -2125,9 +2160,8 @@ neEntPhysicalTable_removeHier (
 	neEntPhysicalEntry_t *poEntry)
 {
 	register entPhysicalEntry_t *poEntPhysicalEntry = NULL;
-	register entPhysicalData_t *poEntPhysicalData = entPhysicalData_getByNeEntry (poEntry);
 	
-	if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (poEntPhysicalData->u32Index)) != NULL)
+	if ((poEntPhysicalEntry = entPhysicalTable_getByIndex (poEntry->u32Index)) != NULL)
 	{
 		entPhysicalTable_removeEntry (poEntPhysicalEntry);
 	}

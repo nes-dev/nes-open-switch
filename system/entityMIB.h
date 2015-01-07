@@ -404,7 +404,12 @@ enum
 typedef struct neEntPhysicalEntry_t
 {
 	/* Index values */
-// 	uint32_t u32Index;
+	uint32_t u32Index;
+	
+	uint8_t au8MfgName[32];
+	size_t u16MfgName_len;
+	uint8_t au8SerialNum[32];
+	size_t u16SerialNum_len;
 	
 	/* Column values */
 	uint32_t u32ContainedIn;
@@ -413,10 +418,12 @@ typedef struct neEntPhysicalEntry_t
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
+	entPhysicalEntry_t oPhy;
+	
 	uint32_t u32ChassisIndex;
 	struct neEntPhysicalEntry_t *pOldEntry;
 	
-// 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oBTreeNode;
 } neEntPhysicalEntry_t;
 
 extern xBTree_t oNeEntPhysicalTable_BTree;
