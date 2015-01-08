@@ -360,60 +360,50 @@ entPhysicalEntry_t *
 entPhysicalTable_createEntry (
 	uint32_t u32Index)
 {
-	register entPhysicalData_t *poEntPhysicalData = NULL;
+	register entPhysicalEntry_t *poEntry = NULL;
+	register neEntPhysicalEntry_t *poPhysical = NULL;
 	
-	if ((poEntPhysicalData = entPhysicalData_getByIndex (u32Index)) == NULL ||
-		xBitmap_getBit (poEntPhysicalData->au8Flags, entPhysicalFlags_phyCreated_c))
+	if ((poPhysical = neEntPhysicalTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poPhysical->oPhy;
 	
-	xBitmap_setBit (poEntPhysicalData->au8Flags, entPhysicalFlags_phyCreated_c, 1);
-	return &poEntPhysicalData->oPhy;
+	return poEntry;
 }
 
 entPhysicalEntry_t *
 entPhysicalTable_getByIndex (
 	uint32_t u32Index)
 {
-	register entPhysicalData_t *poEntPhysicalData = NULL;
+	register neEntPhysicalEntry_t *poPhysical = NULL;
 	
-	if ((poEntPhysicalData = entPhysicalData_getByIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poEntPhysicalData->au8Flags, entPhysicalFlags_phyCreated_c))
+	if ((poPhysical = neEntPhysicalTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poEntPhysicalData->oPhy;
+	return &poPhysical->oPhy;
 }
 
 entPhysicalEntry_t *
 entPhysicalTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register entPhysicalData_t *poEntPhysicalData = NULL;
+	register neEntPhysicalEntry_t *poPhysical = NULL;
 	
-	if ((poEntPhysicalData = entPhysicalData_getNextIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poEntPhysicalData->au8Flags, entPhysicalFlags_phyCreated_c))
+	if ((poPhysical = neEntPhysicalTable_getNextIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poEntPhysicalData->oPhy;
+	return &poPhysical->oPhy;
 }
 
 /* remove a row from the table */
 void
 entPhysicalTable_removeEntry (entPhysicalEntry_t *poEntry)
 {
-	if (poEntry == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	register entPhysicalData_t *poEntPhysicalData = entPhysicalData_getByPhyEntry (poEntry);
-	
-	xBitmap_setBit (poEntPhysicalData->au8Flags, entPhysicalFlags_phyCreated_c, 0);
 	return;
 }
 
@@ -431,97 +421,99 @@ entPhysicalTable_getChassis (
 		return false;
 	}
 	
-	register entPhysicalData_t *poContainerEntry = NULL;
+	register neEntPhysicalEntry_t *poContainer = NULL;
 	
 	while (
 		u32ContainedIn != 0 &&
-		(poContainerEntry = entPhysicalData_getByIndex (u32ContainedIn)) != NULL &&
-		poContainerEntry->oPhy.i32Class != entPhysicalClass_chassis_c)
+		(poContainer = neEntPhysicalTable_getByIndex (u32ContainedIn)) != NULL &&
+		poContainer->oPhy.i32Class != entPhysicalClass_chassis_c)
 	{
-		u32ContainedIn = poContainerEntry->oPhy.u32ContainedIn;
+		u32ContainedIn = poContainer->oPhy.u32ContainedIn;
 	}
 	
-	if (poContainerEntry == NULL || poContainerEntry->oPhy.i32Class != entPhysicalClass_chassis_c)
+	if (poContainer == NULL || poContainer->oPhy.i32Class != entPhysicalClass_chassis_c)
 	{
 		return false;
 	}
 	
-	*pu32ChassisIndex = poContainerEntry->u32Index;
+	*pu32ChassisIndex = poContainer->u32Index;
 	return true;
 }
 
 bool
 entPhysicalTable_createEntity (
 	uint32_t u32Index,
-	entPhysicalEntry_t *poEntry)
+	entPhysicalEntry_t *poInEntry)
 {
-	register entPhysicalData_t *poEntPhysicalData = NULL;
+	register bool bRetCode = false;
+	register neEntPhysicalEntry_t *poEntry = NULL;
 	
 	xRwLock_wrLock (&oEntityGeneral.oLock);
 	
-	if ((poEntPhysicalData = entPhysicalData_getByIndex (u32Index)) != NULL)
+	if ((poEntry = neEntPhysicalTable_getByIndex (u32Index)) != NULL)
 	{
-		if (poEntry->i32Class != 0 && poEntPhysicalData->oPhy.i32Class != 0 && poEntPhysicalData->oPhy.i32Class != poEntry->i32Class)
+		if (poInEntry->i32Class != 0 && poEntry->oPhy.i32Class != 0 && poEntry->oPhy.i32Class != poInEntry->i32Class)
 		{
 			goto entPhysicalTable_createEntity_cleanup;
 		}
 	}
 	else
 	{
-		register neEntPhysicalEntry_t *poNeEntPhysicalEntry = NULL;
-		
-		if ((poNeEntPhysicalEntry = neEntPhysicalTable_createExt (u32Index)) == NULL)
+		if ((poEntry = neEntPhysicalTable_createExt (u32Index)) == NULL)
 		{
 			goto entPhysicalTable_createEntity_cleanup;
 		}
-		poEntPhysicalData = entPhysicalData_getByNeEntry (poNeEntPhysicalEntry);
-		memcpy (poEntPhysicalData, poEntry, sizeof (*poEntPhysicalData));
+// 		memcpy (poEntry, poInEntry, sizeof (*poEntry));	/* TODO */
 	}
 	
-	poEntry->i32Class != 0 ? (poEntPhysicalData->oNe.i32Class = poEntry->i32Class): false;
-	poEntry->u32ContainedIn != 0 ? (poEntPhysicalData->oNe.u32ContainedIn = poEntry->u32ContainedIn): false;
-	poEntry->i32ParentRelPos != 0 ? (poEntPhysicalData->oNe.i32ParentRelPos = poEntry->i32ParentRelPos): false;
-	if (poEntry->au8SerialNum != NULL && poEntry->u16SerialNum_len != 0)
+	poInEntry->i32Class != 0 ? (poEntry->i32Class = poInEntry->i32Class): false;
+	poInEntry->u32ContainedIn != 0 ? (poEntry->u32ContainedIn = poInEntry->u32ContainedIn): false;
+	poInEntry->i32ParentRelPos != 0 ? (poEntry->i32ParentRelPos = poInEntry->i32ParentRelPos): false;
+	if (poInEntry->au8MfgName != NULL && poInEntry->u16MfgName_len != 0)
 	{
-		memcpy (poEntPhysicalData->au8SerialNum, poEntry->au8SerialNum, poEntry->u16SerialNum_len);
-		poEntPhysicalData->u16SerialNum_len = poEntry->u16SerialNum_len;
+		memcpy (poEntry->au8MfgName, poInEntry->au8MfgName, poInEntry->u16MfgName_len);
+		poEntry->u16MfgName_len = poInEntry->u16MfgName_len;
+	}
+	if (poInEntry->au8SerialNum != NULL && poInEntry->u16SerialNum_len != 0)
+	{
+		memcpy (poEntry->au8SerialNum, poInEntry->au8SerialNum, poInEntry->u16SerialNum_len);
+		poEntry->u16SerialNum_len = poInEntry->u16SerialNum_len;
 	}
 	
-	if (!neEntPhysicalRowStatus_handler (&poEntPhysicalData->oNe, xRowStatus_active_c))
+	if (!neEntPhysicalRowStatus_handler (poEntry, xRowStatus_active_c))
 	{
 		goto entPhysicalTable_createEntity_cleanup;
 	}
 	
-	xRwLock_unlock (&oEntityGeneral.oLock);
-	return true;
-	
+	bRetCode = true;
 	
 entPhysicalTable_createEntity_cleanup:
 	
 	xRwLock_unlock (&oEntityGeneral.oLock);
-	entPhysicalTable_removeEntity (u32Index);
-	return false;
+	!bRetCode ? entPhysicalTable_removeEntity (u32Index): false;
+	
+	return bRetCode;
 }
 
 bool
 entPhysicalTable_removeEntity (
 	uint32_t u32Index)
 {
-	bool bRetCode = false;
-	register entPhysicalData_t *poEntPhysicalData = NULL;
+	register bool bRetCode = false;
+	register neEntPhysicalEntry_t *poEntry = NULL;
 	
 	xRwLock_wrLock (&oEntityGeneral.oLock);
 	
-	if ((poEntPhysicalData = entPhysicalData_getByIndex (u32Index)) == NULL)
+	if ((poEntry = neEntPhysicalTable_getByIndex (u32Index)) != NULL)
 	{
 		goto entPhysicalTable_removeEntity_cleanup;
 	}
 	
-	if (!neEntPhysicalRowStatus_handler (&poEntPhysicalData->oNe, xRowStatus_destroy_c))
+	if (!neEntPhysicalRowStatus_handler (poEntry, xRowStatus_destroy_c))
 	{
 		goto entPhysicalTable_removeEntity_cleanup;
 	}
-	entPhysicalData_removeEntry (poEntPhysicalData);
+	neEntPhysicalTable_removeEntry (poEntry);
 	
 	bRetCode = true;
 	

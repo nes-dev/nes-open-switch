@@ -7,7 +7,9 @@
 
 <hr>
 
-<a href="https://plus.google.com/105236054684418980818" rel="publisher"></a>
+<a href="https://plus.google.com/+NES-Dev?rel=author" rel="author"></a>
+<a href="https://plus.google.com/110171670192839928333?rel=author" rel="author"></a>
+<a href="https://plus.google.com/105236054684418980818?rel=publisher" rel="publisher"></a>
 Copyright (c) 2013, 2014
     NES &lt;nes.open.switch@gmail.com&gt;
 
