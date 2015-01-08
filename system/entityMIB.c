@@ -2777,24 +2777,43 @@ neEntLogicalTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
+static int8_t
+neEntLogicalTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntLogicalEntry_t *pEntry1 = xBTree_entry (pNode1, neEntLogicalEntry_t, oBTreeNode);
+	register neEntLogicalEntry_t *pEntry2 = xBTree_entry (pNode2, neEntLogicalEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+xBTree_t oNeEntLogicalTable_BTree = xBTree_initInline (&neEntLogicalTable_BTreeNodeCmp);
+
 /* create a new row in the (unsorted) table */
 neEntLogicalEntry_t *
 neEntLogicalTable_createEntry (
 	uint32_t u32Index)
 {
 	register neEntLogicalEntry_t *poEntry = NULL;
-	register entLogicalData_t *poEntLogicalData = NULL;
 	
-	if ((poEntLogicalData = entLogicalData_createEntry (u32Index)) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
-	poEntry = &poEntLogicalData->oNe;
+	
+	poEntry->u32Index = u32Index;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntLogicalTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
 	
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neEntLogicalStorageType_nonVolatile_c;
 	
-	xBitmap_setBit (poEntLogicalData->au8Flags, entLogicalFlags_neCreated_c, 1);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntLogicalTable_BTree);
 	return poEntry;
 }
 
@@ -2802,44 +2821,60 @@ neEntLogicalEntry_t *
 neEntLogicalTable_getByIndex (
 	uint32_t u32Index)
 {
-	register entLogicalData_t *poEntLogicalData = NULL;
+	register neEntLogicalEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poEntLogicalData = entLogicalData_getByIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poEntLogicalData->au8Flags, entLogicalFlags_neCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poEntLogicalData->oNe;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntLogicalTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntLogicalEntry_t, oBTreeNode);
 }
 
 neEntLogicalEntry_t *
 neEntLogicalTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register entLogicalData_t *poEntLogicalData = NULL;
+	register neEntLogicalEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poEntLogicalData = entLogicalData_getNextIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poEntLogicalData->au8Flags, entLogicalFlags_neCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poEntLogicalData->oNe;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntLogicalTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntLogicalEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
 neEntLogicalTable_removeEntry (neEntLogicalEntry_t *poEntry)
 {
-	if (poEntry == NULL)
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntLogicalTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	register entLogicalData_t *poEntLogicalData = entLogicalData_getByNeEntry (poEntry);
-	
-	entLogicalData_removeEntry (poEntLogicalData);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntLogicalTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -2849,7 +2884,7 @@ neEntLogicalTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oEntLogicalData_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oNeEntLogicalTable_BTree);
 	return neEntLogicalTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2858,18 +2893,18 @@ neEntLogicalTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	entLogicalData_t *poEntry = NULL;
+	neEntLogicalEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, entLogicalData_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, neEntLogicalEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oEntLogicalData_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntLogicalTable_BTree);
 	return put_index_data;
 }
 

@@ -521,13 +521,15 @@ enum
 typedef struct neEntLogicalEntry_t
 {
 	/* Index values */
-// 	uint32_t u32Index;
+	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
-// 	xBTree_Node_t oBTreeNode;
+	entLogicalEntry_t oLog;
+	
+	xBTree_Node_t oBTreeNode;
 } neEntLogicalEntry_t;
 
 extern xBTree_t oNeEntLogicalTable_BTree;
