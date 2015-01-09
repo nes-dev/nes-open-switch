@@ -551,38 +551,6 @@ Netsnmp_Node_Handler neEntLogicalTable_mapper;
 #endif	/* SNMP_SRC */
 
 
-enum
-{
-	entLogicalFlags_neCreated_c = 0,
-	entLogicalFlags_logCreated_c = 1,
-	entLogicalFlags_count_c,
-};
-
-typedef struct entLogicalData_t
-{
-	uint32_t u32Index;
-	
-	neEntLogicalEntry_t oNe;
-	entLogicalEntry_t oLog;
-	
-	uint8_t au8Flags[1];
-	
-	xBTree_Node_t oBTreeNode;
-} entLogicalData_t;
-
-// extern xBTree_t oEntLogicalData_BTree;
-
-entLogicalData_t * entLogicalData_createEntry (
-	uint32_t u32Index);
-entLogicalData_t * entLogicalData_getByIndex (
-	uint32_t u32Index);
-entLogicalData_t * entLogicalData_getNextIndex (
-	uint32_t u32Index);
-#define entLogicalData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entLogicalData_t, oNe))
-#define entLogicalData_getByLogEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entLogicalData_t, oLog))
-void entLogicalData_removeEntry (entLogicalData_t *poEntry);
-
-
 /**
  *	table neEntLPMappingTable definitions
  */
