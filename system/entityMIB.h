@@ -453,46 +453,6 @@ Netsnmp_Node_Handler neEntPhysicalTable_mapper;
 #endif	/* SNMP_SRC */
 
 
-enum
-{
-	entPhysicalFlags_neCreated_c = 0,
-	entPhysicalFlags_phyCreated_c = 1,
-	entPhysicalFlags_count_c,
-};
-
-typedef struct entPhysicalData_t
-{
-	uint32_t u32Index;
-	uint8_t au8SerialNum[32];
-	size_t u16SerialNum_len;
-	
-	neEntPhysicalEntry_t oNe;
-	entPhysicalEntry_t oPhy;
-	
-	uint8_t au8Flags[1];
-	
-	xBTree_Node_t oBTreeNode;
-	xBTree_Node_t oSerialNum_BTreeNode;
-} entPhysicalData_t;
-
-// extern xBTree_t oEntPhysicalData_BTree;
-// extern xBTree_t oEntPhysicalData_SerialNum_BTree;
-
-entPhysicalData_t * entPhysicalData_createEntry (
-	uint32_t u32Index);
-bool entPhysicalData_linkSerialNum (entPhysicalData_t *poEntry);
-entPhysicalData_t * entPhysicalData_getByIndex (
-	uint32_t u32Index);
-entPhysicalData_t * entPhysicalData_getBySerialNum (
-	uint8_t *pu8SerialNum,
-	size_t u16SerialNum_len);
-entPhysicalData_t * entPhysicalData_getNextIndex (
-	uint32_t u32Index);
-#define entPhysicalData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entPhysicalData_t, oNe))
-#define entPhysicalData_getByPhyEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entPhysicalData_t, oPhy))
-void entPhysicalData_removeEntry (entPhysicalData_t *poEntry);
-
-
 /**
  *	table neEntLogicalTable definitions
  */
