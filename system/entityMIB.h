@@ -579,14 +579,16 @@ enum
 typedef struct neEntLPMappingEntry_t
 {
 	/* Index values */
-// 	uint32_t u32LogicalIndex;
-// 	uint32_t u32PhysicalIndex;
+	uint32_t u32LogicalIndex;
+	uint32_t u32PhysicalIndex;
 	
 	/* Column values */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
-// 	xBTree_Node_t oBTreeNode;
+	entLPMappingEntry_t oLp;
+	
+	xBTree_Node_t oBTreeNode;
 } neEntLPMappingEntry_t;
 
 extern xBTree_t oNeEntLPMappingTable_BTree;

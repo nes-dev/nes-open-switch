@@ -3127,70 +3127,111 @@ neEntLPMappingTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
+static int8_t
+neEntLPMappingTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntLPMappingEntry_t *pEntry1 = xBTree_entry (pNode1, neEntLPMappingEntry_t, oBTreeNode);
+	register neEntLPMappingEntry_t *pEntry2 = xBTree_entry (pNode2, neEntLPMappingEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32LogicalIndex < pEntry2->u32LogicalIndex) ||
+		(pEntry1->u32LogicalIndex == pEntry2->u32LogicalIndex && pEntry1->u32PhysicalIndex < pEntry2->u32PhysicalIndex) ? -1:
+		(pEntry1->u32LogicalIndex == pEntry2->u32LogicalIndex && pEntry1->u32PhysicalIndex == pEntry2->u32PhysicalIndex) ? 0: 1;
+}
+
+xBTree_t oNeEntLPMappingTable_BTree = xBTree_initInline (&neEntLPMappingTable_BTreeNodeCmp);
+
 /* create a new row in the (unsorted) table */
 neEntLPMappingEntry_t *
 neEntLPMappingTable_createEntry (
 	uint32_t u32LogicalIndex,
-	uint32_t u32EntLPPhysicalIndex)
+	uint32_t u32PhysicalIndex)
 {
 	register neEntLPMappingEntry_t *poEntry = NULL;
-	register entLPMappingData_t *poEntLPMappingData = NULL;
 	
-	if ((poEntLPMappingData = entLPMappingData_createEntry (u32LogicalIndex, u32EntLPPhysicalIndex)) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
-	poEntry = &poEntLPMappingData->oNe;
+	
+	poEntry->u32LogicalIndex = u32LogicalIndex;
+	poEntry->u32PhysicalIndex = u32PhysicalIndex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
 	
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neEntLPMappingStorageType_nonVolatile_c;
 	
-	xBitmap_setBit (poEntLPMappingData->au8Flags, entLPMappingFlags_neCreated_c, 1);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree);
 	return poEntry;
 }
 
 neEntLPMappingEntry_t *
 neEntLPMappingTable_getByIndex (
 	uint32_t u32LogicalIndex,
-	uint32_t u32EntLPPhysicalIndex)
+	uint32_t u32PhysicalIndex)
 {
-	register entLPMappingData_t *poEntLPMappingData = NULL;
+	register neEntLPMappingEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poEntLPMappingData = entLPMappingData_getByIndex (u32LogicalIndex, u32EntLPPhysicalIndex)) == NULL ||
-		!xBitmap_getBit (poEntLPMappingData->au8Flags, entLPMappingFlags_neCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poEntLPMappingData->oNe;
+	poTmpEntry->u32LogicalIndex = u32LogicalIndex;
+	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntLPMappingTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntLPMappingEntry_t, oBTreeNode);
 }
 
 neEntLPMappingEntry_t *
 neEntLPMappingTable_getNextIndex (
 	uint32_t u32LogicalIndex,
-	uint32_t u32EntLPPhysicalIndex)
+	uint32_t u32PhysicalIndex)
 {
-	register entLPMappingData_t *poEntLPMappingData = NULL;
+	register neEntLPMappingEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poEntLPMappingData = entLPMappingData_getNextIndex (u32LogicalIndex, u32EntLPPhysicalIndex)) == NULL ||
-		!xBitmap_getBit (poEntLPMappingData->au8Flags, entLPMappingFlags_neCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poEntLPMappingData->oNe;
+	poTmpEntry->u32LogicalIndex = u32LogicalIndex;
+	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntLPMappingTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntLPMappingEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
 neEntLPMappingTable_removeEntry (neEntLPMappingEntry_t *poEntry)
 {
-	if (poEntry == NULL)
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	entLPMappingData_removeEntry (entLPMappingData_getByNeEntry (poEntry));
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -3200,7 +3241,7 @@ neEntLPMappingTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oEntLPMappingData_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oNeEntLPMappingTable_BTree);
 	return neEntLPMappingTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -3209,20 +3250,20 @@ neEntLPMappingTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	entLPMappingData_t *poEntry = NULL;
+	neEntLPMappingEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, entLPMappingData_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, neEntLPMappingEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32LogicalIndex);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PhysicalIndex);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oEntLPMappingData_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree);
 	return put_index_data;
 }
 
