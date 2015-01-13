@@ -2178,6 +2178,9 @@ neEntPhysicalTable_mapper (
 			case NEENTPHYSICALCLASS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Class);
 				break;
+			case NEENTPHYSICALPARENTRELPOS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ParentRelPos);
+				break;
 			case NEENTPHYSICALROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
@@ -2212,6 +2215,14 @@ neEntPhysicalTable_mapper (
 				}
 				break;
 			case NEENTPHYSICALCLASS:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTPHYSICALPARENTRELPOS:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -2358,6 +2369,20 @@ neEntPhysicalTable_mapper (
 				
 				table_entry->i32Class = *request->requestvb->val.integer;
 				break;
+			case NEENTPHYSICALPARENTRELPOS:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32ParentRelPos))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32ParentRelPos, sizeof (table_entry->i32ParentRelPos));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32ParentRelPos = *request->requestvb->val.integer;
+				break;
 			case NEENTPHYSICALSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
@@ -2419,6 +2444,9 @@ neEntPhysicalTable_mapper (
 				break;
 			case NEENTPHYSICALCLASS:
 				memcpy (&table_entry->i32Class, pvOldDdata, sizeof (table_entry->i32Class));
+				break;
+			case NEENTPHYSICALPARENTRELPOS:
+				memcpy (&table_entry->i32ParentRelPos, pvOldDdata, sizeof (table_entry->i32ParentRelPos));
 				break;
 			case NEENTPHYSICALROWSTATUS:
 				switch (*request->requestvb->val.integer)
