@@ -565,6 +565,7 @@ neEntLPMappingEntry_t * neEntLPMappingTable_getByIndex (
 neEntLPMappingEntry_t * neEntLPMappingTable_getNextIndex (
 	uint32_t u32LogicalIndex,
 	uint32_t u32PhysicalIndex);
+#define neEntLPMappingTable_getByLpEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), neEntLPMappingEntry_t, oLp))
 void neEntLPMappingTable_removeEntry (neEntLPMappingEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neEntLPMappingTable_getFirst;

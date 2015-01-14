@@ -1041,16 +1041,16 @@ entLPMappingTable_createEntry (
 	uint32_t u32LogicalIndex,
 	uint32_t u32PhysicalIndex)
 {
-	register entLPMappingData_t *poEntLPMappingData = NULL;
+	register entLPMappingEntry_t *poEntry = NULL;
+	register neEntLPMappingEntry_t *poLPMapping = NULL;
 	
-	if ((poEntLPMappingData = entLPMappingData_getByIndex (u32LogicalIndex, u32PhysicalIndex)) == NULL ||
-		xBitmap_getBit (poEntLPMappingData->au8Flags, entLPMappingFlags_lpCreated_c))
+	if ((poLPMapping = neEntLPMappingTable_getByIndex (u32LogicalIndex, u32PhysicalIndex)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poLPMapping->oLp;
 	
-	xBitmap_setBit (poEntLPMappingData->au8Flags, entLPMappingFlags_lpCreated_c, 1);
-	return &poEntLPMappingData->oLp;
+	return poEntry;
 }
 
 entLPMappingEntry_t *
@@ -1058,15 +1058,14 @@ entLPMappingTable_getByIndex (
 	uint32_t u32LogicalIndex,
 	uint32_t u32PhysicalIndex)
 {
-	register entLPMappingData_t *poEntLPMappingData = NULL;
+	register neEntLPMappingEntry_t *poLPMapping = NULL;
 	
-	if ((poEntLPMappingData = entLPMappingData_getByIndex (u32LogicalIndex, u32PhysicalIndex)) == NULL ||
-		!xBitmap_getBit (poEntLPMappingData->au8Flags, entLPMappingFlags_lpCreated_c))
+	if ((poLPMapping = neEntLPMappingTable_getByIndex (u32LogicalIndex, u32PhysicalIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poEntLPMappingData->oLp;
+	return &poLPMapping->oLp;
 }
 
 entLPMappingEntry_t *
@@ -1074,29 +1073,20 @@ entLPMappingTable_getNextIndex (
 	uint32_t u32LogicalIndex,
 	uint32_t u32PhysicalIndex)
 {
-	register entLPMappingData_t *poEntLPMappingData = NULL;
+	register neEntLPMappingEntry_t *poLPMapping = NULL;
 	
-	if ((poEntLPMappingData = entLPMappingData_getNextIndex (u32LogicalIndex, u32PhysicalIndex)) == NULL ||
-		!xBitmap_getBit (poEntLPMappingData->au8Flags, entLPMappingFlags_lpCreated_c))
+	if ((poLPMapping = neEntLPMappingTable_getNextIndex (u32LogicalIndex, u32PhysicalIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poEntLPMappingData->oLp;
+	return &poLPMapping->oLp;
 }
 
 /* remove a row from the table */
 void
 entLPMappingTable_removeEntry (entLPMappingEntry_t *poEntry)
 {
-	if (poEntry == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	register entLPMappingData_t *poEntLPMappingData = entLPMappingData_getByLpEntry (poEntry);
-	
-	xBitmap_setBit (poEntLPMappingData->au8Flags, entLPMappingFlags_lpCreated_c, 0);
 	return;
 }
 
@@ -1106,7 +1096,7 @@ entLPMappingTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oEntLPMappingData_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oNeEntLPMappingTable_BTree);
 	return entLPMappingTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -1115,20 +1105,20 @@ entLPMappingTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	entLPMappingData_t *poEntry = NULL;
+	neEntLPMappingEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, entLPMappingData_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, neEntLPMappingEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32LogicalIndex);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PhysicalIndex);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oEntLPMappingData_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeEntLPMappingTable_BTree);
 	return put_index_data;
 }
 
@@ -1181,12 +1171,12 @@ entLPMappingTable_mapper (
 				continue;
 			}
 			
-			register entLPMappingData_t *poEntLPMappingData = entLPMappingData_getByLpEntry (table_entry);
+			register neEntLPMappingEntry_t *poLPMapping = neEntLPMappingTable_getByLpEntry (table_entry);
 			
 			switch (table_info->colnum)
 			{
 			case ENTLPPHYSICALINDEX:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, poEntLPMappingData->u32PhysicalIndex);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, poLPMapping->u32PhysicalIndex);
 				break;
 				
 			default:
