@@ -164,8 +164,6 @@ entPhysicalEntry_t * entPhysicalTable_createEntry (
 	uint32_t u32Index);
 entPhysicalEntry_t * entPhysicalTable_getByIndex (
 	uint32_t u32Index);
-entPhysicalEntry_t * entPhysicalTable_getBySerialNum (
-	uint8_t pu8SerialNum, size_t u16SerialNum_len);
 entPhysicalEntry_t * entPhysicalTable_getNextIndex (
 	uint32_t u32Index);
 void entPhysicalTable_removeEntry (entPhysicalEntry_t *poEntry);
@@ -425,16 +423,22 @@ typedef struct neEntPhysicalEntry_t
 	struct neEntPhysicalEntry_t *pOldEntry;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oSerialNum_BTreeNode;
 } neEntPhysicalEntry_t;
 
 extern xBTree_t oNeEntPhysicalTable_BTree;
+extern xBTree_t oNeEntPhysicalTable_SerialNum_BTree;
 
 /* neEntPhysicalTable table mapper */
 void neEntPhysicalTable_init (void);
 neEntPhysicalEntry_t * neEntPhysicalTable_createEntry (
 	uint32_t u32Index);
+bool neEntPhysicalTable_linkSerialNum (neEntPhysicalEntry_t *poEntry);
 neEntPhysicalEntry_t * neEntPhysicalTable_getByIndex (
 	uint32_t u32Index);
+neEntPhysicalEntry_t * neEntPhysicalTable_getBySerialNum (
+	uint8_t *pu8MfgName, size_t u16MfgName_len,
+	uint8_t *pu8SerialNum, size_t u16SerialNum_len);
 neEntPhysicalEntry_t * neEntPhysicalTable_getNextIndex (
 	uint32_t u32Index);
 void neEntPhysicalTable_removeEntry (neEntPhysicalEntry_t *poEntry);

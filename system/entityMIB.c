@@ -309,12 +309,12 @@ entPhysicalTable_createEntity (
 	poInEntry->i32Class != 0 ? (poEntry->i32Class = poInEntry->i32Class): false;
 	poInEntry->u32ContainedIn != 0 ? (poEntry->u32ContainedIn = poInEntry->u32ContainedIn): false;
 	poInEntry->i32ParentRelPos != 0 ? (poEntry->i32ParentRelPos = poInEntry->i32ParentRelPos): false;
-	if (poInEntry->au8MfgName != NULL && poInEntry->u16MfgName_len != 0)
+	if (poInEntry->au8MfgName[0] != 0 && poInEntry->u16MfgName_len != 0)
 	{
 		memcpy (poEntry->au8MfgName, poInEntry->au8MfgName, poInEntry->u16MfgName_len);
 		poEntry->u16MfgName_len = poInEntry->u16MfgName_len;
 	}
-	if (poInEntry->au8SerialNum != NULL && poInEntry->u16SerialNum_len != 0)
+	if (poInEntry->au8SerialNum[0] != 0 && poInEntry->u16SerialNum_len != 0)
 	{
 		memcpy (poEntry->au8SerialNum, poInEntry->au8SerialNum, poInEntry->u16SerialNum_len);
 		poEntry->u16SerialNum_len = poInEntry->u16SerialNum_len;
@@ -1715,7 +1715,21 @@ neEntPhysicalTable_BTreeNodeCmp (
 		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
 }
 
+static int8_t
+neEntPhysicalTable_SerialNum_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntPhysicalEntry_t *pEntry1 = xBTree_entry (pNode1, neEntPhysicalEntry_t, oBTreeNode);
+	register neEntPhysicalEntry_t *pEntry2 = xBTree_entry (pNode2, neEntPhysicalEntry_t, oBTreeNode);
+	
+	return
+		(xBinCmp (pEntry1->au8MfgName, pEntry2->au8MfgName, pEntry1->u16MfgName_len, pEntry2->u16MfgName_len) == -1) ||
+		(xBinCmp (pEntry1->au8MfgName, pEntry2->au8MfgName, pEntry1->u16MfgName_len, pEntry2->u16MfgName_len) == 0 && xBinCmp (pEntry1->au8SerialNum, pEntry2->au8SerialNum, pEntry1->u16SerialNum_len, pEntry2->u16SerialNum_len) == -1) ? -1:
+		(xBinCmp (pEntry1->au8MfgName, pEntry2->au8MfgName, pEntry1->u16MfgName_len, pEntry2->u16MfgName_len) == 0 && xBinCmp (pEntry1->au8SerialNum, pEntry2->au8SerialNum, pEntry1->u16SerialNum_len, pEntry2->u16SerialNum_len) == 0) ? 0: 1;
+}
+
 xBTree_t oNeEntPhysicalTable_BTree = xBTree_initInline (&neEntPhysicalTable_BTreeNodeCmp);
+xBTree_t oNeEntPhysicalTable_SerialNum_BTree = xBTree_initInline (&neEntPhysicalTable_SerialNum_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */
 neEntPhysicalEntry_t *
@@ -1743,6 +1757,31 @@ neEntPhysicalTable_createEntry (
 	return poEntry;
 }
 
+bool
+neEntPhysicalTable_linkSerialNum (neEntPhysicalEntry_t *poEntry)
+{
+	register neEntPhysicalEntry_t *poTmpEntry = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return false;
+	}
+	
+	memcpy (poTmpEntry->au8MfgName, poEntry->au8MfgName, poEntry->u16MfgName_len);
+	poTmpEntry->u16MfgName_len = poEntry->u16MfgName_len;
+	memcpy (poTmpEntry->au8SerialNum, poEntry->au8SerialNum, poEntry->u16SerialNum_len);
+	poTmpEntry->u16SerialNum_len = poEntry->u16SerialNum_len;
+	if (xBTree_nodeFind (&poTmpEntry->oSerialNum_BTreeNode, &oNeEntPhysicalTable_SerialNum_BTree) != NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return false;
+	}
+	xBuffer_free (poTmpEntry);
+	
+	xBTree_nodeAdd (&poEntry->oSerialNum_BTreeNode, &oNeEntPhysicalTable_SerialNum_BTree);
+	return true;
+}
+
 neEntPhysicalEntry_t *
 neEntPhysicalTable_getByIndex (
 	uint32_t u32Index)
@@ -1764,6 +1803,33 @@ neEntPhysicalTable_getByIndex (
 	
 	xBuffer_free (poTmpEntry);
 	return xBTree_entry (poNode, neEntPhysicalEntry_t, oBTreeNode);
+}
+
+neEntPhysicalEntry_t *
+neEntPhysicalTable_getBySerialNum (
+	uint8_t *pu8MfgName, size_t u16MfgName_len,
+	uint8_t *pu8SerialNum, size_t u16SerialNum_len)
+{
+	register neEntPhysicalEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->au8MfgName, pu8MfgName, u16MfgName_len);
+	poTmpEntry->u16MfgName_len = u16MfgName_len;
+	memcpy (poTmpEntry->au8SerialNum, pu8SerialNum, u16SerialNum_len);
+	poTmpEntry->u16SerialNum_len = u16SerialNum_len;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oSerialNum_BTreeNode, &oNeEntPhysicalTable_SerialNum_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPhysicalEntry_t, oSerialNum_BTreeNode);
 }
 
 neEntPhysicalEntry_t *
@@ -1800,6 +1866,7 @@ neEntPhysicalTable_removeEntry (neEntPhysicalEntry_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntPhysicalTable_BTree);
+	xBTree_nodeRemove (&poEntry->oSerialNum_BTreeNode, &oNeEntPhysicalTable_SerialNum_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
