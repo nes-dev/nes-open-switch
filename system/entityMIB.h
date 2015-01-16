@@ -155,8 +155,7 @@ typedef struct entPhysicalEntry_t
 // 	xBTree_Node_t oBTreeNode;
 } entPhysicalEntry_t;
 
-extern xBTree_t oEntPhysicalTable_BTree;
-extern xBTree_t oEntPhysicalTable_SerialNum_BTree;
+// extern xBTree_t oEntPhysicalTable_BTree;
 
 /* entPhysicalTable table mapper */
 void entPhysicalTable_init (void);
@@ -217,7 +216,7 @@ typedef struct entLogicalEntry_t
 // 	xBTree_Node_t oBTreeNode;
 } entLogicalEntry_t;
 
-extern xBTree_t oEntLogicalTable_BTree;
+// extern xBTree_t oEntLogicalTable_BTree;
 
 /* entLogicalTable table mapper */
 void entLogicalTable_init (void);
@@ -253,7 +252,7 @@ typedef struct entLPMappingEntry_t
 // 	xBTree_Node_t oBTreeNode;
 } entLPMappingEntry_t;
 
-extern xBTree_t oEntLPMappingTable_BTree;
+// extern xBTree_t oEntLPMappingTable_BTree;
 
 /* entLPMappingTable table mapper */
 void entLPMappingTable_init (void);
@@ -577,42 +576,6 @@ Netsnmp_Next_Data_Point neEntLPMappingTable_getNext;
 Netsnmp_Get_Data_Point neEntLPMappingTable_get;
 Netsnmp_Node_Handler neEntLPMappingTable_mapper;
 #endif	/* SNMP_SRC */
-
-
-enum
-{
-	entLPMappingFlags_neCreated_c = 0,
-	entLPMappingFlags_lpCreated_c = 1,
-	entLPMappingFlags_count_c,
-};
-
-typedef struct entLPMappingData_t
-{
-	uint32_t u32LogicalIndex;
-	uint32_t u32PhysicalIndex;
-	
-	neEntLPMappingEntry_t oNe;
-	entLPMappingEntry_t oLp;
-	
-	uint8_t au8Flags[1];
-	
-	xBTree_Node_t oBTreeNode;
-} entLPMappingData_t;
-
-// extern xBTree_t oEntLPMappingData_BTree;
-
-entLPMappingData_t * entLPMappingData_createEntry (
-	uint32_t u32LogicalIndex,
-	uint32_t u32PhysicalIndex);
-entLPMappingData_t * entLPMappingData_getByIndex (
-	uint32_t u32LogicalIndex,
-	uint32_t u32PhysicalIndex);
-entLPMappingData_t * entLPMappingData_getNextIndex (
-	uint32_t u32LogicalIndex,
-	uint32_t u32PhysicalIndex);
-#define entLPMappingData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entLPMappingData_t, oNe))
-#define entLPMappingData_getByLpEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), entLPMappingData_t, oLp))
-void entLPMappingData_removeEntry (entLPMappingData_t *poEntry);
 
 
 /**
