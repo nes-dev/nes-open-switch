@@ -579,6 +579,54 @@ Netsnmp_Node_Handler neEntLPMappingTable_mapper;
 
 
 /**
+ *	table neEntChassisTable definitions
+ */
+#define NEENTCHASSISNUMPORTS 1
+#define NEENTCHASSISPORTTYPES 2
+
+enum
+{
+	/* enums for column neEntChassisPortTypes */
+	neEntChassisPortTypes_bEthernet_c = 0,
+	neEntChassisPortTypes_bSonet_c = 1,
+	neEntChassisPortTypes_bSdh_c = 2,
+	neEntChassisPortTypes_bOtn_c = 3,
+};
+
+/* table neEntChassisTable row entry data structure */
+typedef struct neEntChassisEntry_t
+{
+	/* Index values */
+	uint32_t u32PhysicalIndex;
+	
+	/* Column values */
+	uint32_t u32NumPorts;
+	uint8_t au8PortTypes[1];
+	size_t u16PortTypes_len;	/* # of uint8_t elements */
+	
+	xBTree_Node_t oBTreeNode;
+} neEntChassisEntry_t;
+
+extern xBTree_t oNeEntChassisTable_BTree;
+
+/* neEntChassisTable table mapper */
+void neEntChassisTable_init (void);
+neEntChassisEntry_t * neEntChassisTable_createEntry (
+	uint32_t u32PhysicalIndex);
+neEntChassisEntry_t * neEntChassisTable_getByIndex (
+	uint32_t u32PhysicalIndex);
+neEntChassisEntry_t * neEntChassisTable_getNextIndex (
+	uint32_t u32PhysicalIndex);
+void neEntChassisTable_removeEntry (neEntChassisEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neEntChassisTable_getFirst;
+Netsnmp_Next_Data_Point neEntChassisTable_getNext;
+Netsnmp_Get_Data_Point neEntChassisTable_get;
+Netsnmp_Node_Handler neEntChassisTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
  *	table neEntPortTable definitions
  */
 #define NEENTPORTCHASSISINDEX 1
