@@ -629,10 +629,10 @@ Netsnmp_Node_Handler neEntChassisTable_mapper;
 /**
  *	table neEntPortTable definitions
  */
-#define NEENTPORTCHASSISINDEX 1
-#define NEENTPORTPORTINDEX 2
-#define NEENTPORTIFINDEX 3
-#define NEENTPORTIFTYPE 4
+#define NEENTPORTIFINDEX 1
+#define NEENTPORTIFTYPE 2
+#define NEENTPORTCHASSISINDEX 3
+#define NEENTPORTHINDEX 4
 #define NEENTPORTROWSTATUS 5
 
 enum
@@ -927,10 +927,10 @@ typedef struct neEntPortEntry_t
 	uint32_t u32PhysicalIndex;
 	
 	/* Column values */
-	uint32_t u32ChassisIndex;
-	uint32_t u32PortIndex;
 	uint32_t u32IfIndex;
 	int32_t i32IfType;
+	uint32_t u32ChassisIndex;
+	uint32_t u32PortIndex;
 	uint8_t u8RowStatus;
 	
 	int32_t i32Type;

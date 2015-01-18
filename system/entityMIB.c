@@ -3631,7 +3631,7 @@ neEntPortTable_init (void)
 	netsnmp_table_helper_add_indexes (table_info,
 		ASN_UNSIGNED /* index: entPhysicalIndex */,
 		0);
-	table_info->min_column = NEENTPORTCHASSISINDEX;
+	table_info->min_column = NEENTPORTIFINDEX;
 	table_info->max_column = NEENTPORTROWSTATUS;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
@@ -4062,17 +4062,17 @@ neEntPortTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEENTPORTCHASSISINDEX:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ChassisIndex);
-				break;
-			case NEENTPORTPORTINDEX:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PortIndex);
-				break;
 			case NEENTPORTIFINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32IfIndex);
 				break;
 			case NEENTPORTIFTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32IfType);
+				break;
+			case NEENTPORTCHASSISINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ChassisIndex);
+				break;
+			case NEENTPORTHINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PortIndex);
 				break;
 			case NEENTPORTROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -4096,22 +4096,6 @@ neEntPortTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEENTPORTCHASSISINDEX:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case NEENTPORTPORTINDEX:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
 			case NEENTPORTIFINDEX:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
@@ -4122,6 +4106,14 @@ neEntPortTable_mapper (
 				break;
 			case NEENTPORTIFTYPE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEENTPORTHINDEX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -4196,10 +4188,9 @@ neEntPortTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEENTPORTCHASSISINDEX:
-			case NEENTPORTPORTINDEX:
 			case NEENTPORTIFINDEX:
 			case NEENTPORTIFTYPE:
+			case NEENTPORTHINDEX:
 				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -4245,34 +4236,6 @@ neEntPortTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEENTPORTCHASSISINDEX:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ChassisIndex))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u32ChassisIndex, sizeof (table_entry->u32ChassisIndex));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u32ChassisIndex = *request->requestvb->val.integer;
-				break;
-			case NEENTPORTPORTINDEX:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PortIndex))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u32PortIndex, sizeof (table_entry->u32PortIndex));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u32PortIndex = *request->requestvb->val.integer;
-				break;
 			case NEENTPORTIFINDEX:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32IfIndex))) == NULL)
 				{
@@ -4300,6 +4263,20 @@ neEntPortTable_mapper (
 				}
 				
 				table_entry->i32IfType = *request->requestvb->val.integer;
+				break;
+			case NEENTPORTHINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PortIndex))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32PortIndex, sizeof (table_entry->u32PortIndex));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32PortIndex = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -4343,17 +4320,14 @@ neEntPortTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEENTPORTCHASSISINDEX:
-				memcpy (&table_entry->u32ChassisIndex, pvOldDdata, sizeof (table_entry->u32ChassisIndex));
-				break;
-			case NEENTPORTPORTINDEX:
-				memcpy (&table_entry->u32PortIndex, pvOldDdata, sizeof (table_entry->u32PortIndex));
-				break;
 			case NEENTPORTIFINDEX:
 				memcpy (&table_entry->u32IfIndex, pvOldDdata, sizeof (table_entry->u32IfIndex));
 				break;
 			case NEENTPORTIFTYPE:
 				memcpy (&table_entry->i32IfType, pvOldDdata, sizeof (table_entry->i32IfType));
+				break;
+			case NEENTPORTHINDEX:
+				memcpy (&table_entry->u32PortIndex, pvOldDdata, sizeof (table_entry->u32PortIndex));
 				break;
 			case NEENTPORTROWSTATUS:
 				switch (*request->requestvb->val.integer)
