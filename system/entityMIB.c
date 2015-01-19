@@ -3775,25 +3775,43 @@ neEntPortData_removeEntry (neEntPortData_t *poEntry)
 	return;
 }
 
+static int8_t
+neEntPortTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntPortEntry_t *pEntry1 = xBTree_entry (pNode1, neEntPortEntry_t, oBTreeNode);
+	register neEntPortEntry_t *pEntry2 = xBTree_entry (pNode2, neEntPortEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32PhysicalIndex < pEntry2->u32PhysicalIndex) ? -1:
+		(pEntry1->u32PhysicalIndex == pEntry2->u32PhysicalIndex) ? 0: 1;
+}
+
+xBTree_t oNeEntPortTable_BTree = xBTree_initInline (&neEntPortTable_BTreeNodeCmp);
+
 /* create a new row in the (unsorted) table */
 neEntPortEntry_t *
 neEntPortTable_createEntry (
 	uint32_t u32PhysicalIndex)
 {
 	register neEntPortEntry_t *poEntry = NULL;
-	register neEntPortData_t *poNeEntPort = NULL;
 	
-	if ((poNeEntPort = neEntPortData_createEntry (u32PhysicalIndex)) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
-	poEntry = &poNeEntPort->oPort;
 	
-	poEntry->u32ChassisIndex = 0;
+	poEntry->u32PhysicalIndex = u32PhysicalIndex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
 	poEntry->u32PortIndex = 0;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
-	xBitmap_setBit (poNeEntPort->au8Flags, neEntPortFlags_portCreated_c, 1); 
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntPortTable_BTree);
 	return poEntry;
 }
 
@@ -3801,42 +3819,60 @@ neEntPortEntry_t *
 neEntPortTable_getByIndex (
 	uint32_t u32PhysicalIndex)
 {
-	register neEntPortData_t *poNeEntPort = NULL;
+	register neEntPortEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poNeEntPort = neEntPortData_getByIndex (u32PhysicalIndex)) == NULL ||
-		!xBitmap_getBit (poNeEntPort->au8Flags, neEntPortFlags_portCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poNeEntPort->oPort;
+	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntPortTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPortEntry_t, oBTreeNode);
 }
 
 neEntPortEntry_t *
 neEntPortTable_getNextIndex (
 	uint32_t u32PhysicalIndex)
 {
-	register neEntPortData_t *poNeEntPort = NULL;
+	register neEntPortEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poNeEntPort = neEntPortData_getNextIndex (u32PhysicalIndex)) == NULL ||
-		!xBitmap_getBit (poNeEntPort->au8Flags, neEntPortFlags_portCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poNeEntPort->oPort;
+	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntPortTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neEntPortEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
 neEntPortTable_removeEntry (neEntPortEntry_t *poEntry)
 {
-	if (poEntry == NULL)
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortTable_BTree) == NULL)
 	{
-		return;
+		return;    /* Nothing to remove */
 	}
 	
-	neEntPortData_removeEntry (neEntPortData_getByPortEntry (poEntry));
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntPortTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
