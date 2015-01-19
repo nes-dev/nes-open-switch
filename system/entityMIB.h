@@ -119,35 +119,35 @@ typedef struct entPhysicalEntry_t
 // 	uint32_t u32Index;
 	
 	/* Column values */
-	uint8_t au8Descr[255];
+	uint8_t au8Descr[32];
 	size_t u16Descr_len;	/* # of uint8_t elements */
 	xOid_t aoVendorType[128];
 	size_t u16VendorType_len;	/* # of xOid_t elements */
 	uint32_t u32ContainedIn;
 	int32_t i32Class;
 	int32_t i32ParentRelPos;
-	uint8_t au8Name[255];
+	uint8_t au8Name[32];
 	size_t u16Name_len;	/* # of uint8_t elements */
-	uint8_t au8HardwareRev[255];
+	uint8_t au8HardwareRev[32];
 	size_t u16HardwareRev_len;	/* # of uint8_t elements */
-	uint8_t au8FirmwareRev[255];
+	uint8_t au8FirmwareRev[32];
 	size_t u16FirmwareRev_len;	/* # of uint8_t elements */
-	uint8_t au8SoftwareRev[255];
+	uint8_t au8SoftwareRev[32];
 	size_t u16SoftwareRev_len;	/* # of uint8_t elements */
 	uint8_t au8SerialNum[32];
 	size_t u16SerialNum_len;	/* # of uint8_t elements */
-	uint8_t au8MfgName[255];
+	uint8_t au8MfgName[32];
 	size_t u16MfgName_len;	/* # of uint8_t elements */
-	uint8_t au8ModelName[255];
+	uint8_t au8ModelName[32];
 	size_t u16ModelName_len;	/* # of uint8_t elements */
 	uint8_t au8Alias[32];
 	size_t u16Alias_len;	/* # of uint8_t elements */
 	uint8_t au8AssetID[32];
 	size_t u16AssetID_len;	/* # of uint8_t elements */
-	int32_t i32IsFRU;
+	uint8_t u8IsFRU;
 	uint8_t au8MfgDate[11];
 	size_t u16MfgDate_len;	/* # of uint8_t elements */
-	uint8_t au8Uris[/* TODO: , OCTETSTR, "" */ TOBE_REPLACED];
+	uint8_t au8Uris[0];
 	size_t u16Uris_len;	/* # of uint8_t elements */
 	uint8_t au8UUID[16];
 	size_t u16UUID_len;	/* # of uint8_t elements */
@@ -198,19 +198,19 @@ typedef struct entLogicalEntry_t
 // 	uint32_t u32Index;
 	
 	/* Column values */
-	uint8_t au8Descr[255];
+	uint8_t au8Descr[32];
 	size_t u16Descr_len;	/* # of uint8_t elements */
 	xOid_t aoType[128];
 	size_t u16Type_len;	/* # of xOid_t elements */
-	uint8_t au8Community[255];
+	uint8_t au8Community[32];
 	size_t u16Community_len;	/* # of uint8_t elements */
-	uint8_t au8TAddress[255];
+	uint8_t au8TAddress[32];
 	size_t u16TAddress_len;	/* # of uint8_t elements */
 	xOid_t aoTDomain[128];
 	size_t u16TDomain_len;	/* # of xOid_t elements */
 	uint8_t au8ContextEngineID[32];
 	size_t u16ContextEngineID_len;	/* # of uint8_t elements */
-	uint8_t au8ContextName[255];
+	uint8_t au8ContextName[32];
 	size_t u16ContextName_len;	/* # of uint8_t elements */
 	
 // 	xBTree_Node_t oBTreeNode;

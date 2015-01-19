@@ -489,7 +489,7 @@ entPhysicalTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AssetID, table_entry->u16AssetID_len);
 				break;
 			case ENTPHYSICALISFRU:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32IsFRU);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8IsFRU);
 				break;
 			case ENTPHYSICALMFGDATE:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MfgDate, table_entry->u16MfgDate_len);
