@@ -34,9 +34,14 @@ extern "C" {
 #include <stdint.h>
 
 
-bool neEntPortRowStatus_update (
-	neEntPortEntry_t *poEntry,
-	uint8_t u8RowStatus);
+extern bool
+	neEntChassisRowStatus_update (
+		neEntChassisEntry_t *poEntry,
+		uint8_t u8RowStatus);
+extern bool
+	neEntPortRowStatus_update (
+		neEntPortEntry_t *poEntry,
+		uint8_t u8RowStatus);
 
 
 

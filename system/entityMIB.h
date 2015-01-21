@@ -604,6 +604,8 @@ typedef struct neEntChassisEntry_t
 	uint8_t au8PortTypes[1];
 	size_t u16PortTypes_len;	/* # of uint8_t elements */
 	
+	uint8_t u8RowStatus;
+	
 	xBTree_Node_t oBTreeNode;
 } neEntChassisEntry_t;
 
@@ -618,6 +620,9 @@ neEntChassisEntry_t * neEntChassisTable_getByIndex (
 neEntChassisEntry_t * neEntChassisTable_getNextIndex (
 	uint32_t u32PhysicalIndex);
 void neEntChassisTable_removeEntry (neEntChassisEntry_t *poEntry);
+bool neEntChassisRowStatus_handler (
+	neEntPhysicalEntry_t *poPhysical,
+	neEntChassisEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neEntChassisTable_getFirst;
 Netsnmp_Next_Data_Point neEntChassisTable_getNext;

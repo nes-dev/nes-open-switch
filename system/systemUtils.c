@@ -37,6 +37,18 @@
 
 
 bool
+neEntChassisRowStatus_update (
+	neEntChassisEntry_t *poEntry,
+	uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+//neEntChassisRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 neEntPortRowStatus_update (
 	neEntPortEntry_t *poEntry,
 	uint8_t u8RowStatus)

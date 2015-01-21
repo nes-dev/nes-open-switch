@@ -3514,6 +3514,74 @@ neEntChassisTable_removeEntry (neEntChassisEntry_t *poEntry)
 	return;
 }
 
+bool
+neEntChassisRowStatus_handler (
+	neEntPhysicalEntry_t *poPhysical,
+	neEntChassisEntry_t *poEntry,
+	uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
+	
+	if (poEntry->u8RowStatus == u8RowStatus)
+	{
+		goto neEntChassisRowStatus_handler_success;
+	}
+	if (u8RowStatus & xRowStatus_fromParent_c &&
+		((u8RealStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
+		 (u8RealStatus == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
+	{
+		goto neEntChassisRowStatus_handler_success;
+	}
+	
+	
+	switch (u8RealStatus)
+	{
+	case xRowStatus_active_c:
+		if (!neEntChassisRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto neEntChassisRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!neEntChassisRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto neEntChassisRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus =
+			poEntry->u8RowStatus == xRowStatus_active_c && (u8RowStatus & xRowStatus_fromParent_c) ? xRowStatus_notReady_c: xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		goto neEntChassisRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!neEntChassisRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto neEntChassisRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+neEntChassisRowStatus_handler_success:
+	
+	bRetCode = true;
+	
+neEntChassisRowStatus_handler_cleanup:
+	
+	return bRetCode || (u8RowStatus & xRowStatus_fromParent_c);
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 neEntChassisTable_getFirst (
