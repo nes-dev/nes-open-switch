@@ -605,6 +605,7 @@ typedef struct neEntChassisEntry_t
 	size_t u16PortTypes_len;	/* # of uint8_t elements */
 	
 	uint8_t u8RowStatus;
+	struct neEntChassisEntry_t *pOldEntry;
 	
 	xBTree_Node_t oBTreeNode;
 } neEntChassisEntry_t;

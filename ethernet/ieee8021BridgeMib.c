@@ -1691,6 +1691,29 @@ ieee8021BridgeBasePortTable_mapper (
 	return SNMP_ERR_NOERROR;
 }
 
+/** initialize ieee8021BridgeChassisTable table mapper **/
+bool
+ieee8021BridgeChassis_createRegister (
+	uint32_t u32ChassisId)
+{
+	register bool bRetCode = false;
+	
+//ieee8021BridgeChassis_createRegister_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgeChassis_removeRegister (
+	uint32_t u32ChassisId)
+{
+	register bool bRetCode = false;
+	
+//ieee8021BridgeChassis_removeRegister_cleanup:
+	
+	return bRetCode;
+}
+
 static int8_t
 ieee8021BridgePhyData_If_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)

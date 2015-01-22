@@ -408,6 +408,18 @@ Netsnmp_Node_Handler ieee8021BridgePhyPortTable_mapper;
 #endif	/* SNMP_SRC */
 
 
+/**
+ *	table ieee8021BridgeChassisTable definitions
+ */
+bool ieee8021BridgeChassis_createRegister (
+	uint32_t u32ChassisId);
+bool ieee8021BridgeChassis_removeRegister (
+	uint32_t u32ChassisId);
+
+
+/**
+ *	table ieee8021BridgePhyTable definitions
+ */
 typedef struct ieee8021BridgePhyData_t
 {
 	uint32_t u32IfIndex;

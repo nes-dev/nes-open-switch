@@ -43,7 +43,49 @@ neEntChassisRowStatus_update (
 {
 	register bool bRetCode = false;
 	
-//neEntChassisRowStatus_update_cleanup:
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (xBitmap_getBitRev (poEntry->au8PortTypes, neEntChassisPortTypes_bEthernet_c) && !ieee8021BridgeChassis_createRegister (poEntry->u32PhysicalIndex))
+		{
+			goto neEntChassisRowStatus_update_cleanup;
+		}
+		break;
+		
+	case xRowStatus_notInService_c:
+	case xRowStatus_destroy_c:
+		if (poEntry->pOldEntry == NULL)
+		{
+			if ((poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+			{
+				goto neEntChassisRowStatus_update_cleanup;
+			}
+			memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
+		}
+		break;
+	}
+	
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_destroy_c:
+		if (xBitmap_getBitRev (poEntry->au8PortTypes, neEntChassisPortTypes_bEthernet_c) && !ieee8021BridgeChassis_removeRegister (poEntry->u32PhysicalIndex))
+		{
+			goto neEntChassisRowStatus_update_cleanup;
+		}
+		
+	case xRowStatus_active_c:
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
+		break;
+	}
+	
+	bRetCode = true;
+	
+neEntChassisRowStatus_update_cleanup:
 	
 	return bRetCode;
 }
