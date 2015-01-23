@@ -932,11 +932,16 @@ typedef struct neEntPortEntry_t
 	/* Index values */
 	uint32_t u32PhysicalIndex;
 	
+	struct {
+		uint32_t u32ChassisIndex;
+		uint32_t u32HIndex;
+	} oK;
+	
 	/* Column values */
 	uint32_t u32IfIndex;
 	int32_t i32IfType;
 	uint32_t u32ChassisIndex;
-	uint32_t u32PortIndex;
+	uint32_t u32HIndex;
 	uint8_t u8RowStatus;
 	
 	int32_t i32Type;
@@ -944,12 +949,12 @@ typedef struct neEntPortEntry_t
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oIf_BTreeNode;
-	xBTree_Node_t oId_BTreeNode;
+	xBTree_Node_t oHMap_BTreeNode;
 } neEntPortEntry_t;
 
 extern xBTree_t oNeEntPortTable_BTree;
 extern xBTree_t oNeEntPortTable_If_BTree;
-extern xBTree_t oNeEntPortTable_Id_BTree;
+extern xBTree_t oNeEntPortTable_HMap_BTree;
 
 /* neEntPortTable table mapper */
 void neEntPortTable_init (void);
@@ -959,6 +964,12 @@ neEntPortEntry_t * neEntPortTable_getByIndex (
 	uint32_t u32PhysicalIndex);
 neEntPortEntry_t * neEntPortTable_getNextIndex (
 	uint32_t u32PhysicalIndex);
+neEntPortEntry_t * neEntPortTable_HMap_getByIndex (
+	uint32_t u32ChassisIndex,
+	uint32_t u32HIndex);
+neEntPortEntry_t * neEntPortTable_HMap_getNextIndex (
+	uint32_t u32ChassisIndex,
+	uint32_t u32HIndex);
 void neEntPortTable_removeEntry (neEntPortEntry_t *poEntry);
 bool neEntPortRowStatus_handler (
 	neEntPortEntry_t *poEntry,
@@ -1024,7 +1035,7 @@ typedef struct neEntPortData_t
 {
 	uint32_t u32PhysicalIndex;
 	uint32_t u32ChassisIndex;
-	uint32_t u32PortIndex;
+	uint32_t u32HIndex;
 	uint32_t u32IfIndex;
 	
 	neEntPortEntry_t oPort;
