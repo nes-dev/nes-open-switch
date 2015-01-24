@@ -1880,16 +1880,6 @@ neEntPhysicalRowStatus_handler (
 			
 			if (poEntry->pOldEntry->u32ContainedIn != 0 && poEntry->pOldEntry->u32ContainedIn != poEntry->u32ContainedIn)
 			{
-				if (poEntry->pOldEntry->i32Class == neEntPhysicalClass_port_c)
-				{
-					register neEntChassisPortEntry_t *poNeEntChassisPortEntry = NULL;
-					
-					if ((poNeEntChassisPortEntry = neEntChassisPortTable_getByIndex (poEntry->pOldEntry->u32ChassisIndex, poEntry->u32Index)) != NULL)
-					{
-						neEntChassisPortTable_removeEntry (poNeEntChassisPortEntry);
-					}
-				}
-				
 				register entPhysicalContainsEntry_t *poEntPhysicalContainsEntry = NULL;
 				
 				if ((poEntPhysicalContainsEntry = entPhysicalContainsTable_getByIndex (poEntry->pOldEntry->u32ContainedIn, poEntry->u32Index)) != NULL)
@@ -1903,18 +1893,6 @@ neEntPhysicalRowStatus_handler (
 			entPhysicalContainsTable_createEntry (poEntry->u32ContainedIn, poEntry->u32Index) == NULL)
 		{
 			goto neEntPhysicalRowStatus_handler_cleanup;
-		}
-		
-		if (poEntry->i32Class == neEntPhysicalClass_port_c && poEntry->u32ContainedIn != 0)
-		{
-			uint32_t u32ChassisIndex = 0;
-			
-			if (entPhysicalTable_getChassis (poEntry->u32Index, poEntry->u32ContainedIn, poEntry->i32Class, &u32ChassisIndex) &&
-				neEntChassisPortTable_createEntry (u32ChassisIndex, poEntry->u32Index) == NULL)
-			{
-				goto neEntPhysicalRowStatus_handler_cleanup;
-			}
-			poEntry->u32ChassisIndex = u32ChassisIndex;
 		}
 		
 		if (poEntry->i32Class == neEntPhysicalClass_port_c)
@@ -1999,17 +1977,6 @@ neEntPhysicalRowStatus_handler (
 			if (poNeEntPortEntry != NULL)
 			{
 				neEntPortTable_removeEntry (poNeEntPortEntry);
-			}
-		}
-		
-		if (poEntry->i32Class == neEntPhysicalClass_port_c && poEntry->u32ContainedIn != 0)
-		{
-			register neEntChassisPortEntry_t *poNeEntChassisPortEntry = NULL;
-			
-			if (poEntry->u32ChassisIndex != 0 &&
-				(poNeEntChassisPortEntry = neEntChassisPortTable_getByIndex (poEntry->u32ChassisIndex, poEntry->u32Index)) != NULL)
-			{
-				neEntChassisPortTable_removeEntry (poNeEntChassisPortEntry);
 			}
 		}
 		
@@ -4572,54 +4539,6 @@ neEntChassisPortTable_init (void)
 	netsnmp_register_table_iterator (reg, iinfo);
 	
 	/* Initialise the contents of the table here */
-}
-
-/* create a new row in the (unsorted) table */
-neEntChassisPortEntry_t *
-neEntChassisPortTable_createEntry (
-	uint32_t u32ChassisIndex,
-	uint32_t u32Index)
-{
-	return NULL;
-}
-
-neEntChassisPortEntry_t *
-neEntChassisPortTable_getByIndex (
-	uint32_t u32ChassisIndex,
-	uint32_t u32Index)
-{
-	register neEntPortData_t *poNeEntPortData = NULL;
-	
-	if ((poNeEntPortData = neEntPortData_getByIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poNeEntPortData->au8Flags, ifFlags_ifCreated_c))
-	{
-		return NULL;
-	}
-	
-	return &poNeEntPortData->oMap;
-}
-
-neEntChassisPortEntry_t *
-neEntChassisPortTable_getNextIndex (
-	uint32_t u32ChassisIndex,
-	uint32_t u32Index)
-{
-	register neEntPortData_t *poNeEntPortData = NULL;
-	
-	if ((poNeEntPortData = neEntPortData_getNextIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poNeEntPortData->au8Flags, ifFlags_ifCreated_c))
-	{
-		return NULL;
-	}
-	
-	return &poNeEntPortData->oMap;
-}
-
-/* remove a row from the table */
-void
-neEntChassisPortTable_removeEntry (neEntChassisPortEntry_t *poEntry)
-{
-	return;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */

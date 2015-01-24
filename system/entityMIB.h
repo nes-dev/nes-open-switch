@@ -986,36 +986,26 @@ Netsnmp_Node_Handler neEntPortTable_mapper;
  *	table neEntChassisPortTable definitions
  */
 #define NEENTCHASSISPORTCHASSISINDEX 1
-#define NEENTCHASSISPORTINDEX 2
+#define NEENTCHASSISPORTHINDEX 2
 #define NEENTCHASSISPORTENTINDEX 3
 
 /* table neEntChassisPortTable row entry data structure */
 typedef struct neEntChassisPortEntry_t
 {
 	/* Index values */
-	uint32_t u32ChassisIndex;
-	uint32_t u32Index;
+// 	uint32_t u32ChassisIndex;
+// 	uint32_t u32HIndex;
 	
 	/* Column values */
- 	uint32_t u32EntIndex;
+// 	uint32_t u32EntIndex;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neEntChassisPortEntry_t;
 
-extern xBTree_t oNeEntChassisPortTable_BTree;
+// extern xBTree_t oNeEntChassisPortTable_BTree;
 
 /* neEntChassisPortTable table mapper */
 void neEntChassisPortTable_init (void);
-neEntChassisPortEntry_t * neEntChassisPortTable_createEntry (
-	uint32_t u32ChassisIndex,
-	uint32_t u32Index);
-neEntChassisPortEntry_t * neEntChassisPortTable_getByIndex (
-	uint32_t u32ChassisIndex,
-	uint32_t u32Index);
-neEntChassisPortEntry_t * neEntChassisPortTable_getNextIndex (
-	uint32_t u32ChassisIndex,
-	uint32_t u32Index);
-void neEntChassisPortTable_removeEntry (neEntChassisPortEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neEntChassisPortTable_getFirst;
 Netsnmp_Next_Data_Point neEntChassisPortTable_getNext;
