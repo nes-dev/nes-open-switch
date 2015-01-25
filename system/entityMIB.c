@@ -61,13 +61,6 @@ static oid snmptrap_oid[] = {1,3,6,1,6,3,1,1,4,1,0};
 static oid entConfigChange_oid[] = {1,3,6,1,2,1,47,2,0,1};
 
 
-#if 0
-static bool entPhysicalTable_getChassis (
-	uint32_t u32PhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
-	uint32_t *pu32ChassisIndex);
-#endif
-
-
 /**
  *	initialize entityMIB group mapper
  */
@@ -247,39 +240,6 @@ void
 entPhysicalTable_removeEntry (entPhysicalEntry_t *poEntry)
 {
 	return;
-}
-
-bool
-entPhysicalTable_getChassis (
-	uint32_t u32PhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
-	uint32_t *pu32ChassisIndex)
-{
-	xUnused (u32PhysicalIndex);
-	
-	if (i32Class == entPhysicalClass_stack_c ||
-		i32Class == entPhysicalClass_chassis_c ||
-		u32ContainedIn == 0)
-	{
-		return false;
-	}
-	
-	register neEntPhysicalEntry_t *poContainer = NULL;
-	
-	while (
-		u32ContainedIn != 0 &&
-		(poContainer = neEntPhysicalTable_getByIndex (u32ContainedIn)) != NULL &&
-		poContainer->oPhy.i32Class != entPhysicalClass_chassis_c)
-	{
-		u32ContainedIn = poContainer->oPhy.u32ContainedIn;
-	}
-	
-	if (poContainer == NULL || poContainer->oPhy.i32Class != entPhysicalClass_chassis_c)
-	{
-		return false;
-	}
-	
-	*pu32ChassisIndex = poContainer->u32Index;
-	return true;
 }
 
 bool
@@ -3682,135 +3642,6 @@ neEntPortTable_init (void)
 }
 
 static int8_t
-neEntPortData_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register neEntPortData_t *pEntry1 = xBTree_entry (pNode1, neEntPortData_t, oBTreeNode);
-	register neEntPortData_t *pEntry2 = xBTree_entry (pNode2, neEntPortData_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32PhysicalIndex < pEntry2->u32PhysicalIndex) ? -1:
-		(pEntry1->u32PhysicalIndex == pEntry2->u32PhysicalIndex) ? 0: 1;
-}
-
-static int8_t
-neEntPortData_If_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register neEntPortData_t *pEntry1 = xBTree_entry (pNode1, neEntPortData_t, oBTreeNode);
-	register neEntPortData_t *pEntry2 = xBTree_entry (pNode2, neEntPortData_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ? -1:
-		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
-}
-
-static int8_t
-neEntPortData_Map_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register neEntPortData_t *pEntry1 = xBTree_entry (pNode1, neEntPortData_t, oBTreeNode);
-	register neEntPortData_t *pEntry2 = xBTree_entry (pNode2, neEntPortData_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32ChassisIndex < pEntry2->u32ChassisIndex) ||
-		(pEntry1->u32ChassisIndex == pEntry2->u32ChassisIndex && pEntry1->u32HIndex < pEntry2->u32HIndex) ? -1:
-		(pEntry1->u32ChassisIndex == pEntry2->u32ChassisIndex && pEntry1->u32HIndex == pEntry2->u32HIndex) ? 0: 1;
-}
-
-static xBTree_t oNeEntPortData_BTree = xBTree_initInline (&neEntPortData_BTreeNodeCmp);
-static xBTree_t oNeEntPortData_If_BTree = xBTree_initInline (&neEntPortData_If_BTreeNodeCmp);
-static xBTree_t oNeEntPortData_Map_BTree = xBTree_initInline (&neEntPortData_Map_BTreeNodeCmp);
-
-/* create a new row in the (unsorted) table */
-neEntPortData_t *
-neEntPortData_createEntry (
-	uint32_t u32PhysicalIndex)
-{
-	register neEntPortData_t *poEntry = NULL;
-	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poEntry->u32PhysicalIndex = u32PhysicalIndex;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortData_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	poEntry->u32ChassisIndex = 0;
-	poEntry->u32HIndex = 0;
-	poEntry->u32IfIndex = 0;
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeEntPortData_BTree);
-	return poEntry;
-}
-
-neEntPortData_t *
-neEntPortData_getByIndex (
-	uint32_t u32PhysicalIndex)
-{
-	register neEntPortData_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
-	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeEntPortData_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neEntPortData_t, oBTreeNode);
-}
-
-neEntPortData_t *
-neEntPortData_getNextIndex (
-	uint32_t u32PhysicalIndex)
-{
-	register neEntPortData_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
-	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeEntPortData_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neEntPortData_t, oBTreeNode);
-}
-
-/* remove a row from the table */
-void
-neEntPortData_removeEntry (neEntPortData_t *poEntry)
-{
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeEntPortData_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeEntPortData_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
-	return;
-}
-
-static int8_t
 neEntPortTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
@@ -4009,8 +3840,6 @@ neEntPortRowStatus_handler (
 			{
 				goto neEntPortRowStatus_handler_cleanup;
 			}
-			
-			xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortData_If_BTree);
 		}
 		
 		ifData_t *poIfData = NULL;
@@ -4020,12 +3849,6 @@ neEntPortRowStatus_handler (
 			goto neEntPortRowStatus_handler_cleanup;
 		}
 		poEntry->i32Type = poIfData->oIf.i32Type;
-		
-		if (poEntry->pOldEntry == NULL ||
-			poEntry->pOldEntry->u32IfIndex != poEntry->u32IfIndex)
-		{
-			xBTree_nodeAdd (&poEntry->oIf_BTreeNode, &oNeEntPortData_If_BTree);
-		}
 		
 		if (!neEntPortRowStatus_update (poEntry, u8RowStatus & xRowStatus_mask_c))
 		{
@@ -4095,7 +3918,6 @@ neEntPortRowStatus_handler (
 			}
 		}
 		
-		xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortData_If_BTree);
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		
 		if (poEntry->pOldEntry != NULL)
