@@ -1812,147 +1812,87 @@ neEntPhysicalRowStatus_handler (
 	neEntPhysicalEntry_t *poEntry,
 	uint8_t u8RowStatus)
 {
-	switch (u8RowStatus)
+	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
+	
+	if (poEntry->u8RowStatus == u8RowStatus)
+	{
+		goto neEntPhysicalRowStatus_handler_success;
+	}
+	
+	if (u8RowStatus & xRowStatus_fromParent_c &&
+		((u8RealStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
+		 (u8RealStatus == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
+	{
+		goto neEntPhysicalRowStatus_handler_success;
+	}
+	
+	
+	switch (u8RealStatus)
 	{
 	case xRowStatus_active_c:
-		if (poEntry->u8RowStatus == xRowStatus_active_c)
+		if (poEntry->i32Class == 0 || (poEntry->oPhy.i32Class != 0 && poEntry->oPhy.i32Class != poEntry->i32Class))
 		{
-			break;
+			goto neEntPhysicalRowStatus_handler_cleanup;
 		}
-		
-		if (poEntry->pOldEntry != NULL)
+		if (poEntry->i32ParentRelPos <= 0)
 		{
-			if (poEntry->pOldEntry->i32Class == neEntPhysicalClass_port_c && poEntry->pOldEntry->i32Class != poEntry->i32Class)
-			{
-				register neEntPortEntry_t *poNeEntPortEntry = NULL;
-				
-				if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32Index)) != NULL &&
-					!neEntPortRowStatus_handler (poNeEntPortEntry, xRowStatus_destroy_c | xRowStatus_fromParent_c))
-				{
-					goto neEntPhysicalRowStatus_handler_cleanup;
-				}
-				
-				if (poNeEntPortEntry != NULL)
-				{
-					neEntPortTable_removeEntry (poNeEntPortEntry);
-				}
-			}
-			
-			if (poEntry->pOldEntry->u32ContainedIn != 0 && poEntry->pOldEntry->u32ContainedIn != poEntry->u32ContainedIn)
-			{
-				register entPhysicalContainsEntry_t *poEntPhysicalContainsEntry = NULL;
-				
-				if ((poEntPhysicalContainsEntry = entPhysicalContainsTable_getByIndex (poEntry->pOldEntry->u32ContainedIn, poEntry->u32Index)) != NULL)
-				{
-					entPhysicalContainsTable_removeEntry (poEntPhysicalContainsEntry);
-				}
-			}
+			goto neEntPhysicalRowStatus_handler_cleanup;
 		}
-		
-		if (poEntry->u32ContainedIn != 0 &&
-			entPhysicalContainsTable_createEntry (poEntry->u32ContainedIn, poEntry->u32Index) == NULL)
+		if (poEntry->oPhy.u8IsFRU == entPhysicalIsFRU_true_c &&
+			(poEntry->u32ContainedIn == 0 || poEntry->i32Class == neEntPhysicalClass_chassis_c || poEntry->i32Class == neEntPhysicalClass_stack_c))
 		{
 			goto neEntPhysicalRowStatus_handler_cleanup;
 		}
 		
-		if (poEntry->i32Class == neEntPhysicalClass_port_c)
+		if (poEntry->u32ContainedIn == 0 && poEntry->i32Class != neEntPhysicalClass_chassis_c && poEntry->i32Class != neEntPhysicalClass_stack_c)
 		{
-			register neEntPortEntry_t *poNeEntPortEntry = NULL;
+			u8RealStatus = xRowStatus_notReady_c;
+		}
+		else if (poEntry->u32ContainedIn != 0 && poEntry->i32Class == neEntPhysicalClass_stack_c)
+		{
+			goto neEntPhysicalRowStatus_handler_cleanup;
+		}
+		else if (poEntry->u32ContainedIn != 0)
+		{
+			register neEntPhysicalEntry_t *poContains = NULL;
 			
-			if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32Index)) != NULL &&
-				!neEntPortRowStatus_handler (poNeEntPortEntry, u8RowStatus | xRowStatus_fromParent_c))
+			if ((poContains = neEntPhysicalTable_getByIndex (poEntry->u32ContainedIn)) == NULL)
 			{
 				goto neEntPhysicalRowStatus_handler_cleanup;
 			}
-			
-			if (poNeEntPortEntry == NULL &&
-				neEntPortTable_createEntry (poEntry->u32Index) == NULL)
+			if (poContains->u8RowStatus != xRowStatus_active_c)
 			{
-				goto neEntPhysicalRowStatus_handler_cleanup;
+				u8RealStatus = xRowStatus_notReady_c;
 			}
 		}
 		
-		/* TODO */
-		poEntry->oPhy.u32ContainedIn = poEntry->u32ContainedIn;
-		poEntry->oPhy.i32Class = poEntry->i32Class;
+		if (!neEntPhysicalRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto neEntPhysicalRowStatus_handler_cleanup;
+		}
 		
 		poEntry->u8RowStatus = xRowStatus_active_c;
-		
-		if (poEntry->pOldEntry != NULL)
-		{
-			xBuffer_free (poEntry->pOldEntry);
-			poEntry->pOldEntry = NULL;
-		}
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (poEntry->u8RowStatus == xRowStatus_notInService_c)
-		{
-			break;
-		}
-		
-		if (poEntry->pOldEntry == NULL &&
-			(poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+		if (!neEntPhysicalRowStatus_update (poEntry, u8RealStatus))
 		{
 			goto neEntPhysicalRowStatus_handler_cleanup;
 		}
-		
-		if (poEntry->i32Class == neEntPhysicalClass_port_c)
-		{
-			register neEntPortEntry_t *poNeEntPortEntry = NULL;
-			
-			if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32Index)) != NULL &&
-				!neEntPortRowStatus_handler (poNeEntPortEntry, u8RowStatus | xRowStatus_fromParent_c))
-			{
-				goto neEntPhysicalRowStatus_handler_cleanup;
-			}
-		}
-		
-		/* TODO */
-		
-		memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
 		
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		break;
 		
 	case xRowStatus_createAndGo_c:
-		poEntry->u8RowStatus = xRowStatus_notReady_c;
-		break;
+		goto neEntPhysicalRowStatus_handler_cleanup;
 		
 	case xRowStatus_createAndWait_c:
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (poEntry->i32Class == neEntPhysicalClass_port_c)
-		{
-			register neEntPortEntry_t *poNeEntPortEntry = NULL;
-			
-			if ((poNeEntPortEntry = neEntPortTable_getByIndex (poEntry->u32Index)) != NULL &&
-				!neEntPortRowStatus_handler (poNeEntPortEntry, u8RowStatus | xRowStatus_fromParent_c))
-			{
-				goto neEntPhysicalRowStatus_handler_cleanup;
-			}
-			
-			if (poNeEntPortEntry != NULL)
-			{
-				neEntPortTable_removeEntry (poNeEntPortEntry);
-			}
-		}
-		
-		if (poEntry->u32ContainedIn != 0)
-		{
-			register entPhysicalContainsEntry_t *poEntPhysicalContainsEntry = NULL;
-			
-			if ((poEntPhysicalContainsEntry = entPhysicalContainsTable_getByIndex (poEntry->u32ContainedIn, poEntry->u32Index)) != NULL)
-			{
-				entPhysicalContainsTable_removeEntry (poEntPhysicalContainsEntry);
-			}
-		}
-		
-		/* TODO */
-		
-		if (poEntry->pOldEntry != NULL)
+		if (!neEntPhysicalRowStatus_update (poEntry, u8RealStatus))
 		{
 			xBuffer_free (poEntry->pOldEntry);
 			poEntry->pOldEntry = NULL;
@@ -1962,14 +1902,13 @@ neEntPhysicalRowStatus_handler (
 		break;
 	}
 	
-// neEntPhysicalRowStatus_handler_success:
+neEntPhysicalRowStatus_handler_success:
 	
-	return true;
-	
+	bRetCode = true;
 	
 neEntPhysicalRowStatus_handler_cleanup:
 	
-	return false;
+	return bRetCode || (u8RowStatus & xRowStatus_fromParent_c);
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */

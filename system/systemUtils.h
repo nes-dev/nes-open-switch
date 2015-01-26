@@ -35,6 +35,10 @@ extern "C" {
 
 
 extern bool
+	neEntPhysicalRowStatus_update (
+		neEntPhysicalEntry_t *poEntry,
+		uint8_t u8RowStatus);
+extern bool
 	neEntChassisRowStatus_update (
 		neEntChassisEntry_t *poEntry,
 		uint8_t u8RowStatus);

@@ -37,6 +37,19 @@
 
 
 bool
+neEntPhysicalRowStatus_update (
+	neEntPhysicalEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	bRetCode = true;
+	
+//neEntPhysicalRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 neEntChassisRowStatus_update (
 	neEntChassisEntry_t *poEntry,
 	uint8_t u8RowStatus)
