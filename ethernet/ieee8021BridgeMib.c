@@ -1697,9 +1697,33 @@ ieee8021BridgeChassis_createRegister (
 	uint32_t u32ChassisId)
 {
 	register bool bRetCode = false;
+	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
 	
-//ieee8021BridgeChassis_createRegister_cleanup:
+	ieee8021Bridge_wrLock ();
 	
+	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (u32ChassisId)) == NULL)
+	{
+		if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_createExt (ieee8021BridgeBaseComponent_zero_c)) == NULL)
+		{
+			goto ieee8021BridgeChassis_createRegister_componentCleanup;
+		}
+	}
+	
+	ieee8021BridgeBase_wrLock (poIeee8021BridgeBaseEntry);
+	
+ieee8021BridgeChassis_createRegister_componentCleanup:
+	
+	ieee8021Bridge_unLock ();
+	if (poIeee8021BridgeBaseEntry == NULL)
+	{
+		goto ieee8021BridgeChassis_createRegister_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgeChassis_createRegister_cleanup:
+	
+	poIeee8021BridgeBaseEntry != NULL ? ieee8021BridgeBase_unLock (poIeee8021BridgeBaseEntry): false;
 	return bRetCode;
 }
 
@@ -1708,8 +1732,35 @@ ieee8021BridgeChassis_removeRegister (
 	uint32_t u32ChassisId)
 {
 	register bool bRetCode = false;
+	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
 	
-//ieee8021BridgeChassis_removeRegister_cleanup:
+	ieee8021Bridge_wrLock ();
+	
+	while ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (u32ChassisId)) != NULL)
+	{
+		ieee8021BridgeBase_wrLock (poIeee8021BridgeBaseEntry);
+		
+		if (!ieee8021BridgeBaseRowStatus_handler (poIeee8021BridgeBaseEntry, xRowStatus_destroy_c))
+		{
+			goto ieee8021BridgeChassis_removeRegister_cleanup;
+		}
+		
+		xBTree_nodeRemove (&poIeee8021BridgeBaseEntry->oBTreeNode, &oIeee8021BridgeBaseTable_BTree);
+		ieee8021BridgeBase_unLock (poIeee8021BridgeBaseEntry);
+		
+		if (!ieee8021BridgeBaseTable_removeExt (poIeee8021BridgeBaseEntry))
+		{
+			poIeee8021BridgeBaseEntry = NULL;
+			goto ieee8021BridgeChassis_removeRegister_cleanup;
+		}
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgeChassis_removeRegister_cleanup:
+	
+	!bRetCode && poIeee8021BridgeBaseEntry != NULL ? ieee8021BridgeBase_unLock (poIeee8021BridgeBaseEntry): false;
+	ieee8021Bridge_unLock ();
 	
 	return bRetCode;
 }
