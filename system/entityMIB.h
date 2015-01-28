@@ -933,6 +933,8 @@ typedef struct neEntPortEntry_t
 	uint32_t u32PhysicalIndex;
 	
 	struct {
+		uint32_t u32IfIndex;
+		int32_t i32IfType;
 		uint32_t u32ChassisIndex;
 		uint32_t u32HIndex;
 	} oK;
