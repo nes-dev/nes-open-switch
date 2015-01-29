@@ -3592,6 +3592,18 @@ neEntPortTable_BTreeNodeCmp (
 }
 
 static int8_t
+neEntPortTable_If_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neEntPortEntry_t *pEntry1 = xBTree_entry (pNode1, neEntPortEntry_t, oBTreeNode);
+	register neEntPortEntry_t *pEntry2 = xBTree_entry (pNode2, neEntPortEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->oK.u32IfIndex < pEntry2->oK.u32IfIndex) ? -1:
+		(pEntry1->oK.u32IfIndex == pEntry2->oK.u32IfIndex) ? 0: 1;
+}
+
+static int8_t
 neEntPortTable_HMap_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
@@ -3605,6 +3617,7 @@ neEntPortTable_HMap_BTreeNodeCmp (
 }
 
 xBTree_t oNeEntPortTable_BTree = xBTree_initInline (&neEntPortTable_BTreeNodeCmp);
+xBTree_t oNeEntPortTable_If_BTree = xBTree_initInline (&neEntPortTable_If_BTreeNodeCmp);
 xBTree_t oNeEntPortTable_HMap_BTree = xBTree_initInline (&neEntPortTable_HMap_BTreeNodeCmp);
 
 /* create a new row in the (unsorted) table */

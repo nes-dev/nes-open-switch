@@ -109,14 +109,49 @@ neEntPortRowStatus_update (
 	uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
-	register neEntPortData_t *poPortData = neEntPortData_getByPortEntry (poEntry);
 	
-	if (poPortData->u32ChassisIndex == 0)
+	
+	switch (u8RowStatus)
 	{
-		goto neEntPortRowStatus_update_cleanup;
+	case xRowStatus_active_c:
+		if (poEntry->u32ChassisIndex == 0)
+		{
+			goto neEntPortRowStatus_update_cleanup;
+		}
+		
+		if (poEntry->oK.u32IfIndex == 0)
+		{
+			ifData_t *poIfData = NULL;
+			
+			if (!ifData_createReference (poEntry->u32IfIndex, poEntry->i32IfType, 0, true, true, true, &poIfData))
+			{
+				goto neEntPortRowStatus_update_cleanup;
+			}
+			poIfData->oIfX.i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_enabled_c;
+			poIfData->oIfX.i32ConnectorPresent = ifConnectorPresent_true_c;
+			ifData_unLock (poIfData);
+			
+			xBTree_nodeAdd (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
+			poEntry->oK.u32IfIndex = poEntry->u32IfIndex;
+			poEntry->oK.i32IfType = poEntry->i32IfType;
+		}
+		break;
+		
+	case xRowStatus_notInService_c:
+	case xRowStatus_destroy_c:
+		if (poEntry->pOldEntry == NULL)
+		{
+			if ((poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+			{
+				goto neEntPortRowStatus_update_cleanup;
+			}
+			memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
+		}
+		break;
 	}
 	
-	switch (poEntry->i32Type)
+	
+	switch (poEntry->oK.i32IfType)
 	{
 	default:
 		goto neEntPortRowStatus_update_cleanup;
@@ -126,40 +161,41 @@ neEntPortRowStatus_update (
 		switch (u8RowStatus)
 		{
 		case xRowStatus_active_c:
-			if (!ieee8021BridgePhyData_createRegister (poPortData->u32IfIndex, poPortData->u32PhysicalIndex, poPortData->u32ChassisIndex))
+			if (!ieee8021BridgePhyData_createRegister (poEntry->oK.u32IfIndex, poEntry->u32PhysicalIndex, poEntry->u32ChassisIndex))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			
-			if (!neIfStatus_modify (poPortData->u32IfIndex, xOperStatus_notPresent_c, true, false))
+			if (!neIfStatus_modify (poEntry->oK.u32IfIndex, xOperStatus_notPresent_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
-			
-			/* TODO */
 			break;
 			
 		case xRowStatus_notInService_c:
-			if (!neIfStatus_modify (poPortData->u32IfIndex, xOperStatus_down_c, true, false))
+			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_down_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
+			break;
 			
-			/* TODO */
+		case xRowStatus_notReady_c:
+			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_lowerLayerDown_c, true, false))
+			{
+				goto neEntPortRowStatus_update_cleanup;
+			}
 			break;
 			
 		case xRowStatus_destroy_c:
-			if (!neIfStatus_modify (poPortData->u32IfIndex, xOperStatus_notPresent_c, true, false))
+			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_notPresent_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			
-			if (!ieee8021BridgePhyData_removeRegister (poPortData->u32IfIndex, poPortData->u32PhysicalIndex))
+			if (!ieee8021BridgePhyData_removeRegister (poEntry->oK.u32IfIndex, poEntry->u32PhysicalIndex))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
-			
-			/* TODO */
 			break;
 		}
 		
@@ -170,6 +206,41 @@ neEntPortRowStatus_update (
 		break;
 		
 	case ifType_opticalTransport_c:
+		break;
+	}
+	
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_destroy_c:
+		if (poEntry->oK.u32IfIndex != 0)
+		{
+			ifData_t *poIfData = NULL;
+			
+			if (!ifData_getByIndexExt (poEntry->oK.u32IfIndex, true, &poIfData))
+			{
+				goto neEntPortRowStatus_update_cleanup;
+			}
+			poIfData->oIfX.i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_disabled_c;
+			poIfData->oIfX.i32ConnectorPresent = ifConnectorPresent_false_c;
+			ifData_unLock (poIfData);
+			
+			if (!ifData_removeReference (poEntry->oK.u32IfIndex, true, true, true))
+			{
+				goto neEntPortRowStatus_update_cleanup;
+			}
+			
+			xBTree_nodeRemove (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
+			poEntry->oK.u32IfIndex = 0;
+			poEntry->oK.i32IfType = 0;
+		}
+		
+	case xRowStatus_active_c:
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
 		break;
 	}
 	
