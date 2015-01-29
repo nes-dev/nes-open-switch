@@ -36,6 +36,44 @@
 #include <stdint.h>
 
 
+bool entPhysicalTable_getChassis (
+	uint32_t u32PhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
+	uint32_t *pu32ChassisIndex);
+
+
+bool
+entPhysicalTable_getChassis (
+	uint32_t u32PhysicalIndex, uint32_t u32ContainedIn, int32_t i32Class,
+	uint32_t *pu32ChassisIndex)
+{
+	xUnused (u32PhysicalIndex);
+	
+	if (i32Class == entPhysicalClass_stack_c ||
+		(i32Class == entPhysicalClass_chassis_c && u32ContainedIn == 0) ||
+		u32ContainedIn == 0)
+	{
+		return true;
+	}
+	
+	register neEntPhysicalEntry_t *poContainer = NULL;
+	
+	while (
+		u32ContainedIn != 0 &&
+		(poContainer = neEntPhysicalTable_getByIndex (u32ContainedIn)) != NULL &&
+		poContainer->oPhy.i32Class != entPhysicalClass_chassis_c)
+	{
+		u32ContainedIn = poContainer->oPhy.u32ContainedIn;
+	}
+	
+	if (poContainer == NULL || poContainer->oPhy.i32Class != entPhysicalClass_chassis_c)
+	{
+		return false;
+	}
+	
+	*pu32ChassisIndex = poContainer->u32Index;
+	return true;
+}
+
 bool
 neEntPhysicalRowStatus_update (
 	neEntPhysicalEntry_t *poEntry, uint8_t u8RowStatus)
