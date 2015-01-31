@@ -76,11 +76,39 @@ xFreeRange_createRange (
 
 bool
 xFreeRange_getFreeIndex (
-	xFreeRange_t *poFreeRange,
+	xFreeRange_t *poRange,
 	bool bInRange, uint32_t u32Start, uint32_t u32End,
 	uint32_t *pu32Index)
 {
-	return false;
+	register bool bRetCode = false;
+	
+	if (u32Start > u32End || pu32Index == NULL)
+	{
+		goto xFreeRange_getFreeIndex_cleanup;
+	}
+	
+	register xBTree_Node_t *poNode = NULL;
+	
+	xBTree_scan (poNode, poRange)
+	{
+		register xFreeRange_Entry_t *poEntry = xGetParentByMemberPtr (poNode, xFreeRange_Entry_t, oBTreeNode);
+		
+		if (!bInRange ||
+			((poEntry->u32Start <= u32Start && u32Start >= poEntry->u32End) ||
+			 (poEntry->u32Start <= u32End && u32End >= poEntry->u32End)))
+		{
+			*pu32Index =
+				!bInRange ? poEntry->u32Start:
+				poEntry->u32Start <= u32Start && u32Start >= poEntry->u32End ? u32Start: poEntry->u32Start;
+				
+			bRetCode = true;
+			break;
+		}
+	}
+	
+xFreeRange_getFreeIndex_cleanup:
+	
+	return bRetCode;
 }
 
 bool
