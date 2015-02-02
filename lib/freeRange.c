@@ -113,10 +113,65 @@ xFreeRange_getFreeIndex_cleanup:
 
 bool
 xFreeRange_allocateIndex (
-	xFreeRange_t *poFreeRange,
+	xFreeRange_t *poRange,
 	uint32_t u32Index)
 {
-	return false;
+	register bool bRetCode = false;
+	register xBTree_Node_t *poNode = NULL;
+	register xFreeRange_Entry_t *poEntry = NULL;
+	
+	xBTree_scan (poNode, poRange)
+	{
+		poEntry = xGetParentByMemberPtr (poNode, xFreeRange_Entry_t, oBTreeNode);
+		
+		if (poEntry->u32Start <= u32Index && u32Index >= poEntry->u32End)
+		{
+			bRetCode = true;
+			break;
+		}
+	}
+	
+	if (!bRetCode)
+	{
+		goto xFreeRange_allocateIndex_cleanup;
+	}
+	bRetCode = false;
+	
+	
+	register uint32_t u32RangeStart = poEntry->u32Start;
+	register uint32_t u32RangeEnd = poEntry->u32End;
+	
+	if (u32RangeEnd > u32Index &&
+		!xFreeRange_createRange (poRange, u32Index - 1, u32RangeEnd))
+	{
+		goto xFreeRange_allocateIndex_cleanup;
+	}
+	
+	if (u32RangeStart == u32Index)
+	{
+		xBTree_nodeRemove (&poEntry->oBTreeNode, poRange);
+		
+		if (u32RangeStart == u32RangeEnd)
+		{
+			xBuffer_free (poEntry);
+		}
+		else
+		{
+			poEntry->u32Start--;
+			xBTree_nodeAdd (&poEntry->oBTreeNode, poRange);
+		}
+	}
+	
+	if (u32RangeEnd == u32Index)
+	{
+		poEntry->u32End--;
+	}
+	
+	bRetCode = true;
+	
+xFreeRange_allocateIndex_cleanup:
+	
+	return bRetCode;
 }
 
 bool
