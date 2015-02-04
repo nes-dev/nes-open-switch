@@ -27,6 +27,7 @@ extern "C" {
 
 
 
+#include "neIeee8021BridgeMIB.h"
 #include "ethernet_ext.h"
 
 #include "lib/freeRange.h"
@@ -129,6 +130,8 @@ typedef struct ieee8021BridgeBaseEntry_t
 	int32_t i32TrafficClassesEnabled;
 	int32_t i32MmrpEnabledStatus;
 	uint8_t u8RowStatus;
+	
+	neIeee8021BridgeBaseEntry_t oNe;
 	
 	uint32_t u32ChassisId;
 	uint8_t au8Ports[ETHERNET_PORT_MAP_SIZE];

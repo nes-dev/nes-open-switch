@@ -25,6 +25,7 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "system/systemMIB.h"
 #include "neIeee8021BridgeMIB.h"
+#include "ieee8021BridgeMib.h"
 
 #include "lib/bitmap.h"
 #include "lib/binaryTree.h"
@@ -117,23 +118,18 @@ neIeee8021BridgeBaseTable_createEntry (
 	uint32_t u32ComponentId)
 {
 	register neIeee8021BridgeBaseEntry_t *poEntry = NULL;
+	register ieee8021BridgeBaseEntry_t *poComponent = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poComponent = ieee8021BridgeBaseTable_getByIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
-	
-	poEntry->u32ComponentId = u32ComponentId;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeIeee8021BridgeBaseTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poComponent->oNe;
 	
 	poEntry->u32ChassisId = 2;
 	poEntry->u32NumPortsMax = 32;
+	poEntry->i32OperState = neIeee8021BridgeBaseOperState_disabled_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeIeee8021BridgeBaseTable_BTree);
 	return poEntry;
 }
 
@@ -141,60 +137,39 @@ neIeee8021BridgeBaseEntry_t *
 neIeee8021BridgeBaseTable_getByIndex (
 	uint32_t u32ComponentId)
 {
-	register neIeee8021BridgeBaseEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021BridgeBaseEntry_t *poComponent = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poComponent = ieee8021BridgeBaseTable_getByIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeIeee8021BridgeBaseTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neIeee8021BridgeBaseEntry_t, oBTreeNode);
+	return &poComponent->oNe;
 }
 
 neIeee8021BridgeBaseEntry_t *
 neIeee8021BridgeBaseTable_getNextIndex (
 	uint32_t u32ComponentId)
 {
-	register neIeee8021BridgeBaseEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021BridgeBaseEntry_t *poComponent = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poComponent = ieee8021BridgeBaseTable_getNextIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeIeee8021BridgeBaseTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neIeee8021BridgeBaseEntry_t, oBTreeNode);
+	return &poComponent->oNe;
 }
 
 /* remove a row from the table */
 void
 neIeee8021BridgeBaseTable_removeEntry (neIeee8021BridgeBaseEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeIeee8021BridgeBaseTable_BTree) == NULL)
+	if (poEntry == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeIeee8021BridgeBaseTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
