@@ -38,14 +38,16 @@ extern "C" {
 enum
 {
 	ModuleId_snmp_c				= 1,
-	ModuleId_system_c,
 	ModuleId_if_c,
+	ModuleId_system_c,
 	ModuleId_hal_c,
 	ModuleId_ethernet_c,
 	ModuleId_lag_c,
 	ModuleId_bridge_c,
 	ModuleId_cfm_c,
+	ModuleId_isis_c,
 	ModuleId_stp_c,
+	ModuleId_spb_c,
 	ModuleId_inet_c,
 	ModuleId_tcpUdp_c,
 };
@@ -61,28 +63,32 @@ typedef struct ModuleInfo_t
 #ifdef __SWITCH_MAIN_C__
 
 #include "snmp_ext.h"
-#include "system_ext.h"
 #include "if_ext.h"
+#include "system_ext.h"
 #include "hal_ext.h"
 #include "ethernet_ext.h"
 #include "lag_ext.h"
 #include "bridge_ext.h"
 #include "cfm_ext.h"
+#include "isis_ext.h"
 #include "stp_ext.h"
+#include "spb_ext.h"
 #include "inet_ext.h"
 #include "tcpUdp_ext.h"
 
 static ModuleInfo_t aoModuleList[] =
 {
 	{ModuleId_snmp_c,				&snmp_main},
-	{ModuleId_system_c,				&system_main},
 	{ModuleId_if_c,					&if_main},
+	{ModuleId_system_c,				&system_main},
 	{ModuleId_hal_c,				&hal_main},
 	{ModuleId_ethernet_c,			&ethernet_main},
 	{ModuleId_lag_c,				&lag_main},
 	{ModuleId_bridge_c,				&bridge_main},
 	{ModuleId_cfm_c,				&cfm_main},
+	{ModuleId_isis_c,				&isis_main},
 	{ModuleId_stp_c,				&stp_main},
+	{ModuleId_spb_c,				&spb_main},
 	{ModuleId_inet_c,				&inet_main},
 	{ModuleId_tcpUdp_c,				&tcpUdp_main},
 };

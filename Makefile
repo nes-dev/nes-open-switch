@@ -40,7 +40,7 @@ include ${MK_COMMON}
 
 PROJECT_OBJS	:=
 
-MODULE_TREE	:= lib snmp system if hal ethernet lag bridge cfm stp inet tcpUdp
+MODULE_TREE	:= lib snmp if system hal ethernet lag bridge cfm isis stp spb inet tcpUdp
 MODULE_PATH	:= .
 
 include $(addsuffix /Makefile,${MODULE_TREE})
