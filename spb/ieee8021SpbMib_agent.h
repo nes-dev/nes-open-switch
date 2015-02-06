@@ -17,55 +17,25 @@
  *  License for the specific language governing permissions and limitations
  *  under the License.
  */
-//set ts=4 sw=4
 
-#ifndef __SPB_MAIN_C__
-#	define __SPB_MAIN_C__
+#ifndef __IEEE8021SPBMIB_AGENT_H__
+#	define __IEEE8021SPBMIB_AGENT_H__
 
-
-#include "ieee8021SpbMib_agent.h"
-
-#include "spb_ext.h"
-#include "spb_defines.h"
-#include "switch_ext.h"
-
-#include "lib/thread.h"
+#	ifdef __cplusplus
+extern "C" {
+#	endif
 
 
-static xThreadInfo_t oSpbThread =
-{
-	.u32Index = XTHREAD_ID (ModuleId_spb_c, 0),
-	.u8SchedPolicy = SCHED_RR,
-	.u8Priority = 1,
-	.poStart = &spb_start,
-};
+
+/**
+ *	agent MIB function
+ */
+void ieee8021SpbMib_init (void);
 
 
-void *
-spb_main (
-	void *pvArgv)
-{
-	ieee8021SpbMib_init ();
-	
-	if (xThread_create (&oSpbThread) == NULL)
-	{
-		Spb_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
-	}
-	
-	return NULL;
+
+#	ifdef __cplusplus
 }
+#	endif
 
-void *
-spb_start (
-	void *pvArgv)
-{
-	while (1)
-	{
-		xThread_sleep (1);
-	}
-	return NULL;
-}
-
-
-#endif	// __SPB_MAIN_C__
+#endif /* __IEEE8021SPBMIB_AGENT_H__ */
