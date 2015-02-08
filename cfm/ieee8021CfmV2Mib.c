@@ -126,7 +126,7 @@ ieee8021CfmStackTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021CfmStackTable_BTree = xBTree_initInline (&ieee8021CfmStackTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021CfmStackEntry_t *
 ieee8021CfmStackTable_createEntry (
 	uint32_t u32IfIndex,
@@ -406,7 +406,7 @@ ieee8021CfmDefaultMdTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021CfmDefaultMdTable_BTree = xBTree_initInline (&ieee8021CfmDefaultMdTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021CfmDefaultMdEntry_t *
 ieee8021CfmDefaultMdTable_createEntry (
 	uint32_t u32ComponentId,
@@ -813,7 +813,7 @@ ieee8021CfmVlanTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021CfmVlanTable_BTree = xBTree_initInline (&ieee8021CfmVlanTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021CfmVlanEntry_t *
 ieee8021CfmVlanTable_createEntry (
 	uint32_t u32ComponentId,
@@ -1285,7 +1285,7 @@ ieee8021CfmConfigErrorListTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021CfmConfigErrorListTable_BTree = xBTree_initInline (&ieee8021CfmConfigErrorListTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021CfmConfigErrorListEntry_t *
 ieee8021CfmConfigErrorListTable_createEntry (
 	int32_t i32SelectorType,
@@ -1536,7 +1536,7 @@ ieee8021CfmMaCompTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021CfmMaCompTable_BTree = xBTree_initInline (&ieee8021CfmMaCompTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021CfmMaCompEntry_t *
 ieee8021CfmMaCompTable_createEntry (
 	uint32_t u32ComponentId,

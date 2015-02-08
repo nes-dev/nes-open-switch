@@ -180,7 +180,7 @@ inetCidrRouteTable_BTreeNodeCmp (
 
 xBTree_t oInetCidrRouteTable_BTree = xBTree_initInline (&inetCidrRouteTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 inetCidrRouteEntry_t *
 inetCidrRouteTable_createEntry (
 	int32_t i32DestType,

@@ -457,7 +457,7 @@ ipv4InterfaceTable_BTreeNodeCmp (
 
 xBTree_t oIpv4InterfaceTable_BTree = xBTree_initInline (&ipv4InterfaceTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipv4InterfaceEntry_t *
 ipv4InterfaceTable_createEntry (
 	uint32_t u32IfIndex)
@@ -787,7 +787,7 @@ ipv6InterfaceTable_BTreeNodeCmp (
 
 xBTree_t oIpv6InterfaceTable_BTree = xBTree_initInline (&ipv6InterfaceTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipv6InterfaceEntry_t *
 ipv6InterfaceTable_createEntry (
 	uint32_t u32IfIndex)
@@ -1149,7 +1149,7 @@ ipSystemStatsTable_BTreeNodeCmp (
 
 xBTree_t oIpSystemStatsTable_BTree = xBTree_initInline (&ipSystemStatsTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipSystemStatsEntry_t *
 ipSystemStatsTable_createEntry (
 	int32_t i32IPVersion)
@@ -1510,7 +1510,7 @@ ipIfStatsTable_BTreeNodeCmp (
 
 xBTree_t oIpIfStatsTable_BTree = xBTree_initInline (&ipIfStatsTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipIfStatsEntry_t *
 ipIfStatsTable_createEntry (
 	int32_t i32IPVersion,
@@ -1882,7 +1882,7 @@ ipAddressPrefixTable_BTreeNodeCmp (
 
 xBTree_t oIpAddressPrefixTable_BTree = xBTree_initInline (&ipAddressPrefixTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipAddressPrefixEntry_t *
 ipAddressPrefixTable_createEntry (
 	uint32_t u32IfIndex,
@@ -2237,7 +2237,7 @@ ipAddressData_If_BTreeNodeCmp (
 xBTree_t oIpAddressData_BTree = xBTree_initInline (&ipAddressData_BTreeNodeCmp);
 static xBTree_t oIpAddressData_If_BTree = xBTree_initInline (&ipAddressData_If_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipAddressData_t *
 ipAddressData_createEntry (
 	int32_t i32AddrType,
@@ -2386,7 +2386,7 @@ ipAddressData_removeEntry (ipAddressData_t *poEntry)
 	return;
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipAddressEntry_t *
 ipAddressTable_createEntry (
 	int32_t i32AddrType,
@@ -3179,7 +3179,7 @@ ipNetToPhysicalTable_BTreeNodeCmp (
 
 xBTree_t oIpNetToPhysicalTable_BTree = xBTree_initInline (&ipNetToPhysicalTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipNetToPhysicalEntry_t *
 ipNetToPhysicalTable_createEntry (
 	uint32_t u32IfIndex,
@@ -3702,7 +3702,7 @@ ipv6ScopeZoneIndexTable_BTreeNodeCmp (
 
 xBTree_t oIpv6ScopeZoneIndexTable_BTree = xBTree_initInline (&ipv6ScopeZoneIndexTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipv6ScopeZoneIndexEntry_t *
 ipv6ScopeZoneIndexTable_createEntry (
 	uint32_t u32IfIndex)
@@ -3966,7 +3966,7 @@ ipDefaultRouterTable_BTreeNodeCmp (
 
 xBTree_t oIpDefaultRouterTable_BTree = xBTree_initInline (&ipDefaultRouterTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipDefaultRouterEntry_t *
 ipDefaultRouterTable_createEntry (
 	int32_t i32AddressType,
@@ -4219,7 +4219,7 @@ ipv6RouterAdvertTable_BTreeNodeCmp (
 
 xBTree_t oIpv6RouterAdvertTable_BTree = xBTree_initInline (&ipv6RouterAdvertTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ipv6RouterAdvertEntry_t *
 ipv6RouterAdvertTable_createEntry (
 	uint32_t u32IfIndex)

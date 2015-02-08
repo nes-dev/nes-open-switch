@@ -227,7 +227,7 @@ tcpConnectionTable_BTreeNodeCmp (
 
 xBTree_t oTcpConnectionTable_BTree = xBTree_initInline (&tcpConnectionTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 tcpConnectionEntry_t *
 tcpConnectionTable_createEntry (
 	int32_t i32LocalAddressType,
@@ -612,7 +612,7 @@ tcpListenerTable_BTreeNodeCmp (
 
 xBTree_t oTcpListenerTable_BTree = xBTree_initInline (&tcpListenerTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 tcpListenerEntry_t *
 tcpListenerTable_createEntry (
 	int32_t i32LocalAddressType,

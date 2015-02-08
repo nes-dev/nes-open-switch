@@ -128,7 +128,7 @@ ieee8021PbbTeProtectionGroupListTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbTeProtectionGroupListTable_BTree = xBTree_initInline (&ieee8021PbbTeProtectionGroupListTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbTeProtectionGroupListEntry_t *
 ieee8021PbbTeProtectionGroupListTable_createEntry (
 	uint32_t u32BridgeBaseComponentId,
@@ -685,7 +685,7 @@ ieee8021PbbTeMASharedGroupTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbTeMASharedGroupTable_BTree = xBTree_initInline (&ieee8021PbbTeMASharedGroupTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbTeMASharedGroupEntry_t *
 ieee8021PbbTeMASharedGroupTable_createEntry (
 	uint32_t u32BridgeBaseComponentId,
@@ -932,7 +932,7 @@ ieee8021PbbTeTesiTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbTeTesiTable_BTree = xBTree_initInline (&ieee8021PbbTeTesiTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbTeTesiEntry_t *
 ieee8021PbbTeTesiTable_createEntry (
 	uint32_t u32Id)
@@ -1447,7 +1447,7 @@ ieee8021PbbTeTeSiEspTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbTeTeSiEspTable_BTree = xBTree_initInline (&ieee8021PbbTeTeSiEspTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbTeTeSiEspEntry_t *
 ieee8021PbbTeTeSiEspTable_createEntry (
 	uint32_t u32TesiId,
@@ -1951,7 +1951,7 @@ ieee8021PbbTeProtectionGroupConfigTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbTeProtectionGroupConfigTable_BTree = xBTree_initInline (&ieee8021PbbTeProtectionGroupConfigTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbTeProtectionGroupConfigEntry_t *
 ieee8021PbbTeProtectionGroupConfigTable_createEntry (
 	uint32_t u32BridgeBaseComponentId,
@@ -2509,7 +2509,7 @@ ieee8021PbbTeProtectionGroupISidTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbTeProtectionGroupISidTable_BTree = xBTree_initInline (&ieee8021PbbTeProtectionGroupISidTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbTeProtectionGroupISidEntry_t *
 ieee8021PbbTeProtectionGroupISidTable_createEntry (
 	uint32_t u32Index)
@@ -3024,7 +3024,7 @@ ieee8021PbbTeBridgeStaticForwardAnyUnicastTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbTeBridgeStaticForwardAnyUnicastTable_BTree = xBTree_initInline (&ieee8021PbbTeBridgeStaticForwardAnyUnicastTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbTeBridgeStaticForwardAnyUnicastEntry_t *
 ieee8021PbbTeBridgeStaticForwardAnyUnicastTable_createEntry (
 	uint32_t u32QBridgeVlanCurrentComponentId,

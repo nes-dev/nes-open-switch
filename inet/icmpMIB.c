@@ -112,7 +112,7 @@ icmpStatsTable_BTreeNodeCmp (
 
 xBTree_t oIcmpStatsTable_BTree = xBTree_initInline (&icmpStatsTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 icmpStatsEntry_t *
 icmpStatsTable_createEntry (
 	int32_t i32IPVersion)
@@ -350,7 +350,7 @@ icmpMsgStatsTable_BTreeNodeCmp (
 
 xBTree_t oIcmpMsgStatsTable_BTree = xBTree_initInline (&icmpMsgStatsTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 icmpMsgStatsEntry_t *
 icmpMsgStatsTable_createEntry (
 	int32_t i32IPVersion,

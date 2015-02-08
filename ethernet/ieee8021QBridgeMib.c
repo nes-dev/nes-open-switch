@@ -214,7 +214,7 @@ ieee8021QBridgeTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeTable_BTree = xBTree_initInline (&ieee8021QBridgeTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeEntry_t *
 ieee8021QBridgeTable_createEntry (
 	uint32_t u32ComponentId)
@@ -868,7 +868,7 @@ ieee8021QBridgeCVlanPortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeCVlanPortTable_BTree = xBTree_initInline (&ieee8021QBridgeCVlanPortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeCVlanPortEntry_t *
 ieee8021QBridgeCVlanPortTable_createEntry (
 	uint32_t u32ComponentId,
@@ -1482,7 +1482,7 @@ ieee8021QBridgeFdbTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeFdbTable_BTree = xBTree_initInline (&ieee8021QBridgeFdbTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeFdbEntry_t *
 ieee8021QBridgeFdbTable_createEntry (
 	uint32_t u32ComponentId,
@@ -1857,7 +1857,7 @@ ieee8021QBridgeTpFdbTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeTpFdbTable_BTree = xBTree_initInline (&ieee8021QBridgeTpFdbTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeTpFdbEntry_t *
 ieee8021QBridgeTpFdbTable_createEntry (
 	uint32_t u32FdbComponentId,
@@ -2114,7 +2114,7 @@ ieee8021QBridgeTpGroupTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeTpGroupTable_BTree = xBTree_initInline (&ieee8021QBridgeTpGroupTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeTpGroupEntry_t *
 ieee8021QBridgeTpGroupTable_createEntry (
 	uint32_t u32VlanCurrentComponentId,
@@ -2369,7 +2369,7 @@ ieee8021QBridgeForwardAllTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeForwardAllTable_BTree = xBTree_initInline (&ieee8021QBridgeForwardAllTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeForwardAllEntry_t *
 ieee8021QBridgeForwardAllTable_createEntry (
 	uint32_t u32VlanCurrentComponentId,
@@ -2744,7 +2744,7 @@ ieee8021QBridgeForwardUnregisteredTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeForwardUnregisteredTable_BTree = xBTree_initInline (&ieee8021QBridgeForwardUnregisteredTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeForwardUnregisteredEntry_t *
 ieee8021QBridgeForwardUnregisteredTable_createEntry (
 	uint32_t u32VlanCurrentComponentId,
@@ -3123,7 +3123,7 @@ ieee8021QBridgeStaticUnicastTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeStaticUnicastTable_BTree = xBTree_initInline (&ieee8021QBridgeStaticUnicastTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeStaticUnicastEntry_t *
 ieee8021QBridgeStaticUnicastTable_createEntry (
 	uint32_t u32ComponentId,
@@ -3693,7 +3693,7 @@ ieee8021QBridgeStaticMulticastTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeStaticMulticastTable_BTree = xBTree_initInline (&ieee8021QBridgeStaticMulticastTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeStaticMulticastEntry_t *
 ieee8021QBridgeStaticMulticastTable_createEntry (
 	uint32_t u32VlanCurrentComponentId,
@@ -4275,7 +4275,7 @@ ieee8021QBridgeVlanCurrentTable_Vlan_BTreeNodeCmp (
 xBTree_t oIeee8021QBridgeVlanCurrentTable_BTree = xBTree_initInline (&ieee8021QBridgeVlanCurrentTable_BTreeNodeCmp);
 xBTree_t oIeee8021QBridgeVlanCurrentTable_Vlan_BTree = xBTree_initInline (&ieee8021QBridgeVlanCurrentTable_Vlan_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeVlanCurrentEntry_t *
 ieee8021QBridgeVlanCurrentTable_createEntry (
 	uint32_t u32TimeMark,
@@ -4748,7 +4748,7 @@ ieee8021QBridgeVlanStaticTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeVlanStaticTable_BTree = xBTree_initInline (&ieee8021QBridgeVlanStaticTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeVlanStaticEntry_t *
 ieee8021QBridgeVlanStaticTable_createEntry (
 	uint32_t u32ComponentId,
@@ -5622,7 +5622,7 @@ ieee8021QBridgeNextFreeLocalVlanTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeNextFreeLocalVlanTable_BTree = xBTree_initInline (&ieee8021QBridgeNextFreeLocalVlanTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeNextFreeLocalVlanEntry_t *
 ieee8021QBridgeNextFreeLocalVlanTable_createEntry (
 	uint32_t u32ComponentId)
@@ -5851,7 +5851,7 @@ ieee8021QBridgePortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgePortTable_BTree = xBTree_initInline (&ieee8021QBridgePortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgePortEntry_t *
 ieee8021QBridgePortTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
@@ -6403,7 +6403,7 @@ ieee8021QBridgePortVlanStatisticsTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgePortVlanStatisticsTable_BTree = xBTree_initInline (&ieee8021QBridgePortVlanStatisticsTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgePortVlanStatisticsEntry_t *
 ieee8021QBridgePortVlanStatisticsTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
@@ -6660,7 +6660,7 @@ ieee8021QBridgeLearningConstraintsTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeLearningConstraintsTable_BTree = xBTree_initInline (&ieee8021QBridgeLearningConstraintsTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeLearningConstraintsEntry_t *
 ieee8021QBridgeLearningConstraintsTable_createEntry (
 	uint32_t u32ComponentId,
@@ -7230,7 +7230,7 @@ ieee8021QBridgeLearningConstraintDefaultsTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeLearningConstraintDefaultsTable_BTree = xBTree_initInline (&ieee8021QBridgeLearningConstraintDefaultsTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeLearningConstraintDefaultsEntry_t *
 ieee8021QBridgeLearningConstraintDefaultsTable_createEntry (
 	uint32_t u32ComponentId)
@@ -7661,7 +7661,7 @@ ieee8021QBridgeProtocolGroupTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeProtocolGroupTable_BTree = xBTree_initInline (&ieee8021QBridgeProtocolGroupTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeProtocolGroupEntry_t *
 ieee8021QBridgeProtocolGroupTable_createEntry (
 	uint32_t u32ComponentId,
@@ -8148,7 +8148,7 @@ ieee8021QBridgeProtocolPortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeProtocolPortTable_BTree = xBTree_initInline (&ieee8021QBridgeProtocolPortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeProtocolPortEntry_t *
 ieee8021QBridgeProtocolPortTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
@@ -8632,7 +8632,7 @@ ieee8021QBridgeVidXTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeVidXTable_BTree = xBTree_initInline (&ieee8021QBridgeVidXTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeVidXEntry_t *
 ieee8021QBridgeVidXTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
@@ -9116,7 +9116,7 @@ ieee8021QBridgeEgressVidXTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021QBridgeEgressVidXTable_BTree = xBTree_initInline (&ieee8021QBridgeEgressVidXTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021QBridgeEgressVidXEntry_t *
 ieee8021QBridgeEgressVidXTable_createEntry (
 	uint32_t u32BridgeBaseComponentId,

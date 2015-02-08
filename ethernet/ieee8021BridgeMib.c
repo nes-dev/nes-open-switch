@@ -154,7 +154,7 @@ ieee8021BridgeBaseTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgeBaseTable_BTree = xBTree_initInline (&ieee8021BridgeBaseTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgeBaseEntry_t *
 ieee8021BridgeBaseTable_createEntry (
 	uint32_t u32ComponentId)
@@ -983,7 +983,7 @@ ieee8021BridgeBasePortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgeBasePortTable_BTree = xBTree_initInline (&ieee8021BridgeBasePortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgeBasePortEntry_t *
 ieee8021BridgeBasePortTable_createEntry (
 	uint32_t u32ComponentId,
@@ -1792,7 +1792,7 @@ ieee8021BridgePhyData_Phy_BTreeNodeCmp (
 xBTree_t oIeee8021BridgePhyData_If_BTree = xBTree_initInline (&ieee8021BridgePhyData_If_BTreeNodeCmp);
 xBTree_t oIeee8021BridgePhyData_Phy_BTree = xBTree_initInline (&ieee8021BridgePhyData_Phy_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgePhyData_t *
 ieee8021BridgePhyData_createEntry (
 	uint32_t u32IfIndex,
@@ -2223,7 +2223,7 @@ ieee8021BridgeBaseIfToPortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgeBaseIfToPortTable_BTree = xBTree_initInline (&ieee8021BridgeBaseIfToPortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgeBaseIfToPortEntry_t *
 ieee8021BridgeBaseIfToPortTable_createEntry (
 	uint32_t u32Index)
@@ -2457,7 +2457,7 @@ ieee8021BridgePhyPortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgePhyPortTable_BTree = xBTree_initInline (&ieee8021BridgePhyPortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgePhyPortEntry_t *
 ieee8021BridgePhyPortTable_createEntry (
 	uint32_t u32Port)
@@ -2698,7 +2698,7 @@ ieee8021BridgeTpPortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgeTpPortTable_BTree = xBTree_initInline (&ieee8021BridgeTpPortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgeTpPortEntry_t *
 ieee8021BridgeTpPortTable_createEntry (
 	uint32_t u32ComponentId,
@@ -3122,7 +3122,7 @@ ieee8021BridgePortPriorityTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgePortPriorityTable_BTree = xBTree_initInline (&ieee8021BridgePortPriorityTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgePortPriorityEntry_t *
 ieee8021BridgePortPriorityTable_createEntry (
 	uint32_t u32BasePortComponentId,
@@ -3718,7 +3718,7 @@ ieee8021BridgeUserPriorityRegenTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgeUserPriorityRegenTable_BTree = xBTree_initInline (&ieee8021BridgeUserPriorityRegenTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgeUserPriorityRegenEntry_t *
 ieee8021BridgeUserPriorityRegenTable_createEntry (
 	uint32_t u32BasePortComponentId,
@@ -4064,7 +4064,7 @@ ieee8021BridgeTrafficClassTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgeTrafficClassTable_BTree = xBTree_initInline (&ieee8021BridgeTrafficClassTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgeTrafficClassEntry_t *
 ieee8021BridgeTrafficClassTable_createEntry (
 	uint32_t u32BasePortComponentId,
@@ -4410,7 +4410,7 @@ ieee8021BridgePortOutboundAccessPriorityTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgePortOutboundAccessPriorityTable_BTree = xBTree_initInline (&ieee8021BridgePortOutboundAccessPriorityTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgePortOutboundAccessPriorityEntry_t *
 ieee8021BridgePortOutboundAccessPriorityTable_createEntry (
 	uint32_t u32BasePortComponentId,
@@ -4663,7 +4663,7 @@ ieee8021BridgePortDecodingTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgePortDecodingTable_BTree = xBTree_initInline (&ieee8021BridgePortDecodingTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgePortDecodingEntry_t *
 ieee8021BridgePortDecodingTable_createEntry (
 	uint32_t u32ComponentId,
@@ -5051,7 +5051,7 @@ ieee8021BridgePortEncodingTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgePortEncodingTable_BTree = xBTree_initInline (&ieee8021BridgePortEncodingTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgePortEncodingEntry_t *
 ieee8021BridgePortEncodingTable_createEntry (
 	uint32_t u32ComponentId,
@@ -5417,7 +5417,7 @@ ieee8021BridgeServiceAccessPriorityTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgeServiceAccessPriorityTable_BTree = xBTree_initInline (&ieee8021BridgeServiceAccessPriorityTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgeServiceAccessPriorityEntry_t *
 ieee8021BridgeServiceAccessPriorityTable_createEntry (
 	uint32_t u32ComponentId,
@@ -5761,7 +5761,7 @@ ieee8021BridgePortMrpTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgePortMrpTable_BTree = xBTree_initInline (&ieee8021BridgePortMrpTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgePortMrpEntry_t *
 ieee8021BridgePortMrpTable_createEntry (
 	uint32_t u32BasePortComponentId,
@@ -6155,7 +6155,7 @@ ieee8021BridgePortMmrpTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgePortMmrpTable_BTree = xBTree_initInline (&ieee8021BridgePortMmrpTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgePortMmrpEntry_t *
 ieee8021BridgePortMmrpTable_createEntry (
 	uint32_t u32BasePortComponentId,
@@ -6524,7 +6524,7 @@ ieee8021BridgeILanIfTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgeILanIfTable_BTree = xBTree_initInline (&ieee8021BridgeILanIfTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgeILanIfEntry_t *
 ieee8021BridgeILanIfTable_createEntry (
 	uint32_t u32Index)
@@ -7121,7 +7121,7 @@ ieee8021BridgeDot1dPortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021BridgeDot1dPortTable_BTree = xBTree_initInline (&ieee8021BridgeDot1dPortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021BridgeDot1dPortEntry_t *
 ieee8021BridgeDot1dPortTable_createEntry (
 	uint32_t u32BasePortComponentId,

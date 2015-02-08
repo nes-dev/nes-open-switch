@@ -117,7 +117,7 @@ ieee8021SpanningTreeTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021SpanningTreeTable_BTree = xBTree_initInline (&ieee8021SpanningTreeTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021SpanningTreeEntry_t *
 ieee8021SpanningTreeTable_createEntry (
 	uint32_t u32ComponentId)
@@ -613,7 +613,7 @@ ieee8021SpanningTreePortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021SpanningTreePortTable_BTree = xBTree_initInline (&ieee8021SpanningTreePortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021SpanningTreePortEntry_t *
 ieee8021SpanningTreePortTable_createEntry (
 	uint32_t u32ComponentId,

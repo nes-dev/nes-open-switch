@@ -361,7 +361,7 @@ dot1agCfmMdTable_BTreeNodeCmp (
 
 xBTree_t oDot1agCfmMdTable_BTree = xBTree_initInline (&dot1agCfmMdTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot1agCfmMdEntry_t *
 dot1agCfmMdTable_createEntry (
 	uint32_t u32Index)
@@ -959,7 +959,7 @@ dot1agCfmMaNetTable_Meg_BTreeNodeCmp (
 xBTree_t oDot1agCfmMaNetTable_BTree = xBTree_initInline (&dot1agCfmMaNetTable_BTreeNodeCmp);
 xBTree_t oDot1agCfmMaNetTable_Meg_BTree = xBTree_initInline (&dot1agCfmMaNetTable_Meg_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot1agCfmMaNetEntry_t *
 dot1agCfmMaNetTable_createEntry (
 	uint32_t u32MdIndex,
@@ -1493,7 +1493,7 @@ dot1agCfmMaMepListTable_BTreeNodeCmp (
 
 xBTree_t oDot1agCfmMaMepListTable_BTree = xBTree_initInline (&dot1agCfmMaMepListTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot1agCfmMaMepListEntry_t *
 dot1agCfmMaMepListTable_createEntry (
 	uint32_t u32MdIndex,
@@ -1965,7 +1965,7 @@ dot1agCfmMepTable_If_BTreeNodeCmp (
 xBTree_t oDot1agCfmMepTable_BTree = xBTree_initInline (&dot1agCfmMepTable_BTreeNodeCmp);
 xBTree_t oDot1agCfmMepTable_If_BTree = xBTree_initInline (&dot1agCfmMepTable_If_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot1agCfmMepEntry_t *
 dot1agCfmMepTable_createEntry (
 	uint32_t u32MdIndex,
@@ -3289,7 +3289,7 @@ dot1agCfmLtrTable_BTreeNodeCmp (
 
 xBTree_t oDot1agCfmLtrTable_BTree = xBTree_initInline (&dot1agCfmLtrTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot1agCfmLtrEntry_t *
 dot1agCfmLtrTable_createEntry (
 	uint32_t u32MdIndex,
@@ -3616,7 +3616,7 @@ dot1agCfmMepDbTable_BTreeNodeCmp (
 
 xBTree_t oDot1agCfmMepDbTable_BTree = xBTree_initInline (&dot1agCfmMepDbTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot1agCfmMepDbEntry_t *
 dot1agCfmMepDbTable_createEntry (
 	uint32_t u32MdIndex,

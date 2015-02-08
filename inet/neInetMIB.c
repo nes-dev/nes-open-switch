@@ -407,7 +407,7 @@ neInetInterfaceTable_BTreeNodeCmp (
 
 xBTree_t oNeInetInterfaceTable_BTree = xBTree_initInline (&neInetInterfaceTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neInetInterfaceEntry_t *
 neInetInterfaceTable_createEntry (
 	uint32_t u32IfIndex)
@@ -1093,7 +1093,7 @@ neInetIntRouteTable_BTreeNodeCmp (
 
 xBTree_t oNeInetIntRouteTable_BTree = xBTree_initInline (&neInetIntRouteTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neInetIntRouteEntry_t *
 neInetIntRouteTable_createEntry (
 	uint8_t *pau8Dest, size_t u16Dest_len,
@@ -1387,7 +1387,7 @@ neInetRouteTable_BTreeNodeCmp (
 
 xBTree_t oNeInetRouteTable_BTree = xBTree_initInline (&neInetRouteTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neInetRouteEntry_t *
 neInetRouteTable_createEntry (
 	uint8_t *pau8Dest, size_t u16Dest_len,
@@ -1650,7 +1650,7 @@ neIpAddressTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neIpAddressEntry_t *
 neIpAddressTable_createEntry (
 	int32_t i32IpAddressAddrType,
@@ -2025,7 +2025,7 @@ xBTree_t oNeIpUnNumTable_BTree = xBTree_initInline (&neIpUnNumTable_BTreeNodeCmp
 xBTree_t oNeIpUnNumTable_LocalId_BTree = xBTree_initInline (&neIpUnNumTable_LocalId_BTreeNodeCmp);
 xBTree_t oNeIpUnNumTable_RemoteId_BTree = xBTree_initInline (&neIpUnNumTable_RemoteId_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neIpUnNumEntry_t *
 neIpUnNumTable_createEntry (
 	uint32_t u32IfIndex)
@@ -2954,7 +2954,7 @@ neIpAsNodeTable_BTreeNodeCmp (
 
 xBTree_t oNeIpAsNodeTable_BTree = xBTree_initInline (&neIpAsNodeTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neIpAsNodeEntry_t *
 neIpAsNodeTable_createEntry (
 	uint32_t u32Asn,

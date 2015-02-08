@@ -730,7 +730,7 @@ snmpTargetAddrTable_BTreeNodeCmp (
 
 xBTree_t oSnmpTargetAddrTable_BTree = xBTree_initInline (&snmpTargetAddrTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 snmpTargetAddrEntry_t *
 snmpTargetAddrTable_createEntry (
 	uint8_t *pau8Name, size_t u16Name_len)
@@ -1381,7 +1381,7 @@ snmpTargetParamsTable_BTreeNodeCmp (
 
 xBTree_t oSnmpTargetParamsTable_BTree = xBTree_initInline (&snmpTargetParamsTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 snmpTargetParamsEntry_t *
 snmpTargetParamsTable_createEntry (
 	uint8_t *pau8Name, size_t u16Name_len)
@@ -1958,7 +1958,7 @@ snmpNotifyTable_BTreeNodeCmp (
 
 xBTree_t oSnmpNotifyTable_BTree = xBTree_initInline (&snmpNotifyTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 snmpNotifyEntry_t *
 snmpNotifyTable_createEntry (
 	uint8_t *pau8Name, size_t u16Name_len)
@@ -2481,7 +2481,7 @@ snmpNotifyFilterProfileTable_BTreeNodeCmp (
 
 xBTree_t oSnmpNotifyFilterProfileTable_BTree = xBTree_initInline (&snmpNotifyFilterProfileTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 snmpNotifyFilterProfileEntry_t *
 snmpNotifyFilterProfileTable_createEntry (
 	uint8_t *pau8TargetParamsName, size_t u16TargetParamsName_len)
@@ -2976,7 +2976,7 @@ snmpNotifyFilterTable_BTreeNodeCmp (
 
 xBTree_t oSnmpNotifyFilterTable_BTree = xBTree_initInline (&snmpNotifyFilterTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 snmpNotifyFilterEntry_t *
 snmpNotifyFilterTable_createEntry (
 	uint8_t *pau8ProfileName, size_t u16ProfileName_len,
@@ -3516,7 +3516,7 @@ usmUserTable_BTreeNodeCmp (
 
 xBTree_t oUsmUserTable_BTree = xBTree_initInline (&usmUserTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 usmUserEntry_t *
 usmUserTable_createEntry (
 	uint8_t *pau8EngineID, size_t u16EngineID_len,
@@ -4265,7 +4265,7 @@ vacmContextTable_BTreeNodeCmp (
 
 xBTree_t oVacmContextTable_BTree = xBTree_initInline (&vacmContextTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 vacmContextEntry_t *
 vacmContextTable_createEntry (
 	uint8_t *pau8Name, size_t u16Name_len)
@@ -4497,7 +4497,7 @@ vacmSecurityToGroupTable_BTreeNodeCmp (
 
 xBTree_t oVacmSecurityToGroupTable_BTree = xBTree_initInline (&vacmSecurityToGroupTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 vacmSecurityToGroupEntry_t *
 vacmSecurityToGroupTable_createEntry (
 	int32_t i32SecurityModel,
@@ -5008,7 +5008,7 @@ vacmAccessTable_BTreeNodeCmp (
 
 xBTree_t oVacmAccessTable_BTree = xBTree_initInline (&vacmAccessTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 vacmAccessEntry_t *
 vacmAccessTable_createEntry (
 	uint8_t *pau8GroupName, size_t u16GroupName_len,
@@ -5640,7 +5640,7 @@ vacmViewTreeFamilyTable_BTreeNodeCmp (
 
 xBTree_t oVacmViewTreeFamilyTable_BTree = xBTree_initInline (&vacmViewTreeFamilyTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 vacmViewTreeFamilyEntry_t *
 vacmViewTreeFamilyTable_createEntry (
 	uint8_t *pau8ViewName, size_t u16ViewName_len,
@@ -6178,7 +6178,7 @@ snmpCommunityTable_BTreeNodeCmp (
 
 xBTree_t oSnmpCommunityTable_BTree = xBTree_initInline (&snmpCommunityTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 snmpCommunityEntry_t *
 snmpCommunityTable_createEntry (
 	uint8_t *pau8Index, size_t u16Index_len)
@@ -6804,7 +6804,7 @@ snmpTargetAddrExtTable_BTreeNodeCmp (
 
 xBTree_t oSnmpTargetAddrExtTable_BTree = xBTree_initInline (&snmpTargetAddrExtTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 snmpTargetAddrExtEntry_t *
 snmpTargetAddrExtTable_createEntry (
 	uint8_t *pau8Name, size_t u16Name_len)

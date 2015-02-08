@@ -594,7 +594,7 @@ clnpAddrTable_BTreeNodeCmp (
 
 xBTree_t oClnpAddrTable_BTree = xBTree_initInline (&clnpAddrTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 clnpAddrEntry_t *
 clnpAddrTable_createEntry (
 	uint8_t *pau8EntAddr, size_t u16EntAddr_len)
@@ -830,7 +830,7 @@ clnpRoutingTable_BTreeNodeCmp (
 
 xBTree_t oClnpRoutingTable_BTree = xBTree_initInline (&clnpRoutingTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 clnpRoutingEntry_t *
 clnpRoutingTable_createEntry (
 	uint8_t *pau8RouteDest, size_t u16RouteDest_len)
@@ -1425,7 +1425,7 @@ clnpNetToMediaTable_BTreeNodeCmp (
 
 xBTree_t oClnpNetToMediaTable_BTree = xBTree_initInline (&clnpNetToMediaTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 clnpNetToMediaEntry_t *
 clnpNetToMediaTable_createEntry (
 	int32_t i32IfIndex,
@@ -1912,7 +1912,7 @@ clnpMediaToNetTable_BTreeNodeCmp (
 
 xBTree_t oClnpMediaToNetTable_BTree = xBTree_initInline (&clnpMediaToNetTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 clnpMediaToNetEntry_t *
 clnpMediaToNetTable_createEntry (
 	int32_t i32IfIndex,

@@ -197,7 +197,7 @@ udpEndpointTable_BTreeNodeCmp (
 
 xBTree_t oUdpEndpointTable_BTree = xBTree_initInline (&udpEndpointTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 udpEndpointEntry_t *
 udpEndpointTable_createEntry (
 	int32_t i32LocalAddressType,

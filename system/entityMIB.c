@@ -190,7 +190,7 @@ entPhysicalTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 entPhysicalEntry_t *
 entPhysicalTable_createEntry (
 	uint32_t u32Index)
@@ -692,7 +692,7 @@ entLogicalTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 entLogicalEntry_t *
 entLogicalTable_createEntry (
 	uint32_t u32Index)
@@ -892,7 +892,7 @@ entLPMappingTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 entLPMappingEntry_t *
 entLPMappingTable_createEntry (
 	uint32_t u32LogicalIndex,
@@ -1098,7 +1098,7 @@ entAliasMappingTable_BTreeNodeCmp (
 
 xBTree_t oEntAliasMappingTable_BTree = xBTree_initInline (&entAliasMappingTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 entAliasMappingEntry_t *
 entAliasMappingTable_createEntry (
 	uint32_t u32PhysicalIndex,
@@ -1337,7 +1337,7 @@ entPhysicalContainsTable_BTreeNodeCmp (
 
 xBTree_t oEntPhysicalContainsTable_BTree = xBTree_initInline (&entPhysicalContainsTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 entPhysicalContainsEntry_t *
 entPhysicalContainsTable_createEntry (
 	uint32_t u32Index,
@@ -1588,7 +1588,7 @@ neEntPhysicalTable_SerialNum_BTreeNodeCmp (
 xBTree_t oNeEntPhysicalTable_BTree = xBTree_initInline (&neEntPhysicalTable_BTreeNodeCmp);
 xBTree_t oNeEntPhysicalTable_SerialNum_BTree = xBTree_initInline (&neEntPhysicalTable_SerialNum_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neEntPhysicalEntry_t *
 neEntPhysicalTable_createEntry (
 	uint32_t u32Index)
@@ -2367,7 +2367,7 @@ neEntLogicalTable_BTreeNodeCmp (
 
 xBTree_t oNeEntLogicalTable_BTree = xBTree_initInline (&neEntLogicalTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neEntLogicalEntry_t *
 neEntLogicalTable_createEntry (
 	uint32_t u32Index)
@@ -2826,7 +2826,7 @@ neEntLPMappingTable_BTreeNodeCmp (
 
 xBTree_t oNeEntLPMappingTable_BTree = xBTree_initInline (&neEntLPMappingTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neEntLPMappingEntry_t *
 neEntLPMappingTable_createEntry (
 	uint32_t u32LogicalIndex,
@@ -3295,7 +3295,7 @@ neEntChassisTable_BTreeNodeCmp (
 
 xBTree_t oNeEntChassisTable_BTree = xBTree_initInline (&neEntChassisTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neEntChassisEntry_t *
 neEntChassisTable_createEntry (
 	uint32_t u32PhysicalIndex)
@@ -3620,7 +3620,7 @@ xBTree_t oNeEntPortTable_BTree = xBTree_initInline (&neEntPortTable_BTreeNodeCmp
 xBTree_t oNeEntPortTable_If_BTree = xBTree_initInline (&neEntPortTable_If_BTreeNodeCmp);
 xBTree_t oNeEntPortTable_HMap_BTree = xBTree_initInline (&neEntPortTable_HMap_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neEntPortEntry_t *
 neEntPortTable_createEntry (
 	uint32_t u32PhysicalIndex)

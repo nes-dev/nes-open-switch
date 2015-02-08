@@ -294,7 +294,7 @@ ieee8021PbbVipTable_ISid_BTreeNodeCmp (
 xBTree_t oIeee8021PbbVipTable_BTree = xBTree_initInline (&ieee8021PbbVipTable_BTreeNodeCmp);
 xBTree_t oIeee8021PbbVipTable_ISid_BTree = xBTree_initInline (&ieee8021PbbVipTable_ISid_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbVipEntry_t *
 ieee8021PbbVipTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
@@ -1135,7 +1135,7 @@ ieee8021PbbISidToVipTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbISidToVipTable_BTree = xBTree_initInline (&ieee8021PbbISidToVipTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbISidToVipEntry_t *
 ieee8021PbbISidToVipTable_createEntry (
 	uint32_t u32ISid)
@@ -1379,7 +1379,7 @@ ieee8021PbbPipTable_Comp_BTreeNodeCmp (
 xBTree_t oIeee8021PbbPipTable_BTree = xBTree_initInline (&ieee8021PbbPipTable_BTreeNodeCmp);
 xBTree_t oIeee8021PbbPipTable_Comp_BTree = xBTree_initInline (&ieee8021PbbPipTable_Comp_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbPipEntry_t *
 ieee8021PbbPipTable_createEntry (
 	uint32_t u32IfIndex)
@@ -2279,7 +2279,7 @@ ieee8021PbbPipPriorityTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbPipPriorityTable_BTree = xBTree_initInline (&ieee8021PbbPipPriorityTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbPipPriorityEntry_t *
 ieee8021PbbPipPriorityTable_createEntry (
 	uint32_t u32IfIndex)
@@ -2663,7 +2663,7 @@ ieee8021PbbPipDecodingTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbPipDecodingTable_BTree = xBTree_initInline (&ieee8021PbbPipDecodingTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbPipDecodingEntry_t *
 ieee8021PbbPipDecodingTable_createEntry (
 	uint32_t u32IfIndex,
@@ -3039,7 +3039,7 @@ ieee8021PbbPipEncodingTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbPipEncodingTable_BTree = xBTree_initInline (&ieee8021PbbPipEncodingTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbPipEncodingEntry_t *
 ieee8021PbbPipEncodingTable_createEntry (
 	uint32_t u32IfIndex,
@@ -3393,7 +3393,7 @@ ieee8021PbbVipToPipMappingTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbVipToPipMappingTable_BTree = xBTree_initInline (&ieee8021PbbVipToPipMappingTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbVipToPipMappingEntry_t *
 ieee8021PbbVipToPipMappingTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
@@ -4027,7 +4027,7 @@ ieee8021PbbCbpServiceMappingTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbCbpServiceMappingTable_BTree = xBTree_initInline (&ieee8021PbbCbpServiceMappingTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbCbpServiceMappingEntry_t *
 ieee8021PbbCbpServiceMappingTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
@@ -4753,7 +4753,7 @@ ieee8021PbbCbpTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021PbbCbpTable_BTree = xBTree_initInline (&ieee8021PbbCbpTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021PbbCbpEntry_t *
 ieee8021PbbCbpTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,

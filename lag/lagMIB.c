@@ -209,7 +209,7 @@ dot3adAggData_Group_BTreeNodeCmp (
 static xBTree_t oDot3adAggData_BTree = xBTree_initInline (&dot3adAggData_BTreeNodeCmp);
 static xBTree_t oDot3adAggData_Group_BTree = xBTree_initInline (&dot3adAggData_Group_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot3adAggData_t *
 dot3adAggData_createEntry (
 	uint32_t u32Index)
@@ -347,7 +347,7 @@ dot3adAggData_removeEntry (dot3adAggData_t *poEntry)
 	return;
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot3adAggEntry_t *
 dot3adAggTable_createEntry (
 	uint32_t u32Index)
@@ -820,7 +820,7 @@ dot3adAggPortListTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot3adAggPortListEntry_t *
 dot3adAggPortListTable_createEntry (
 	uint32_t u32Index)
@@ -1040,7 +1040,7 @@ dot3adAggPortData_Group_BTreeNodeCmp (
 static xBTree_t oDot3adAggPortData_BTree = xBTree_initInline (&dot3adAggPortData_BTreeNodeCmp);
 static xBTree_t oDot3adAggPortData_Group_BTree = xBTree_initInline (&dot3adAggPortData_Group_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot3adAggPortData_t *
 dot3adAggPortData_createEntry (
 	uint32_t u32Index)
@@ -1181,7 +1181,7 @@ dot3adAggPortData_removeEntry (dot3adAggPortData_t *poEntry)
 	return;
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot3adAggPortEntry_t *
 dot3adAggPortTable_createEntry (
 	uint32_t u32Index)
@@ -1949,7 +1949,7 @@ dot3adAggPortStatsTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot3adAggPortStatsEntry_t *
 dot3adAggPortStatsTable_createEntry (
 	uint32_t u32Index)
@@ -2161,7 +2161,7 @@ dot3adAggPortDebugTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot3adAggPortDebugEntry_t *
 dot3adAggPortDebugTable_createEntry (
 	uint32_t u32Index)
@@ -2385,7 +2385,7 @@ dot3adAggPortXTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 dot3adAggPortXEntry_t *
 dot3adAggPortXTable_createEntry (
 	uint32_t u32Index)
@@ -2681,7 +2681,7 @@ neAggTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neAggEntry_t *
 neAggTable_createEntry (
 	uint32_t u32Dot3adAggIndex)
@@ -3407,7 +3407,7 @@ neAggPortListTable_BTreeNodeCmp (
 
 xBTree_t oNeAggPortListTable_BTree = xBTree_initInline (&neAggPortListTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neAggPortListEntry_t *
 neAggPortListTable_createEntry (
 	uint32_t u32Dot3adAggIndex,
@@ -3630,7 +3630,7 @@ neAggPortTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neAggPortEntry_t *
 neAggPortTable_createEntry (
 	uint32_t u32Dot3adAggPortIndex)

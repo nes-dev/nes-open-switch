@@ -329,7 +329,7 @@ sysORTable_ID_BTreeNodeCmp (
 xBTree_t oSysORTable_BTree = xBTree_initInline (&sysORTable_BTreeNodeCmp);
 xBTree_t oSysORTable_ID_BTree = xBTree_initInline (&sysORTable_ID_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 sysOREntry_t *
 sysORTable_createEntry (
 	int32_t i32Index)

@@ -500,7 +500,7 @@ ifTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ifEntry_t *
 ifTable_createEntry (
 	uint32_t u32Index)
@@ -1084,7 +1084,7 @@ ifXTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ifXEntry_t *
 ifXTable_createEntry (
 	uint32_t u32Index)
@@ -1515,7 +1515,7 @@ ifStackTable_LToH_BTreeNodeCmp (
 xBTree_t oIfStackTable_BTree = xBTree_initInline (&ifStackTable_BTreeNodeCmp);
 xBTree_t oIfStackTable_LToH_BTree = xBTree_initInline (&ifStackTable_LToH_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ifStackEntry_t *
 ifStackTable_createEntry (
 	uint32_t u32HigherLayer,
@@ -2179,7 +2179,7 @@ ifRcvAddressTable_BTreeNodeCmp (
 
 xBTree_t oIfRcvAddressTable_BTree = xBTree_initInline (&ifRcvAddressTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ifRcvAddressEntry_t *
 ifRcvAddressTable_createEntry (
 	uint32_t u32Index,
@@ -2706,7 +2706,7 @@ neIfTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 neIfEntry_t *
 neIfTable_createEntry (
 	uint32_t u32IfIndex)

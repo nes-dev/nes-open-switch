@@ -182,7 +182,7 @@ mefServiceEnniCfgTable_BTreeNodeCmp (
 
 xBTree_t oMefServiceEnniCfgTable_BTree = xBTree_initInline (&mefServiceEnniCfgTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 mefServiceEnniCfgEntry_t *
 mefServiceEnniCfgTable_createEntry (
 	uint32_t u32IfIndex)
@@ -579,7 +579,7 @@ mefServiceVuniCfgTable_BTreeNodeCmp (
 
 xBTree_t oMefServiceVuniCfgTable_BTree = xBTree_initInline (&mefServiceVuniCfgTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 mefServiceVuniCfgEntry_t *
 mefServiceVuniCfgTable_createEntry (
 	uint32_t u32IfIndex,
@@ -1236,7 +1236,7 @@ mefServiceOvcCfgTable_BTreeNodeCmp (
 
 xBTree_t oMefServiceOvcCfgTable_BTree = xBTree_initInline (&mefServiceOvcCfgTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 mefServiceOvcCfgEntry_t *
 mefServiceOvcCfgTable_createEntry (
 	uint32_t u32Index)
@@ -2075,7 +2075,7 @@ mefServiceOvcStatusTable_BTreeNodeCmp (
 
 xBTree_t oMefServiceOvcStatusTable_BTree = xBTree_initInline (&mefServiceOvcStatusTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 mefServiceOvcStatusEntry_t *
 mefServiceOvcStatusTable_createEntry (
 	uint32_t u32CfgIndex)
@@ -2313,7 +2313,7 @@ mefServiceOvcEndPtPerEnniCfgTable_BTreeNodeCmp (
 
 xBTree_t oMefServiceOvcEndPtPerEnniCfgTable_BTree = xBTree_initInline (&mefServiceOvcEndPtPerEnniCfgTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 mefServiceOvcEndPtPerEnniCfgEntry_t *
 mefServiceOvcEndPtPerEnniCfgTable_createEntry (
 	uint32_t u32IfIndex,
@@ -2943,7 +2943,7 @@ mefServiceOvcEndPtPerUniCfgTable_BTreeNodeCmp (
 
 xBTree_t oMefServiceOvcEndPtPerUniCfgTable_BTree = xBTree_initInline (&mefServiceOvcEndPtPerUniCfgTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 mefServiceOvcEndPtPerUniCfgEntry_t *
 mefServiceOvcEndPtPerUniCfgTable_createEntry (
 	uint32_t u32IfIndex,
@@ -3511,7 +3511,7 @@ mefServiceOvcEndPtPerVuniCfgTable_BTreeNodeCmp (
 
 xBTree_t oMefServiceOvcEndPtPerVuniCfgTable_BTree = xBTree_initInline (&mefServiceOvcEndPtPerVuniCfgTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 mefServiceOvcEndPtPerVuniCfgEntry_t *
 mefServiceOvcEndPtPerVuniCfgTable_createEntry (
 	uint32_t u32IfIndex,

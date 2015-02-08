@@ -124,7 +124,7 @@ ieee8021MstpCistTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021MstpCistTable_BTree = xBTree_initInline (&ieee8021MstpCistTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021MstpCistEntry_t *
 ieee8021MstpCistTable_createEntry (
 	uint32_t u32ComponentId)
@@ -460,7 +460,7 @@ ieee8021MstpTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021MstpTable_BTree = xBTree_initInline (&ieee8021MstpTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021MstpEntry_t *
 ieee8021MstpTable_createEntry (
 	uint32_t u32ComponentId,
@@ -963,7 +963,7 @@ ieee8021MstpCistPortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021MstpCistPortTable_BTree = xBTree_initInline (&ieee8021MstpCistPortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021MstpCistPortEntry_t *
 ieee8021MstpCistPortTable_createEntry (
 	uint32_t u32ComponentId,
@@ -1591,7 +1591,7 @@ ieee8021MstpPortTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021MstpPortTable_BTree = xBTree_initInline (&ieee8021MstpPortTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021MstpPortEntry_t *
 ieee8021MstpPortTable_createEntry (
 	uint32_t u32ComponentId,
@@ -1985,7 +1985,7 @@ ieee8021MstpConfigIdTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021MstpConfigIdTable_BTree = xBTree_initInline (&ieee8021MstpConfigIdTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021MstpConfigIdEntry_t *
 ieee8021MstpConfigIdTable_createEntry (
 	uint32_t u32ComponentId)
@@ -2373,7 +2373,7 @@ ieee8021MstpCistPortExtensionTable_BTreeNodeCmp (
 
 xBTree_t oIeee8021MstpCistPortExtensionTable_BTree = xBTree_initInline (&ieee8021MstpCistPortExtensionTable_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021MstpCistPortExtensionEntry_t *
 ieee8021MstpCistPortExtensionTable_createEntry (
 	uint32_t u32ComponentId,
@@ -2710,7 +2710,7 @@ ieee8021MstpFidToMstiV2Table_BTreeNodeCmp (
 
 xBTree_t oIeee8021MstpFidToMstiV2Table_BTree = xBTree_initInline (&ieee8021MstpFidToMstiV2Table_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021MstpFidToMstiV2Entry_t *
 ieee8021MstpFidToMstiV2Table_createEntry (
 	uint32_t u32ComponentId,
@@ -3044,7 +3044,7 @@ ieee8021MstpVlanV2Table_BTreeNodeCmp (
 
 xBTree_t oIeee8021MstpVlanV2Table_BTree = xBTree_initInline (&ieee8021MstpVlanV2Table_BTreeNodeCmp);
 
-/* create a new row in the (unsorted) table */
+/* create a new row in the table */
 ieee8021MstpVlanV2Entry_t *
 ieee8021MstpVlanV2Table_createEntry (
 	uint32_t u32ComponentId,
