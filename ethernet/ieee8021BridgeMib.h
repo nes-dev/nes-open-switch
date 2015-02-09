@@ -127,8 +127,8 @@ typedef struct ieee8021BridgeBaseEntry_t
 	int32_t i32ComponentType;
 	uint8_t au8DeviceCapabilities[1];
 	size_t u16DeviceCapabilities_len;	/* # of uint8_t elements */
-	int32_t i32TrafficClassesEnabled;
-	int32_t i32MmrpEnabledStatus;
+	uint8_t u8TrafficClassesEnabled;
+	uint8_t u8MmrpEnabledStatus;
 	uint8_t u8RowStatus;
 	
 	neIeee8021BridgeBaseEntry_t oNe;
@@ -165,9 +165,9 @@ bool ieee8021BridgeBaseTable_removeExt (ieee8021BridgeBaseEntry_t *poEntry);
 bool ieee8021BridgeBaseTable_createHier (ieee8021BridgeBaseEntry_t *poEntry);
 bool ieee8021BridgeBaseTable_removeHier (ieee8021BridgeBaseEntry_t *poEntry);
 bool ieee8021BridgeBaseTrafficClassesEnabled_handler (
-	ieee8021BridgeBaseEntry_t *poEntry, int32_t i32TrafficClassesEnabled, bool bForce);
+	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8TrafficClassesEnabled, bool bForce);
 bool ieee8021BridgeBaseMmrpEnabledStatus_handler (
-	ieee8021BridgeBaseEntry_t *poEntry, int32_t i32MmrpEnabledStatus, bool bForce);
+	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8MmrpEnabledStatus, bool bForce);
 bool ieee8021BridgeBaseRowStatus_handler (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
@@ -266,9 +266,9 @@ typedef struct ieee8021BridgeBasePortEntry_t
 	uint8_t au8TypeCapabilities[2];
 	size_t u16TypeCapabilities_len;	/* # of uint8_t elements */
 	int32_t i32Type;
-	int32_t i32External;
+	uint8_t u8External;
 	int32_t i32AdminPointToPoint;
-	int32_t i32OperPointToPoint;
+	uint8_t u8OperPointToPoint;
 	uint8_t au8Name[255];
 	size_t u16Name_len;	/* # of uint8_t elements */
 	
@@ -577,12 +577,12 @@ typedef struct ieee8021BridgePortPriorityEntry_t
 	uint32_t u32BasePort;
 	
 	/* Column values */
-	uint32_t u32PortDefaultUserPriority;
-	int32_t i32PortNumTrafficClasses;
+	uint32_t u32DefaultUserPriority;
+	int32_t i32NumTrafficClasses;
 	int32_t i32CodePointSelection;
-	int32_t i32PortUseDEI;
-	int32_t i32PortRequireDropEncoding;
-	int32_t i32PortServiceAccessPrioritySelection;
+	uint8_t u8UseDEI;
+	uint8_t u8RequireDropEncoding;
+	uint8_t u8ServiceAccessPrioritySelection;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgePortPriorityEntry_t;
@@ -783,7 +783,7 @@ typedef struct ieee8021BridgePortDecodingEntry_t
 	
 	/* Column values */
 	uint32_t u32Priority;
-	int32_t i32DropEligible;
+	uint8_t u8DropEligible;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgePortDecodingEntry_t;
@@ -847,7 +847,7 @@ typedef struct ieee8021BridgePortEncodingEntry_t
 	uint32_t u32PortNum;
 	int32_t i32PriorityCodePointRow;
 	int32_t i32PriorityCodePoint;
-	int32_t i32DropEligible;
+	uint8_t u8DropEligible;
 	
 	/* Column values */
 	uint32_t u32Priority;
@@ -864,19 +864,19 @@ ieee8021BridgePortEncodingEntry_t * ieee8021BridgePortEncodingTable_createEntry 
 	uint32_t u32PortNum,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible);
+	uint8_t u8DropEligible);
 ieee8021BridgePortEncodingEntry_t * ieee8021BridgePortEncodingTable_getByIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32PortNum,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible);
+	uint8_t u8DropEligible);
 ieee8021BridgePortEncodingEntry_t * ieee8021BridgePortEncodingTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32PortNum,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible);
+	uint8_t u8DropEligible);
 void ieee8021BridgePortEncodingTable_removeEntry (ieee8021BridgePortEncodingEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgePortEncodingTable_getFirst;
@@ -1004,11 +1004,11 @@ typedef struct ieee8021BridgePortMmrpEntry_t
 	uint32_t u32BasePort;
 	
 	/* Column values */
-	int32_t i32EnabledStatus;
+	uint8_t u8EnabledStatus;
 	uint64_t u64FailedRegistrations;
 	uint8_t au8LastPduOrigin[6];
 	size_t u16LastPduOrigin_len;	/* # of uint8_t elements */
-	int32_t i32PortRestrictedGroupRegistration;
+	uint8_t u8RestrictedGroupRegistration;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgePortMmrpEntry_t;

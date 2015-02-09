@@ -173,8 +173,8 @@ ieee8021BridgeBaseTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_true_c;
-	poEntry->i32MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_true_c;
+	poEntry->u8TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_true_c;
+	poEntry->u8MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_true_c;
 	poEntry->u16Ports_len = ETHERNET_PORT_MAP_SIZE;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	xFreeRange_init (&poEntry->oPort_FreeRange);
@@ -327,14 +327,14 @@ ieee8021BridgeBaseTable_removeHier_cleanup:
 }
 
 bool ieee8021BridgeBaseTrafficClassesEnabled_handler (
-	ieee8021BridgeBaseEntry_t *poEntry, int32_t i32TrafficClassesEnabled, bool bForce)
+	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8TrafficClassesEnabled, bool bForce)
 {
-	if (poEntry->i32TrafficClassesEnabled == i32TrafficClassesEnabled && !bForce)
+	if (poEntry->u8TrafficClassesEnabled == u8TrafficClassesEnabled && !bForce)
 	{
 		goto ieee8021BridgeBaseTrafficClassesEnabled_handler_success;
 	}
 	
-	switch (i32TrafficClassesEnabled)
+	switch (u8TrafficClassesEnabled)
 	{
 	default:
 		goto ieee8021BridgeBaseTrafficClassesEnabled_handler_cleanup;
@@ -342,13 +342,13 @@ bool ieee8021BridgeBaseTrafficClassesEnabled_handler (
 	case ieee8021BridgeBaseTrafficClassesEnabled_true_c:
 		/* TODO */
 		
-		!bForce ? (poEntry->i32TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_true_c): false;
+		!bForce ? (poEntry->u8TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_true_c): false;
 		break;
 		
 	case ieee8021BridgeBaseTrafficClassesEnabled_false_c:
 		/* TODO */
 		
-		!bForce ? (poEntry->i32TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_false_c): false;
+		!bForce ? (poEntry->u8TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_false_c): false;
 		break;
 	}
 	
@@ -363,14 +363,14 @@ ieee8021BridgeBaseTrafficClassesEnabled_handler_cleanup:
 }
 
 bool ieee8021BridgeBaseMmrpEnabledStatus_handler (
-	ieee8021BridgeBaseEntry_t *poEntry, int32_t i32MmrpEnabledStatus, bool bForce)
+	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8MmrpEnabledStatus, bool bForce)
 {
-	if (poEntry->i32MmrpEnabledStatus == i32MmrpEnabledStatus && !bForce)
+	if (poEntry->u8MmrpEnabledStatus == u8MmrpEnabledStatus && !bForce)
 	{
 		goto ieee8021BridgeBaseMmrpEnabledStatus_handler_success;
 	}
 	
-	switch (i32MmrpEnabledStatus)
+	switch (u8MmrpEnabledStatus)
 	{
 	default:
 		goto ieee8021BridgeBaseMmrpEnabledStatus_handler_cleanup;
@@ -378,13 +378,13 @@ bool ieee8021BridgeBaseMmrpEnabledStatus_handler (
 	case ieee8021BridgeBaseMmrpEnabledStatus_true_c:
 		/* TODO */
 		
-		!bForce ? (poEntry->i32MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_true_c): false;
+		!bForce ? (poEntry->u8MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_true_c): false;
 		break;
 		
 	case ieee8021BridgeBaseMmrpEnabledStatus_false_c:
 		/* TODO */
 		
-		!bForce ? (poEntry->i32MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_false_c): false;
+		!bForce ? (poEntry->u8MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_false_c): false;
 		break;
 	}
 	
@@ -412,11 +412,11 @@ ieee8021BridgeBaseRowStatus_handler (
 	case xRowStatus_active_c:
 		/* TODO */
 		
-		if (!ieee8021BridgeBaseTrafficClassesEnabled_handler (poEntry, poEntry->i32TrafficClassesEnabled, true))
+		if (!ieee8021BridgeBaseTrafficClassesEnabled_handler (poEntry, poEntry->u8TrafficClassesEnabled, true))
 		{
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
 		}
-		if (!ieee8021BridgeBaseMmrpEnabledStatus_handler (poEntry, poEntry->i32MmrpEnabledStatus, true))
+		if (!ieee8021BridgeBaseMmrpEnabledStatus_handler (poEntry, poEntry->u8MmrpEnabledStatus, true))
 		{
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
 		}
@@ -563,10 +563,10 @@ ieee8021BridgeBaseTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8DeviceCapabilities, table_entry->u16DeviceCapabilities_len);
 				break;
 			case IEEE8021BRIDGEBASETRAFFICCLASSESENABLED:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TrafficClassesEnabled);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8TrafficClassesEnabled);
 				break;
 			case IEEE8021BRIDGEBASEMMRPENABLEDSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32MmrpEnabledStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8MmrpEnabledStatus);
 				break;
 			case IEEE8021BRIDGEBASEROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -797,14 +797,14 @@ ieee8021BridgeBaseTable_mapper (
 				table_entry->u16DeviceCapabilities_len = request->requestvb->val_len;
 				break;
 			case IEEE8021BRIDGEBASETRAFFICCLASSESENABLED:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TrafficClassesEnabled))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8TrafficClassesEnabled))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32TrafficClassesEnabled, sizeof (table_entry->i32TrafficClassesEnabled));
+					memcpy (pvOldDdata, &table_entry->u8TrafficClassesEnabled, sizeof (table_entry->u8TrafficClassesEnabled));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
@@ -815,14 +815,14 @@ ieee8021BridgeBaseTable_mapper (
 				}
 				break;
 			case IEEE8021BRIDGEBASEMMRPENABLEDSTATUS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32MmrpEnabledStatus))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8MmrpEnabledStatus))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32MmrpEnabledStatus, sizeof (table_entry->i32MmrpEnabledStatus));
+					memcpy (pvOldDdata, &table_entry->u8MmrpEnabledStatus, sizeof (table_entry->u8MmrpEnabledStatus));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
@@ -886,10 +886,10 @@ ieee8021BridgeBaseTable_mapper (
 				table_entry->u16DeviceCapabilities_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case IEEE8021BRIDGEBASETRAFFICCLASSESENABLED:
-				memcpy (&table_entry->i32TrafficClassesEnabled, pvOldDdata, sizeof (table_entry->i32TrafficClassesEnabled));
+				memcpy (&table_entry->u8TrafficClassesEnabled, pvOldDdata, sizeof (table_entry->u8TrafficClassesEnabled));
 				break;
 			case IEEE8021BRIDGEBASEMMRPENABLEDSTATUS:
-				memcpy (&table_entry->i32MmrpEnabledStatus, pvOldDdata, sizeof (table_entry->i32MmrpEnabledStatus));
+				memcpy (&table_entry->u8MmrpEnabledStatus, pvOldDdata, sizeof (table_entry->u8MmrpEnabledStatus));
 				break;
 			case IEEE8021BRIDGEBASEROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -1549,13 +1549,13 @@ ieee8021BridgeBasePortTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
 				break;
 			case IEEE8021BRIDGEBASEPORTEXTERNAL:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32External);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8External);
 				break;
 			case IEEE8021BRIDGEBASEPORTADMINPOINTTOPOINT:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32AdminPointToPoint);
 				break;
 			case IEEE8021BRIDGEBASEPORTOPERPOINTTOPOINT:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32OperPointToPoint);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8OperPointToPoint);
 				break;
 			case IEEE8021BRIDGEBASEPORTNAME:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Name, table_entry->u16Name_len);
@@ -2143,7 +2143,7 @@ ieee8021BridgePhyData_attachComponent (
 	poPhyData->u32Port = poPort->u32Port;
 	memcpy (poPort->au8Capabilities, poPhyData->au8TypeCapabilities, sizeof (poPort->au8Capabilities));
 	poPort->u32IfIndex = poPhyData->u32IfIndex;
-	poPort->i32External = poPhyData->u32PhyPort == 0 ? ieee8021BridgeBasePortExternal_false_c: ieee8021BridgeBasePortExternal_true_c;
+	poPort->u8External = poPhyData->u32PhyPort == 0 ? ieee8021BridgeBasePortExternal_false_c: ieee8021BridgeBasePortExternal_true_c;
 	bRetCode = true;
 	
 ieee8021BridgePhyData_attachComponent_cleanup:
@@ -2166,7 +2166,7 @@ ieee8021BridgePhyData_detachComponent (
 	poPhyData->u32ComponentId = 0;
 	poPhyData->u32Port = 0;
 	memset (poPort->au8Capabilities, 0, sizeof (poPort->au8Capabilities));
-	poPort->i32External = ieee8021BridgeBasePortExternal_false_c;
+	poPort->u8External = ieee8021BridgeBasePortExternal_false_c;
 	bRetCode = true;
 	
 ieee8021BridgePhyData_detachComponent_cleanup:
@@ -2333,7 +2333,7 @@ ieee8021BridgeBaseIfToPortTable_getNext (
 	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePhyData_t, oIf_BTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32IfIndex);
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oIf;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oIf_BTreeNode, &oIeee8021BridgePhyData_If_BTree);
 	return put_index_data;
 }
@@ -2567,7 +2567,7 @@ ieee8021BridgePhyPortTable_getNext (
 	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePhyData_t, oPhy_BTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PhyPort);
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oPhy;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oPhy_BTreeNode, &oIeee8021BridgePhyData_Phy_BTree);
 	return put_index_data;
 }
@@ -3143,7 +3143,7 @@ ieee8021BridgePortPriorityTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32PortRequireDropEncoding = ieee8021BridgePortRequireDropEncoding_false_c;
+	poEntry->u8RequireDropEncoding = ieee8021BridgePortRequireDropEncoding_false_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021BridgePortPriorityTable_BTree);
 	return poEntry;
@@ -3228,10 +3228,10 @@ ieee8021BridgePortPriorityTable_createExt (
 	{
 		return NULL;
 	}
-	poEntry->i32PortNumTrafficClasses = 8;
+	poEntry->i32NumTrafficClasses = 8;
 	poEntry->i32CodePointSelection = ieee8021BridgePortPriorityCodePointSelection_codePoint8p0d_c;
-	poEntry->i32PortUseDEI = ieee8021BridgePortUseDEI_false_c;
-	poEntry->i32PortServiceAccessPrioritySelection = ieee8021BridgePortServiceAccessPrioritySelection_true_c;
+	poEntry->u8UseDEI = ieee8021BridgePortUseDEI_false_c;
+	poEntry->u8ServiceAccessPrioritySelection = ieee8021BridgePortServiceAccessPrioritySelection_true_c;
 	
 	if (!ieee8021BridgePortPriorityTable_createHier (poEntry))
 	{
@@ -3418,22 +3418,22 @@ ieee8021BridgePortPriorityTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTDEFAULTUSERPRIORITY:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PortDefaultUserPriority);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32DefaultUserPriority);
 				break;
 			case IEEE8021BRIDGEPORTNUMTRAFFICCLASSES:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PortNumTrafficClasses);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32NumTrafficClasses);
 				break;
 			case IEEE8021BRIDGEPORTPRIORITYCODEPOINTSELECTION:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32CodePointSelection);
 				break;
 			case IEEE8021BRIDGEPORTUSEDEI:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PortUseDEI);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8UseDEI);
 				break;
 			case IEEE8021BRIDGEPORTREQUIREDROPENCODING:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PortRequireDropEncoding);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RequireDropEncoding);
 				break;
 			case IEEE8021BRIDGEPORTSERVICEACCESSPRIORITYSELECTION:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PortServiceAccessPrioritySelection);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8ServiceAccessPrioritySelection);
 				break;
 				
 			default:
@@ -3537,32 +3537,32 @@ ieee8021BridgePortPriorityTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTDEFAULTUSERPRIORITY:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PortDefaultUserPriority))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32DefaultUserPriority))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->u32PortDefaultUserPriority, sizeof (table_entry->u32PortDefaultUserPriority));
+					memcpy (pvOldDdata, &table_entry->u32DefaultUserPriority, sizeof (table_entry->u32DefaultUserPriority));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->u32PortDefaultUserPriority = *request->requestvb->val.integer;
+				table_entry->u32DefaultUserPriority = *request->requestvb->val.integer;
 				break;
 			case IEEE8021BRIDGEPORTNUMTRAFFICCLASSES:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PortNumTrafficClasses))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32NumTrafficClasses))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PortNumTrafficClasses, sizeof (table_entry->i32PortNumTrafficClasses));
+					memcpy (pvOldDdata, &table_entry->i32NumTrafficClasses, sizeof (table_entry->i32NumTrafficClasses));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PortNumTrafficClasses = *request->requestvb->val.integer;
+				table_entry->i32NumTrafficClasses = *request->requestvb->val.integer;
 				break;
 			case IEEE8021BRIDGEPORTPRIORITYCODEPOINTSELECTION:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32CodePointSelection))) == NULL)
@@ -3579,46 +3579,46 @@ ieee8021BridgePortPriorityTable_mapper (
 				table_entry->i32CodePointSelection = *request->requestvb->val.integer;
 				break;
 			case IEEE8021BRIDGEPORTUSEDEI:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PortUseDEI))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8UseDEI))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PortUseDEI, sizeof (table_entry->i32PortUseDEI));
+					memcpy (pvOldDdata, &table_entry->u8UseDEI, sizeof (table_entry->u8UseDEI));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PortUseDEI = *request->requestvb->val.integer;
+				table_entry->u8UseDEI = *request->requestvb->val.integer;
 				break;
 			case IEEE8021BRIDGEPORTREQUIREDROPENCODING:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PortRequireDropEncoding))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8RequireDropEncoding))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PortRequireDropEncoding, sizeof (table_entry->i32PortRequireDropEncoding));
+					memcpy (pvOldDdata, &table_entry->u8RequireDropEncoding, sizeof (table_entry->u8RequireDropEncoding));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PortRequireDropEncoding = *request->requestvb->val.integer;
+				table_entry->u8RequireDropEncoding = *request->requestvb->val.integer;
 				break;
 			case IEEE8021BRIDGEPORTSERVICEACCESSPRIORITYSELECTION:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PortServiceAccessPrioritySelection))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8ServiceAccessPrioritySelection))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PortServiceAccessPrioritySelection, sizeof (table_entry->i32PortServiceAccessPrioritySelection));
+					memcpy (pvOldDdata, &table_entry->u8ServiceAccessPrioritySelection, sizeof (table_entry->u8ServiceAccessPrioritySelection));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PortServiceAccessPrioritySelection = *request->requestvb->val.integer;
+				table_entry->u8ServiceAccessPrioritySelection = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -3638,22 +3638,22 @@ ieee8021BridgePortPriorityTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTDEFAULTUSERPRIORITY:
-				memcpy (&table_entry->u32PortDefaultUserPriority, pvOldDdata, sizeof (table_entry->u32PortDefaultUserPriority));
+				memcpy (&table_entry->u32DefaultUserPriority, pvOldDdata, sizeof (table_entry->u32DefaultUserPriority));
 				break;
 			case IEEE8021BRIDGEPORTNUMTRAFFICCLASSES:
-				memcpy (&table_entry->i32PortNumTrafficClasses, pvOldDdata, sizeof (table_entry->i32PortNumTrafficClasses));
+				memcpy (&table_entry->i32NumTrafficClasses, pvOldDdata, sizeof (table_entry->i32NumTrafficClasses));
 				break;
 			case IEEE8021BRIDGEPORTPRIORITYCODEPOINTSELECTION:
 				memcpy (&table_entry->i32CodePointSelection, pvOldDdata, sizeof (table_entry->i32CodePointSelection));
 				break;
 			case IEEE8021BRIDGEPORTUSEDEI:
-				memcpy (&table_entry->i32PortUseDEI, pvOldDdata, sizeof (table_entry->i32PortUseDEI));
+				memcpy (&table_entry->u8UseDEI, pvOldDdata, sizeof (table_entry->u8UseDEI));
 				break;
 			case IEEE8021BRIDGEPORTREQUIREDROPENCODING:
-				memcpy (&table_entry->i32PortRequireDropEncoding, pvOldDdata, sizeof (table_entry->i32PortRequireDropEncoding));
+				memcpy (&table_entry->u8RequireDropEncoding, pvOldDdata, sizeof (table_entry->u8RequireDropEncoding));
 				break;
 			case IEEE8021BRIDGEPORTSERVICEACCESSPRIORITYSELECTION:
-				memcpy (&table_entry->i32PortServiceAccessPrioritySelection, pvOldDdata, sizeof (table_entry->i32PortServiceAccessPrioritySelection));
+				memcpy (&table_entry->u8ServiceAccessPrioritySelection, pvOldDdata, sizeof (table_entry->u8ServiceAccessPrioritySelection));
 				break;
 			}
 		}
@@ -4862,7 +4862,7 @@ ieee8021BridgePortDecodingTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Priority);
 				break;
 			case IEEE8021BRIDGEPORTDECODINGDROPELIGIBLE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32DropEligible);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8DropEligible);
 				break;
 				
 			default:
@@ -4948,18 +4948,18 @@ ieee8021BridgePortDecodingTable_mapper (
 				table_entry->u32Priority = *request->requestvb->val.integer;
 				break;
 			case IEEE8021BRIDGEPORTDECODINGDROPELIGIBLE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32DropEligible))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8DropEligible))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32DropEligible, sizeof (table_entry->i32DropEligible));
+					memcpy (pvOldDdata, &table_entry->u8DropEligible, sizeof (table_entry->u8DropEligible));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32DropEligible = *request->requestvb->val.integer;
+				table_entry->u8DropEligible = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -4982,7 +4982,7 @@ ieee8021BridgePortDecodingTable_mapper (
 				memcpy (&table_entry->u32Priority, pvOldDdata, sizeof (table_entry->u32Priority));
 				break;
 			case IEEE8021BRIDGEPORTDECODINGDROPELIGIBLE:
-				memcpy (&table_entry->i32DropEligible, pvOldDdata, sizeof (table_entry->i32DropEligible));
+				memcpy (&table_entry->u8DropEligible, pvOldDdata, sizeof (table_entry->u8DropEligible));
 				break;
 			}
 		}
@@ -5045,8 +5045,8 @@ ieee8021BridgePortEncodingTable_BTreeNodeCmp (
 		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32PortNum < pEntry2->u32PortNum) ||
 		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32PortNum == pEntry2->u32PortNum && pEntry1->i32PriorityCodePointRow < pEntry2->i32PriorityCodePointRow) ||
 		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32PortNum == pEntry2->u32PortNum && pEntry1->i32PriorityCodePointRow == pEntry2->i32PriorityCodePointRow && pEntry1->i32PriorityCodePoint < pEntry2->i32PriorityCodePoint) ||
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32PortNum == pEntry2->u32PortNum && pEntry1->i32PriorityCodePointRow == pEntry2->i32PriorityCodePointRow && pEntry1->i32PriorityCodePoint == pEntry2->i32PriorityCodePoint && pEntry1->i32DropEligible < pEntry2->i32DropEligible) ? -1:
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32PortNum == pEntry2->u32PortNum && pEntry1->i32PriorityCodePointRow == pEntry2->i32PriorityCodePointRow && pEntry1->i32PriorityCodePoint == pEntry2->i32PriorityCodePoint && pEntry1->i32DropEligible == pEntry2->i32DropEligible) ? 0: 1;
+		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32PortNum == pEntry2->u32PortNum && pEntry1->i32PriorityCodePointRow == pEntry2->i32PriorityCodePointRow && pEntry1->i32PriorityCodePoint == pEntry2->i32PriorityCodePoint && pEntry1->u8DropEligible < pEntry2->u8DropEligible) ? -1:
+		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32PortNum == pEntry2->u32PortNum && pEntry1->i32PriorityCodePointRow == pEntry2->i32PriorityCodePointRow && pEntry1->i32PriorityCodePoint == pEntry2->i32PriorityCodePoint && pEntry1->u8DropEligible == pEntry2->u8DropEligible) ? 0: 1;
 }
 
 xBTree_t oIeee8021BridgePortEncodingTable_BTree = xBTree_initInline (&ieee8021BridgePortEncodingTable_BTreeNodeCmp);
@@ -5058,7 +5058,7 @@ ieee8021BridgePortEncodingTable_createEntry (
 	uint32_t u32PortNum,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible)
+	uint8_t u8DropEligible)
 {
 	register ieee8021BridgePortEncodingEntry_t *poEntry = NULL;
 	
@@ -5071,7 +5071,7 @@ ieee8021BridgePortEncodingTable_createEntry (
 	poEntry->u32PortNum = u32PortNum;
 	poEntry->i32PriorityCodePointRow = i32PriorityCodePointRow;
 	poEntry->i32PriorityCodePoint = i32PriorityCodePoint;
-	poEntry->i32DropEligible = i32DropEligible;
+	poEntry->u8DropEligible = u8DropEligible;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgePortEncodingTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -5088,7 +5088,7 @@ ieee8021BridgePortEncodingTable_getByIndex (
 	uint32_t u32PortNum,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible)
+	uint8_t u8DropEligible)
 {
 	register ieee8021BridgePortEncodingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -5102,7 +5102,7 @@ ieee8021BridgePortEncodingTable_getByIndex (
 	poTmpEntry->u32PortNum = u32PortNum;
 	poTmpEntry->i32PriorityCodePointRow = i32PriorityCodePointRow;
 	poTmpEntry->i32PriorityCodePoint = i32PriorityCodePoint;
-	poTmpEntry->i32DropEligible = i32DropEligible;
+	poTmpEntry->u8DropEligible = u8DropEligible;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021BridgePortEncodingTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -5119,7 +5119,7 @@ ieee8021BridgePortEncodingTable_getNextIndex (
 	uint32_t u32PortNum,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible)
+	uint8_t u8DropEligible)
 {
 	register ieee8021BridgePortEncodingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -5133,7 +5133,7 @@ ieee8021BridgePortEncodingTable_getNextIndex (
 	poTmpEntry->u32PortNum = u32PortNum;
 	poTmpEntry->i32PriorityCodePointRow = i32PriorityCodePointRow;
 	poTmpEntry->i32PriorityCodePoint = i32PriorityCodePoint;
-	poTmpEntry->i32DropEligible = i32DropEligible;
+	poTmpEntry->u8DropEligible = u8DropEligible;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021BridgePortEncodingTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -5191,7 +5191,7 @@ ieee8021BridgePortEncodingTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32PriorityCodePoint);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32DropEligible);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u8DropEligible);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortEncodingTable_BTree);
 	return put_index_data;
@@ -6176,8 +6176,8 @@ ieee8021BridgePortMmrpTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32EnabledStatus = ieee8021BridgePortMmrpEnabledStatus_true_c;
-	poEntry->i32PortRestrictedGroupRegistration = ieee8021BridgePortRestrictedGroupRegistration_false_c;
+	poEntry->u8EnabledStatus = ieee8021BridgePortMmrpEnabledStatus_true_c;
+	poEntry->u8RestrictedGroupRegistration = ieee8021BridgePortRestrictedGroupRegistration_false_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021BridgePortMmrpTable_BTree);
 	return poEntry;
@@ -6334,7 +6334,7 @@ ieee8021BridgePortMmrpTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTMMRPENABLEDSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32EnabledStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8EnabledStatus);
 				break;
 			case IEEE8021BRIDGEPORTMMRPFAILEDREGISTRATIONS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER64, table_entry->u64FailedRegistrations);
@@ -6343,7 +6343,7 @@ ieee8021BridgePortMmrpTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LastPduOrigin, table_entry->u16LastPduOrigin_len);
 				break;
 			case IEEE8021BRIDGEPORTRESTRICTEDGROUPREGISTRATION:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PortRestrictedGroupRegistration);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RestrictedGroupRegistration);
 				break;
 				
 			default:
@@ -6415,32 +6415,32 @@ ieee8021BridgePortMmrpTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTMMRPENABLEDSTATUS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32EnabledStatus))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8EnabledStatus))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32EnabledStatus, sizeof (table_entry->i32EnabledStatus));
+					memcpy (pvOldDdata, &table_entry->u8EnabledStatus, sizeof (table_entry->u8EnabledStatus));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32EnabledStatus = *request->requestvb->val.integer;
+				table_entry->u8EnabledStatus = *request->requestvb->val.integer;
 				break;
 			case IEEE8021BRIDGEPORTRESTRICTEDGROUPREGISTRATION:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PortRestrictedGroupRegistration))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8RestrictedGroupRegistration))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PortRestrictedGroupRegistration, sizeof (table_entry->i32PortRestrictedGroupRegistration));
+					memcpy (pvOldDdata, &table_entry->u8RestrictedGroupRegistration, sizeof (table_entry->u8RestrictedGroupRegistration));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PortRestrictedGroupRegistration = *request->requestvb->val.integer;
+				table_entry->u8RestrictedGroupRegistration = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -6460,10 +6460,10 @@ ieee8021BridgePortMmrpTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTMMRPENABLEDSTATUS:
-				memcpy (&table_entry->i32EnabledStatus, pvOldDdata, sizeof (table_entry->i32EnabledStatus));
+				memcpy (&table_entry->u8EnabledStatus, pvOldDdata, sizeof (table_entry->u8EnabledStatus));
 				break;
 			case IEEE8021BRIDGEPORTRESTRICTEDGROUPREGISTRATION:
-				memcpy (&table_entry->i32PortRestrictedGroupRegistration, pvOldDdata, sizeof (table_entry->i32PortRestrictedGroupRegistration));
+				memcpy (&table_entry->u8RestrictedGroupRegistration, pvOldDdata, sizeof (table_entry->u8RestrictedGroupRegistration));
 				break;
 			}
 		}
@@ -6612,14 +6612,14 @@ ieee8021BridgeILanIfTable_removeEntry (ieee8021BridgeILanIfEntry_t *poEntry)
 
 ieee8021BridgeILanIfEntry_t *
 ieee8021BridgeILanIfTable_createRegister (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	bool bRetCode = false;
 	register ieee8021BridgeILanIfEntry_t *poEntry = NULL;
 	
 	ieee8021Bridge_wrLock ();
 	
-	if ((poEntry = ieee8021BridgeILanIfTable_createExt (u32IfIndex)) == NULL)
+	if ((poEntry = ieee8021BridgeILanIfTable_createExt (u32Index)) == NULL)
 	{
 		goto ieee8021BridgeILanIfTable_createRegister_cleanup;
 	}
@@ -6641,14 +6641,14 @@ ieee8021BridgeILanIfTable_createRegister_cleanup:
 
 bool
 ieee8021BridgeILanIfTable_removeRegister (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	bool bRetCode = false;
 	register ieee8021BridgeILanIfEntry_t *poEntry = NULL;
 	
 	ieee8021Bridge_wrLock ();
 	
-	if ((poEntry = ieee8021BridgeILanIfTable_getByIndex (u32IfIndex)) == NULL)
+	if ((poEntry = ieee8021BridgeILanIfTable_getByIndex (u32Index)) == NULL)
 	{
 		goto ieee8021BridgeILanIfTable_removeRegister_success;
 	}
@@ -6672,28 +6672,28 @@ ieee8021BridgeILanIfTable_removeRegister_cleanup:
 
 ieee8021BridgeILanIfEntry_t *
 ieee8021BridgeILanIfTable_createExt (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
-	bool bIfReserved = u32IfIndex != ifIndex_zero_c;
+	bool bIfReserved = u32Index != ifIndex_zero_c;
 	ieee8021BridgeILanIfEntry_t *poEntry = NULL;
 	
 	if (!bIfReserved)
 	{
 		ifData_t *poILanIfData = NULL;
 		
-		if (!ifData_createReference (u32IfIndex, ifType_ilan_c, 0, true, true, false, &poILanIfData))
+		if (!ifData_createReference (u32Index, ifType_ilan_c, ifAdminStatus_up_c, true, true, false, &poILanIfData))
 		{
 			goto ieee8021BridgeILanIfTable_createExt_cleanup;
 		}
 		
 		bIfReserved = true;
-		u32IfIndex = poILanIfData->u32Index;
+		u32Index = poILanIfData->u32Index;
 		
 		ifData_unLock (poILanIfData);
 	}
 	
 	poEntry = ieee8021BridgeILanIfTable_createEntry (
-		u32IfIndex);
+		u32Index);
 	if (poEntry == NULL)
 	{
 		goto ieee8021BridgeILanIfTable_createExt_cleanup;
@@ -6727,7 +6727,7 @@ bool
 ieee8021BridgeILanIfTable_createHier (
 	ieee8021BridgeILanIfEntry_t *poEntry)
 {
-	if (!ifData_createReference (poEntry->u32Index, 0, 0, false, true, false, NULL))
+	if (!ifData_createReference (poEntry->u32Index, 0, ifAdminStatus_up_c, true, true, false, NULL))
 	{
 		goto ieee8021BridgeILanIfTable_createHier_cleanup;
 	}
