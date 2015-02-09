@@ -82,8 +82,8 @@ typedef struct ieee8021PbCVidRegistrationEntry_t
 	
 	/* Column values */
 	uint32_t u32SVid;
-	int32_t i32UntaggedPep;
-	int32_t i32UntaggedCep;
+	int32_t u8UntaggedPep;
+	int32_t u8UntaggedCep;
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
@@ -156,7 +156,7 @@ typedef struct ieee8021PbEdgePortEntry_t
 	uint32_t u32PVid;
 	uint32_t u32DefaultUserPriority;
 	int32_t i32AcceptableFrameTypes;
-	int32_t i32EnableIngressFiltering;
+	int32_t u8EnableIngressFiltering;
 	
 	uint32_t u32CComponentId;
 	uint32_t u32PepPort;
@@ -535,13 +535,13 @@ typedef struct ieee8021PbInternalInterfaceEntry_t
 	/* Index values */
 	uint32_t u32BridgeBasePortComponentId;
 	uint32_t u32BridgeBasePort;
-	uint32_t u32PbIiExternalSVid;
+	uint32_t u32ExternalSVid;
 	
 	/* Column values */
-	uint32_t u32PbIiInternalPortNumber;
-	int32_t i32PbIiInternalPortType;
-	uint32_t u32PbIiInternalSVid;
-	uint8_t u8PbIiRowStatus;
+	uint32_t u32InternalPortNumber;
+	int32_t i32InternalPortType;
+	uint32_t u32InternalSVid;
+	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbInternalInterfaceEntry_t;
@@ -553,15 +553,15 @@ void ieee8021PbInternalInterfaceTable_init (void);
 ieee8021PbInternalInterfaceEntry_t * ieee8021PbInternalInterfaceTable_createEntry (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	uint32_t u32PbIiExternalSVid);
+	uint32_t u32ExternalSVid);
 ieee8021PbInternalInterfaceEntry_t * ieee8021PbInternalInterfaceTable_getByIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	uint32_t u32PbIiExternalSVid);
+	uint32_t u32ExternalSVid);
 ieee8021PbInternalInterfaceEntry_t * ieee8021PbInternalInterfaceTable_getNextIndex (
 	uint32_t u32BridgeBasePortComponentId,
 	uint32_t u32BridgeBasePort,
-	uint32_t u32PbIiExternalSVid);
+	uint32_t u32ExternalSVid);
 void ieee8021PbInternalInterfaceTable_removeEntry (ieee8021PbInternalInterfaceEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021PbInternalInterfaceTable_getFirst;

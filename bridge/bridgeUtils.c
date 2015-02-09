@@ -405,14 +405,14 @@ ieee8021PbCVidRegistrationRowStatus_update (
 	if ((poIeee8021PbEdgePortEntry = ieee8021PbEdgePortTable_getByIndex (poEntry->u32BridgeBasePortComponentId, poEntry->u32BridgeBasePort, poEntry->u32SVid)) != NULL &&
 		!ieee8021QBridgeVlanStaticTable_vHandler (
 			poIeee8021PbCepEntry->u32CComponentId, poEntry->u32CVid,
-			u8RowStatus == xRowStatus_active_c, poEntry->i32UntaggedPep == ieee8021PbCVidRegistrationUntaggedPep_true_c, 1, poIeee8021PbEdgePortEntry->u32PepPort))
+			u8RowStatus == xRowStatus_active_c, poEntry->u8UntaggedPep == ieee8021PbCVidRegistrationUntaggedPep_true_c, 1, poIeee8021PbEdgePortEntry->u32PepPort))
 	{
 		goto ieee8021PbCVidRegistrationRowStatus_update_cleanup;
 	}
 	
 	if (u8RowStatus == xRowStatus_active_c)
 	{
-		xBitmap_setBitRev (poCVlanStaticEntry->au8UntaggedPorts, poEntry->u32BridgeBasePort - 1, poEntry->i32UntaggedCep == ieee8021PbCVidRegistrationUntaggedCep_true_c);
+		xBitmap_setBitRev (poCVlanStaticEntry->au8UntaggedPorts, poEntry->u32BridgeBasePort - 1, poEntry->u8UntaggedCep == ieee8021PbCVidRegistrationUntaggedCep_true_c);
 	}
 	
 	if (!ieee8021QBridgeVlanStaticRowStatus_handler (poCComponent, poCVlanStaticEntry, u8RowStatus))
