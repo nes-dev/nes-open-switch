@@ -25,6 +25,7 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "system/systemMIB.h"
 #include "ethernetUtils.h"
+#include "neIeee8021BridgeMIB.h"
 #include "ieee8021BridgeMib.h"
 #include "if/ifMIB.h"
 
@@ -152,7 +153,21 @@ ieee8021BridgeBaseTable_BTreeNodeCmp (
 		(pEntry1->u32ComponentId == pEntry2->u32ComponentId) ? 0: 1;
 }
 
+static int8_t
+ieee8021BridgeBaseTable_Chassis_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ieee8021BridgeBaseEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021BridgeBaseEntry_t, oChassis_BTreeNode);
+	register ieee8021BridgeBaseEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021BridgeBaseEntry_t, oChassis_BTreeNode);
+	
+	return
+		(pEntry1->u32ChassisId < pEntry2->u32ChassisId) ||
+		(pEntry1->u32ChassisId == pEntry2->u32ChassisId && pEntry1->u32ComponentId < pEntry2->u32ComponentId) ? -1:
+		(pEntry1->u32ChassisId == pEntry2->u32ChassisId && pEntry1->u32ComponentId == pEntry2->u32ComponentId) ? 0: 1;
+}
+
 xBTree_t oIeee8021BridgeBaseTable_BTree = xBTree_initInline (&ieee8021BridgeBaseTable_BTreeNodeCmp);
+xBTree_t oIeee8021BridgeBaseTable_Chassis_BTree = xBTree_initInline (&ieee8021BridgeBaseTable_Chassis_BTreeNodeCmp);
 
 /* create a new row in the table */
 ieee8021BridgeBaseEntry_t *
@@ -231,6 +246,31 @@ ieee8021BridgeBaseTable_getNextIndex (
 	return xBTree_entry (poNode, ieee8021BridgeBaseEntry_t, oBTreeNode);
 }
 
+ieee8021BridgeBaseEntry_t *
+ieee8021BridgeBaseTable_Chassis_getNextIndex (
+	uint32_t u32ChassisId,
+	uint32_t u32ComponentId)
+{
+	register ieee8021BridgeBaseEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32ChassisId = u32ChassisId;
+	poTmpEntry->u32ComponentId = u32ComponentId;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oChassis_BTreeNode, &oIeee8021BridgeBaseTable_Chassis_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ieee8021BridgeBaseEntry_t, oChassis_BTreeNode);
+}
+
 /* remove a row from the table */
 void
 ieee8021BridgeBaseTable_removeEntry (ieee8021BridgeBaseEntry_t *poEntry)
@@ -242,6 +282,7 @@ ieee8021BridgeBaseTable_removeEntry (ieee8021BridgeBaseEntry_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021BridgeBaseTable_BTree);
+	xBTree_nodeRemove (&poEntry->oChassis_BTreeNode, &oIeee8021BridgeBaseTable_Chassis_BTree);
 	xRwLock_destroy (&poEntry->oLock);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
@@ -435,8 +476,6 @@ ieee8021BridgeBaseRowStatus_handler (
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
 		}
 		
-		/* TODO */
-		
 		poEntry->u8RowStatus = u8RowStatus;
 		break;
 		
@@ -452,8 +491,6 @@ ieee8021BridgeBaseRowStatus_handler (
 		{
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
 		}
-		
-		/* TODO */
 		
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		break;
@@ -1367,8 +1404,6 @@ ieee8021BridgeBasePortRowStatus_handler (
 			goto ieee8021BridgeBasePortRowStatus_handler_cleanup;
 		}
 		
-		/* TODO */
-		
 		if (!ieee8021BridgeBasePortRowStatus_update (poComponent, poEntry, u8RealStatus))
 		{
 			goto ieee8021BridgeBasePortRowStatus_handler_cleanup;
@@ -1701,12 +1736,14 @@ ieee8021BridgeChassis_createRegister (
 	
 	ieee8021Bridge_wrLock ();
 	
-	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (u32ChassisId)) == NULL)
+	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_Chassis_getNextIndex (u32ChassisId, 0)) == NULL || poIeee8021BridgeBaseEntry->u32ChassisId != u32ChassisId)
 	{
 		if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_createExt (ieee8021BridgeBaseComponent_zero_c)) == NULL)
 		{
 			goto ieee8021BridgeChassis_createRegister_componentCleanup;
 		}
+		
+		poIeee8021BridgeBaseEntry->oNe.u32ChassisId = u32ChassisId;
 	}
 	
 	ieee8021BridgeBase_wrLock (poIeee8021BridgeBaseEntry);
@@ -1736,7 +1773,7 @@ ieee8021BridgeChassis_removeRegister (
 	
 	ieee8021Bridge_wrLock ();
 	
-	while ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (u32ChassisId)) != NULL)
+	while ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_Chassis_getNextIndex (u32ChassisId, 0)) != NULL && poIeee8021BridgeBaseEntry->u32ChassisId != u32ChassisId)
 	{
 		ieee8021BridgeBase_wrLock (poIeee8021BridgeBaseEntry);
 		
@@ -1746,6 +1783,7 @@ ieee8021BridgeChassis_removeRegister (
 		}
 		
 		xBTree_nodeRemove (&poIeee8021BridgeBaseEntry->oBTreeNode, &oIeee8021BridgeBaseTable_BTree);
+		xBTree_nodeRemove (&poIeee8021BridgeBaseEntry->oChassis_BTreeNode, &oIeee8021BridgeBaseTable_Chassis_BTree);
 		ieee8021BridgeBase_unLock (poIeee8021BridgeBaseEntry);
 		
 		if (!ieee8021BridgeBaseTable_removeExt (poIeee8021BridgeBaseEntry))

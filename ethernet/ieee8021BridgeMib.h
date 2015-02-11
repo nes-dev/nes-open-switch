@@ -141,10 +141,12 @@ typedef struct ieee8021BridgeBaseEntry_t
 	xFreeRange_t oPort_FreeRange;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oChassis_BTreeNode;
 	xRwLock_t oLock;
 } ieee8021BridgeBaseEntry_t;
 
 extern xBTree_t oIeee8021BridgeBaseTable_BTree;
+extern xBTree_t oIeee8021BridgeBaseTable_Chassis_BTree;
 
 #define ieee8021BridgeBase_wrLock(poEntry) (xRwLock_wrLock (&(poEntry)->oLock))
 #define ieee8021BridgeBase_rdLock(poEntry) (xRwLock_rdLock (&(poEntry)->oLock))
@@ -157,6 +159,9 @@ ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_createEntry (
 ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_getByIndex (
 	uint32_t u32ComponentId);
 ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_getNextIndex (
+	uint32_t u32ComponentId);
+ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_Chassis_getNextIndex (
+	uint32_t u32ChassisId,
 	uint32_t u32ComponentId);
 void ieee8021BridgeBaseTable_removeEntry (ieee8021BridgeBaseEntry_t *poEntry);
 ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_createExt (
