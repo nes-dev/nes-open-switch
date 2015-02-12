@@ -48,6 +48,8 @@ void ieee8021BridgeMib_init (void);
 
 typedef struct ieee8021Bridge_t
 {
+	xFreeRange_t oComponent_FreeRange;
+	
 	xRwLock_t oComponentLock;
 	xRwLock_t oPhyPortLock;
 } ieee8021Bridge_t;
@@ -77,6 +79,8 @@ extern ieee8021Bridge_t oBridge;
 enum
 {
 	ieee8021BridgeBaseComponent_zero_c = 0,
+	ieee8021BridgeBaseComponent_start_c = 1,
+	ieee8021BridgeBaseComponent_end_c = 0xFFFFFFFF,
 
 	/* enums for column ieee8021BridgeBaseComponentType */
 	ieee8021BridgeBaseComponentType_iComponent_c = 1,

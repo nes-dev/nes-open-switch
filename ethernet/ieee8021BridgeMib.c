@@ -94,11 +94,14 @@ ieee8021BridgeMib_init (void)
 	
 	/* register ieee8021BridgeMib modules */
 	sysORTable_createRegister ("ieee8021BridgeMib", ieee8021BridgeMib_oid, OID_LENGTH (ieee8021BridgeMib_oid));
+	
+	xFreeRange_createRange (&oBridge.oComponent_FreeRange, ieee8021BridgeBaseComponent_start_c, ieee8021BridgeBaseComponent_end_c);
 }
 
 
 ieee8021Bridge_t oBridge =
 {
+	.oComponent_FreeRange = xFreeRange_initInline (),
 	.oComponentLock = xRwLock_initInline (),
 	.oPhyPortLock = xRwLock_initInline (),
 };
@@ -294,6 +297,12 @@ ieee8021BridgeBaseTable_createExt (
 {
 	ieee8021BridgeBaseEntry_t *poEntry = NULL;
 	
+	if (u32ComponentId == ieee8021BridgeBaseComponent_zero_c &&
+		!xFreeRange_getFreeIndex (&oBridge.oComponent_FreeRange, false, 0, 0, &u32ComponentId))
+	{
+		goto ieee8021BridgeBaseTable_createExt_cleanup;
+	}
+	
 	poEntry = ieee8021BridgeBaseTable_createEntry (
 		u32ComponentId);
 	if (poEntry == NULL)
@@ -337,6 +346,11 @@ ieee8021BridgeBaseTable_createHier (
 {
 	register bool bRetCode = false;
 	
+	if (!xFreeRange_allocateIndex (&oBridge.oComponent_FreeRange, poEntry->u32ComponentId))
+	{
+		goto ieee8021BridgeBaseTable_createHier_cleanup;
+	}
+	
 	if (!ieee8021BridgeBaseTable_hierUpdate (poEntry, xRowStatus_active_c))
 	{
 		goto ieee8021BridgeBaseTable_createHier_cleanup;
@@ -356,6 +370,11 @@ ieee8021BridgeBaseTable_removeHier (
 	register bool bRetCode = false;
 	
 	if (!ieee8021BridgeBaseTable_hierUpdate (poEntry, xRowStatus_destroy_c))
+	{
+		goto ieee8021BridgeBaseTable_removeHier_cleanup;
+	}
+	
+	if (!xFreeRange_removeIndex (&oBridge.oComponent_FreeRange, poEntry->u32ComponentId))
 	{
 		goto ieee8021BridgeBaseTable_removeHier_cleanup;
 	}
