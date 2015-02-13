@@ -31,7 +31,7 @@ include ${MK_COMMON}
 
 CFLAGS +=
 
-SNMP_SRC := 
+SNMP_SRC := isisMIB.c
 MODULE_SRC := isis_main.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
