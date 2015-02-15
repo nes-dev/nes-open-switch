@@ -82,8 +82,8 @@ typedef struct ieee8021PbCVidRegistrationEntry_t
 	
 	/* Column values */
 	uint32_t u32SVid;
-	int32_t u8UntaggedPep;
-	int32_t u8UntaggedCep;
+	uint8_t u8UntaggedPep;
+	uint8_t u8UntaggedCep;
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
@@ -156,7 +156,7 @@ typedef struct ieee8021PbEdgePortEntry_t
 	uint32_t u32PVid;
 	uint32_t u32DefaultUserPriority;
 	int32_t i32AcceptableFrameTypes;
-	int32_t u8EnableIngressFiltering;
+	uint8_t u8EnableIngressFiltering;
 	
 	uint32_t u32CComponentId;
 	uint32_t u32PepPort;

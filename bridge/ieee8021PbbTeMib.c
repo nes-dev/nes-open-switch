@@ -1975,7 +1975,7 @@ ieee8021PbbTeProtectionGroupConfigTable_createEntry (
 	poEntry->i32CommandAdmin = ieee8021PbbTeProtectionGroupConfigCommandAdmin_clear_c;
 	poEntry->u32WTR = 5;
 	poEntry->u32HoldOff = 0;
-	poEntry->i32NotifyEnable = ieee8021PbbTeProtectionGroupConfigNotifyEnable_false_c;
+	poEntry->u8NotifyEnable = ieee8021PbbTeProtectionGroupConfigNotifyEnable_false_c;
 	poEntry->u8StorageType = ieee8021PbbTeProtectionGroupConfigStorageType_nonVolatile_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbTeProtectionGroupConfigTable_BTree);
@@ -2154,7 +2154,7 @@ ieee8021PbbTeProtectionGroupConfigTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32HoldOff);
 				break;
 			case IEEE8021PBBTEPROTECTIONGROUPCONFIGNOTIFYENABLE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32NotifyEnable);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8NotifyEnable);
 				break;
 			case IEEE8021PBBTEPROTECTIONGROUPCONFIGSTORAGETYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
@@ -2351,18 +2351,18 @@ ieee8021PbbTeProtectionGroupConfigTable_mapper (
 				table_entry->u32HoldOff = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBBTEPROTECTIONGROUPCONFIGNOTIFYENABLE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32NotifyEnable))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8NotifyEnable))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32NotifyEnable, sizeof (table_entry->i32NotifyEnable));
+					memcpy (pvOldDdata, &table_entry->u8NotifyEnable, sizeof (table_entry->u8NotifyEnable));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32NotifyEnable = *request->requestvb->val.integer;
+				table_entry->u8NotifyEnable = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBBTEPROTECTIONGROUPCONFIGSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
@@ -2436,7 +2436,7 @@ ieee8021PbbTeProtectionGroupConfigTable_mapper (
 				}
 				else
 				{
-					memcpy (&table_entry->i32NotifyEnable, pvOldDdata, sizeof (table_entry->i32NotifyEnable));
+					memcpy (&table_entry->u8NotifyEnable, pvOldDdata, sizeof (table_entry->u8NotifyEnable));
 				}
 				break;
 			case IEEE8021PBBTEPROTECTIONGROUPCONFIGSTORAGETYPE:

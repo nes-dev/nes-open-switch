@@ -320,7 +320,7 @@ ieee8021PbbVipTable_createEntry (
 	/*poEntry->au8DefaultDstBMAC = 131046834177*/;
 	xBitmap_setBitsRev (poEntry->au8Type, 2, 1, ieee8021PbbVipType_egress_c, ieee8021PbbVipType_ingress_c);
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
-	poEntry->i32EnableConnectionId = ieee8021PbbVipEnableConnectionId_true_c;
+	poEntry->u8EnableConnectionId = ieee8021PbbVipEnableConnectionId_true_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbVipTable_BTree);
 	return poEntry;
@@ -793,7 +793,7 @@ ieee8021PbbVipTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 			case IEEE8021PBBVIPENABLECONNECTIONID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32EnableConnectionId);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8EnableConnectionId);
 				break;
 				
 			default:
@@ -976,18 +976,18 @@ ieee8021PbbVipTable_mapper (
 				table_entry->u16Type_len = request->requestvb->val_len;
 				break;
 			case IEEE8021PBBVIPENABLECONNECTIONID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32EnableConnectionId))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8EnableConnectionId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32EnableConnectionId, sizeof (table_entry->i32EnableConnectionId));
+					memcpy (pvOldDdata, &table_entry->u8EnableConnectionId, sizeof (table_entry->u8EnableConnectionId));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32EnableConnectionId = *request->requestvb->val.integer;
+				table_entry->u8EnableConnectionId = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -1046,7 +1046,7 @@ ieee8021PbbVipTable_mapper (
 				}
 				break;
 			case IEEE8021PBBVIPENABLECONNECTIONID:
-				memcpy (&table_entry->i32EnableConnectionId, pvOldDdata, sizeof (table_entry->i32EnableConnectionId));
+				memcpy (&table_entry->u8EnableConnectionId, pvOldDdata, sizeof (table_entry->u8EnableConnectionId));
 				break;
 			}
 		}
@@ -2298,7 +2298,7 @@ ieee8021PbbPipPriorityTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32RequireDropEncoding = ieee8021PbbPipRequireDropEncoding_false_c;
+	poEntry->u8RequireDropEncoding = ieee8021PbbPipRequireDropEncoding_false_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021PbbPipPriorityTable_BTree);
 	return poEntry;
@@ -2450,10 +2450,10 @@ ieee8021PbbPipPriorityTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32CodePointSelection);
 				break;
 			case IEEE8021PBBPIPUSEDEI:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32UseDEI);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8UseDEI);
 				break;
 			case IEEE8021PBBPIPREQUIREDROPENCODING:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RequireDropEncoding);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RequireDropEncoding);
 				break;
 				
 			default:
@@ -2547,32 +2547,32 @@ ieee8021PbbPipPriorityTable_mapper (
 				table_entry->i32CodePointSelection = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBBPIPUSEDEI:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32UseDEI))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8UseDEI))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32UseDEI, sizeof (table_entry->i32UseDEI));
+					memcpy (pvOldDdata, &table_entry->u8UseDEI, sizeof (table_entry->u8UseDEI));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32UseDEI = *request->requestvb->val.integer;
+				table_entry->u8UseDEI = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBBPIPREQUIREDROPENCODING:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32RequireDropEncoding))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8RequireDropEncoding))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32RequireDropEncoding, sizeof (table_entry->i32RequireDropEncoding));
+					memcpy (pvOldDdata, &table_entry->u8RequireDropEncoding, sizeof (table_entry->u8RequireDropEncoding));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32RequireDropEncoding = *request->requestvb->val.integer;
+				table_entry->u8RequireDropEncoding = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -2595,10 +2595,10 @@ ieee8021PbbPipPriorityTable_mapper (
 				memcpy (&table_entry->i32CodePointSelection, pvOldDdata, sizeof (table_entry->i32CodePointSelection));
 				break;
 			case IEEE8021PBBPIPUSEDEI:
-				memcpy (&table_entry->i32UseDEI, pvOldDdata, sizeof (table_entry->i32UseDEI));
+				memcpy (&table_entry->u8UseDEI, pvOldDdata, sizeof (table_entry->u8UseDEI));
 				break;
 			case IEEE8021PBBPIPREQUIREDROPENCODING:
-				memcpy (&table_entry->i32RequireDropEncoding, pvOldDdata, sizeof (table_entry->i32RequireDropEncoding));
+				memcpy (&table_entry->u8RequireDropEncoding, pvOldDdata, sizeof (table_entry->u8RequireDropEncoding));
 				break;
 			}
 		}
@@ -2852,7 +2852,7 @@ ieee8021PbbPipDecodingTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Priority);
 				break;
 			case IEEE8021PBBPIPDECODINGDROPELIGIBLE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32DropEligible);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8DropEligible);
 				break;
 				
 			default:
@@ -2938,18 +2938,18 @@ ieee8021PbbPipDecodingTable_mapper (
 				table_entry->u32Priority = *request->requestvb->val.integer;
 				break;
 			case IEEE8021PBBPIPDECODINGDROPELIGIBLE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32DropEligible))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8DropEligible))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32DropEligible, sizeof (table_entry->i32DropEligible));
+					memcpy (pvOldDdata, &table_entry->u8DropEligible, sizeof (table_entry->u8DropEligible));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32DropEligible = *request->requestvb->val.integer;
+				table_entry->u8DropEligible = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -2972,7 +2972,7 @@ ieee8021PbbPipDecodingTable_mapper (
 				memcpy (&table_entry->u32Priority, pvOldDdata, sizeof (table_entry->u32Priority));
 				break;
 			case IEEE8021PBBPIPDECODINGDROPELIGIBLE:
-				memcpy (&table_entry->i32DropEligible, pvOldDdata, sizeof (table_entry->i32DropEligible));
+				memcpy (&table_entry->u8DropEligible, pvOldDdata, sizeof (table_entry->u8DropEligible));
 				break;
 			}
 		}
@@ -3033,8 +3033,8 @@ ieee8021PbbPipEncodingTable_BTreeNodeCmp (
 		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ||
 		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32PriorityCodePointRow < pEntry2->i32PriorityCodePointRow) ||
 		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32PriorityCodePointRow == pEntry2->i32PriorityCodePointRow && pEntry1->i32PriorityCodePoint < pEntry2->i32PriorityCodePoint) ||
-		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32PriorityCodePointRow == pEntry2->i32PriorityCodePointRow && pEntry1->i32PriorityCodePoint == pEntry2->i32PriorityCodePoint && pEntry1->i32DropEligible < pEntry2->i32DropEligible) ? -1:
-		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32PriorityCodePointRow == pEntry2->i32PriorityCodePointRow && pEntry1->i32PriorityCodePoint == pEntry2->i32PriorityCodePoint && pEntry1->i32DropEligible == pEntry2->i32DropEligible) ? 0: 1;
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32PriorityCodePointRow == pEntry2->i32PriorityCodePointRow && pEntry1->i32PriorityCodePoint == pEntry2->i32PriorityCodePoint && pEntry1->u8DropEligible < pEntry2->u8DropEligible) ? -1:
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->i32PriorityCodePointRow == pEntry2->i32PriorityCodePointRow && pEntry1->i32PriorityCodePoint == pEntry2->i32PriorityCodePoint && pEntry1->u8DropEligible == pEntry2->u8DropEligible) ? 0: 1;
 }
 
 xBTree_t oIeee8021PbbPipEncodingTable_BTree = xBTree_initInline (&ieee8021PbbPipEncodingTable_BTreeNodeCmp);
@@ -3045,7 +3045,7 @@ ieee8021PbbPipEncodingTable_createEntry (
 	uint32_t u32IfIndex,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible)
+	uint8_t u8DropEligible)
 {
 	register ieee8021PbbPipEncodingEntry_t *poEntry = NULL;
 	
@@ -3057,7 +3057,7 @@ ieee8021PbbPipEncodingTable_createEntry (
 	poEntry->u32IfIndex = u32IfIndex;
 	poEntry->i32PriorityCodePointRow = i32PriorityCodePointRow;
 	poEntry->i32PriorityCodePoint = i32PriorityCodePoint;
-	poEntry->i32DropEligible = i32DropEligible;
+	poEntry->u8DropEligible = u8DropEligible;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021PbbPipEncodingTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -3073,7 +3073,7 @@ ieee8021PbbPipEncodingTable_getByIndex (
 	uint32_t u32IfIndex,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible)
+	uint8_t u8DropEligible)
 {
 	register ieee8021PbbPipEncodingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -3086,7 +3086,7 @@ ieee8021PbbPipEncodingTable_getByIndex (
 	poTmpEntry->u32IfIndex = u32IfIndex;
 	poTmpEntry->i32PriorityCodePointRow = i32PriorityCodePointRow;
 	poTmpEntry->i32PriorityCodePoint = i32PriorityCodePoint;
-	poTmpEntry->i32DropEligible = i32DropEligible;
+	poTmpEntry->u8DropEligible = u8DropEligible;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021PbbPipEncodingTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -3102,7 +3102,7 @@ ieee8021PbbPipEncodingTable_getNextIndex (
 	uint32_t u32IfIndex,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible)
+	uint8_t u8DropEligible)
 {
 	register ieee8021PbbPipEncodingEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -3115,7 +3115,7 @@ ieee8021PbbPipEncodingTable_getNextIndex (
 	poTmpEntry->u32IfIndex = u32IfIndex;
 	poTmpEntry->i32PriorityCodePointRow = i32PriorityCodePointRow;
 	poTmpEntry->i32PriorityCodePoint = i32PriorityCodePoint;
-	poTmpEntry->i32DropEligible = i32DropEligible;
+	poTmpEntry->u8DropEligible = u8DropEligible;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021PbbPipEncodingTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -3171,7 +3171,7 @@ ieee8021PbbPipEncodingTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32PriorityCodePoint);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32DropEligible);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u8DropEligible);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021PbbPipEncodingTable_BTree);
 	return put_index_data;

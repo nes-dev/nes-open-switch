@@ -119,7 +119,7 @@ typedef struct ieee8021PbbVipEntry_t
 	uint8_t au8Type[1];
 	size_t u16Type_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
-	int32_t i32EnableConnectionId;
+	uint8_t u8EnableConnectionId;
 	
 	uint32_t u32ChassisId;
 	struct ieee8021PbbVipEntry_t *pOldEntry;
@@ -324,8 +324,8 @@ typedef struct ieee8021PbbPipPriorityEntry_t
 	
 	/* Column values */
 	int32_t i32CodePointSelection;
-	int32_t i32UseDEI;
-	int32_t i32RequireDropEncoding;
+	uint8_t u8UseDEI;
+	uint8_t u8RequireDropEncoding;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbPipPriorityEntry_t;
@@ -380,7 +380,7 @@ typedef struct ieee8021PbbPipDecodingEntry_t
 	
 	/* Column values */
 	uint32_t u32Priority;
-	int32_t i32DropEligible;
+	uint8_t u8DropEligible;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021PbbPipDecodingEntry_t;
@@ -438,7 +438,7 @@ typedef struct ieee8021PbbPipEncodingEntry_t
 	uint32_t u32IfIndex;
 	int32_t i32PriorityCodePointRow;
 	int32_t i32PriorityCodePoint;
-	int32_t i32DropEligible;
+	uint8_t u8DropEligible;
 	
 	/* Column values */
 	uint32_t u32Priority;
@@ -454,17 +454,17 @@ ieee8021PbbPipEncodingEntry_t * ieee8021PbbPipEncodingTable_createEntry (
 	uint32_t u32IfIndex,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible);
+	uint8_t u8DropEligible);
 ieee8021PbbPipEncodingEntry_t * ieee8021PbbPipEncodingTable_getByIndex (
 	uint32_t u32IfIndex,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible);
+	uint8_t u8DropEligible);
 ieee8021PbbPipEncodingEntry_t * ieee8021PbbPipEncodingTable_getNextIndex (
 	uint32_t u32IfIndex,
 	int32_t i32PriorityCodePointRow,
 	int32_t i32PriorityCodePoint,
-	int32_t i32DropEligible);
+	uint8_t u8DropEligible);
 void ieee8021PbbPipEncodingTable_removeEntry (ieee8021PbbPipEncodingEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021PbbPipEncodingTable_getFirst;

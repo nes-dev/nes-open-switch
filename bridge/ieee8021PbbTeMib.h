@@ -357,7 +357,7 @@ typedef struct ieee8021PbbTeProtectionGroupConfigEntry_t
 	int32_t i32ActiveRequests;
 	uint32_t u32WTR;
 	uint32_t u32HoldOff;
-	int32_t i32NotifyEnable;
+	uint8_t u8NotifyEnable;
 	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
