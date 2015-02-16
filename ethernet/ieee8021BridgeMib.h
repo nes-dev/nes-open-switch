@@ -167,12 +167,14 @@ ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_getNextIndex (
 ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_Chassis_getNextIndex (
 	uint32_t u32ChassisId,
 	uint32_t u32ComponentId);
+#define ieee8021BridgeBaseTable_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBaseEntry_t, oNe))
 void ieee8021BridgeBaseTable_removeEntry (ieee8021BridgeBaseEntry_t *poEntry);
 ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_createExt (
 	uint32_t u32ComponentId);
 bool ieee8021BridgeBaseTable_removeExt (ieee8021BridgeBaseEntry_t *poEntry);
 bool ieee8021BridgeBaseTable_createHier (ieee8021BridgeBaseEntry_t *poEntry);
 bool ieee8021BridgeBaseTable_removeHier (ieee8021BridgeBaseEntry_t *poEntry);
+bool ieee8021BridgeBaseEntry_init (ieee8021BridgeBaseEntry_t *poEntry);
 bool ieee8021BridgeBaseTrafficClassesEnabled_handler (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8TrafficClassesEnabled, bool bForce);
 bool ieee8021BridgeBaseMmrpEnabledStatus_handler (
@@ -278,7 +280,7 @@ typedef struct ieee8021BridgeBasePortEntry_t
 	uint8_t u8External;
 	int32_t i32AdminPointToPoint;
 	uint8_t u8OperPointToPoint;
-	uint8_t au8Name[255];
+	uint8_t au8Name[32];
 	size_t u16Name_len;	/* # of uint8_t elements */
 	
 	uint8_t u8RowStatus;
@@ -337,11 +339,11 @@ Netsnmp_Node_Handler ieee8021BridgeBasePortTable_mapper;
 typedef struct ieee8021BridgeBaseIfToPortEntry_t
 {
 	/* Index values */
-// 	uint32_t u32IfIndex;
+// 	uint32_t u32Index;
 	
 	/* Column values */
-// 	uint32_t u32IndexComponentId;
-// 	uint32_t u32IndexPort;
+// 	uint32_t u32ComponentId;
+// 	uint32_t u32Port;
 	
 // 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeBaseIfToPortEntry_t;

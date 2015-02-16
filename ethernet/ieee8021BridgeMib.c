@@ -351,6 +351,11 @@ ieee8021BridgeBaseTable_createHier (
 		goto ieee8021BridgeBaseTable_createHier_cleanup;
 	}
 	
+	if ((neIeee8021BridgeBaseTable_createEntry (poEntry->u32ComponentId)) == NULL)
+	{
+		goto ieee8021BridgeBaseTable_createHier_cleanup;
+	}
+	
 	if (!ieee8021BridgeBaseTable_hierUpdate (poEntry, xRowStatus_active_c))
 	{
 		goto ieee8021BridgeBaseTable_createHier_cleanup;
@@ -374,6 +379,8 @@ ieee8021BridgeBaseTable_removeHier (
 		goto ieee8021BridgeBaseTable_removeHier_cleanup;
 	}
 	
+	neIeee8021BridgeBaseTable_removeEntry (&poEntry->oNe);
+	
 	if (!xFreeRange_removeIndex (&oBridge.oComponent_FreeRange, poEntry->u32ComponentId))
 	{
 		goto ieee8021BridgeBaseTable_removeHier_cleanup;
@@ -386,7 +393,33 @@ ieee8021BridgeBaseTable_removeHier_cleanup:
 	return bRetCode;
 }
 
-bool ieee8021BridgeBaseTrafficClassesEnabled_handler (
+bool
+ieee8021BridgeBaseEntry_init (
+	ieee8021BridgeBaseEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (poEntry->oNe.u32ChassisId == 0 ||
+		(poEntry->u32ChassisId != 0 && poEntry->u32ChassisId != poEntry->oNe.u32ChassisId))
+	{
+		goto ieee8021BridgeBaseEntry_init_cleanup;
+	}
+	
+	if (poEntry->u32ChassisId == 0)
+	{
+		poEntry->u32ChassisId = poEntry->oNe.u32ChassisId;
+		xBTree_nodeAdd (&poEntry->oChassis_BTreeNode, &oIeee8021BridgeBaseTable_Chassis_BTree);
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgeBaseEntry_init_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgeBaseTrafficClassesEnabled_handler (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8TrafficClassesEnabled, bool bForce)
 {
 	if (poEntry->u8TrafficClassesEnabled == u8TrafficClassesEnabled && !bForce)
@@ -422,7 +455,8 @@ ieee8021BridgeBaseTrafficClassesEnabled_handler_cleanup:
 	return false;
 }
 
-bool ieee8021BridgeBaseMmrpEnabledStatus_handler (
+bool
+ieee8021BridgeBaseMmrpEnabledStatus_handler (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8MmrpEnabledStatus, bool bForce)
 {
 	if (poEntry->u8MmrpEnabledStatus == u8MmrpEnabledStatus && !bForce)
@@ -481,7 +515,8 @@ ieee8021BridgeBaseRowStatus_handler (
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
 		}
 		
-		if (!ieee8021BridgeBaseRowStatus_update (poEntry, u8RowStatus))
+		if (!ieee8021BridgeBaseEntry_init (poEntry) ||
+			!ieee8021BridgeBaseRowStatus_update (poEntry, u8RowStatus))
 		{
 			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
 		}
@@ -1763,6 +1798,11 @@ ieee8021BridgeChassis_createRegister (
 		}
 		
 		poIeee8021BridgeBaseEntry->oNe.u32ChassisId = u32ChassisId;
+		
+		if (!ieee8021BridgeBaseEntry_init (poIeee8021BridgeBaseEntry))
+		{
+			goto ieee8021BridgeChassis_createRegister_componentCleanup;
+		}
 	}
 	
 	ieee8021BridgeBase_wrLock (poIeee8021BridgeBaseEntry);
