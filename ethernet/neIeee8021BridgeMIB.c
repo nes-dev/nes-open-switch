@@ -98,20 +98,6 @@ neIeee8021BridgeBaseTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-neIeee8021BridgeBaseTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register neIeee8021BridgeBaseEntry_t *pEntry1 = xBTree_entry (pNode1, neIeee8021BridgeBaseEntry_t, oBTreeNode);
-	register neIeee8021BridgeBaseEntry_t *pEntry2 = xBTree_entry (pNode2, neIeee8021BridgeBaseEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32ComponentId < pEntry2->u32ComponentId) ? -1:
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId) ? 0: 1;
-}
-
-xBTree_t oNeIeee8021BridgeBaseTable_BTree = xBTree_initInline (&neIeee8021BridgeBaseTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 neIeee8021BridgeBaseEntry_t *
 neIeee8021BridgeBaseTable_createEntry (
@@ -173,13 +159,20 @@ neIeee8021BridgeBaseTable_removeEntry (neIeee8021BridgeBaseEntry_t *poEntry)
 	return;
 }
 
+bool
+neIeee8021BridgeBaseRowStatus_handler (
+	neIeee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	return true;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 neIeee8021BridgeBaseTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oNeIeee8021BridgeBaseTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021BridgeBaseTable_BTree);
 	return neIeee8021BridgeBaseTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -188,18 +181,18 @@ neIeee8021BridgeBaseTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neIeee8021BridgeBaseEntry_t *poEntry = NULL;
+	ieee8021BridgeBaseEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, neIeee8021BridgeBaseEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgeBaseEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeIeee8021BridgeBaseTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgeBaseTable_BTree);
 	return put_index_data;
 }
 
@@ -208,10 +201,10 @@ neIeee8021BridgeBaseTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neIeee8021BridgeBaseEntry_t *poEntry = NULL;
+	ieee8021BridgeBaseEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = neIeee8021BridgeBaseTable_getByIndex (
+	poEntry = ieee8021BridgeBaseTable_getByIndex (
 		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
@@ -233,6 +226,7 @@ neIeee8021BridgeBaseTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	neIeee8021BridgeBaseEntry_t *table_entry;
+	register ieee8021BridgeBaseEntry_t *poEntry = NULL;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -244,13 +238,14 @@ neIeee8021BridgeBaseTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIeee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -283,8 +278,9 @@ neIeee8021BridgeBaseTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIeee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -323,55 +319,11 @@ neIeee8021BridgeBaseTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIeee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			register netsnmp_variable_list *idx1 = table_info->indexes;
-			
-			switch (table_info->colnum)
+			if (poEntry == NULL)
 			{
-			case NEIEEE8021BRIDGEBASECHASSISID:
-			case NEIEEE8021BRIDGEBASENUMPORTSMAX:
-			case NEIEEE8021BRIDGEBASEADMINFLAGS:
-				if (table_entry == NULL)
-				{
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-						return SNMP_ERR_NOERROR;
-					}
-					
-					table_entry = neIeee8021BridgeBaseTable_createEntry (
-						*idx1->val.integer);
-					if (table_entry != NULL)
-					{
-						netsnmp_insert_iterator_context (request, table_entry);
-						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
-					}
-					else
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-						return SNMP_ERR_NOERROR;
-					}
-				}
-				break;
-			default:
-				if (table_entry == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
-				}
-				break;
-			}
-		}
-		break;
-		
-	case MODE_SET_FREE:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neIeee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
-			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
 			
@@ -380,19 +332,26 @@ neIeee8021BridgeBaseTable_mapper (
 			case NEIEEE8021BRIDGEBASECHASSISID:
 			case NEIEEE8021BRIDGEBASENUMPORTSMAX:
 			case NEIEEE8021BRIDGEBASEADMINFLAGS:
-				neIeee8021BridgeBaseTable_removeEntry (table_entry);
-				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				if (poEntry->u8RowStatus == xRowStatus_active_c || poEntry->u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
 				break;
 			}
 		}
+		break;
+		
+	case MODE_SET_FREE:
 		break;
 		
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neIeee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -450,48 +409,25 @@ neIeee8021BridgeBaseTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neIeee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
 			case NEIEEE8021BRIDGEBASECHASSISID:
-				if (pvOldDdata == table_entry)
-				{
-					neIeee8021BridgeBaseTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				}
-				else
-				{
-					memcpy (&table_entry->u32ChassisId, pvOldDdata, sizeof (table_entry->u32ChassisId));
-				}
+				memcpy (&table_entry->u32ChassisId, pvOldDdata, sizeof (table_entry->u32ChassisId));
 				break;
 			case NEIEEE8021BRIDGEBASENUMPORTSMAX:
-				if (pvOldDdata == table_entry)
-				{
-					neIeee8021BridgeBaseTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				}
-				else
-				{
-					memcpy (&table_entry->u32NumPortsMax, pvOldDdata, sizeof (table_entry->u32NumPortsMax));
-				}
+				memcpy (&table_entry->u32NumPortsMax, pvOldDdata, sizeof (table_entry->u32NumPortsMax));
 				break;
 			case NEIEEE8021BRIDGEBASEADMINFLAGS:
-				if (pvOldDdata == table_entry)
-				{
-					neIeee8021BridgeBaseTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				}
-				else
-				{
-					memcpy (table_entry->au8AdminFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16AdminFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				}
+				memcpy (table_entry->au8AdminFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16AdminFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			}
 		}

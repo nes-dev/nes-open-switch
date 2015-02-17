@@ -30,6 +30,8 @@ extern "C" {
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+
 #define TOBE_REPLACED 1
 
 
