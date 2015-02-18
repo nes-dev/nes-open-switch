@@ -102,6 +102,65 @@ Netsnmp_Node_Handler neIeee8021BridgeBaseTable_mapper;
 #endif	/* SNMP_SRC */
 
 
+/**
+ *	table neIeee8021BridgeBasePortTable definitions
+ */
+#define NEIEEE8021BRIDGEBASEPORTADMINFLAGS 1
+#define NEIEEE8021BRIDGEBASEPORTOPERSTATE 2
+
+enum
+{
+	/* enums for column neIeee8021BridgeBasePortAdminFlags */
+	neIeee8021BridgeBasePortAdminFlags_bInternalCosMapping_c = 0,
+	neIeee8021BridgeBasePortAdminFlags_bExternalCosMapping_c = 1,
+	neIeee8021BridgeBasePortAdminFlags_bServiceUni_c = 5,
+	neIeee8021BridgeBasePortAdminFlags_bServiceEnni_c = 6,
+	neIeee8021BridgeBasePortAdminFlags_bServiceVuni_c = 7,
+
+	/* enums for column neIeee8021BridgeBasePortOperState */
+	neIeee8021BridgeBasePortOperState_unknown_c = 1,
+	neIeee8021BridgeBasePortOperState_disabled_c = 2,
+	neIeee8021BridgeBasePortOperState_enabled_c = 3,
+	neIeee8021BridgeBasePortOperState_testing_c = 4,
+};
+
+/* table neIeee8021BridgeBasePortTable row entry data structure */
+typedef struct neIeee8021BridgeBasePortEntry_t
+{
+	/* Index values */
+	uint32_t u32ComponentId;
+	uint32_t u32Port;
+	
+	/* Column values */
+	uint8_t au8AdminFlags[2];
+	size_t u16AdminFlags_len;	/* # of uint8_t elements */
+	int32_t i32OperState;
+	
+	xBTree_Node_t oBTreeNode;
+} neIeee8021BridgeBasePortEntry_t;
+
+extern xBTree_t oNeIeee8021BridgeBasePortTable_BTree;
+
+/* neIeee8021BridgeBasePortTable table mapper */
+void neIeee8021BridgeBasePortTable_init (void);
+neIeee8021BridgeBasePortEntry_t * neIeee8021BridgeBasePortTable_createEntry (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+neIeee8021BridgeBasePortEntry_t * neIeee8021BridgeBasePortTable_getByIndex (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+neIeee8021BridgeBasePortEntry_t * neIeee8021BridgeBasePortTable_getNextIndex (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+void neIeee8021BridgeBasePortTable_removeEntry (neIeee8021BridgeBasePortEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neIeee8021BridgeBasePortTable_getFirst;
+Netsnmp_Next_Data_Point neIeee8021BridgeBasePortTable_getNext;
+Netsnmp_Get_Data_Point neIeee8021BridgeBasePortTable_get;
+Netsnmp_Node_Handler neIeee8021BridgeBasePortTable_mapper;
+#endif	/* SNMP_SRC */
+
+
 
 #	ifdef __cplusplus
 }
