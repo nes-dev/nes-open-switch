@@ -259,6 +259,36 @@ ieee8021BridgeBaseRowStatus_update (
 	}
 	
 	
+	register uint32_t u32VlanIndex = 0;
+	register ieee8021QBridgeVlanStaticEntry_t *poIeee8021QBridgeVlanStaticEntry = NULL;
+	
+	while (
+		(poIeee8021QBridgeVlanStaticEntry = ieee8021QBridgeVlanStaticTable_getNextIndex (poEntry->u32ComponentId, u32VlanIndex)) != NULL &&
+		poIeee8021QBridgeVlanStaticEntry->u32ComponentId == poEntry->u32ComponentId)
+	{
+		u32VlanIndex = poIeee8021QBridgeVlanStaticEntry->u32VlanIndex;
+		
+		if (!ieee8021QBridgeVlanStaticRowStatus_handler (poEntry, poIeee8021QBridgeVlanStaticEntry, u8RowStatus | xRowStatus_fromParent_c))
+		{
+			goto ieee8021BridgeBaseRowStatus_update_cleanup;
+		}
+	}
+	
+	register ieee8021QBridgeVlanCurrentEntry_t *poIeee8021QBridgeVlanCurrentEntry = NULL;
+	
+	while (
+		(poIeee8021QBridgeVlanCurrentEntry = ieee8021QBridgeVlanCurrentTable_Vlan_getNextIndex (poEntry->u32ComponentId, u32VlanIndex)) != NULL &&
+		poIeee8021QBridgeVlanCurrentEntry->u32ComponentId == poEntry->u32ComponentId)
+	{
+		u32VlanIndex = poIeee8021QBridgeVlanCurrentEntry->u32Index;
+		
+		if (!ieee8021QBridgeVlanCurrentRowStatus_handler (poEntry, poIeee8021QBridgeVlanCurrentEntry, u8RowStatus | xRowStatus_fromParent_c))
+		{
+			goto ieee8021BridgeBaseRowStatus_update_cleanup;
+		}
+	}
+	
+	
 	register uint32_t u32Port = 0;
 	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 	
