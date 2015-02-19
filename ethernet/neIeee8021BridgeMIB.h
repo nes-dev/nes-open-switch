@@ -94,6 +94,8 @@ neIeee8021BridgeBaseEntry_t * neIeee8021BridgeBaseTable_getByIndex (
 neIeee8021BridgeBaseEntry_t * neIeee8021BridgeBaseTable_getNextIndex (
 	uint32_t u32ComponentId);
 void neIeee8021BridgeBaseTable_removeEntry (neIeee8021BridgeBaseEntry_t *poEntry);
+bool neIeee8021BridgeBaseRowStatus_handler (
+	neIeee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neIeee8021BridgeBaseTable_getFirst;
 Netsnmp_Next_Data_Point neIeee8021BridgeBaseTable_getNext;

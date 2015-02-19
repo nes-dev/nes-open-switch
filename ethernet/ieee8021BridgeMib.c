@@ -422,6 +422,8 @@ bool
 ieee8021BridgeBaseTrafficClassesEnabled_handler (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8TrafficClassesEnabled, bool bForce)
 {
+	register bool bRetCode = false;
+	
 	if (poEntry->u8TrafficClassesEnabled == u8TrafficClassesEnabled && !bForce)
 	{
 		goto ieee8021BridgeBaseTrafficClassesEnabled_handler_success;
@@ -432,33 +434,32 @@ ieee8021BridgeBaseTrafficClassesEnabled_handler (
 	default:
 		goto ieee8021BridgeBaseTrafficClassesEnabled_handler_cleanup;
 		
-	case ieee8021BridgeBaseTrafficClassesEnabled_true_c:
-		/* TODO */
-		
-		!bForce ? (poEntry->u8TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_true_c): false;
-		break;
-		
 	case ieee8021BridgeBaseTrafficClassesEnabled_false_c:
-		/* TODO */
-		
-		!bForce ? (poEntry->u8TrafficClassesEnabled = ieee8021BridgeBaseTrafficClassesEnabled_false_c): false;
+	case ieee8021BridgeBaseTrafficClassesEnabled_true_c:
+		if (!ieee8021BridgeBaseTrafficClassesEnabled_update (poEntry, u8TrafficClassesEnabled))
+		{
+			goto ieee8021BridgeBaseTrafficClassesEnabled_handler_cleanup;
+		}
 		break;
 	}
 	
+	!bForce ? (poEntry->u8TrafficClassesEnabled = u8TrafficClassesEnabled): false;
+	
 ieee8021BridgeBaseTrafficClassesEnabled_handler_success:
 	
-	return true;
-	
+	bRetCode = true;
 	
 ieee8021BridgeBaseTrafficClassesEnabled_handler_cleanup:
 	
-	return false;
+	return bRetCode;
 }
 
 bool
 ieee8021BridgeBaseMmrpEnabledStatus_handler (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8MmrpEnabledStatus, bool bForce)
 {
+	register bool bRetCode = false;
+	
 	if (poEntry->u8MmrpEnabledStatus == u8MmrpEnabledStatus && !bForce)
 	{
 		goto ieee8021BridgeBaseMmrpEnabledStatus_handler_success;
@@ -469,33 +470,32 @@ ieee8021BridgeBaseMmrpEnabledStatus_handler (
 	default:
 		goto ieee8021BridgeBaseMmrpEnabledStatus_handler_cleanup;
 		
-	case ieee8021BridgeBaseMmrpEnabledStatus_true_c:
-		/* TODO */
-		
-		!bForce ? (poEntry->u8MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_true_c): false;
-		break;
-		
 	case ieee8021BridgeBaseMmrpEnabledStatus_false_c:
-		/* TODO */
-		
-		!bForce ? (poEntry->u8MmrpEnabledStatus = ieee8021BridgeBaseMmrpEnabledStatus_false_c): false;
+	case ieee8021BridgeBaseMmrpEnabledStatus_true_c:
+		if (!ieee8021BridgeBaseTrafficClassesEnabled_update (poEntry, u8MmrpEnabledStatus))
+		{
+			goto ieee8021BridgeBaseMmrpEnabledStatus_handler_cleanup;
+		}
 		break;
 	}
 	
+	!bForce ? (poEntry->u8MmrpEnabledStatus = u8MmrpEnabledStatus): false;
+	
 ieee8021BridgeBaseMmrpEnabledStatus_handler_success:
 	
-	return true;
-	
+	bRetCode = true;
 	
 ieee8021BridgeBaseMmrpEnabledStatus_handler_cleanup:
 	
-	return false;
+	return bRetCode;
 }
 
 bool
 ieee8021BridgeBaseRowStatus_handler (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus)
 {
+	register bool bRetCode = false;
+	
 	if (poEntry->u8RowStatus == u8RowStatus)
 	{
 		goto ieee8021BridgeBaseRowStatus_handler_success;
@@ -504,17 +504,6 @@ ieee8021BridgeBaseRowStatus_handler (
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
-		/* TODO */
-		
-		if (!ieee8021BridgeBaseTrafficClassesEnabled_handler (poEntry, poEntry->u8TrafficClassesEnabled, true))
-		{
-			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
-		}
-		if (!ieee8021BridgeBaseMmrpEnabledStatus_handler (poEntry, poEntry->u8MmrpEnabledStatus, true))
-		{
-			goto ieee8021BridgeBaseRowStatus_handler_cleanup;
-		}
-		
 		if (!ieee8021BridgeBaseEntry_init (poEntry) ||
 			!ieee8021BridgeBaseRowStatus_update (poEntry, u8RowStatus))
 		{
@@ -552,12 +541,11 @@ ieee8021BridgeBaseRowStatus_handler (
 	
 ieee8021BridgeBaseRowStatus_handler_success:
 	
-	return true;
-	
+	bRetCode = true;
 	
 ieee8021BridgeBaseRowStatus_handler_cleanup:
 	
-	return false;
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */

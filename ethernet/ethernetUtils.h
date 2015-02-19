@@ -41,6 +41,12 @@ bool
 	ieee8021BridgeBaseTable_hierUpdate (
 		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 bool
+	ieee8021BridgeBaseTrafficClassesEnabled_update (
+		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8TrafficClassesEnabled);
+bool
+	ieee8021BridgeBaseMmrpEnabledStatus_update (
+		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8MmrpEnabledStatus);
+bool
 	ieee8021BridgeBaseRowStatus_update (
 		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 bool

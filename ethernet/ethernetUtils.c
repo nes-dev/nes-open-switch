@@ -198,6 +198,9 @@ ieee8021If_ilanStackModify (
 
 
 static bool
+	ieee8021BridgeBaseDependentStatus_update (
+		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
+static bool
 	ieee8021BridgeBaseRowStatus_halUpdate (
 		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 static bool
@@ -247,13 +250,75 @@ ieee8021BridgeBaseTable_hierUpdate_cleanup:
 }
 
 bool
+ieee8021BridgeBaseTrafficClassesEnabled_update (
+	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8TrafficClassesEnabled)
+{
+	register bool bRetCode = false;
+	
+	/* TODO */
+	
+	bRetCode = true;
+	
+// ieee8021BridgeBaseTrafficClassesEnabled_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgeBaseMmrpEnabledStatus_update (
+	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8MmrpEnabledStatus)
+{
+	register bool bRetCode = false;
+	
+	/* TODO */
+	
+	bRetCode = true;
+	
+// ieee8021BridgeBaseMmrpEnabledStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgeBaseDependentStatus_update (
+	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	register uint8_t u8TrafficClassesEnabled = u8RowStatus == xRowStatus_active_c ? poEntry->u8TrafficClassesEnabled: ieee8021BridgeBaseTrafficClassesEnabled_false_c;
+	register uint8_t u8MmrpEnabledStatus = u8RowStatus == xRowStatus_active_c ? poEntry->u8MmrpEnabledStatus: ieee8021BridgeBaseMmrpEnabledStatus_false_c;
+	
+	if (!ieee8021BridgeBaseTrafficClassesEnabled_handler (poEntry, u8TrafficClassesEnabled, true) ||
+		!ieee8021BridgeBaseMmrpEnabledStatus_handler (poEntry, u8MmrpEnabledStatus, true))
+	{
+		goto ieee8021BridgeBaseDependentStatus_update_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgeBaseDependentStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021BridgeBaseRowStatus_update (
 	ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
 	
 	
+	if (!neIeee8021BridgeBaseRowStatus_handler (&poEntry->oNe, u8RowStatus))
+	{
+		goto ieee8021BridgeBaseRowStatus_update_cleanup;
+	}
+	
 	if (u8RowStatus == xRowStatus_active_c && !ieee8021BridgeBaseRowStatus_halUpdate (poEntry, u8RowStatus))
+	{
+		goto ieee8021BridgeBaseRowStatus_update_cleanup;
+	}
+	
+	if (u8RowStatus == xRowStatus_active_c && !ieee8021BridgeBaseDependentStatus_update (poEntry, u8RowStatus))
 	{
 		goto ieee8021BridgeBaseRowStatus_update_cleanup;
 	}
@@ -398,6 +463,11 @@ ieee8021BridgeBaseRowStatus_update (
 		}
 	}
 	
+	
+	if (u8RowStatus != xRowStatus_active_c && !ieee8021BridgeBaseDependentStatus_update (poEntry, u8RowStatus))
+	{
+		goto ieee8021BridgeBaseRowStatus_update_cleanup;
+	}
 	
 	if (u8RowStatus != xRowStatus_active_c && !ieee8021BridgeBaseRowStatus_halUpdate (poEntry, u8RowStatus))
 	{
