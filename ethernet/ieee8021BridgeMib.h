@@ -246,6 +246,8 @@ enum
 	ieee8021BridgeBasePortType_uplinkRelayPort_c = 12,
 	ieee8021BridgeBasePortType_providerEdgePort_c = 13,
 	ieee8021BridgeBasePortType_providerInstancePort_c = 14,
+	ieee8021BridgeBasePortType_min_c = ieee8021BridgeBasePortType_customerVlanPort_c,
+	ieee8021BridgeBasePortType_max_c = ieee8021BridgeBasePortType_providerInstancePort_c,
 
 	/* enums for column ieee8021BridgeBasePortExternal */
 	ieee8021BridgeBasePortExternal_true_c = 1,
@@ -442,9 +444,9 @@ typedef struct ieee8021BridgePhyData_t
 	ieee8021BridgeBaseIfToPortEntry_t oIf;
 	ieee8021BridgePhyPortEntry_t oPhy;
 	
+	uint32_t u32ChassisId;
 	uint32_t u32ComponentId;
 	uint32_t u32Port;
-	uint32_t u32ChassisId;
 	uint8_t au8TypeCapabilities[2];
 	size_t u16TypeCapabilities_len;	/* # of uint8_t elements */
 	
