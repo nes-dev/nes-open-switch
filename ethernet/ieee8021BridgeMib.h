@@ -285,6 +285,8 @@ typedef struct ieee8021BridgeBasePortEntry_t
 	uint8_t au8Name[32];
 	size_t u16Name_len;	/* # of uint8_t elements */
 	
+	neIeee8021BridgeBasePortEntry_t oNe;
+	
 	uint8_t u8RowStatus;
 	struct ieee8021BridgeBasePortEntry_t *pOldEntry;
 	

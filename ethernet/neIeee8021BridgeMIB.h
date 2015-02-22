@@ -69,7 +69,7 @@ enum
 typedef struct neIeee8021BridgeBaseEntry_t
 {
 	/* Index values */
-	uint32_t u32ComponentId;
+// 	uint32_t u32ComponentId;
 	
 	/* Column values */
 	uint32_t u32ChassisId;
@@ -80,10 +80,10 @@ typedef struct neIeee8021BridgeBaseEntry_t
 	size_t u16AdminFlags_len;	/* # of uint8_t elements */
 	int32_t i32OperState;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neIeee8021BridgeBaseEntry_t;
 
-extern xBTree_t oNeIeee8021BridgeBaseTable_BTree;
+// extern xBTree_t oNeIeee8021BridgeBaseTable_BTree;
 
 /* neIeee8021BridgeBaseTable table mapper */
 void neIeee8021BridgeBaseTable_init (void);
@@ -130,18 +130,18 @@ enum
 typedef struct neIeee8021BridgeBasePortEntry_t
 {
 	/* Index values */
-	uint32_t u32ComponentId;
-	uint32_t u32Port;
+// 	uint32_t u32ComponentId;
+// 	uint32_t u32Port;
 	
 	/* Column values */
-	uint8_t au8AdminFlags[2];
+	uint8_t au8AdminFlags[1];
 	size_t u16AdminFlags_len;	/* # of uint8_t elements */
 	int32_t i32OperState;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neIeee8021BridgeBasePortEntry_t;
 
-extern xBTree_t oNeIeee8021BridgeBasePortTable_BTree;
+// extern xBTree_t oNeIeee8021BridgeBasePortTable_BTree;
 
 /* neIeee8021BridgeBasePortTable table mapper */
 void neIeee8021BridgeBasePortTable_init (void);
