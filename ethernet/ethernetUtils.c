@@ -204,6 +204,10 @@ static bool
 	ieee8021BridgeBaseRowStatus_halUpdate (
 		ieee8021BridgeBaseEntry_t *poEntry, uint8_t u8RowStatus);
 static bool
+	ieee8021BridgeBasePortDependentStatus_update (
+		ieee8021BridgeBaseEntry_t *poComponent,
+		ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
+static bool
 	ieee8021BridgeBasePortRowStatus_halUpdate (
 		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
@@ -544,6 +548,22 @@ ieee8021BridgeBasePortTable_hierUpdate_cleanup:
 }
 
 bool
+ieee8021BridgeBasePortDependentStatus_update (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	/* TODO */
+	
+	bRetCode = true;
+	
+// ieee8021BridgeBasePortDependentStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021BridgeBasePortRowStatus_update (
 	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus)
@@ -555,12 +575,22 @@ ieee8021BridgeBasePortRowStatus_update (
 		goto ieee8021BridgeBasePortRowStatus_update_cleanup;
 	}
 	
-	/* TODO */
+	if (u8RowStatus == xRowStatus_active_c && !ieee8021BridgeBasePortDependentStatus_update (poComponent, poEntry, u8RowStatus))
+	{
+		goto ieee8021BridgeBasePortRowStatus_update_cleanup;
+	}
+	
+	
+	if (u8RowStatus != xRowStatus_active_c && !ieee8021BridgeBasePortDependentStatus_update (poComponent, poEntry, u8RowStatus))
+	{
+		goto ieee8021BridgeBasePortRowStatus_update_cleanup;
+	}
 	
 	if (u8RowStatus != xRowStatus_active_c && !ieee8021BridgeBasePortRowStatus_halUpdate (poComponent, poEntry, u8RowStatus))
 	{
 		goto ieee8021BridgeBasePortRowStatus_update_cleanup;
 	}
+	
 	
 	bRetCode = true;
 	

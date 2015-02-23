@@ -1279,6 +1279,11 @@ ieee8021BridgeBasePortTable_createHier (ieee8021BridgeBaseEntry_t *poComponent, 
 	xBitmap_setBitRev (poComponent->oNe.pu8Ports, poEntry->u32Port - 1, 1);
 	
 	
+	if ((neIeee8021BridgeBasePortTable_createEntry (poEntry->u32ComponentId, poEntry->u32Port)) == NULL)
+	{
+		goto ieee8021BridgeBasePortTable_createHier_cleanup;
+	}
+	
 	if (ieee8021BridgeTpPortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port) == NULL &&
 		ieee8021BridgeTpPortTable_createExt (poEntry->u32ComponentId, poEntry->u32Port) == NULL)
 	{
@@ -1331,6 +1336,8 @@ ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBaseEntry_t *poComponent, 
 	{
 		goto ieee8021BridgeBasePortTable_removeHier_cleanup;
 	}
+	
+	neIeee8021BridgeBasePortTable_removeEntry (&poEntry->oNe);
 	
 	if ((poIeee8021BridgePortMmrpEntry = ieee8021BridgePortMmrpTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port)) != NULL)
 	{
