@@ -405,6 +405,23 @@ ieee8021BridgeBaseEntry_init (
 		goto ieee8021BridgeBaseEntry_init_cleanup;
 	}
 	
+	register uint16_t u16Ports_len = xBitmap_maskCount (poEntry->oNe.u32NumPortsMax);
+	
+	if (poEntry->oNe.u32NumPortsMax == 0 ||
+		(poEntry->oNe.u16Ports_len != 0 && poEntry->oNe.u16Ports_len < u16Ports_len))
+	{
+		goto ieee8021BridgeBaseEntry_init_cleanup;
+	}
+	
+	if (poEntry->oNe.u16Ports_len == 0)
+	{
+		if ((poEntry->oNe.pu8Ports = xBuffer_cAlloc (u16Ports_len)) == NULL)
+		{
+			goto ieee8021BridgeBaseEntry_init_cleanup;
+		}
+		poEntry->oNe.u16Ports_len = u16Ports_len;
+	}
+	
 	if (poEntry->u32ChassisId == 0)
 	{
 		poEntry->u32ChassisId = poEntry->oNe.u32ChassisId;
@@ -1175,7 +1192,7 @@ ieee8021BridgeBasePortTable_allocateIndex (
 	{
 		goto ieee8021BridgeBasePortTable_allocateIndex_cleanup;
 	}
-	xBitmap_setBitRev (poComponent->au8Ports, u32Port - 1, 1);
+	xBitmap_setBitRev (poComponent->oNe.pu8Ports, u32Port - 1, 1);
 	
 	*pu32Port = u32Port;
 	bRetCode = true;
@@ -1192,7 +1209,7 @@ ieee8021BridgeBasePortTable_removeIndex (
 {
 	register bool bRetCode = false;
 	
-	xBitmap_setBitRev (poComponent->au8Ports, u32Port - 1, 0);
+	xBitmap_setBitRev (poComponent->oNe.pu8Ports, u32Port - 1, 0);
 	if (!xFreeRange_removeIndex (&poComponent->oPort_FreeRange, u32Port))
 	{
 		goto ieee8021BridgeBasePortTable_removeIndex_cleanup;
@@ -1259,7 +1276,7 @@ ieee8021BridgeBasePortTable_createHier (ieee8021BridgeBaseEntry_t *poComponent, 
 	{
 		goto ieee8021BridgeBasePortTable_createHier_cleanup;
 	}
-	xBitmap_setBitRev (poComponent->au8Ports, poEntry->u32Port - 1, 1);
+	xBitmap_setBitRev (poComponent->oNe.pu8Ports, poEntry->u32Port - 1, 1);
 	
 	
 	if (ieee8021BridgeTpPortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port) == NULL &&
@@ -1336,7 +1353,7 @@ ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBaseEntry_t *poComponent, 
 	}
 	
 	
-	xBitmap_setBitRev (poComponent->au8Ports, poEntry->u32Port - 1, 0);
+	xBitmap_setBitRev (poComponent->oNe.pu8Ports, poEntry->u32Port - 1, 0);
 	if (!xFreeRange_removeIndex (&poComponent->oPort_FreeRange, poEntry->u32Port))
 	{
 		goto ieee8021BridgeBasePortTable_removeHier_cleanup;
@@ -1758,6 +1775,7 @@ ieee8021BridgeChassis_createRegister (
 		}
 		
 		poIeee8021BridgeBaseEntry->oNe.u32ChassisId = u32ChassisId;
+		poIeee8021BridgeBaseEntry->oNe.u32NumPortsMax = ETHERNET_PORT_MAP_SIZE;
 		
 		if (!ieee8021BridgeBaseEntry_init (poIeee8021BridgeBaseEntry))
 		{

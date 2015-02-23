@@ -74,7 +74,7 @@ typedef struct neIeee8021BridgeBaseEntry_t
 	/* Column values */
 	uint32_t u32ChassisId;
 	uint32_t u32NumPortsMax;
-	uint8_t au8Ports[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t *pu8Ports;
 	size_t u16Ports_len;	/* # of uint8_t elements */
 	uint8_t au8AdminFlags[1];
 	size_t u16AdminFlags_len;	/* # of uint8_t elements */

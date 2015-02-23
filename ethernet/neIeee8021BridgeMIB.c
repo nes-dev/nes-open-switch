@@ -27,7 +27,6 @@
 #include "neIeee8021BridgeMIB.h"
 #include "ieee8021BridgeMib.h"
 
-#include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
@@ -158,6 +157,7 @@ neIeee8021BridgeBaseTable_removeEntry (neIeee8021BridgeBaseEntry_t *poEntry)
 		return;    /* Nothing to remove */
 	}
 	
+	poEntry->pu8Ports != NULL ? xBuffer_free (poEntry->pu8Ports): false;
 	return;
 }
 
@@ -258,7 +258,7 @@ neIeee8021BridgeBaseTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32NumPortsMax);
 				break;
 			case NEIEEE8021BRIDGEBASEPORTS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Ports, table_entry->u16Ports_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->pu8Ports, table_entry->u16Ports_len);
 				break;
 			case NEIEEE8021BRIDGEBASEADMINFLAGS:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdminFlags, table_entry->u16AdminFlags_len);
