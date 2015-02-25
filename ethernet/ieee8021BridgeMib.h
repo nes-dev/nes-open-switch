@@ -138,9 +138,6 @@ typedef struct ieee8021BridgeBaseEntry_t
 	neIeee8021BridgeBaseEntry_t oNe;
 	
 	uint32_t u32ChassisId;
-	uint8_t au8Ports[ETHERNET_PORT_MAP_SIZE];
-	size_t u16Ports_len;	/* # of uint8_t elements */
-	uint32_t u32TpIfIndex;
 	uint32_t u32NumTpPorts;
 	xFreeRange_t oPort_FreeRange;
 	

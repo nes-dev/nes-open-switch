@@ -114,7 +114,7 @@ ieee8021PbVlanStaticTable_vlanHandler (
 	register uint16_t u16PortIndex = 0;
 	
 	xBitmap_scanBitRangeRev (
-		pu8DisabledPorts, 0, xBitmap_bitLength (poComponent->u16Ports_len) - 1, 1, u16PortIndex)
+		pu8DisabledPorts, 0, xBitmap_bitLength (poComponent->oNe.u16Ports_len) - 1, 1, u16PortIndex)
 	{
 		register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
 		
@@ -133,7 +133,7 @@ ieee8021PbVlanStaticTable_vlanHandler (
 	}
 	
 	xBitmap_scanBitRangeRev (
-		pu8EnabledPorts, 0, xBitmap_bitLength (poComponent->u16Ports_len) - 1, 1, u16PortIndex)
+		pu8EnabledPorts, 0, xBitmap_bitLength (poComponent->oNe.u16Ports_len) - 1, 1, u16PortIndex)
 	{
 		register ieee8021PbCepEntry_t *poIeee8021PbCepEntry = NULL;
 		
@@ -181,7 +181,7 @@ ieee8021PbVlanStaticRowStatus_handler (
 	register uint16_t u16PortIndex = 0;
 	
 	xBitmap_scanBitRangeRev (
-		poEntry->au8EgressPorts, 0, xBitmap_bitLength (poComponent->u16Ports_len) - 1, 1, u16PortIndex)
+		poEntry->au8EgressPorts, 0, xBitmap_bitLength (poComponent->oNe.u16Ports_len) - 1, 1, u16PortIndex)
 	{
 		register ieee8021PbEdgePortEntry_t *poIeee8021PbEdgePortEntry = NULL;
 		
