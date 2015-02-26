@@ -27,7 +27,11 @@ extern "C" {
 
 
 
+struct ieee8021BridgeBaseEntry_t;
+typedef struct ieee8021BridgeBaseEntry_t ieee8021BridgeBaseEntry_t;
+
 #include "neIeee8021BridgeMIB.h"
+#include "ieee8021QBridgeMib.h"
 #include "ethernet_ext.h"
 
 #include "lib/freeRange.h"
@@ -119,7 +123,7 @@ enum
 };
 
 /* table ieee8021BridgeBaseTable row entry data structure */
-typedef struct ieee8021BridgeBaseEntry_t
+/*typedef*/ struct ieee8021BridgeBaseEntry_t
 {
 	/* Index values */
 	uint32_t u32ComponentId;
@@ -136,6 +140,7 @@ typedef struct ieee8021BridgeBaseEntry_t
 	uint8_t u8RowStatus;
 	
 	neIeee8021BridgeBaseEntry_t oNe;
+	ieee8021QBridgeEntry_t oQ;
 	
 	uint32_t u32ChassisId;
 	uint32_t u32NumTpPorts;
@@ -144,7 +149,7 @@ typedef struct ieee8021BridgeBaseEntry_t
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oChassis_BTreeNode;
 	xRwLock_t oLock;
-} ieee8021BridgeBaseEntry_t;
+} /*ieee8021BridgeBaseEntry_t*/;
 
 extern xBTree_t oIeee8021BridgeBaseTable_BTree;
 extern xBTree_t oIeee8021BridgeBaseTable_Chassis_BTree;
@@ -165,6 +170,7 @@ ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_Chassis_getNextIndex (
 	uint32_t u32ChassisId,
 	uint32_t u32ComponentId);
 #define ieee8021BridgeBaseTable_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBaseEntry_t, oNe))
+#define ieee8021BridgeBaseTable_getByQEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBaseEntry_t, oQ))
 void ieee8021BridgeBaseTable_removeEntry (ieee8021BridgeBaseEntry_t *poEntry);
 ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_createExt (
 	uint32_t u32ComponentId);
