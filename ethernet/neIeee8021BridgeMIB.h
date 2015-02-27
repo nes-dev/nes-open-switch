@@ -163,6 +163,70 @@ Netsnmp_Node_Handler neIeee8021BridgeBasePortTable_mapper;
 #endif	/* SNMP_SRC */
 
 
+/**
+ *	table neIeee8021QBridgeVlanCurrentTable definitions
+ */
+#define NEIEEE8021QBRIDGEVLANCURRENTADMINFLAGS 1
+#define NEIEEE8021QBRIDGEVLANCURRENTOPERSTATE 2
+#define NEIEEE8021QBRIDGEVLANCURRENTLEARNT 3
+#define NEIEEE8021QBRIDGEVLANCURRENTIFINDEX 4
+
+enum
+{
+	/* enums for column neIeee8021QBridgeVlanCurrentAdminFlags */
+	neIeee8021QBridgeVlanCurrentAdminFlags_bVlanIf_c = 0,
+
+	/* enums for column neIeee8021QBridgeVlanCurrentOperState */
+	neIeee8021QBridgeVlanCurrentOperState_unknown_c = 1,
+	neIeee8021QBridgeVlanCurrentOperState_disabled_c = 2,
+	neIeee8021QBridgeVlanCurrentOperState_enabled_c = 3,
+	neIeee8021QBridgeVlanCurrentOperState_testing_c = 4,
+};
+
+/* table neIeee8021QBridgeVlanCurrentTable row entry data structure */
+typedef struct neIeee8021QBridgeVlanCurrentEntry_t
+{
+	/* Index values */
+	uint32_t u32TimeMark;
+	uint32_t u32ComponentId;
+	uint32_t u32Index;
+	
+	/* Column values */
+	uint8_t au8AdminFlags[1];
+	size_t u16AdminFlags_len;	/* # of uint8_t elements */
+	int32_t i32OperState;
+	uint8_t au8Learnt[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	size_t u16Learnt_len;	/* # of uint8_t elements */
+	uint32_t u32IfIndex;
+	
+	xBTree_Node_t oBTreeNode;
+} neIeee8021QBridgeVlanCurrentEntry_t;
+
+extern xBTree_t oNeIeee8021QBridgeVlanCurrentTable_BTree;
+
+/* neIeee8021QBridgeVlanCurrentTable table mapper */
+void neIeee8021QBridgeVlanCurrentTable_init (void);
+neIeee8021QBridgeVlanCurrentEntry_t * neIeee8021QBridgeVlanCurrentTable_createEntry (
+	uint32_t u32TimeMark,
+	uint32_t u32ComponentId,
+	uint32_t u32Index);
+neIeee8021QBridgeVlanCurrentEntry_t * neIeee8021QBridgeVlanCurrentTable_getByIndex (
+	uint32_t u32TimeMark,
+	uint32_t u32ComponentId,
+	uint32_t u32Index);
+neIeee8021QBridgeVlanCurrentEntry_t * neIeee8021QBridgeVlanCurrentTable_getNextIndex (
+	uint32_t u32TimeMark,
+	uint32_t u32ComponentId,
+	uint32_t u32Index);
+void neIeee8021QBridgeVlanCurrentTable_removeEntry (neIeee8021QBridgeVlanCurrentEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neIeee8021QBridgeVlanCurrentTable_getFirst;
+Netsnmp_Next_Data_Point neIeee8021QBridgeVlanCurrentTable_getNext;
+Netsnmp_Get_Data_Point neIeee8021QBridgeVlanCurrentTable_get;
+Netsnmp_Node_Handler neIeee8021QBridgeVlanCurrentTable_mapper;
+#endif	/* SNMP_SRC */
+
+
 
 #	ifdef __cplusplus
 }
