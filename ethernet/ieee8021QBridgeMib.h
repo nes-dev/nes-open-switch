@@ -93,7 +93,7 @@ enum
 typedef struct ieee8021QBridgeEntry_t
 {
 	/* Index values */
-	uint32_t u32ComponentId;
+// 	uint32_t u32ComponentId;
 	
 	/* Column values */
 	int32_t i32VlanVersionNumber;
@@ -102,10 +102,10 @@ typedef struct ieee8021QBridgeEntry_t
 	uint32_t u32NumVlans;
 	uint8_t u8MvrpEnabledStatus;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeEntry_t;
 
-extern xBTree_t oIeee8021QBridgeTable_BTree;
+// extern xBTree_t oIeee8021QBridgeTable_BTree;
 
 /* ieee8021QBridgeTable table mapper */
 void ieee8021QBridgeTable_init (void);

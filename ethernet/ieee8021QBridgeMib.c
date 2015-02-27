@@ -200,20 +200,6 @@ ieee8021QBridgeTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-ieee8021QBridgeTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register ieee8021QBridgeEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021QBridgeEntry_t, oBTreeNode);
-	register ieee8021QBridgeEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021QBridgeEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32ComponentId < pEntry2->u32ComponentId) ? -1:
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId) ? 0: 1;
-}
-
-xBTree_t oIeee8021QBridgeTable_BTree = xBTree_initInline (&ieee8021QBridgeTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 ieee8021QBridgeEntry_t *
 ieee8021QBridgeTable_createEntry (
@@ -560,6 +546,18 @@ ieee8021QBridgeTable_removeHier (
 		{
 			u32BridgeBasePort = poIeee8021QBridgePortEntry->u32BridgeBasePort;
 			ieee8021QBridgePortTable_removeEntry (poIeee8021QBridgePortEntry);
+		}
+	}
+	
+	{
+		uint32_t u32Index = 0;
+		register ieee8021QBridgeVlanCurrentEntry_t *poIeee8021QBridgeVlanCurrentEntry = NULL;
+		
+		while ((poIeee8021QBridgeVlanCurrentEntry = ieee8021QBridgeVlanCurrentTable_Vlan_getNextIndex (poComponent->u32ComponentId, u32Index)) != NULL &&
+			poIeee8021QBridgeVlanCurrentEntry->u32ComponentId == poComponent->u32ComponentId)
+		{
+			u32Index = poIeee8021QBridgeVlanCurrentEntry->u32Index;
+			ieee8021QBridgeVlanCurrentTable_removeEntry (poIeee8021QBridgeVlanCurrentEntry);
 		}
 	}
 	
