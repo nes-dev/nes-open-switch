@@ -814,23 +814,16 @@ neIeee8021QBridgeVlanCurrentTable_createEntry (
 	uint32_t u32Index)
 {
 	register neIeee8021QBridgeVlanCurrentEntry_t *poEntry = NULL;
+	register ieee8021QBridgeVlanCurrentEntry_t *poVlan = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poVlan = ieee8021QBridgeVlanCurrentTable_getByIndex (u32TimeMark, u32ComponentId, u32Index)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poVlan->oNe;
 	
-	poEntry->u32TimeMark = u32TimeMark;
-	poEntry->u32ComponentId = u32ComponentId;
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeIeee8021QBridgeVlanCurrentTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry->i32OperState = neIeee8021QBridgeVlanCurrentOperState_disabled_c;
 	
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeIeee8021QBridgeVlanCurrentTable_BTree);
 	return poEntry;
 }
 
@@ -840,25 +833,14 @@ neIeee8021QBridgeVlanCurrentTable_getByIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Index)
 {
-	register neIeee8021QBridgeVlanCurrentEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021QBridgeVlanCurrentEntry_t *poVlan = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poVlan = ieee8021QBridgeVlanCurrentTable_getByIndex (u32TimeMark, u32ComponentId, u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32TimeMark = u32TimeMark;
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeIeee8021QBridgeVlanCurrentTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neIeee8021QBridgeVlanCurrentEntry_t, oBTreeNode);
+	return &poVlan->oNe;
 }
 
 neIeee8021QBridgeVlanCurrentEntry_t *
@@ -867,39 +849,20 @@ neIeee8021QBridgeVlanCurrentTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Index)
 {
-	register neIeee8021QBridgeVlanCurrentEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021QBridgeVlanCurrentEntry_t *poVlan = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poVlan = ieee8021QBridgeVlanCurrentTable_getNextIndex (u32TimeMark, u32ComponentId, u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32TimeMark = u32TimeMark;
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeIeee8021QBridgeVlanCurrentTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neIeee8021QBridgeVlanCurrentEntry_t, oBTreeNode);
+	return &poVlan->oNe;
 }
 
 /* remove a row from the table */
 void
 neIeee8021QBridgeVlanCurrentTable_removeEntry (neIeee8021QBridgeVlanCurrentEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeIeee8021QBridgeVlanCurrentTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeIeee8021QBridgeVlanCurrentTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -942,12 +905,12 @@ neIeee8021QBridgeVlanCurrentTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neIeee8021QBridgeVlanCurrentEntry_t *poEntry = NULL;
+	ieee8021QBridgeVlanCurrentEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	register netsnmp_variable_list *idx3 = idx2->next_variable;
 	
-	poEntry = neIeee8021QBridgeVlanCurrentTable_getByIndex (
+	poEntry = ieee8021QBridgeVlanCurrentTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer,
 		*idx3->val.integer);
@@ -971,6 +934,7 @@ neIeee8021QBridgeVlanCurrentTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	neIeee8021QBridgeVlanCurrentEntry_t *table_entry;
+	register ieee8021QBridgeVlanCurrentEntry_t *poEntry = NULL;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -982,13 +946,14 @@ neIeee8021QBridgeVlanCurrentTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIeee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -1018,8 +983,9 @@ neIeee8021QBridgeVlanCurrentTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIeee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -1042,43 +1008,22 @@ neIeee8021QBridgeVlanCurrentTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIeee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			register netsnmp_variable_list *idx1 = table_info->indexes;
-			register netsnmp_variable_list *idx2 = idx1->next_variable;
-			register netsnmp_variable_list *idx3 = idx2->next_variable;
+			if (poEntry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
 			case NEIEEE8021QBRIDGEVLANCURRENTADMINFLAGS:
-				if (table_entry == NULL)
+				if (poEntry->u8RowStatus == xRowStatus_active_c || poEntry->u8RowStatus == xRowStatus_notReady_c)
 				{
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-						return SNMP_ERR_NOERROR;
-					}
-					
-					table_entry = neIeee8021QBridgeVlanCurrentTable_createEntry (
-						*idx1->val.integer,
-						*idx2->val.integer,
-						*idx3->val.integer);
-					if (table_entry != NULL)
-					{
-						netsnmp_insert_iterator_context (request, table_entry);
-						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
-					}
-					else
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-						return SNMP_ERR_NOERROR;
-					}
-				}
-				break;
-			default:
-				if (table_entry == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
 				}
 				break;
 			}
@@ -1086,32 +1031,15 @@ neIeee8021QBridgeVlanCurrentTable_mapper (
 		break;
 		
 	case MODE_SET_FREE:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neIeee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
-			{
-				continue;
-			}
-			
-			switch (table_info->colnum)
-			{
-			case NEIEEE8021QBRIDGEVLANCURRENTADMINFLAGS:
-				neIeee8021QBridgeVlanCurrentTable_removeEntry (table_entry);
-				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				break;
-			}
-		}
 		break;
 		
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neIeee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -1141,26 +1069,19 @@ neIeee8021QBridgeVlanCurrentTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neIeee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021QBridgeVlanCurrentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
 			case NEIEEE8021QBRIDGEVLANCURRENTADMINFLAGS:
-				if (pvOldDdata == table_entry)
-				{
-					neIeee8021QBridgeVlanCurrentTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				}
-				else
-				{
-					memcpy (table_entry->au8AdminFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16AdminFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				}
+				memcpy (table_entry->au8AdminFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16AdminFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			}
 		}

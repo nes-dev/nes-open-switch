@@ -647,6 +647,8 @@ typedef struct ieee8021QBridgeVlanCurrentEntry_t
 	int32_t i32Status;
 	uint32_t u32CreationTime;
 	
+	neIeee8021QBridgeVlanCurrentEntry_t oNe;
+	
 	uint8_t au8Learnt[ETHERNET_PORT_MAP_SIZE];
 	size_t u16Learnt_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
