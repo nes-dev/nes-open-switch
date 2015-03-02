@@ -2093,11 +2093,12 @@ ieee8021QBridgeTpGroupEntry_t *
 ieee8021QBridgeTpGroupTable_createEntry (
 	uint32_t u32VlanCurrentComponentId,
 	uint32_t u32VlanIndex,
-	uint8_t *pau8Address, size_t u16Address_len)
+	uint8_t *pau8Address, size_t u16Address_len,
+	uint16_t u16Ports_len)
 {
 	register ieee8021QBridgeTpGroupEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if (u16Ports_len == 0 || (poEntry = xBuffer_cAlloc (sizeof (*poEntry) + 2 * u16Ports_len)) == NULL)
 	{
 		return NULL;
 	}
@@ -2111,6 +2112,11 @@ ieee8021QBridgeTpGroupTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->pu8EgressPorts = (void *) (poEntry + 1);
+	poEntry->pu8Learnt = ((void *) (poEntry + 1)) + u16Ports_len;
+	poEntry->u16EgressPorts_len = u16Ports_len;
+	poEntry->u16Learnt_len = u16Ports_len;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeTpGroupTable_BTree);
 	return poEntry;
@@ -2275,10 +2281,10 @@ ieee8021QBridgeTpGroupTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGETPGROUPEGRESSPORTS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8EgressPorts, table_entry->u16EgressPorts_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->pu8EgressPorts, table_entry->u16EgressPorts_len);
 				break;
 			case IEEE8021QBRIDGETPGROUPLEARNT:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Learnt, table_entry->u16Learnt_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->pu8Learnt, table_entry->u16Learnt_len);
 				break;
 				
 			default:

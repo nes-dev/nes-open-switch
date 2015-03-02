@@ -27,6 +27,7 @@ extern "C" {
 
 
 
+#include "neIeee8021BridgeMIB.h"
 #include "ethernet_ext.h"
 
 #include "lib/binaryTree.h"
@@ -325,9 +326,9 @@ typedef struct ieee8021QBridgeTpGroupEntry_t
 	size_t u16Address_len;	/* # of uint8_t elements */
 	
 	/* Column values */
-	uint8_t au8EgressPorts[ETHERNET_PORT_MAP_SIZE];
+	uint8_t *pu8EgressPorts;
 	size_t u16EgressPorts_len;	/* # of uint8_t elements */
-	uint8_t au8Learnt[ETHERNET_PORT_MAP_SIZE];
+	uint8_t *pu8Learnt;
 	size_t u16Learnt_len;	/* # of uint8_t elements */
 	
 	xBTree_Node_t oBTreeNode;
@@ -340,7 +341,8 @@ void ieee8021QBridgeTpGroupTable_init (void);
 ieee8021QBridgeTpGroupEntry_t * ieee8021QBridgeTpGroupTable_createEntry (
 	uint32_t u32VlanCurrentComponentId,
 	uint32_t u32VlanIndex,
-	uint8_t *pau8Address, size_t u16Address_len);
+	uint8_t *pau8Address, size_t u16Address_len,
+	uint16_t u16Ports_len);
 ieee8021QBridgeTpGroupEntry_t * ieee8021QBridgeTpGroupTable_getByIndex (
 	uint32_t u32VlanCurrentComponentId,
 	uint32_t u32VlanIndex,
