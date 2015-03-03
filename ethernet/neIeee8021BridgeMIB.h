@@ -187,9 +187,9 @@ enum
 typedef struct neIeee8021QBridgeVlanCurrentEntry_t
 {
 	/* Index values */
-	uint32_t u32TimeMark;
-	uint32_t u32ComponentId;
-	uint32_t u32Index;
+// 	uint32_t u32TimeMark;
+// 	uint32_t u32ComponentId;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8AdminFlags[1];
@@ -199,10 +199,10 @@ typedef struct neIeee8021QBridgeVlanCurrentEntry_t
 	size_t u16Learnt_len;	/* # of uint8_t elements */
 	uint32_t u32IfIndex;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neIeee8021QBridgeVlanCurrentEntry_t;
 
-extern xBTree_t oNeIeee8021QBridgeVlanCurrentTable_BTree;
+// extern xBTree_t oNeIeee8021QBridgeVlanCurrentTable_BTree;
 
 /* neIeee8021QBridgeVlanCurrentTable table mapper */
 void neIeee8021QBridgeVlanCurrentTable_init (void);
