@@ -570,6 +570,49 @@ ieee8021BridgeBasePortRowStatus_update (
 {
 	register bool bRetCode = false;
 	
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+	case xRowStatus_notReady_c:
+		if (!ieee8021BridgeBasePortIfIndex_handler (poComponent, poEntry))
+		{
+			goto ieee8021BridgeBasePortRowStatus_update_cleanup;
+		}
+		
+		if (poEntry->pOldEntry != NULL)
+		{
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
+		break;
+		
+	case xRowStatus_notInService_c:
+	case xRowStatus_destroy_c:
+		if (poEntry->pOldEntry == NULL)
+		{
+			if ((poEntry->pOldEntry = xBuffer_alloc (sizeof (*poEntry->pOldEntry))) == NULL)
+			{
+				goto ieee8021BridgeBasePortRowStatus_update_cleanup;
+			}
+			memcpy (poEntry->pOldEntry, poEntry, sizeof (*poEntry->pOldEntry));
+		}
+		
+		if (u8RowStatus == xRowStatus_destroy_c)
+		{
+			poEntry->u32IfIndex = 0;
+			if (!ieee8021BridgeBasePortIfIndex_handler (poComponent, poEntry))
+			{
+				goto ieee8021BridgeBasePortRowStatus_update_cleanup;
+			}
+			
+			xBuffer_free (poEntry->pOldEntry);
+			poEntry->pOldEntry = NULL;
+		}
+		break;
+	}
+	
+	
 	if (u8RowStatus == xRowStatus_active_c && !ieee8021BridgeBasePortRowStatus_halUpdate (poComponent, poEntry, u8RowStatus))
 	{
 		goto ieee8021BridgeBasePortRowStatus_update_cleanup;
