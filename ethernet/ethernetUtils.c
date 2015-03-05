@@ -1086,6 +1086,20 @@ ieee8021QBridgePortRowStatus_halUpdate_cleanup:
 	return bRetCode;
 }
 
+bool
+ieee8021QBridgeIngressVidXRowStatus_update (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021QBridgeIngressVidXEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	bRetCode = true;
+	
+//ieee8021QBridgeIngressVidXRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
 
 
 #endif	// __ETHERNET_UTILS_C__

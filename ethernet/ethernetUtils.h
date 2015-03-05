@@ -95,6 +95,10 @@ bool
 	ieee8021QBridgePortRowStatus_update (
 		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgePortEntry_t *poEntry, uint8_t u8RowStatus);
+bool
+	ieee8021QBridgeIngressVidXRowStatus_update (
+		ieee8021BridgeBaseEntry_t *poComponent,
+		ieee8021QBridgeIngressVidXEntry_t *poEntry, uint8_t u8RowStatus);
 
 
 
