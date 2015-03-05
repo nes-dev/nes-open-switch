@@ -557,6 +557,22 @@ Netsnmp_Node_Handler ieee8021BridgeTpPortTable_mapper;
 
 
 /**
+ *	ieee8021BridgePortPriority definitions
+ */
+enum
+{
+	ieee8021BridgePriority_min_c = 0,
+	ieee8021BridgePriority_max_c = 7,
+	ieee8021BridgePriority_invalid_c = 8,
+	ieee8021BridgePriority_count_c = 8,
+};
+
+#define ieee8021BridgePriority_getNext(_p) (ieee8021BridgePriority_min_c <= (_p) && (_p) < ieee8021BridgePriority_max_c ? (_p) + 1: ieee8021BridgePriority_min_c)
+#define ieee8021BridgePriority_isLast(_p) ((_p) == ieee8021BridgePriority_max_c)
+#define ieee8021BridgePriority_isValid(_p) (ieee8021BridgePriority_min_c <= (_p) && (_p) <= ieee8021BridgePriority_max_c)
+
+
+/**
  *	table ieee8021BridgePortPriorityTable definitions
  */
 #define IEEE8021BRIDGEPORTDEFAULTUSERPRIORITY 1
@@ -645,10 +661,10 @@ typedef struct ieee8021BridgeUserPriorityRegenEntry_t
 	/* Index values */
 	uint32_t u32BasePortComponentId;
 	uint32_t u32BasePort;
-	uint32_t u32UserPriority;
+// 	uint32_t u32UserPriority;
 	
 	/* Column values */
-	uint32_t u32RegenUserPriority;
+	uint8_t au8RegenUserPriority[ieee8021BridgePriority_count_c];
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeUserPriorityRegenEntry_t;
