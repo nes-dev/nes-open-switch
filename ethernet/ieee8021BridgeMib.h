@@ -706,10 +706,10 @@ typedef struct ieee8021BridgeTrafficClassEntry_t
 	/* Index values */
 	uint32_t u32BasePortComponentId;
 	uint32_t u32BasePort;
-	uint32_t u32Priority;
+// 	uint32_t u32Priority;
 	
 	/* Column values */
-	int32_t i32Class;
+	uint8_t au8Class[ieee8021BridgePriority_count_c];
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeTrafficClassEntry_t;

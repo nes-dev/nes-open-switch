@@ -3970,9 +3970,8 @@ ieee8021BridgeTrafficClassTable_BTreeNodeCmp (
 	
 	return
 		(pEntry1->u32BasePortComponentId < pEntry2->u32BasePortComponentId) ||
-		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort < pEntry2->u32BasePort) ||
-		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort == pEntry2->u32BasePort && pEntry1->u32Priority < pEntry2->u32Priority) ? -1:
-		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort == pEntry2->u32BasePort && pEntry1->u32Priority == pEntry2->u32Priority) ? 0: 1;
+		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort < pEntry2->u32BasePort) ? -1:
+		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort == pEntry2->u32BasePort) ? 0: 1;
 }
 
 xBTree_t oIeee8021BridgeTrafficClassTable_BTree = xBTree_initInline (&ieee8021BridgeTrafficClassTable_BTreeNodeCmp);
@@ -3986,6 +3985,10 @@ ieee8021BridgeTrafficClassTable_createEntry (
 {
 	register ieee8021BridgeTrafficClassEntry_t *poEntry = NULL;
 	
+	if (!ieee8021BridgePriority_isValid (u32Priority))
+	{
+		return NULL;
+	}
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
@@ -3993,7 +3996,7 @@ ieee8021BridgeTrafficClassTable_createEntry (
 	
 	poEntry->u32BasePortComponentId = u32BasePortComponentId;
 	poEntry->u32BasePort = u32BasePort;
-	poEntry->u32Priority = u32Priority;
+// 	poEntry->u32Priority = u32Priority;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgeTrafficClassTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -4013,6 +4016,10 @@ ieee8021BridgeTrafficClassTable_getByIndex (
 	register ieee8021BridgeTrafficClassEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
+	if (!ieee8021BridgePriority_isValid (u32Priority))
+	{
+		return NULL;
+	}
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
@@ -4020,7 +4027,7 @@ ieee8021BridgeTrafficClassTable_getByIndex (
 	
 	poTmpEntry->u32BasePortComponentId = u32BasePortComponentId;
 	poTmpEntry->u32BasePort = u32BasePort;
-	poTmpEntry->u32Priority = u32Priority;
+// 	poTmpEntry->u32Priority = u32Priority;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021BridgeTrafficClassTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -4047,7 +4054,7 @@ ieee8021BridgeTrafficClassTable_getNextIndex (
 	
 	poTmpEntry->u32BasePortComponentId = u32BasePortComponentId;
 	poTmpEntry->u32BasePort = u32BasePort;
-	poTmpEntry->u32Priority = u32Priority;
+// 	poTmpEntry->u32Priority = u32Priority;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021BridgeTrafficClassTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -4101,7 +4108,7 @@ ieee8021BridgeTrafficClassTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BasePort);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Priority);
+//	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Priority);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgeTrafficClassTable_BTree);
 	return put_index_data;
@@ -4163,7 +4170,7 @@ ieee8021BridgeTrafficClassTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGETRAFFICCLASS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Class);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->au8Class[0]);
 				break;
 				
 			default:
@@ -4227,18 +4234,18 @@ ieee8021BridgeTrafficClassTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGETRAFFICCLASS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Class))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Class[0]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32Class, sizeof (table_entry->i32Class));
+					memcpy (pvOldDdata, &table_entry->au8Class[0], sizeof (table_entry->au8Class[0]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32Class = *request->requestvb->val.integer;
+				table_entry->au8Class[0] = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -4258,7 +4265,7 @@ ieee8021BridgeTrafficClassTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGETRAFFICCLASS:
-				memcpy (&table_entry->i32Class, pvOldDdata, sizeof (table_entry->i32Class));
+				memcpy (&table_entry->au8Class[0], pvOldDdata, sizeof (table_entry->au8Class[0]));
 				break;
 			}
 		}
