@@ -5620,20 +5620,14 @@ ieee8021QBridgeNextFreeLocalVlanTable_createEntry (
 	uint32_t u32ComponentId)
 {
 	register ieee8021QBridgeNextFreeLocalVlanEntry_t *poEntry = NULL;
+	register ieee8021BridgeBaseEntry_t *poComponent = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poComponent = ieee8021BridgeBaseTable_getByIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poComponent->oNextFreeLocalVlan;
 	
-	poEntry->u32ComponentId = u32ComponentId;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgeNextFreeLocalVlanTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeNextFreeLocalVlanTable_BTree);
 	return poEntry;
 }
 
@@ -5641,60 +5635,34 @@ ieee8021QBridgeNextFreeLocalVlanEntry_t *
 ieee8021QBridgeNextFreeLocalVlanTable_getByIndex (
 	uint32_t u32ComponentId)
 {
-	register ieee8021QBridgeNextFreeLocalVlanEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021BridgeBaseEntry_t *poComponent = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poComponent = ieee8021BridgeBaseTable_getByIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeNextFreeLocalVlanTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021QBridgeNextFreeLocalVlanEntry_t, oBTreeNode);
+	return &poComponent->oNextFreeLocalVlan;
 }
 
 ieee8021QBridgeNextFreeLocalVlanEntry_t *
 ieee8021QBridgeNextFreeLocalVlanTable_getNextIndex (
 	uint32_t u32ComponentId)
 {
-	register ieee8021QBridgeNextFreeLocalVlanEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021BridgeBaseEntry_t *poComponent = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poComponent = ieee8021BridgeBaseTable_getNextIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeNextFreeLocalVlanTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021QBridgeNextFreeLocalVlanEntry_t, oBTreeNode);
+	return &poComponent->oNextFreeLocalVlan;
 }
 
 /* remove a row from the table */
 void
 ieee8021QBridgeNextFreeLocalVlanTable_removeEntry (ieee8021QBridgeNextFreeLocalVlanEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgeNextFreeLocalVlanTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021QBridgeNextFreeLocalVlanTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -5758,6 +5726,7 @@ ieee8021QBridgeNextFreeLocalVlanTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	ieee8021QBridgeNextFreeLocalVlanEntry_t *table_entry;
+	register ieee8021BridgeBaseEntry_t *poEntry = NULL;
 	
 	switch (reqinfo->mode)
 	{
@@ -5767,13 +5736,14 @@ ieee8021QBridgeNextFreeLocalVlanTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021QBridgeNextFreeLocalVlanEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBaseEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oNextFreeLocalVlan;
 			
 			switch (table_info->colnum)
 			{

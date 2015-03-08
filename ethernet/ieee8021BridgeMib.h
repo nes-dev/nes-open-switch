@@ -141,6 +141,7 @@ enum
 	
 	neIeee8021BridgeBaseEntry_t oNe;
 	ieee8021QBridgeEntry_t oQ;
+	ieee8021QBridgeNextFreeLocalVlanEntry_t oNextFreeLocalVlan;
 	
 	uint32_t u32ChassisId;
 	uint32_t u32NumTpPorts;
@@ -171,6 +172,7 @@ ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_Chassis_getNextIndex (
 	uint32_t u32ComponentId);
 #define ieee8021BridgeBaseTable_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBaseEntry_t, oNe))
 #define ieee8021BridgeBaseTable_getByQEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBaseEntry_t, oQ))
+#define ieee8021BridgeBaseTable_getByNextFreeLocalVlanEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBaseEntry_t, oNextFreeLocalVlan))
 void ieee8021BridgeBaseTable_removeEntry (ieee8021BridgeBaseEntry_t *poEntry);
 ieee8021BridgeBaseEntry_t * ieee8021BridgeBaseTable_createExt (
 	uint32_t u32ComponentId);
