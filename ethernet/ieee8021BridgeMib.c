@@ -6680,6 +6680,11 @@ ieee8021BridgeILanIfRowStatus_handler (
 		goto ieee8021BridgeILanIfRowStatus_handler_success;
 	}
 	
+	if (u8RowStatus == xRowStatus_createAndGo_c)
+	{
+		u8RowStatus = xRowStatus_active_c;
+	}
+	
 	if (!ifData_createReference (poEntry->u32Index, 0, 0, false, false, false, &poILanIfData) ||
 		!neIfRowStatus_handler (&poILanIfData->oNe, u8RowStatus))
 	{
@@ -6917,8 +6922,11 @@ ieee8021BridgeILanIfTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int ieee8021BridgeILanIfTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
+					if (!ieee8021BridgeILanIfRowStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -6968,15 +6976,8 @@ ieee8021BridgeILanIfTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_ACTIVE:
-					table_entry->u8RowStatus = RS_ACTIVE;
-					break;
-					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_NOTINSERVICE:
-					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
@@ -7582,15 +7583,8 @@ ieee8021BridgeDot1dPortTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_ACTIVE:
-					table_entry->u8RowStatus = RS_ACTIVE;
-					break;
-					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_NOTINSERVICE:
-					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
