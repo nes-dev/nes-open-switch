@@ -425,11 +425,11 @@ typedef struct ieee8021QBridgeForwardUnregisteredEntry_t
 	uint32_t u32VlanIndex;
 	
 	/* Column values */
-	uint8_t au8Ports[ETHERNET_PORT_MAP_SIZE];
+	uint8_t *pu8Ports;
 	size_t u16Ports_len;	/* # of uint8_t elements */
-	uint8_t au8StaticPorts[ETHERNET_PORT_MAP_SIZE];
+	uint8_t *pu8StaticPorts;
 	size_t u16StaticPorts_len;	/* # of uint8_t elements */
-	uint8_t au8ForbiddenPorts[ETHERNET_PORT_MAP_SIZE];
+	uint8_t *pu8ForbiddenPorts;
 	size_t u16ForbiddenPorts_len;	/* # of uint8_t elements */
 	
 	xBTree_Node_t oBTreeNode;
@@ -441,7 +441,8 @@ extern xBTree_t oIeee8021QBridgeForwardUnregisteredTable_BTree;
 void ieee8021QBridgeForwardUnregisteredTable_init (void);
 ieee8021QBridgeForwardUnregisteredEntry_t * ieee8021QBridgeForwardUnregisteredTable_createEntry (
 	uint32_t u32VlanCurrentComponentId,
-	uint32_t u32VlanIndex);
+	uint32_t u32VlanIndex,
+	uint16_t u16Ports_len);
 ieee8021QBridgeForwardUnregisteredEntry_t * ieee8021QBridgeForwardUnregisteredTable_getByIndex (
 	uint32_t u32VlanCurrentComponentId,
 	uint32_t u32VlanIndex);

@@ -2740,11 +2740,12 @@ xBTree_t oIeee8021QBridgeForwardUnregisteredTable_BTree = xBTree_initInline (&ie
 ieee8021QBridgeForwardUnregisteredEntry_t *
 ieee8021QBridgeForwardUnregisteredTable_createEntry (
 	uint32_t u32VlanCurrentComponentId,
-	uint32_t u32VlanIndex)
+	uint32_t u32VlanIndex,
+	uint16_t u16Ports_len)
 {
 	register ieee8021QBridgeForwardUnregisteredEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if (u16Ports_len == 0 || (poEntry = xBuffer_cAlloc (sizeof (*poEntry) + 3 * u16Ports_len)) == NULL)
 	{
 		return NULL;
 	}
@@ -2756,6 +2757,13 @@ ieee8021QBridgeForwardUnregisteredTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->pu8Ports = (void *) (poEntry + 1);
+	poEntry->pu8StaticPorts = ((void *) (poEntry + 1)) + u16Ports_len;
+	poEntry->pu8ForbiddenPorts = ((void *) (poEntry + 1)) + 2 * u16Ports_len;
+	poEntry->u16Ports_len = u16Ports_len;
+	poEntry->u16StaticPorts_len = u16Ports_len;
+	poEntry->u16ForbiddenPorts_len = u16Ports_len;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeForwardUnregisteredTable_BTree);
 	return poEntry;
@@ -2912,13 +2920,13 @@ ieee8021QBridgeForwardUnregisteredTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEFORWARDUNREGISTEREDPORTS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Ports, table_entry->u16Ports_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->pu8Ports, table_entry->u16Ports_len);
 				break;
 			case IEEE8021QBRIDGEFORWARDUNREGISTEREDSTATICPORTS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8StaticPorts, table_entry->u16StaticPorts_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->pu8StaticPorts, table_entry->u16StaticPorts_len);
 				break;
 			case IEEE8021QBRIDGEFORWARDUNREGISTEREDFORBIDDENPORTS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ForbiddenPorts, table_entry->u16ForbiddenPorts_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->pu8ForbiddenPorts, table_entry->u16ForbiddenPorts_len);
 				break;
 				
 			default:
@@ -2940,7 +2948,7 @@ ieee8021QBridgeForwardUnregisteredTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEFORWARDUNREGISTEREDSTATICPORTS:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8StaticPorts));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, table_entry->u16StaticPorts_len);
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -2948,7 +2956,7 @@ ieee8021QBridgeForwardUnregisteredTable_mapper (
 				}
 				break;
 			case IEEE8021QBRIDGEFORWARDUNREGISTEREDFORBIDDENPORTS:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8ForbiddenPorts));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, table_entry->u16ForbiddenPorts_len);
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -2990,7 +2998,7 @@ ieee8021QBridgeForwardUnregisteredTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEFORWARDUNREGISTEREDSTATICPORTS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8StaticPorts))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + table_entry->u16StaticPorts_len)) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
@@ -2999,16 +3007,16 @@ ieee8021QBridgeForwardUnregisteredTable_mapper (
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
 					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16StaticPorts_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8StaticPorts, sizeof (table_entry->au8StaticPorts));
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->pu8StaticPorts, table_entry->u16StaticPorts_len);
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8StaticPorts, 0, sizeof (table_entry->au8StaticPorts));
-				memcpy (table_entry->au8StaticPorts, request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->pu8StaticPorts, 0, table_entry->u16StaticPorts_len);
+				memcpy (table_entry->pu8StaticPorts, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16StaticPorts_len = request->requestvb->val_len;
 				break;
 			case IEEE8021QBRIDGEFORWARDUNREGISTEREDFORBIDDENPORTS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8ForbiddenPorts))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + table_entry->u16ForbiddenPorts_len)) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
@@ -3017,12 +3025,12 @@ ieee8021QBridgeForwardUnregisteredTable_mapper (
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
 					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ForbiddenPorts_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8ForbiddenPorts, sizeof (table_entry->au8ForbiddenPorts));
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->pu8ForbiddenPorts, table_entry->u16ForbiddenPorts_len);
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8ForbiddenPorts, 0, sizeof (table_entry->au8ForbiddenPorts));
-				memcpy (table_entry->au8ForbiddenPorts, request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->pu8ForbiddenPorts, 0, table_entry->u16ForbiddenPorts_len);
+				memcpy (table_entry->pu8ForbiddenPorts, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16ForbiddenPorts_len = request->requestvb->val_len;
 				break;
 			}
@@ -3043,11 +3051,11 @@ ieee8021QBridgeForwardUnregisteredTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGEFORWARDUNREGISTEREDSTATICPORTS:
-				memcpy (table_entry->au8StaticPorts, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->pu8StaticPorts, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16StaticPorts_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case IEEE8021QBRIDGEFORWARDUNREGISTEREDFORBIDDENPORTS:
-				memcpy (table_entry->au8ForbiddenPorts, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->pu8ForbiddenPorts, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16ForbiddenPorts_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			}
