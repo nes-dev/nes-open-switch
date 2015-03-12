@@ -752,10 +752,10 @@ typedef struct ieee8021BridgePortOutboundAccessPriorityEntry_t
 	/* Index values */
 	uint32_t u32BasePortComponentId;
 	uint32_t u32BasePort;
-	uint32_t u32RegenUserPriority;
+// 	uint32_t u32RegenUserPriority;
 	
 	/* Column values */
-	uint32_t u32Priority;
+	uint8_t au8Priority[ieee8021BridgePriority_count_c];
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgePortOutboundAccessPriorityEntry_t;

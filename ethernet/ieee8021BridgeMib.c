@@ -4323,9 +4323,8 @@ ieee8021BridgePortOutboundAccessPriorityTable_BTreeNodeCmp (
 	
 	return
 		(pEntry1->u32BasePortComponentId < pEntry2->u32BasePortComponentId) ||
-		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort < pEntry2->u32BasePort) ||
-		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort == pEntry2->u32BasePort && pEntry1->u32RegenUserPriority < pEntry2->u32RegenUserPriority) ? -1:
-		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort == pEntry2->u32BasePort && pEntry1->u32RegenUserPriority == pEntry2->u32RegenUserPriority) ? 0: 1;
+		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort < pEntry2->u32BasePort) ? -1:
+		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort == pEntry2->u32BasePort) ? 0: 1;
 }
 
 xBTree_t oIeee8021BridgePortOutboundAccessPriorityTable_BTree = xBTree_initInline (&ieee8021BridgePortOutboundAccessPriorityTable_BTreeNodeCmp);
@@ -4339,6 +4338,10 @@ ieee8021BridgePortOutboundAccessPriorityTable_createEntry (
 {
 	register ieee8021BridgePortOutboundAccessPriorityEntry_t *poEntry = NULL;
 	
+	if (!ieee8021BridgePriority_isValid (u32RegenUserPriority))
+	{
+		return NULL;
+	}
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
@@ -4346,7 +4349,7 @@ ieee8021BridgePortOutboundAccessPriorityTable_createEntry (
 	
 	poEntry->u32BasePortComponentId = u32BasePortComponentId;
 	poEntry->u32BasePort = u32BasePort;
-	poEntry->u32RegenUserPriority = u32RegenUserPriority;
+// 	poEntry->u32RegenUserPriority = u32RegenUserPriority;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgePortOutboundAccessPriorityTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -4366,6 +4369,10 @@ ieee8021BridgePortOutboundAccessPriorityTable_getByIndex (
 	register ieee8021BridgePortOutboundAccessPriorityEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
+	if (!ieee8021BridgePriority_isValid (u32RegenUserPriority))
+	{
+		return NULL;
+	}
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
@@ -4373,7 +4380,7 @@ ieee8021BridgePortOutboundAccessPriorityTable_getByIndex (
 	
 	poTmpEntry->u32BasePortComponentId = u32BasePortComponentId;
 	poTmpEntry->u32BasePort = u32BasePort;
-	poTmpEntry->u32RegenUserPriority = u32RegenUserPriority;
+// 	poTmpEntry->u32RegenUserPriority = u32RegenUserPriority;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021BridgePortOutboundAccessPriorityTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -4400,7 +4407,7 @@ ieee8021BridgePortOutboundAccessPriorityTable_getNextIndex (
 	
 	poTmpEntry->u32BasePortComponentId = u32BasePortComponentId;
 	poTmpEntry->u32BasePort = u32BasePort;
-	poTmpEntry->u32RegenUserPriority = u32RegenUserPriority;
+// 	poTmpEntry->u32RegenUserPriority = u32RegenUserPriority;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021BridgePortOutboundAccessPriorityTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -4454,9 +4461,9 @@ ieee8021BridgePortOutboundAccessPriorityTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BasePort);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32RegenUserPriority);
+//	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32RegenUserPriority);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortOutboundAccessPriorityTable_BTree);
+//	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortOutboundAccessPriorityTable_BTree);
 	return put_index_data;
 }
 
@@ -4514,7 +4521,7 @@ ieee8021BridgePortOutboundAccessPriorityTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTOUTBOUNDACCESSPRIORITY:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Priority);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->au8Priority[0]);
 				break;
 				
 			default:
