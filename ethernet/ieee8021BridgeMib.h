@@ -936,10 +936,10 @@ typedef struct ieee8021BridgeServiceAccessPriorityEntry_t
 	/* Index values */
 	uint32_t u32ComponentId;
 	uint32_t u32PortNum;
-	uint32_t u32Received;
+// 	uint32_t u32Received;
 	
 	/* Column values */
-	uint32_t u32Value;
+	uint8_t au8Value[ieee8021BridgePriority_count_c];
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeServiceAccessPriorityEntry_t;
