@@ -99,6 +99,10 @@ bool
 	ieee8021QBridgeIngressVidXRowStatus_update (
 		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgeIngressVidXEntry_t *poEntry, uint8_t u8RowStatus);
+bool
+	ieee8021QBridgeEgressVidXRowStatus_update (
+		ieee8021BridgeBaseEntry_t *poComponent,
+		ieee8021QBridgeEgressVidXEntry_t *poEntry, uint8_t u8RowStatus);
 
 
 

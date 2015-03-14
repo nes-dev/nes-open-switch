@@ -1314,6 +1314,8 @@ ieee8021QBridgeEgressVidXEntry_t * ieee8021QBridgeEgressVidXTable_getNextIndex (
 	uint32_t u32BridgeBasePort,
 	uint32_t u32RelayVid);
 void ieee8021QBridgeEgressVidXTable_removeEntry (ieee8021QBridgeEgressVidXEntry_t *poEntry);
+bool ieee8021QBridgeEgressVidXRowStatus_handler (
+	ieee8021QBridgeEgressVidXEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeEgressVidXTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeEgressVidXTable_getNext;

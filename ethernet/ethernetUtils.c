@@ -1100,6 +1100,20 @@ ieee8021QBridgeIngressVidXRowStatus_update (
 	return bRetCode;
 }
 
+bool
+ieee8021QBridgeEgressVidXRowStatus_update (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021QBridgeEgressVidXEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	bRetCode = true;
+	
+//ieee8021QBridgeEgressVidXRowStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
 
 
 #endif	// __ETHERNET_UTILS_C__

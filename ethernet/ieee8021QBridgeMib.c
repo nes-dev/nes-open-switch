@@ -9261,6 +9261,83 @@ ieee8021QBridgeEgressVidXTable_removeEntry (ieee8021QBridgeEgressVidXEntry_t *po
 	return;
 }
 
+bool
+ieee8021QBridgeEgressVidXRowStatus_handler (
+	ieee8021QBridgeEgressVidXEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
+	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
+	
+	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poEntry->u32BridgeBaseComponentId)) == NULL)
+	{
+		goto ieee8021QBridgeEgressVidXRowStatus_handler_cleanup;
+	}
+	
+	if (poEntry->u8RowStatus == u8RealStatus)
+	{
+		goto ieee8021QBridgeEgressVidXRowStatus_handler_success;
+	}
+	if (u8RowStatus & xRowStatus_fromParent_c &&
+		((u8RealStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
+		 (u8RealStatus == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
+	{
+		goto ieee8021QBridgeEgressVidXRowStatus_handler_success;
+	}
+	
+	
+	switch (u8RealStatus)
+	{
+	case xRowStatus_active_c:
+		if (!(u8RowStatus & xRowStatus_fromParent_c) && poIeee8021BridgeBaseEntry->u8RowStatus != xRowStatus_active_c)
+		{
+			u8RealStatus = xRowStatus_notReady_c;
+		}
+		
+		if (!ieee8021QBridgeEgressVidXRowStatus_update (poIeee8021BridgeBaseEntry, poEntry, u8RealStatus))
+		{
+			goto ieee8021QBridgeEgressVidXRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!ieee8021QBridgeEgressVidXRowStatus_update (poIeee8021BridgeBaseEntry, poEntry, u8RealStatus))
+		{
+			goto ieee8021QBridgeEgressVidXRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus =
+			poEntry->u8RowStatus == xRowStatus_active_c && (u8RowStatus & xRowStatus_fromParent_c) ? xRowStatus_notReady_c: xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		goto ieee8021QBridgeEgressVidXRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!ieee8021QBridgeEgressVidXRowStatus_update (poIeee8021BridgeBaseEntry, poEntry, u8RealStatus))
+		{
+			goto ieee8021QBridgeEgressVidXRowStatus_handler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+ieee8021QBridgeEgressVidXRowStatus_handler_success:
+	
+	bRetCode = true;
+	
+ieee8021QBridgeEgressVidXRowStatus_handler_cleanup:
+	
+	return bRetCode || (u8RowStatus & xRowStatus_fromParent_c);
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021QBridgeEgressVidXTable_getFirst (
