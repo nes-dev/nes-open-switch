@@ -567,12 +567,19 @@ enum
 	ieee8021BridgePriority_max_c = 7,
 	ieee8021BridgePriority_invalid_c = 8,
 	ieee8021BridgePriority_count_c = 8,
+	
+	ieee8021BridgeDEI_min_c = 1,
+	ieee8021BridgeDEI_max_c = 2,
+	ieee8021BridgeDEI_count_c = 2,
 };
 
 #define ieee8021BridgePriority_getNext(_p) (ieee8021BridgePriority_min_c <= (_p) && (_p) < ieee8021BridgePriority_max_c ? (_p) + 1: ieee8021BridgePriority_min_c)
 #define ieee8021BridgePriority_isLast(_p) ((_p) == ieee8021BridgePriority_max_c)
 #define ieee8021BridgePriority_isValid(_p) (ieee8021BridgePriority_min_c <= (_p) && (_p) <= ieee8021BridgePriority_max_c)
 
+#define ieee8021BridgeDEI_getNext(_p) (ieee8021BridgeDEI_min_c <= (_p) && (_p) < ieee8021BridgeDEI_max_c ? (_p) + 1: ieee8021BridgeDEI_min_c)
+#define ieee8021BridgeDEI_isLast(_p) ((_p) == ieee8021BridgeDEI_max_c)
+#define ieee8021BridgeDEI_isValid(_p) (ieee8021BridgeDEI_min_c <= (_p) && (_p) <= ieee8021BridgeDEI_max_c)
 
 /**
  *	table ieee8021BridgePortPriorityTable definitions
@@ -886,7 +893,7 @@ typedef struct ieee8021BridgePortEncodingEntry_t
 	uint8_t u8DropEligible;
 	
 	/* Column values */
-	uint32_t u32Priority;
+	uint8_t au8Priority[ieee8021BridgePriority_count_c][ieee8021BridgeDEI_count_c];
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgePortEncodingEntry_t;
