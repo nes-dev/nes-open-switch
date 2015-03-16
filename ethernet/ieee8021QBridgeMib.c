@@ -7206,22 +7206,16 @@ ieee8021QBridgeLearningConstraintDefaultsTable_createEntry (
 	uint32_t u32ComponentId)
 {
 	register ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry = NULL;
+	register ieee8021BridgeBaseEntry_t *poComponent = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poComponent = ieee8021BridgeBaseTable_getByIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
-	
-	poEntry->u32ComponentId = u32ComponentId;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgeLearningConstraintDefaultsTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poComponent->oLearningConstraintDefaults;
 	
 	poEntry->i32Type = ieee8021QBridgeLearningConstraintDefaultsType_shared_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021QBridgeLearningConstraintDefaultsTable_BTree);
 	return poEntry;
 }
 
@@ -7229,60 +7223,34 @@ ieee8021QBridgeLearningConstraintDefaultsEntry_t *
 ieee8021QBridgeLearningConstraintDefaultsTable_getByIndex (
 	uint32_t u32ComponentId)
 {
-	register ieee8021QBridgeLearningConstraintDefaultsEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021BridgeBaseEntry_t *poComponent = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poComponent = ieee8021BridgeBaseTable_getByIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeLearningConstraintDefaultsTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021QBridgeLearningConstraintDefaultsEntry_t, oBTreeNode);
+	return &poComponent->oLearningConstraintDefaults;
 }
 
 ieee8021QBridgeLearningConstraintDefaultsEntry_t *
 ieee8021QBridgeLearningConstraintDefaultsTable_getNextIndex (
 	uint32_t u32ComponentId)
 {
-	register ieee8021QBridgeLearningConstraintDefaultsEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021BridgeBaseEntry_t *poComponent = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poComponent = ieee8021BridgeBaseTable_getNextIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021QBridgeLearningConstraintDefaultsTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021QBridgeLearningConstraintDefaultsEntry_t, oBTreeNode);
+	return &poComponent->oLearningConstraintDefaults;
 }
 
 /* remove a row from the table */
 void
 ieee8021QBridgeLearningConstraintDefaultsTable_removeEntry (ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021QBridgeLearningConstraintDefaultsTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021QBridgeLearningConstraintDefaultsTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -7327,9 +7295,10 @@ bool
 ieee8021QBridgeLearningConstraintDefaultsTable_createHier (ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry)
 {
 	register bool bRetCode = false;
+	register ieee8021BridgeBaseEntry_t *poComponent = ieee8021BridgeBaseTable_getByLearningConstraintDefaultsEntry (poEntry);
 	
-	if (ieee8021QBridgeLearningConstraintsTable_getByIndex (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set) == NULL &&
-		ieee8021QBridgeLearningConstraintsTable_createExt (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set) == NULL)
+	if (ieee8021QBridgeLearningConstraintsTable_getByIndex (poComponent->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set) == NULL &&
+		ieee8021QBridgeLearningConstraintsTable_createExt (poComponent->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set) == NULL)
 	{
 		goto ieee8021QBridgeLearningConstraintDefaultsTable_createHier_cleanup;
 	}
@@ -7346,9 +7315,10 @@ bool
 ieee8021QBridgeLearningConstraintDefaultsTable_removeHier (ieee8021QBridgeLearningConstraintDefaultsEntry_t *poEntry)
 {
 	register bool bRetCode = false;
+	register ieee8021BridgeBaseEntry_t *poComponent = ieee8021BridgeBaseTable_getByLearningConstraintDefaultsEntry (poEntry);
 	register ieee8021QBridgeLearningConstraintsEntry_t *poIeee8021QBridgeLearningConstraintsEntry = NULL;
 	
-	if ((poIeee8021QBridgeLearningConstraintsEntry = ieee8021QBridgeLearningConstraintsTable_getByIndex (poEntry->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set)) != NULL &&
+	if ((poIeee8021QBridgeLearningConstraintsEntry = ieee8021QBridgeLearningConstraintsTable_getByIndex (poComponent->u32ComponentId, ieee8021QBridgeVlanIndex_all_c, poEntry->i32Set)) != NULL &&
 		!ieee8021QBridgeLearningConstraintsTable_removeExt (poIeee8021QBridgeLearningConstraintsEntry))
 	{
 		goto ieee8021QBridgeLearningConstraintDefaultsTable_removeHier_cleanup;
