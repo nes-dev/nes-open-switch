@@ -1045,16 +1045,16 @@ enum
 typedef struct ieee8021QBridgeLearningConstraintDefaultsEntry_t
 {
 	/* Index values */
-	uint32_t u32ComponentId;
+// 	uint32_t u32ComponentId;
 	
 	/* Column values */
 	int32_t i32Set;
 	int32_t i32Type;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeLearningConstraintDefaultsEntry_t;
 
-extern xBTree_t oIeee8021QBridgeLearningConstraintDefaultsTable_BTree;
+// extern xBTree_t oIeee8021QBridgeLearningConstraintDefaultsTable_BTree;
 
 /* ieee8021QBridgeLearningConstraintDefaultsTable table mapper */
 void ieee8021QBridgeLearningConstraintDefaultsTable_init (void);
