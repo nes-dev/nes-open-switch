@@ -891,8 +891,8 @@ typedef struct ieee8021BridgePortEncodingEntry_t
 	uint32_t u32ComponentId;
 	uint32_t u32PortNum;
 	int32_t i32PriorityCodePointRow;
-	int32_t i32PriorityCodePoint;
-	uint8_t u8DropEligible;
+// 	int32_t i32PriorityCodePoint;
+// 	uint8_t u8DropEligible;
 	
 	/* Column values */
 	uint8_t au8Priority[ieee8021BridgePriority_count_c][ieee8021BridgeDEI_count_c];
