@@ -1087,6 +1087,21 @@ ieee8021QBridgePortRowStatus_halUpdate_cleanup:
 }
 
 bool
+ieee8021QBridgeLearningConstraintsType_update (
+	ieee8021QBridgeLearningConstraintsEntry_t *poEntry, int32_t i32Type)
+{
+	register bool bRetCode = false;
+	
+	/* TODO */
+	
+	bRetCode = true;
+	
+// ieee8021QBridgeLearningConstraintsType_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021QBridgeIngressVidXRowStatus_update (
 	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021QBridgeIngressVidXEntry_t *poEntry, uint8_t u8RowStatus)

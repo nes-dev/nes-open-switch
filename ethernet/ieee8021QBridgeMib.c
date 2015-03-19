@@ -6818,6 +6818,42 @@ ieee8021QBridgeLearningConstraintsTable_removeHier_cleanup:
 	return bRetCode;
 }
 
+bool
+ieee8021QBridgeLearningConstraintsType_handler (
+	ieee8021QBridgeLearningConstraintsEntry_t *poEntry, int32_t i32Type, bool bForce)
+{
+	register bool bRetCode = false;
+	
+	if (poEntry->i32Type == i32Type && !bForce)
+	{
+		goto ieee8021QBridgeLearningConstraintsType_handler_success;
+	}
+	
+	switch (i32Type)
+	{
+	default:
+		goto ieee8021QBridgeLearningConstraintsType_handler_cleanup;
+		
+	case ieee8021QBridgeLearningConstraintsType_independent_c:
+	case ieee8021QBridgeLearningConstraintsType_shared_c:
+		if (!ieee8021QBridgeLearningConstraintsType_update (poEntry, i32Type))
+		{
+			goto ieee8021QBridgeLearningConstraintsType_handler_cleanup;
+		}
+		break;
+	}
+	
+	!bForce ? (poEntry->i32Type = i32Type): false;
+	
+ieee8021QBridgeLearningConstraintsType_handler_success:
+	
+	bRetCode = true;
+	
+ieee8021QBridgeLearningConstraintsType_handler_cleanup:
+	
+	return bRetCode;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021QBridgeLearningConstraintsTable_getFirst (

@@ -96,6 +96,9 @@ bool
 		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgePortEntry_t *poEntry, uint8_t u8RowStatus);
 bool
+	ieee8021QBridgeLearningConstraintsType_update (
+		ieee8021QBridgeLearningConstraintsEntry_t *poEntry, int32_t i32Type);
+bool
 	ieee8021QBridgeIngressVidXRowStatus_update (
 		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021QBridgeIngressVidXEntry_t *poEntry, uint8_t u8RowStatus);
