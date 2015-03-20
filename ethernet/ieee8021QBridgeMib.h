@@ -799,15 +799,15 @@ Netsnmp_Node_Handler ieee8021QBridgeVlanStaticTable_mapper;
 typedef struct ieee8021QBridgeNextFreeLocalVlanEntry_t
 {
 	/* Index values */
-	uint32_t u32ComponentId;
+// 	uint32_t u32ComponentId;
 	
 	/* Column values */
 	uint32_t u32Index;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ieee8021QBridgeNextFreeLocalVlanEntry_t;
 
-extern xBTree_t oIeee8021QBridgeNextFreeLocalVlanTable_BTree;
+// extern xBTree_t oIeee8021QBridgeNextFreeLocalVlanTable_BTree;
 
 /* ieee8021QBridgeNextFreeLocalVlanTable table mapper */
 void ieee8021QBridgeNextFreeLocalVlanTable_init (void);

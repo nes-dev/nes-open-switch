@@ -5608,20 +5608,6 @@ ieee8021QBridgeNextFreeLocalVlanTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-ieee8021QBridgeNextFreeLocalVlanTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register ieee8021QBridgeNextFreeLocalVlanEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021QBridgeNextFreeLocalVlanEntry_t, oBTreeNode);
-	register ieee8021QBridgeNextFreeLocalVlanEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021QBridgeNextFreeLocalVlanEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32ComponentId < pEntry2->u32ComponentId) ? -1:
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId) ? 0: 1;
-}
-
-xBTree_t oIeee8021QBridgeNextFreeLocalVlanTable_BTree = xBTree_initInline (&ieee8021QBridgeNextFreeLocalVlanTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 ieee8021QBridgeNextFreeLocalVlanEntry_t *
 ieee8021QBridgeNextFreeLocalVlanTable_createEntry (
@@ -5680,7 +5666,7 @@ ieee8021QBridgeNextFreeLocalVlanTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021QBridgeNextFreeLocalVlanTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021BridgeBaseTable_BTree);
 	return ieee8021QBridgeNextFreeLocalVlanTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -5689,18 +5675,18 @@ ieee8021QBridgeNextFreeLocalVlanTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021QBridgeNextFreeLocalVlanEntry_t *poEntry = NULL;
+	ieee8021BridgeBaseEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ieee8021QBridgeNextFreeLocalVlanEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgeBaseEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021QBridgeNextFreeLocalVlanTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgeBaseTable_BTree);
 	return put_index_data;
 }
 
@@ -5709,10 +5695,10 @@ ieee8021QBridgeNextFreeLocalVlanTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021QBridgeNextFreeLocalVlanEntry_t *poEntry = NULL;
+	ieee8021BridgeBaseEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = ieee8021QBridgeNextFreeLocalVlanTable_getByIndex (
+	poEntry = ieee8021BridgeBaseTable_getByIndex (
 		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
