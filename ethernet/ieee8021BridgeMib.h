@@ -561,7 +561,7 @@ Netsnmp_Node_Handler ieee8021BridgeTpPortTable_mapper;
 
 
 /**
- *	ieee8021BridgePortPriority definitions
+ *	ieee8021BridgePortPriority, ieee8021BridgePriorityCodePoint, ieee8021BridgeDEI & ieee8021BridgeTrafficClass definitions
  */
 enum
 {
@@ -582,6 +582,7 @@ enum
 #define ieee8021BridgeDEI_getNext(_p) (ieee8021BridgeDEI_min_c <= (_p) && (_p) < ieee8021BridgeDEI_max_c ? (_p) + 1: ieee8021BridgeDEI_min_c)
 #define ieee8021BridgeDEI_isLast(_p) ((_p) == ieee8021BridgeDEI_max_c)
 #define ieee8021BridgeDEI_isValid(_p) (ieee8021BridgeDEI_min_c <= (_p) && (_p) <= ieee8021BridgeDEI_max_c)
+
 
 /**
  *	table ieee8021BridgePortPriorityTable definitions
@@ -824,11 +825,11 @@ typedef struct ieee8021BridgePortDecodingEntry_t
 	uint32_t u32ComponentId;
 	uint32_t u32PortNum;
 	int32_t i32PriorityCodePointRow;
-	int32_t i32PriorityCodePoint;
+// 	int32_t i32PriorityCodePoint;
 	
 	/* Column values */
-	uint32_t u32Priority;
-	uint8_t u8DropEligible;
+	uint8_t au8Priority[ieee8021BridgePriority_count_c];
+	uint8_t au8DropEligible[ieee8021BridgePriority_count_c];
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgePortDecodingEntry_t;
