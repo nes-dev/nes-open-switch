@@ -6840,6 +6840,63 @@ ieee8021QBridgeLearningConstraintsType_handler_cleanup:
 	return bRetCode;
 }
 
+bool
+ieee8021QBridgeLearningConstraintsStatus_handler (
+	ieee8021QBridgeLearningConstraintsEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	if (poEntry->u8Status == u8RowStatus)
+	{
+		goto ieee8021QBridgeLearningConstraintsStatus_handler_success;
+	}
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_createAndGo_c:
+		u8RowStatus = xRowStatus_active_c;
+		
+	case xRowStatus_active_c:
+		if (!ieee8021QBridgeLearningConstraintsStatus_update (poEntry, u8RowStatus))
+		{
+			goto ieee8021QBridgeLearningConstraintsStatus_handler_cleanup;
+		}
+		
+		poEntry->u8Status = u8RowStatus;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!ieee8021QBridgeLearningConstraintsStatus_update (poEntry, u8RowStatus))
+		{
+			goto ieee8021QBridgeLearningConstraintsStatus_handler_cleanup;
+		}
+		
+		poEntry->u8Status = u8RowStatus;
+		break;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8Status = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		if (!ieee8021QBridgeLearningConstraintsStatus_update (poEntry, u8RowStatus))
+		{
+			goto ieee8021QBridgeLearningConstraintsStatus_handler_cleanup;
+		}
+		
+		poEntry->u8Status = xRowStatus_notInService_c;
+		break;
+	}
+	
+ieee8021QBridgeLearningConstraintsStatus_handler_success:
+	
+	bRetCode = true;
+	
+ieee8021QBridgeLearningConstraintsStatus_handler_cleanup:
+	
+	return bRetCode;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021QBridgeLearningConstraintsTable_getFirst (

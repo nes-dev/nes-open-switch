@@ -1102,6 +1102,26 @@ ieee8021QBridgeLearningConstraintsType_update (
 }
 
 bool
+ieee8021QBridgeLearningConstraintsStatus_update (
+	ieee8021QBridgeLearningConstraintsEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	if (u8RowStatus == xRowStatus_active_c && !ieee8021QBridgeLearningConstraintsType_handler (poEntry, poEntry->i32Type, true))
+	{
+		goto ieee8021QBridgeLearningConstraintsStatus_update_cleanup;
+	}
+	
+	/* TODO */
+	
+	bRetCode = true;
+	
+ieee8021QBridgeLearningConstraintsStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021QBridgeIngressVidXRowStatus_update (
 	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021QBridgeIngressVidXEntry_t *poEntry, uint8_t u8RowStatus)

@@ -1021,6 +1021,8 @@ bool ieee8021QBridgeLearningConstraintsTable_createHier (ieee8021QBridgeLearning
 bool ieee8021QBridgeLearningConstraintsTable_removeHier (ieee8021QBridgeLearningConstraintsEntry_t *poEntry);
 bool ieee8021QBridgeLearningConstraintsType_handler (
 	ieee8021QBridgeLearningConstraintsEntry_t *poEntry, int32_t i32Type, bool bForce);
+bool ieee8021QBridgeLearningConstraintsStatus_handler (
+	ieee8021QBridgeLearningConstraintsEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021QBridgeLearningConstraintsTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021QBridgeLearningConstraintsTable_getNext;
