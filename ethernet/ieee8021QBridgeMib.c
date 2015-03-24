@@ -3129,11 +3129,12 @@ ieee8021QBridgeStaticUnicastTable_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32VlanIndex,
 	uint8_t *pau8Address, size_t u16Address_len,
-	uint32_t u32ReceivePort)
+	uint32_t u32ReceivePort,
+	uint16_t u16Ports_len)
 {
 	register ieee8021QBridgeStaticUnicastEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if (u16Ports_len == 0 || (poEntry = xBuffer_cAlloc (sizeof (*poEntry) + 2 * u16Ports_len)) == NULL)
 	{
 		return NULL;
 	}
@@ -3149,8 +3150,10 @@ ieee8021QBridgeStaticUnicastTable_createEntry (
 		return NULL;
 	}
 	
-	/*poEntry->au8StaticEgressPorts = 0*/;
-	/*poEntry->au8ForbiddenEgressPorts = 0*/;
+	poEntry->pu8StaticEgressPorts = (void *) (poEntry + 1);
+	poEntry->pu8ForbiddenEgressPorts = ((void *) (poEntry + 1)) + u16Ports_len;
+	poEntry->u16StaticEgressPorts_len = u16Ports_len;
+	poEntry->u16ForbiddenEgressPorts_len = u16Ports_len;
 	poEntry->u8StorageType = ieee8021QBridgeStaticUnicastStorageType_nonVolatile_c;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
@@ -3327,10 +3330,10 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGESTATICUNICASTSTATICEGRESSPORTS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8StaticEgressPorts, table_entry->u16StaticEgressPorts_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->pu8StaticEgressPorts, table_entry->u16StaticEgressPorts_len);
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTFORBIDDENEGRESSPORTS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ForbiddenEgressPorts, table_entry->u16ForbiddenEgressPorts_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->pu8ForbiddenEgressPorts, table_entry->u16ForbiddenEgressPorts_len);
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTSTORAGETYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
@@ -3358,7 +3361,7 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGESTATICUNICASTSTATICEGRESSPORTS:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8StaticEgressPorts));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, table_entry->u16StaticEgressPorts_len);
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -3366,7 +3369,7 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 				}
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTFORBIDDENEGRESSPORTS:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8ForbiddenEgressPorts));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, table_entry->u16ForbiddenEgressPorts_len);
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -3420,11 +3423,20 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 						return SNMP_ERR_NOERROR;
 					}
 					
+					register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
+					
+					if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (*idx1->val.integer)) == NULL)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
 					table_entry = ieee8021QBridgeStaticUnicastTable_createEntry (
 						*idx1->val.integer,
 						*idx2->val.integer,
 						(void*) idx3->val.string, idx3->val_len,
-						*idx4->val.integer);
+						*idx4->val.integer,
+						poIeee8021BridgeBaseEntry->oNe.u16Ports_len);
 					if (table_entry != NULL)
 					{
 						netsnmp_insert_iterator_context (request, table_entry);
@@ -3491,7 +3503,7 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGESTATICUNICASTSTATICEGRESSPORTS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8StaticEgressPorts))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + table_entry->u16StaticEgressPorts_len)) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
@@ -3500,16 +3512,16 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
 					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16StaticEgressPorts_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8StaticEgressPorts, sizeof (table_entry->au8StaticEgressPorts));
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->pu8StaticEgressPorts, table_entry->u16StaticEgressPorts_len);
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8StaticEgressPorts, 0, sizeof (table_entry->au8StaticEgressPorts));
-				memcpy (table_entry->au8StaticEgressPorts, request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->pu8StaticEgressPorts, 0, table_entry->u16StaticEgressPorts_len);
+				memcpy (table_entry->pu8StaticEgressPorts, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16StaticEgressPorts_len = request->requestvb->val_len;
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTFORBIDDENEGRESSPORTS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8ForbiddenEgressPorts))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + table_entry->u16ForbiddenEgressPorts_len)) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
@@ -3518,12 +3530,12 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
 					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ForbiddenEgressPorts_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8ForbiddenEgressPorts, sizeof (table_entry->au8ForbiddenEgressPorts));
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->pu8ForbiddenEgressPorts, table_entry->u16ForbiddenEgressPorts_len);
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8ForbiddenEgressPorts, 0, sizeof (table_entry->au8ForbiddenEgressPorts));
-				memcpy (table_entry->au8ForbiddenEgressPorts, request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->pu8ForbiddenEgressPorts, 0, table_entry->u16ForbiddenEgressPorts_len);
+				memcpy (table_entry->pu8ForbiddenEgressPorts, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16ForbiddenEgressPorts_len = request->requestvb->val_len;
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTSTORAGETYPE:
@@ -3580,11 +3592,11 @@ ieee8021QBridgeStaticUnicastTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021QBRIDGESTATICUNICASTSTATICEGRESSPORTS:
-				memcpy (table_entry->au8StaticEgressPorts, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->pu8StaticEgressPorts, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16StaticEgressPorts_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTFORBIDDENEGRESSPORTS:
-				memcpy (table_entry->au8ForbiddenEgressPorts, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->pu8ForbiddenEgressPorts, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16ForbiddenEgressPorts_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case IEEE8021QBRIDGESTATICUNICASTSTORAGETYPE:
