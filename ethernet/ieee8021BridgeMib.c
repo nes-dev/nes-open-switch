@@ -4097,6 +4097,8 @@ ieee8021BridgeTrafficClassTable_getNext (
 {
 	ieee8021BridgeTrafficClassEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
+	register netsnmp_variable_list *idx2 = put_index_data->next_variable;
+	register netsnmp_variable_list *idx3 = idx2->next_variable;
 	
 	if (*my_loop_context == NULL)
 	{
@@ -4104,13 +4106,16 @@ ieee8021BridgeTrafficClassTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgeTrafficClassEntry_t, oBTreeNode);
 	
+	register uint32_t u32Priority =
+		*idx2->val.integer != poEntry->u32BasePort ? ieee8021BridgePriority_min_c: ieee8021BridgePriority_getNext (*idx3->val.integer);
+		
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BasePortComponentId);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BasePort);
 	idx = idx->next_variable;
-//	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Priority);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, u32Priority);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgeTrafficClassTable_BTree);
+	ieee8021BridgePriority_isLast (u32Priority) ? *my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgeTrafficClassTable_BTree): false;
 	return put_index_data;
 }
 
@@ -4161,6 +4166,7 @@ ieee8021BridgeTrafficClassTable_mapper (
 		{
 			table_entry = (ieee8021BridgeTrafficClassEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx3 = table_info->indexes->next_variable->next_variable;
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -4170,7 +4176,7 @@ ieee8021BridgeTrafficClassTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGETRAFFICCLASS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->au8Class[0]);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->au8Class[*idx3->val.integer]);
 				break;
 				
 			default:
@@ -4230,22 +4236,23 @@ ieee8021BridgeTrafficClassTable_mapper (
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
 			table_entry = (ieee8021BridgeTrafficClassEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx3 = table_info->indexes->next_variable->next_variable;
 			
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGETRAFFICCLASS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Class[0]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Class[*idx3->val.integer]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->au8Class[0], sizeof (table_entry->au8Class[0]));
+					memcpy (pvOldDdata, &table_entry->au8Class[*idx3->val.integer], sizeof (table_entry->au8Class[*idx3->val.integer]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->au8Class[0] = *request->requestvb->val.integer;
+				table_entry->au8Class[*idx3->val.integer] = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -4257,6 +4264,7 @@ ieee8021BridgeTrafficClassTable_mapper (
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
 			table_entry = (ieee8021BridgeTrafficClassEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx3 = table_info->indexes->next_variable->next_variable;
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
 				continue;
@@ -4265,7 +4273,7 @@ ieee8021BridgeTrafficClassTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGETRAFFICCLASS:
-				memcpy (&table_entry->au8Class[0], pvOldDdata, sizeof (table_entry->au8Class[0]));
+				memcpy (&table_entry->au8Class[*idx3->val.integer], pvOldDdata, sizeof (table_entry->au8Class[*idx3->val.integer]));
 				break;
 			}
 		}
