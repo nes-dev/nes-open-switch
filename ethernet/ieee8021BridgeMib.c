@@ -4466,6 +4466,8 @@ ieee8021BridgePortOutboundAccessPriorityTable_getNext (
 {
 	ieee8021BridgePortOutboundAccessPriorityEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
+	register netsnmp_variable_list *idx2 = put_index_data->next_variable;
+	register netsnmp_variable_list *idx3 = idx2->next_variable;
 	
 	if (*my_loop_context == NULL)
 	{
@@ -4473,13 +4475,16 @@ ieee8021BridgePortOutboundAccessPriorityTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePortOutboundAccessPriorityEntry_t, oBTreeNode);
 	
+	register uint32_t u32RegenUserPriority =
+		*idx2->val.integer != poEntry->u32BasePort ? ieee8021BridgePriority_min_c: ieee8021BridgePriority_getNext (*idx3->val.integer);
+		
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BasePortComponentId);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BasePort);
 	idx = idx->next_variable;
-//	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32RegenUserPriority);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, u32RegenUserPriority);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortOutboundAccessPriorityTable_BTree);
+	ieee8021BridgePriority_isLast (u32RegenUserPriority) ? *my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortOutboundAccessPriorityTable_BTree): false;
 	return put_index_data;
 }
 
@@ -4528,6 +4533,7 @@ ieee8021BridgePortOutboundAccessPriorityTable_mapper (
 		{
 			table_entry = (ieee8021BridgePortOutboundAccessPriorityEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx3 = table_info->indexes->next_variable->next_variable;
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -4537,7 +4543,7 @@ ieee8021BridgePortOutboundAccessPriorityTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTOUTBOUNDACCESSPRIORITY:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->au8Priority[0]);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->au8Priority[*idx3->val.integer]);
 				break;
 				
 			default:
