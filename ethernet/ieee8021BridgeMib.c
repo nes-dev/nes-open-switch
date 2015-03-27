@@ -488,7 +488,7 @@ ieee8021BridgeBaseMmrpEnabledStatus_handler (
 		
 	case ieee8021BridgeBaseMmrpEnabledStatus_false_c:
 	case ieee8021BridgeBaseMmrpEnabledStatus_true_c:
-		if (!ieee8021BridgeBaseTrafficClassesEnabled_update (poEntry, u8MmrpEnabledStatus))
+		if (!ieee8021BridgeBaseMmrpEnabledStatus_update (poEntry, u8MmrpEnabledStatus))
 		{
 			goto ieee8021BridgeBaseMmrpEnabledStatus_handler_cleanup;
 		}
@@ -754,6 +754,9 @@ ieee8021BridgeBaseTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_WRONGVALUE);
+					return SNMP_ERR_NOERROR;
+					
 				case RS_CREATEANDWAIT:
 					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
 					{
@@ -1387,7 +1390,7 @@ ieee8021BridgeBasePortIfIndex_handler (
 		goto ieee8021BridgeBasePortIfIndex_handler_success;
 	}
 	
-	if (poEntry->u32IfIndex != 0 || (poEntry->pOldEntry != NULL && poEntry->pOldEntry->u32IfIndex))
+	if (poEntry->u32IfIndex != 0 || (poEntry->pOldEntry != NULL && poEntry->pOldEntry->u32IfIndex != 0))
 	{
 		ieee8021BridgePhyData_wrLock ();
 		bLocked = true;
@@ -1680,11 +1683,22 @@ ieee8021BridgeBasePortTable_mapper (
 		{
 			table_entry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case IEEE8021BRIDGEBASEPORTIFINDEX:
+			case IEEE8021BRIDGEBASEPORTADMINPOINTTOPOINT:
+				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
 			}
 		}
 		break;
