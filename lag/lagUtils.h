@@ -29,11 +29,14 @@ extern "C" {
 
 
 #include "lagMIB.h"
+#include "if/ifUtils.h"
 
 #include <stdbool.h>
 
 
 bool lagUtilsInit (void);
+
+extern neIfTypeStatusModifier_t lag_portStatusModify;
 
 bool
 	neAggRowStatus_update (
