@@ -374,6 +374,23 @@ ieee8021BridgeBaseRowStatus_update (
 	
 	
 	register uint32_t u32Port = 0;
+	register ieee8021QBridgeIngressVidXEntry_t *poIeee8021QBridgeIngressVidXEntry = NULL;
+	
+	u32VlanIndex = 0;
+	
+	while (
+		(poIeee8021QBridgeIngressVidXEntry = ieee8021QBridgeIngressVidXTable_getNextIndex (poEntry->u32ComponentId, u32Port, u32VlanIndex)) != NULL &&
+		poIeee8021QBridgeIngressVidXEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
+	{
+		u32Port = poIeee8021QBridgeIngressVidXEntry->u32BridgeBasePort;
+		u32VlanIndex = poIeee8021QBridgeIngressVidXEntry->u32LocalVid;
+		
+		if (!ieee8021QBridgeIngressVidXRowStatus_handler (poIeee8021QBridgeIngressVidXEntry, u8RowStatus | xRowStatus_fromParent_c))
+		{
+			goto ieee8021BridgeBaseRowStatus_update_cleanup;
+		}
+	}
+	
 	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 	
 	while (
