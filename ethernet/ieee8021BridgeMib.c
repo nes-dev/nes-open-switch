@@ -4752,6 +4752,8 @@ ieee8021BridgePortDecodingTable_getNext (
 {
 	ieee8021BridgePortDecodingEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
+	register netsnmp_variable_list *idx3 = put_index_data->next_variable->next_variable;
+	register netsnmp_variable_list *idx4 = idx3->next_variable;
 	
 	if (*my_loop_context == NULL)
 	{
@@ -4759,15 +4761,18 @@ ieee8021BridgePortDecodingTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePortDecodingEntry_t, oBTreeNode);
 	
+	register int32_t i32PriorityCodePoint =
+		*idx3->val.integer != poEntry->i32PriorityCodePointRow ? ieee8021BridgePriority_min_c: ieee8021BridgePriority_getNext (*idx4->val.integer);
+		
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PortNum);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32PriorityCodePointRow);
 	idx = idx->next_variable;
-//	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32PriorityCodePoint);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, i32PriorityCodePoint);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortDecodingTable_BTree);
+	ieee8021BridgePriority_isLast (i32PriorityCodePoint) ? *my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortDecodingTable_BTree): false;
 	return put_index_data;
 }
 
@@ -4820,6 +4825,7 @@ ieee8021BridgePortDecodingTable_mapper (
 		{
 			table_entry = (ieee8021BridgePortDecodingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx4 = table_info->indexes->next_variable->next_variable->next_variable;
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -4829,10 +4835,10 @@ ieee8021BridgePortDecodingTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTDECODINGPRIORITY:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->au8Priority[0]);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->au8Priority[*idx4->val.integer]);
 				break;
 			case IEEE8021BRIDGEPORTDECODINGDROPELIGIBLE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->au8DropEligible[0]);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->au8DropEligible[*idx4->val.integer]);
 				break;
 				
 			default:
@@ -4882,7 +4888,6 @@ ieee8021BridgePortDecodingTable_mapper (
 		{
 			table_entry = (ieee8021BridgePortDecodingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -4900,36 +4905,37 @@ ieee8021BridgePortDecodingTable_mapper (
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
 			table_entry = (ieee8021BridgePortDecodingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx4 = table_info->indexes->next_variable->next_variable->next_variable;
 			
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTDECODINGPRIORITY:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Priority[0]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Priority[*idx4->val.integer]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->au8Priority[0], sizeof (table_entry->au8Priority[0]));
+					memcpy (pvOldDdata, &table_entry->au8Priority[*idx4->val.integer], sizeof (table_entry->au8Priority[*idx4->val.integer]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->au8Priority[0] = *request->requestvb->val.integer;
+				table_entry->au8Priority[*idx4->val.integer] = *request->requestvb->val.integer;
 				break;
 			case IEEE8021BRIDGEPORTDECODINGDROPELIGIBLE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8DropEligible[0]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8DropEligible[*idx4->val.integer]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->au8DropEligible[0], sizeof (table_entry->au8DropEligible[0]));
+					memcpy (pvOldDdata, &table_entry->au8DropEligible[*idx4->val.integer], sizeof (table_entry->au8DropEligible[*idx4->val.integer]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->au8DropEligible[0] = *request->requestvb->val.integer;
+				table_entry->au8DropEligible[*idx4->val.integer] = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -4941,6 +4947,7 @@ ieee8021BridgePortDecodingTable_mapper (
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
 			table_entry = (ieee8021BridgePortDecodingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx4 = table_info->indexes->next_variable->next_variable->next_variable;
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
 				continue;
@@ -4949,10 +4956,10 @@ ieee8021BridgePortDecodingTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTDECODINGPRIORITY:
-				memcpy (&table_entry->au8Priority[0], pvOldDdata, sizeof (table_entry->au8Priority[0]));
+				memcpy (&table_entry->au8Priority[*idx4->val.integer], pvOldDdata, sizeof (table_entry->au8Priority[*idx4->val.integer]));
 				break;
 			case IEEE8021BRIDGEPORTDECODINGDROPELIGIBLE:
-				memcpy (&table_entry->au8DropEligible[0], pvOldDdata, sizeof (table_entry->au8DropEligible[0]));
+				memcpy (&table_entry->au8DropEligible[*idx4->val.integer], pvOldDdata, sizeof (table_entry->au8DropEligible[*idx4->val.integer]));
 				break;
 			}
 		}
