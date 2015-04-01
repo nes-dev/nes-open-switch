@@ -570,6 +570,11 @@ enum
 	ieee8021BridgePriority_invalid_c = 8,
 	ieee8021BridgePriority_count_c = 8,
 	
+	ieee8021BridgePriorityCodePoint_min_c = 1,
+	ieee8021BridgePriorityCodePoint_max_c = 4,
+	ieee8021BridgePriorityCodePoint_invalid_c = 5,
+	ieee8021BridgePriorityCodePoint_count_c = 4,
+	
 	ieee8021BridgeDEI_min_c = 1,
 	ieee8021BridgeDEI_max_c = 2,
 	ieee8021BridgeDEI_count_c = 2,
@@ -582,6 +587,14 @@ enum
 #define ieee8021BridgeDEI_getNext(_p) (ieee8021BridgeDEI_min_c <= (_p) && (_p) < ieee8021BridgeDEI_max_c ? (_p) + 1: ieee8021BridgeDEI_min_c)
 #define ieee8021BridgeDEI_isLast(_p) ((_p) == ieee8021BridgeDEI_max_c)
 #define ieee8021BridgeDEI_isValid(_p) (ieee8021BridgeDEI_min_c <= (_p) && (_p) <= ieee8021BridgeDEI_max_c)
+
+typedef struct ieee8021BridgePcp_t {
+	uint8_t ubDei: 1;
+	uint8_t ubPcp: 7;
+} ieee8021BridgePcp_t;
+
+extern const uint8_t ieee8021BridgePcpEncodingTable [ieee8021BridgePriorityCodePoint_count_c][ieee8021BridgePriority_count_c][ieee8021BridgeDEI_count_c];
+extern const ieee8021BridgePcp_t ieee8021BridgePcpDecodingTable [ieee8021BridgePriorityCodePoint_count_c][ieee8021BridgePriority_count_c];
 
 
 /**
