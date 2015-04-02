@@ -63,6 +63,13 @@ halEthernet_vlanConfigure ()
 }
 
 bool
+halEthernet_ifVlanConfigure ()
+{
+	/* TODO */
+	return false;
+}
+
+bool
 halEthernet_cbpSidConfigure ()
 {
 	/* TODO */

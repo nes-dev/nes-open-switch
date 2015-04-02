@@ -1160,9 +1160,19 @@ ieee8021QBridgeIngressVidXRowStatus_update (
 {
 	register bool bRetCode = false;
 	
+	register uint8_t u8HalOpCode =
+		u8RowStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_active_c ? halEthernet_if_bVlanMapIngressEnable:
+		u8RowStatus != xRowStatus_active_c && poEntry->u8RowStatus == xRowStatus_active_c ? halEthernet_if_bVlanMapIngressDisable: halEthernet_if_bVlanNone;
+		
+	if ((u8HalOpCode != halEthernet_portNone_c && !halEthernet_ifVlanConfigure (poComponent, u8HalOpCode, poEntry)) ||
+		(u8RowStatus == xRowStatus_destroy_c && !halEthernet_ifVlanConfigure (poComponent, halEthernet_if_bVlanMapIngressDestroy, poEntry)))
+	{
+		goto ieee8021QBridgeIngressVidXRowStatus_update_cleanup;
+	}
+	
 	bRetCode = true;
 	
-//ieee8021QBridgeIngressVidXRowStatus_update_cleanup:
+ieee8021QBridgeIngressVidXRowStatus_update_cleanup:
 	
 	return bRetCode;
 }
@@ -1174,9 +1184,19 @@ ieee8021QBridgeEgressVidXRowStatus_update (
 {
 	register bool bRetCode = false;
 	
+	register uint8_t u8HalOpCode =
+		u8RowStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_active_c ? halEthernet_if_bVlanMapEgressEnable:
+		u8RowStatus != xRowStatus_active_c && poEntry->u8RowStatus == xRowStatus_active_c ? halEthernet_if_bVlanMapEgressDisable: halEthernet_if_bVlanNone;
+		
+	if ((u8HalOpCode != halEthernet_portNone_c && !halEthernet_ifVlanConfigure (poComponent, u8HalOpCode, poEntry)) ||
+		(u8RowStatus == xRowStatus_destroy_c && !halEthernet_ifVlanConfigure (poComponent, halEthernet_if_bVlanMapEgressDestroy, poEntry)))
+	{
+		goto ieee8021QBridgeEgressVidXRowStatus_update_cleanup;
+	}
+	
 	bRetCode = true;
 	
-//ieee8021QBridgeEgressVidXRowStatus_update_cleanup:
+ieee8021QBridgeEgressVidXRowStatus_update_cleanup:
 	
 	return bRetCode;
 }
