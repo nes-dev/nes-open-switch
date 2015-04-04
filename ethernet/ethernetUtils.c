@@ -677,6 +677,15 @@ ieee8021BridgeBasePortRowStatus_update (
 	}
 	
 	
+	register ieee8021QBridgePortEntry_t *poIeee8021QBridgePortEntry = NULL;
+	
+	if ((poIeee8021QBridgePortEntry = ieee8021QBridgePortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port)) != NULL &&
+		!ieee8021QBridgePortRowStatus_handler (poComponent, poIeee8021QBridgePortEntry, u8RowStatus))
+	{
+		goto ieee8021BridgeBasePortRowStatus_update_cleanup;
+	}
+	
+	
 	if (u8RowStatus != xRowStatus_active_c && !ieee8021BridgeBasePortDependentStatus_update (poComponent, poEntry, u8RowStatus))
 	{
 		goto ieee8021BridgeBasePortRowStatus_update_cleanup;
