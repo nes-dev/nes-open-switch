@@ -1243,6 +1243,9 @@ ieee8021QBridgeCVlanPortTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_WRONGVALUE);
+					return SNMP_ERR_NOERROR;
+					
 				case RS_CREATEANDWAIT:
 					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
 					{
@@ -1332,7 +1335,10 @@ ieee8021QBridgeCVlanPortTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
 				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
 					if (!ieee8021QBridgeCVlanPortRowStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
@@ -1383,15 +1389,8 @@ ieee8021QBridgeCVlanPortTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_ACTIVE:
-					table_entry->u8RowStatus = RS_ACTIVE;
-					break;
-					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_NOTINSERVICE:
-					table_entry->u8RowStatus = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
