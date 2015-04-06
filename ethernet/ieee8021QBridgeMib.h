@@ -577,9 +577,9 @@ typedef struct ieee8021QBridgeStaticMulticastEntry_t
 	uint32_t u32ReceivePort;
 	
 	/* Column values */
-	uint8_t au8StaticEgressPorts[ETHERNET_PORT_MAP_SIZE];
+	uint8_t *pu8StaticEgressPorts;
 	size_t u16StaticEgressPorts_len;	/* # of uint8_t elements */
-	uint8_t au8ForbiddenEgressPorts[ETHERNET_PORT_MAP_SIZE];
+	uint8_t *pu8ForbiddenEgressPorts;
 	size_t u16ForbiddenEgressPorts_len;	/* # of uint8_t elements */
 	uint8_t u8StorageType;
 	uint8_t u8RowStatus;
@@ -595,7 +595,8 @@ ieee8021QBridgeStaticMulticastEntry_t * ieee8021QBridgeStaticMulticastTable_crea
 	uint32_t u32VlanCurrentComponentId,
 	uint32_t u32VlanIndex,
 	uint8_t *pau8Address, size_t u16Address_len,
-	uint32_t u32ReceivePort);
+	uint32_t u32ReceivePort,
+	uint16_t u16Ports_len);
 ieee8021QBridgeStaticMulticastEntry_t * ieee8021QBridgeStaticMulticastTable_getByIndex (
 	uint32_t u32VlanCurrentComponentId,
 	uint32_t u32VlanIndex,
