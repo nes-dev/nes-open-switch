@@ -4500,6 +4500,52 @@ bool
 ieee8021QBridgeVlanCurrentTable_removeHier (
 	ieee8021QBridgeVlanCurrentEntry_t *poEntry)
 {
+	register uint16_t u16PortIndex = 0;
+	register uint32_t u32VlanIndex = 0;
+	register ieee8021QBridgeEntry_t *poIeee8021QBridgeEntry = NULL;
+	register ieee8021QBridgeFdbEntry_t *poIeee8021QBridgeFdbEntry = NULL;
+	register ieee8021QBridgeForwardAllEntry_t *poIeee8021QBridgeForwardAllEntry = NULL;
+	register ieee8021QBridgeForwardUnregisteredEntry_t *poIeee8021QBridgeForwardUnregisteredEntry = NULL;
+	register ieee8021QBridgePortVlanStatisticsEntry_t *poIeee8021QBridgePortVlanStatisticsEntry = NULL;
+	
+	if ((poIeee8021QBridgeEntry = ieee8021QBridgeTable_getByIndex (poEntry->u32ComponentId)) == NULL)
+	{
+		return false;
+	}
+	
+	
+	u32VlanIndex = poEntry->u32Index;
+	while (
+		(poIeee8021QBridgePortVlanStatisticsEntry = ieee8021QBridgePortVlanStatisticsTable_getNextIndex (poEntry->u32ComponentId, (uint32_t) u16PortIndex, u32VlanIndex)) != NULL &&
+		poIeee8021QBridgePortVlanStatisticsEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
+	{
+		u16PortIndex = poIeee8021QBridgePortVlanStatisticsEntry->u32BridgeBasePort;
+		u32VlanIndex = poIeee8021QBridgePortVlanStatisticsEntry->u32VlanIndex;
+		
+		if (poIeee8021QBridgePortVlanStatisticsEntry->u32VlanIndex != poEntry->u32Index)
+		{
+			continue;
+		}
+		
+		ieee8021QBridgePortVlanStatisticsTable_removeEntry (poIeee8021QBridgePortVlanStatisticsEntry);
+	}
+	
+	if ((poIeee8021QBridgeForwardUnregisteredEntry = ieee8021QBridgeForwardUnregisteredTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Index)) != NULL)
+	{
+		ieee8021QBridgeForwardUnregisteredTable_removeEntry (poIeee8021QBridgeForwardUnregisteredEntry);
+	}
+	
+	if ((poIeee8021QBridgeForwardAllEntry = ieee8021QBridgeForwardAllTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Index)) != NULL)
+	{
+		ieee8021QBridgeForwardAllTable_removeEntry (poIeee8021QBridgeForwardAllEntry);
+	}
+	
+	if (poEntry->u32FdbId != 0 && (poIeee8021QBridgeFdbEntry = ieee8021QBridgeFdbTable_getByIndex (poEntry->u32ComponentId, poEntry->u32FdbId)) != NULL)
+	{
+		ieee8021QBridgeFdbTable_removeEntry (poIeee8021QBridgeFdbEntry);
+	}
+	
+	poIeee8021QBridgeEntry->u32NumVlans--;
 	return true;
 }
 
