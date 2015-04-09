@@ -5256,6 +5256,8 @@ ieee8021BridgePortEncodingTable_mapper (
 		{
 			table_entry = (ieee8021BridgePortEncodingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx4 = table_info->indexes->next_variable->next_variable->next_variable;
+			register netsnmp_variable_list *idx5 = idx4->next_variable;
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -5265,7 +5267,7 @@ ieee8021BridgePortEncodingTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTENCODINGPRIORITY:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->au8Priority[0][0]);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->au8Priority[*idx4->val.integer][*idx5->val.integer - ieee8021BridgeDEI_min_c]);
 				break;
 				
 			default:
@@ -5307,7 +5309,6 @@ ieee8021BridgePortEncodingTable_mapper (
 		{
 			table_entry = (ieee8021BridgePortEncodingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -5325,22 +5326,24 @@ ieee8021BridgePortEncodingTable_mapper (
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
 			table_entry = (ieee8021BridgePortEncodingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx4 = table_info->indexes->next_variable->next_variable->next_variable;
+			register netsnmp_variable_list *idx5 = idx4->next_variable;
 			
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTENCODINGPRIORITY:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Priority[0][0]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Priority[*idx4->val.integer][*idx5->val.integer - ieee8021BridgeDEI_min_c]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->au8Priority[0][0], sizeof (table_entry->au8Priority[0][0]));
+					memcpy (pvOldDdata, &table_entry->au8Priority[*idx4->val.integer][*idx5->val.integer - ieee8021BridgeDEI_min_c], sizeof (table_entry->au8Priority[*idx4->val.integer][*idx5->val.integer - ieee8021BridgeDEI_min_c]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->au8Priority[0][0] = *request->requestvb->val.integer;
+				table_entry->au8Priority[*idx4->val.integer][*idx5->val.integer - ieee8021BridgeDEI_min_c] = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -5352,6 +5355,8 @@ ieee8021BridgePortEncodingTable_mapper (
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
 			table_entry = (ieee8021BridgePortEncodingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx4 = table_info->indexes->next_variable->next_variable->next_variable;
+			register netsnmp_variable_list *idx5 = idx4->next_variable;
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
 				continue;
@@ -5360,7 +5365,7 @@ ieee8021BridgePortEncodingTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPORTENCODINGPRIORITY:
-				memcpy (&table_entry->au8Priority[0][0], pvOldDdata, sizeof (table_entry->au8Priority[0][0]));
+				memcpy (&table_entry->au8Priority[*idx4->val.integer][*idx5->val.integer - ieee8021BridgeDEI_min_c], pvOldDdata, sizeof (table_entry->au8Priority[*idx4->val.integer][*idx5->val.integer - ieee8021BridgeDEI_min_c]));
 				break;
 			}
 		}
