@@ -5184,6 +5184,9 @@ ieee8021BridgePortEncodingTable_getNext (
 {
 	ieee8021BridgePortEncodingEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
+	register netsnmp_variable_list *idx3 = put_index_data->next_variable->next_variable;
+	register netsnmp_variable_list *idx4 = idx3->next_variable;
+	register netsnmp_variable_list *idx5 = idx4->next_variable;
 	
 	if (*my_loop_context == NULL)
 	{
@@ -5191,17 +5194,22 @@ ieee8021BridgePortEncodingTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePortEncodingEntry_t, oBTreeNode);
 	
+	register int32_t i32PriorityCodePoint =
+		*idx3->val.integer != poEntry->i32PriorityCodePointRow ? ieee8021BridgePriority_min_c: ieee8021BridgePriority_getNext (*idx4->val.integer);
+	register uint8_t u8DropEligible =
+		*idx4->val.integer != i32PriorityCodePoint ? ieee8021BridgeDEI_min_c: ieee8021BridgeDEI_getNext (*idx5->val.integer);
+		
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PortNum);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32PriorityCodePointRow);
 	idx = idx->next_variable;
-//	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32PriorityCodePoint);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, i32PriorityCodePoint);
 	idx = idx->next_variable;
-//	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u8DropEligible);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, u8DropEligible);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortEncodingTable_BTree);
+	ieee8021BridgePriority_isLast (i32PriorityCodePoint) && ieee8021BridgeDEI_isLast (u8DropEligible) ? *my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortEncodingTable_BTree): false;
 	return put_index_data;
 }
 
