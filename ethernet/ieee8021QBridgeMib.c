@@ -4493,7 +4493,82 @@ bool
 ieee8021QBridgeVlanCurrentTable_createHier (
 	ieee8021QBridgeVlanCurrentEntry_t *poEntry)
 {
+	register uint16_t u16PortIndex = 0;
+	register uint32_t u32VlanIndex = 0;
+	register ieee8021QBridgeEntry_t *poIeee8021QBridgeEntry = NULL;
+	register ieee8021QBridgeFdbEntry_t *poIeee8021QBridgeFdbEntry = NULL;
+	register ieee8021QBridgeForwardAllEntry_t *poIeee8021QBridgeForwardAllEntry = NULL;
+	register ieee8021QBridgeForwardUnregisteredEntry_t *poIeee8021QBridgeForwardUnregisteredEntry = NULL;
+	register ieee8021QBridgePortVlanStatisticsEntry_t *poIeee8021QBridgePortVlanStatisticsEntry = NULL;
+	
+	if ((poIeee8021QBridgeEntry = ieee8021QBridgeTable_getByIndex (poEntry->u32ComponentId)) == NULL)
+	{
+		goto ieee8021QBridgeVlanCurrentTable_createHier_cleanup;
+	}
+	
+	
+	if (poEntry->u32FdbId != 0 &&
+		(poIeee8021QBridgeFdbEntry = ieee8021QBridgeFdbTable_getByIndex (poEntry->u32ComponentId, poEntry->u32FdbId)) == NULL &&
+		(poIeee8021QBridgeFdbEntry = ieee8021QBridgeFdbTable_createEntry (poEntry->u32ComponentId, poEntry->u32FdbId)) == NULL)
+	{
+		goto ieee8021QBridgeVlanCurrentTable_createHier_cleanup;
+	}
+	
+	if ((poIeee8021QBridgeForwardAllEntry = ieee8021QBridgeForwardAllTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Index)) == NULL &&
+		(poIeee8021QBridgeForwardAllEntry = ieee8021QBridgeForwardAllTable_createEntry (poEntry->u32ComponentId, poEntry->u32Index, poEntry->u16EgressPorts_len)) == NULL)
+	{
+		goto ieee8021QBridgeVlanCurrentTable_createHier_cleanup;
+	}
+	
+	if ((poIeee8021QBridgeForwardUnregisteredEntry = ieee8021QBridgeForwardUnregisteredTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Index)) == NULL &&
+		(poIeee8021QBridgeForwardUnregisteredEntry = ieee8021QBridgeForwardUnregisteredTable_createEntry (poEntry->u32ComponentId, poEntry->u32Index, poEntry->u16EgressPorts_len)) == NULL)
+	{
+		goto ieee8021QBridgeVlanCurrentTable_createHier_cleanup;
+	}
+	
+	u32VlanIndex = poEntry->u32Index;
+	while (
+		(poIeee8021QBridgePortVlanStatisticsEntry = ieee8021QBridgePortVlanStatisticsTable_getNextIndex (poEntry->u32ComponentId, (uint32_t) u16PortIndex, u32VlanIndex)) != NULL &&
+		poIeee8021QBridgePortVlanStatisticsEntry->u32BridgeBasePortComponentId == poEntry->u32ComponentId)
+	{
+		u16PortIndex = poIeee8021QBridgePortVlanStatisticsEntry->u32BridgeBasePort;
+		u32VlanIndex = poIeee8021QBridgePortVlanStatisticsEntry->u32VlanIndex;
+		
+		if (poIeee8021QBridgePortVlanStatisticsEntry->u32VlanIndex != poEntry->u32Index)
+		{
+			continue;
+		}
+		if (xBitmap_getBitRev (poEntry->au8EgressPorts, (uint16_t) (poIeee8021QBridgePortVlanStatisticsEntry->u32BridgeBasePort - 1)))
+		{
+			continue;
+		}
+		
+		ieee8021QBridgePortVlanStatisticsTable_removeEntry (poIeee8021QBridgePortVlanStatisticsEntry);
+	}
+	
+	xBitmap_scanBitRangeRev (
+		poEntry->au8EgressPorts, 0, xBitmap_bitLength (poEntry->u16EgressPorts_len) - 1, 1, u16PortIndex)
+	{
+		if (ieee8021QBridgePortVlanStatisticsTable_getByIndex (poEntry->u32ComponentId, u16PortIndex + 1, poEntry->u32Index) != NULL)
+		{
+			continue;
+		}
+		
+		if (ieee8021QBridgePortVlanStatisticsTable_createEntry (poEntry->u32ComponentId, u16PortIndex + 1, poEntry->u32Index) == NULL)
+		{
+			goto ieee8021QBridgeVlanCurrentTable_createHier_cleanup;
+		}
+		/* TODO */
+	}
+	
+	poIeee8021QBridgeEntry->u32NumVlans++;
 	return true;
+	
+	
+ieee8021QBridgeVlanCurrentTable_createHier_cleanup:
+	
+	ieee8021QBridgeVlanCurrentTable_removeHier (poEntry);
+	return false;
 }
 
 bool
