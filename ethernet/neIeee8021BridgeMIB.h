@@ -155,6 +155,8 @@ neIeee8021BridgeBasePortEntry_t * neIeee8021BridgeBasePortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
 void neIeee8021BridgeBasePortTable_removeEntry (neIeee8021BridgeBasePortEntry_t *poEntry);
+bool neIeee8021BridgeBasePortAdminFlags_handler (
+	neIeee8021BridgeBasePortEntry_t *poEntry, uint8_t *pu8AdminFlags, bool bForce);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neIeee8021BridgeBasePortTable_getFirst;
 Netsnmp_Next_Data_Point neIeee8021BridgeBasePortTable_getNext;

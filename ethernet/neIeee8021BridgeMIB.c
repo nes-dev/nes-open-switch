@@ -24,6 +24,7 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "system/systemMIB.h"
+#include "ethernetUtils.h"
 #include "neIeee8021BridgeMIB.h"
 #include "ieee8021BridgeMib.h"
 
@@ -587,6 +588,34 @@ neIeee8021BridgeBasePortTable_get (
 	
 	*my_data_context = (void*) poEntry;
 	return true;
+}
+
+bool
+neIeee8021BridgeBasePortAdminFlags_handler (
+	neIeee8021BridgeBasePortEntry_t *poEntry, uint8_t *pu8AdminFlags, bool bForce)
+{
+	register bool bRetCode = false;
+	register ieee8021BridgeBasePortEntry_t *poPort = ieee8021BridgeBasePortTable_getByNeEntry (poEntry);
+	
+	if (memcmp (poEntry->au8AdminFlags, pu8AdminFlags, sizeof (poEntry->au8AdminFlags)) == 0 && !bForce)
+	{
+		goto neIeee8021BridgeBasePortAdminFlags_handler_success;
+	}
+	
+	if (!neIeee8021BridgeBasePortAdminFlags_update (poPort, pu8AdminFlags))
+	{
+		goto neIeee8021BridgeBasePortAdminFlags_handler_cleanup;
+	}
+	
+	!bForce ? memcpy (poEntry->au8AdminFlags, pu8AdminFlags, sizeof (poEntry->au8AdminFlags)): false;
+	
+neIeee8021BridgeBasePortAdminFlags_handler_success:
+	
+	bRetCode = true;
+	
+neIeee8021BridgeBasePortAdminFlags_handler_cleanup:
+	
+	return bRetCode;
 }
 
 /* neIeee8021BridgeBasePortTable table mapper */

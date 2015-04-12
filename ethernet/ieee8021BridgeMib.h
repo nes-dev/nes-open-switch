@@ -313,6 +313,7 @@ ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getByIndex (
 ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
+#define ieee8021BridgeBasePortTable_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBasePortEntry_t, oNe))
 void ieee8021BridgeBasePortTable_removeEntry (ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortTable_allocateIndex (
 	ieee8021BridgeBaseEntry_t *poComponent,

@@ -4626,13 +4626,13 @@ ieee8021QBridgeVlanCurrentTable_removeHier (
 
 bool
 ieee8021QBridgeVlanCurrentTable_vlanHandler (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021QBridgeVlanCurrentEntry_t *poEntry,
 	uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts)
 {
 	register bool bRetCode = false;
 	
-	if (!ieee8021QBridgeVlanCurrentTable_vlanUpdate (pComponent, poEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts))
+	if (!ieee8021QBridgeVlanCurrentTable_vlanUpdate (poComponent, poEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts))
 	{
 		goto ieee8021QBridgeVlanCurrentTable_vlanHandler_cleanup;
 	}
@@ -4652,7 +4652,7 @@ ieee8021QBridgeVlanCurrentTable_vlanHandler_cleanup:
 
 bool
 ieee8021QBridgeVlanCurrentRowStatus_handler (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021QBridgeVlanCurrentEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
@@ -4673,14 +4673,14 @@ ieee8021QBridgeVlanCurrentRowStatus_handler (
 	switch (u8RealStatus)
 	{
 	case xRowStatus_active_c:
-		if (!(u8RowStatus & xRowStatus_fromParent_c) && pComponent->u8RowStatus != xRowStatus_active_c)
+		if (!(u8RowStatus & xRowStatus_fromParent_c) && poComponent->u8RowStatus != xRowStatus_active_c)
 		{
 			u8RealStatus = xRowStatus_notReady_c;
 		}
 		
 		/* TODO */
 		
-		if (!ieee8021QBridgeVlanCurrentRowStatus_update (pComponent, poEntry, u8RealStatus))
+		if (!ieee8021QBridgeVlanCurrentRowStatus_update (poComponent, poEntry, u8RealStatus))
 		{
 			goto ieee8021QBridgeVlanCurrentRowStatus_handler_cleanup;
 		}
@@ -4689,7 +4689,7 @@ ieee8021QBridgeVlanCurrentRowStatus_handler (
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!ieee8021QBridgeVlanCurrentRowStatus_update (pComponent, poEntry, u8RealStatus))
+		if (!ieee8021QBridgeVlanCurrentRowStatus_update (poComponent, poEntry, u8RealStatus))
 		{
 			goto ieee8021QBridgeVlanCurrentRowStatus_handler_cleanup;
 		}
@@ -4707,7 +4707,7 @@ ieee8021QBridgeVlanCurrentRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!ieee8021QBridgeVlanCurrentRowStatus_update (pComponent, poEntry, u8RealStatus))
+		if (!ieee8021QBridgeVlanCurrentRowStatus_update (poComponent, poEntry, u8RealStatus))
 		{
 			goto ieee8021QBridgeVlanCurrentRowStatus_handler_cleanup;
 		}
@@ -5109,7 +5109,7 @@ ieee8021QBridgeVlanStaticTable_removeHier_cleanup:
 
 bool
 ieee8021QBridgeVlanStaticTable_vlanUpdater (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021QBridgeVlanStaticEntry_t *poEntry,
 	uint8_t *pu8EnabledPorts, uint8_t *pu8DisabledPorts, uint8_t *pu8UntaggedPorts)
 {
@@ -5121,12 +5121,12 @@ ieee8021QBridgeVlanStaticTable_vlanUpdater (
 		goto ieee8021QBridgeVlanStaticTable_vlanUpdater_cleanup;
 	}
 	
-	if (!ieee8021QBridgeVlanCurrentTable_vlanHandler (pComponent, poIeee8021QBridgeVlanCurrentEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts))
+	if (!ieee8021QBridgeVlanCurrentTable_vlanHandler (poComponent, poIeee8021QBridgeVlanCurrentEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts))
 	{
 		goto ieee8021QBridgeVlanStaticTable_vlanUpdater_cleanup;
 	}
 	
-	if (!ieee8021QBridgeVlanStaticTable_vlanUpdate (pComponent, poEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts))
+	if (!ieee8021QBridgeVlanStaticTable_vlanUpdate (poComponent, poEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts))
 	{
 		goto ieee8021QBridgeVlanStaticTable_vlanUpdater_cleanup;
 	}
@@ -5140,7 +5140,7 @@ ieee8021QBridgeVlanStaticTable_vlanUpdater_cleanup:
 
 bool
 ieee8021QBridgeVlanStaticTable_handler (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021QBridgeVlanStaticEntry_t *poEntry,
 	uint8_t *pu8EgressPorts, uint8_t *pu8ForbiddenEgressPorts, uint8_t *pu8UntaggedPorts)
 {
@@ -5184,7 +5184,7 @@ ieee8021QBridgeVlanStaticTable_handler (
 	if ((xBitmap_checkBitRange (pu8EnabledPorts, 0, xBitmap_bitLength (poEntry->u16EgressPorts_len) - 1, 1) != xBitmap_index_invalid_c ||
 		 xBitmap_checkBitRange (pu8DisabledPorts, 0, xBitmap_bitLength (poEntry->u16EgressPorts_len) - 1, 1) != xBitmap_index_invalid_c ||
 		 xBitmap_checkBitRange (pu8UntaggedPorts2, 0, xBitmap_bitLength (poEntry->u16EgressPorts_len) - 1, 1) != xBitmap_index_invalid_c) &&
-		!ieee8021QBridgeVlanStaticTable_vlanUpdater (pComponent, poEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts2))
+		!ieee8021QBridgeVlanStaticTable_vlanUpdater (poComponent, poEntry, pu8EnabledPorts, pu8DisabledPorts, pu8UntaggedPorts2))
 	{
 		goto ieee8021QBridgeVlanStaticTable_handler_cleanup;
 	}
@@ -5211,7 +5211,7 @@ ieee8021QBridgeVlanStaticTable_handler_cleanup:
 
 bool
 ieee8021QBridgeVlanStaticRowStatus_handler (
-	ieee8021BridgeBaseEntry_t *pComponent,
+	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021QBridgeVlanStaticEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
@@ -5232,14 +5232,14 @@ ieee8021QBridgeVlanStaticRowStatus_handler (
 	switch (u8RealStatus)
 	{
 	case xRowStatus_active_c:
-		if (!(u8RowStatus & xRowStatus_fromParent_c) && pComponent->u8RowStatus != xRowStatus_active_c)
+		if (!(u8RowStatus & xRowStatus_fromParent_c) && poComponent->u8RowStatus != xRowStatus_active_c)
 		{
 			u8RealStatus = xRowStatus_notReady_c;
 		}
 		
 		/* TODO */
 		
-		if (!ieee8021QBridgeVlanStaticRowStatus_update (pComponent, poEntry, u8RealStatus))
+		if (!ieee8021QBridgeVlanStaticRowStatus_update (poComponent, poEntry, u8RealStatus))
 		{
 			goto ieee8021QBridgeVlanStaticRowStatus_handler_cleanup;
 		}
@@ -5248,7 +5248,7 @@ ieee8021QBridgeVlanStaticRowStatus_handler (
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!ieee8021QBridgeVlanStaticRowStatus_update (pComponent, poEntry, u8RealStatus))
+		if (!ieee8021QBridgeVlanStaticRowStatus_update (poComponent, poEntry, u8RealStatus))
 		{
 			goto ieee8021QBridgeVlanStaticRowStatus_handler_cleanup;
 		}
@@ -5266,7 +5266,7 @@ ieee8021QBridgeVlanStaticRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!ieee8021QBridgeVlanStaticRowStatus_update (pComponent, poEntry, u8RealStatus))
+		if (!ieee8021QBridgeVlanStaticRowStatus_update (poComponent, poEntry, u8RealStatus))
 		{
 			goto ieee8021QBridgeVlanStaticRowStatus_handler_cleanup;
 		}

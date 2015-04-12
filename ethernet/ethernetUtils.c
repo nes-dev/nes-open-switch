@@ -601,6 +601,19 @@ ieee8021BridgeBasePortTable_hierUpdate_cleanup:
 }
 
 bool
+neIeee8021BridgeBasePortAdminFlags_update (
+	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t *pu8AdminFlags)
+{
+	register bool bRetCode = false;
+	
+	bRetCode = true;
+	
+//neIeee8021BridgeBasePortAdminFlags_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 ieee8021BridgeBasePortDependentStatus_update (
 	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus)
