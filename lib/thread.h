@@ -38,7 +38,6 @@ extern "C" {
 #include <sched.h>
 #include <time.h>
 
-#include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/sync.h"
 
@@ -74,7 +73,7 @@ typedef struct xThreadInfo_t
 	xThreadRoutine_t	   *poResume;
 	xThreadRoutine_t	   *poStop;
 	pthread_t				oPThread;
-	xBitmap_declare		   (ubFlags, xThreadInfo_flagsCount_c);
+	uint8_t					au8Flags[1];
 	xCond_t					oSignal;
 	xMLock_t				oLock;
 	void				   *pvData;

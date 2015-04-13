@@ -30,6 +30,7 @@
 #include "if/ifMIB.h"
 #include "entityMIB.h"
 
+#include "lib/bitmap.h"
 #include "lib/snmp.h"
 
 #include <stdbool.h>

@@ -28,6 +28,8 @@
 #include "lag/lacp/lacpUtils.h"
 #include "if/ifUtils.h"
 
+#include "lib/bitmap.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 

@@ -19,32 +19,31 @@
  */
 //set ts=4 sw=4
 
-#ifndef __SYNC_C__
-#	define __SYNC_C__
+#ifndef __MESSAGE_C__
+#	define __MESSAGE_C__
 
 
 
-#include "sync.h"
+#include "message.h"
 #include "lib/lib.h"
 #include "lib/list.h"
 #include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
+#include "lib/sync.h"
 #include "lib/thread.h"
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <pthread.h>
 
-#define MOD_NAME "SYNC"
-#define PTHREAD_OK 0
+#define MOD_NAME "MESSAGE"
 
 #if 0
 #include "lib/log.h"
 
-#define Sync_log(_pri, _frmt, _args ...) xLog_str (MOD_NAME, _pri, _frmt, ## _args)
+#define Message_log(_pri, _frmt, _args ...) xLog_str (MOD_NAME, _pri, _frmt, ## _args)
 #else
-#define Sync_log(_pri, _frmt, _args ...)
+#define Message_log(_pri, _frmt, _args ...)
 #endif
 
 typedef struct xMessageData_t
@@ -73,7 +72,7 @@ static xMessageData_t oMessageData =
 	.oLock = xRwLock_initInline (),
 };
 static xMessageQueue_t *
-xMessageQueue_getByIndex (uint32_t u32Index);
+	xMessageQueue_getByIndex (uint32_t u32Index);
 
 
 int8_t
@@ -93,7 +92,7 @@ xMessageQueue_t *
 xMessageQueue_create (
 	uint32_t u32Index)
 {
-	xMessageQueue_t *poEntry = NULL;
+	register xMessageQueue_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (xMessageQueue_t))) == NULL)
 	{
@@ -108,6 +107,7 @@ xMessageQueue_create (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
 	xSList_headInit (&poEntry->oTxList);
 	xSList_headInit (&poEntry->oRxList);
 	xSList_headInit (&poEntry->oAckList);
@@ -163,7 +163,7 @@ xMessage_t *
 xMessage_allocate (
 	uint16_t u32Type, void *pvData)
 {
-	xMessageSrc_t *poEntry = NULL;
+	register xMessageSrc_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (xMessageSrc_t))) == NULL)
 	{
@@ -211,9 +211,9 @@ xMessage_send (
 		xSList_push (&poMsgDst->oMsg.oQNode, &poQueueDst->oRxList);
 		xRwLock_unlock (&poQueueDst->oLock);
 		
-		xBitmap_setBit (poThread->ubFlags, xThreadInfo_flagsMessage_c, true);
-		xMLock_unlock (&poThread->oLock);
+		xBitmap_setBit (poThread->au8Flags, xThreadInfo_flagsMessage_c, true);
 		xCond_broadcast (&poThread->oSignal);
+		xMLock_unlock (&poThread->oLock);
 		
 		bMsgAdded = true;
 	}
@@ -228,11 +228,26 @@ xMessage_send (
 	return true;
 }
 
+xMessage_t *
+xMessageAck_getMessage (
+	xMessageQueue_t *poQueueSrc)
+{
+	register xSList_Node_t *poMsgNode = NULL;
+	register xMessage_t *poMsg = NULL;
+	
+	if ((poMsgNode = xSList_nodeGetTail (&poQueueSrc->oAckList)) != NULL)
+	{
+		poMsg = xSList_entry (poMsgNode, xMessage_t, oQNode);
+	}
+	
+	return poMsg;
+}
+
 bool
-xMessage_free (
+xMessageAck_remove (
 	xMessage_t *poMessage, xMessageQueue_t *poQueueSrc)
 {
-	xMessageSrc_t *poMsgSrc = xGetParentByMemberPtr (poMessage, xMessageSrc_t, oMsg);
+	register xMessageSrc_t *poMsgSrc = xGetParentByMemberPtr (poMessage, xMessageSrc_t, oMsg);
 	
 	xRwLock_wrLock (&poQueueSrc->oLock);
 	xSList_nodeRem (&poMsgSrc->oMsg.oQNode, &poQueueSrc->oAckList);
@@ -242,12 +257,20 @@ xMessage_free (
 	return true;
 }
 
+bool
+xMessage_cleanupThread (
+	xMessageQueue_t *poSrcQueue, xThreadInfo_t *pThread)
+{
+	xBitmap_setBit (pThread->au8Flags, xThreadInfo_flagsMessage_c, 0);
+	return true;
+}
+
 
 xMessage_t *
 xMessageDst_create (
 	uint32_t u32Index, xMessage_t *poMessage)
 {
-	xMessageDst_t *poEntry = NULL;
+	register xMessageDst_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (xMessageDst_t))) == NULL)
 	{
@@ -267,12 +290,27 @@ xMessageDst_create (
 	return &poEntry->oMsg;
 }
 
+xMessage_t *
+xMessageDst_getMessage (
+	xMessageQueue_t *poQueueDst)
+{
+	register xSList_Node_t *poMsgNode = NULL;
+	register xMessage_t *poMsg = NULL;
+	
+	if ((poMsgNode = xSList_nodeGetTail (&poQueueDst->oRxList)) != NULL)
+	{
+		poMsg = xSList_entry (poMsgNode, xMessage_t, oQNode);
+	}
+	
+	return poMsg;
+}
+
 bool
 xMessageDst_remove (
 	xMessage_t *poMsg, xMessageQueue_t *poQueueDst)
 {
-	bool bRxComplete = false;
-	xMessageInfo_t *poMsgInfo = poMsg->poMsgInfo;
+	register bool bRxComplete = false;
+	register xMessageInfo_t *poMsgInfo = poMsg->poMsgInfo;
 	
 	xRwLock_wrLock (&poMsgInfo->oLock);
 	xRwLock_wrLock (&poQueueDst->oLock);
@@ -299,7 +337,7 @@ xMessageDst_remove (
 		{
 			register xMessageDst_t *poMsgDst = xSList_entry (poDstNode, xMessageDst_t, oDstNode);
 			
-			if (!xBitmap_getBit (poMsgDst->oMsg.ubFlags, xMessage_flagsAckInline_c))
+			if (!xBitmap_getBit (poMsgDst->oMsg.au8Flags, xMessage_flagsAckInline_c))
 			{
 				xSList_nodeRem (&poMsgDst->oDstNode, &poMsgInfo->oDstList);
 				xBuffer_free (poMsgDst);
@@ -310,9 +348,9 @@ xMessageDst_remove (
 	
 	if (bRxComplete && xSList_count (&poMsgInfo->oDstList) != 0)
 	{
-		xThreadInfo_t *poThread = NULL;
-		xMessageQueue_t *poQueueSrc = NULL;
-		xMessageSrc_t *poMsgSrc = xGetParentByMemberPtr (poMsgInfo, xMessageSrc_t, oMsgInfo);
+		register xThreadInfo_t *poThread = NULL;
+		register xMessageQueue_t *poQueueSrc = NULL;
+		register xMessageSrc_t *poMsgSrc = xGetParentByMemberPtr (poMsgInfo, xMessageSrc_t, oMsgInfo);
 		
 		xRwLock_rdLock (&oThreadData.oLock);
 		xRwLock_rdLock (&oMessageData.oLock);
@@ -331,9 +369,9 @@ xMessageDst_remove (
 		xSList_push (&poMsgSrc->oMsg.oQNode, &poQueueSrc->oAckList);
 		xRwLock_unlock (&poQueueSrc->oLock);
 		
-		xBitmap_setBit (poThread->ubFlags, xThreadInfo_flagsMessage_c, true);
-		xMLock_unlock (&poThread->oLock);
+		xBitmap_setBit (poThread->au8Flags, xThreadInfo_flagsMessage_c, true);
 		xCond_broadcast (&poThread->oSignal);
+		xMLock_unlock (&poThread->oLock);
 		
 		xRwLock_unlock (&oMessageData.oLock);
 		xRwLock_unlock (&oThreadData.oLock);
@@ -344,4 +382,4 @@ xMessageDst_remove (
 
 
 
-#endif	// __SYNC_C__
+#endif	// __MESSAGE_C__

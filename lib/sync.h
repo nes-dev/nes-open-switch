@@ -34,13 +34,12 @@ extern "C" {
 #	error "incompatible C library: Posix Thread support expected"
 #endif	/* _POSIX_THREADS */
 
+#include "lib/list.h"
+#include "lib/binaryTree.h"
+
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
-
-#include "lib/bitmap.h"
-#include "lib/list.h"
-#include "lib/binaryTree.h"
 
 
 typedef pthread_mutex_t xMLock_t;
@@ -77,73 +76,6 @@ typedef pthread_cond_t xCond_t;
 #define xCond_timedWait(_pCond, _pLock, _pTime) pthread_cond_timedwait (_pCond, _pLock, _pTime)
 #define xCond_signal(_pCond) pthread_cond_signal (_pCond)
 #define xCond_broadcast(_pCond) pthread_cond_broadcast (_pCond)
-
-
-enum
-{
-	xMessageQueue_flagsTx_c = 0,
-	xMessageQueue_flagsRx_c = 1,
-	xMessageQueue_flagsCount_c = 2,
-	
-	xMessage_flagsAckInline_c = 0,
-	xMessage_flagsCount_c = 1,
-};
-
-typedef struct xMessageQueue_t
-{
-	uint32_t u32Index;
-	
-	xBitmap_declare (ubFlags, xMessageQueue_flagsCount_c);
-	xSList_Head_t oTxList;
-	xSList_Head_t oRxList;
-	xSList_Head_t oAckList;
-	xRwLock_t oLock;
-	xBTree_Node_t oBTreeNode;
-} xMessageQueue_t;
-
-struct xMessageInfo_t;
-
-typedef struct xMessage_t
-{
-	uint32_t u32Index;
-	void *pvData;
-	xBitmap_declare (ubFlags, xMessage_flagsCount_c);
-	struct xMessageInfo_t *poMsgInfo;
-	xSList_Node_t oQNode;
-} xMessage_t;
-
-typedef struct xMessageInfo_t
-{
-	uint16_t u32Type;
-	uint16_t u16RxCount;
-	xSList_Head_t oDstList;
-	xRwLock_t oLock;
-} xMessageInfo_t;
-
-
-extern xMessageQueue_t *
-xMessageQueue_create (uint32_t u32Index);
-extern void
-xMessageQueue_remove (xMessageQueue_t *poEntry);
-
-
-extern xMessage_t *
-xMessage_allocate (
-	uint16_t u32Type, void *pvData);
-extern bool
-xMessage_send (
-	xMessage_t *poMessage, xMessageQueue_t *poSrcQueue);
-extern bool
-xMessage_free (
-	xMessage_t *poMessage, xMessageQueue_t *poSrcQueue);
-
-
-extern xMessage_t *
-xMessageDst_create (
-	uint32_t u32Index, xMessage_t *poMessage);
-extern bool
-xMessageDst_remove (
-	xMessage_t *poMsg, xMessageQueue_t *poDstQueue);
 
 
 
