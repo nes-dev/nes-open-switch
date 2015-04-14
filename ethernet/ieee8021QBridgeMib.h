@@ -646,17 +646,15 @@ typedef struct ieee8021QBridgeVlanCurrentEntry_t
 	
 	/* Column values */
 	uint32_t u32FdbId;
-	uint8_t au8EgressPorts[ETHERNET_PORT_MAP_SIZE];
+	uint8_t *pu8EgressPorts;
 	size_t u16EgressPorts_len;	/* # of uint8_t elements */
-	uint8_t au8UntaggedPorts[ETHERNET_PORT_MAP_SIZE];
+	uint8_t *pu8UntaggedPorts;
 	size_t u16UntaggedPorts_len;	/* # of uint8_t elements */
 	int32_t i32Status;
 	uint32_t u32CreationTime;
 	
 	neIeee8021QBridgeVlanCurrentEntry_t oNe;
 	
-	uint8_t au8Learnt[ETHERNET_PORT_MAP_SIZE];
-	size_t u16Learnt_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
@@ -671,7 +669,8 @@ void ieee8021QBridgeVlanCurrentTable_init (void);
 ieee8021QBridgeVlanCurrentEntry_t * ieee8021QBridgeVlanCurrentTable_createEntry (
 	uint32_t u32TimeMark,
 	uint32_t u32ComponentId,
-	uint32_t u32Index);
+	uint32_t u32Index,
+	uint16_t u16Ports_len);
 ieee8021QBridgeVlanCurrentEntry_t * ieee8021QBridgeVlanCurrentTable_getByIndex (
 	uint32_t u32TimeMark,
 	uint32_t u32ComponentId,
@@ -690,7 +689,8 @@ void ieee8021QBridgeVlanCurrentTable_removeEntry (ieee8021QBridgeVlanCurrentEntr
 ieee8021QBridgeVlanCurrentEntry_t * ieee8021QBridgeVlanCurrentTable_createExt (
 	uint32_t u32TimeMark,
 	uint32_t u32ComponentId,
-	uint32_t u32Index);
+	uint32_t u32Index,
+	uint16_t u16Ports_len);
 bool ieee8021QBridgeVlanCurrentTable_removeExt (ieee8021QBridgeVlanCurrentEntry_t *poEntry);
 bool ieee8021QBridgeVlanCurrentTable_createHier (ieee8021QBridgeVlanCurrentEntry_t *poEntry);
 bool ieee8021QBridgeVlanCurrentTable_removeHier (ieee8021QBridgeVlanCurrentEntry_t *poEntry);

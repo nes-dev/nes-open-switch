@@ -197,7 +197,7 @@ typedef struct neIeee8021QBridgeVlanCurrentEntry_t
 	uint8_t au8AdminFlags[1];
 	size_t u16AdminFlags_len;	/* # of uint8_t elements */
 	int32_t i32OperState;
-	uint8_t au8Learnt[/* TODO: PortList, PortList, "" */ TOBE_REPLACED];
+	uint8_t *pu8Learnt;
 	size_t u16Learnt_len;	/* # of uint8_t elements */
 	uint32_t u32IfIndex;
 	

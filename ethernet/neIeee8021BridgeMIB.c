@@ -977,7 +977,7 @@ neIeee8021QBridgeVlanCurrentTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32OperState);
 				break;
 			case NEIEEE8021QBRIDGEVLANCURRENTLEARNT:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Learnt, table_entry->u16Learnt_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->pu8Learnt, table_entry->u16Learnt_len);
 				break;
 			case NEIEEE8021QBRIDGEVLANCURRENTIFINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32IfIndex);
