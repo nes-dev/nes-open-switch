@@ -414,6 +414,8 @@ ieee8021BridgeBaseRowStatus_update (
 	
 	register ieee8021BridgeBasePortEntry_t *poIeee8021BridgeBasePortEntry = NULL;
 	
+	u32Port = 0;
+	
 	while (
 		(poIeee8021BridgeBasePortEntry = ieee8021BridgeBasePortTable_getNextIndex (poEntry->u32ComponentId, u32Port)) != NULL &&
 		poIeee8021BridgeBasePortEntry->u32ComponentId == poEntry->u32ComponentId)
@@ -605,6 +607,36 @@ neIeee8021BridgeBasePortAdminFlags_update (
 	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t *pu8AdminFlags)
 {
 	register bool bRetCode = false;
+	
+	register uint8_t u8BitIndex = neIeee8021BridgeBasePortAdminFlags_bMin_c;
+	
+	do
+	{
+		uint8_t u8BitNew = xBitmap_getBitRev (pu8AdminFlags, u8BitIndex);
+		uint8_t u8BitOld = xBitmap_getBitRev (poEntry->oNe.au8AdminFlags, u8BitIndex);
+		
+		if (u8BitOld == u8BitNew)
+		{
+			continue;
+		}
+		
+		switch (u8BitIndex)
+		{
+		case neIeee8021BridgeBasePortAdminFlags_bCosMapping_c:
+		case neIeee8021BridgeBasePortAdminFlags_bTCMapping_c:
+		case neIeee8021BridgeBasePortAdminFlags_bPCPMapping_c:
+		case neIeee8021BridgeBasePortAdminFlags_bServiceUni_c:
+		case neIeee8021BridgeBasePortAdminFlags_bServiceEnni_c:
+		case neIeee8021BridgeBasePortAdminFlags_bServiceVuni_c:
+		case neIeee8021BridgeBasePortAdminFlags_bSpanningTree_c:
+			break;
+			
+		default:
+			break;
+		}
+	} while (++u8BitIndex < neIeee8021BridgeBasePortAdminFlags_bCount_c);
+	
+	/* TODO */
 	
 	bRetCode = true;
 	

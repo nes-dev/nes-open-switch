@@ -113,11 +113,15 @@ Netsnmp_Node_Handler neIeee8021BridgeBaseTable_mapper;
 enum
 {
 	/* enums for column neIeee8021BridgeBasePortAdminFlags */
-	neIeee8021BridgeBasePortAdminFlags_bInternalCosMapping_c = 0,
-	neIeee8021BridgeBasePortAdminFlags_bExternalCosMapping_c = 1,
-	neIeee8021BridgeBasePortAdminFlags_bServiceUni_c = 5,
-	neIeee8021BridgeBasePortAdminFlags_bServiceEnni_c = 6,
-	neIeee8021BridgeBasePortAdminFlags_bServiceVuni_c = 7,
+	neIeee8021BridgeBasePortAdminFlags_bCosMapping_c = 0,
+	neIeee8021BridgeBasePortAdminFlags_bTCMapping_c = 1,
+	neIeee8021BridgeBasePortAdminFlags_bPCPMapping_c = 2,
+	neIeee8021BridgeBasePortAdminFlags_bServiceUni_c = 4,
+	neIeee8021BridgeBasePortAdminFlags_bServiceEnni_c = 5,
+	neIeee8021BridgeBasePortAdminFlags_bServiceVuni_c = 6,
+	neIeee8021BridgeBasePortAdminFlags_bSpanningTree_c = 7,
+	neIeee8021BridgeBasePortAdminFlags_bCount_c,
+	neIeee8021BridgeBasePortAdminFlags_bMin_c = neIeee8021BridgeBasePortAdminFlags_bCosMapping_c,
 
 	/* enums for column neIeee8021BridgeBasePortOperState */
 	neIeee8021BridgeBasePortOperState_unknown_c = 1,
