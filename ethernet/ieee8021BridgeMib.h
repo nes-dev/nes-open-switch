@@ -30,6 +30,9 @@ extern "C" {
 struct ieee8021BridgeBaseEntry_t;
 typedef struct ieee8021BridgeBaseEntry_t ieee8021BridgeBaseEntry_t;
 
+struct ieee8021BridgeBasePortEntry_t;
+typedef struct ieee8021BridgeBasePortEntry_t ieee8021BridgeBasePortEntry_t;
+
 #include "neIeee8021BridgeMIB.h"
 #include "ieee8021QBridgeMib.h"
 #include "ethernet_ext.h"
@@ -270,36 +273,6 @@ enum
 	ieee8021BridgeBasePortOperPointToPoint_false_c = 2,
 };
 
-/* table ieee8021BridgeBasePortTable row entry data structure */
-typedef struct ieee8021BridgeBasePortEntry_t
-{
-	/* Index values */
-	uint32_t u32ComponentId;
-	uint32_t u32Port;
-	
-	/* Column values */
-	uint32_t u32IfIndex;
-	uint64_t u64DelayExceededDiscards;
-	uint64_t u64MtuExceededDiscards;
-	uint8_t au8Capabilities[1];
-	size_t u16Capabilities_len;	/* # of uint8_t elements */
-	uint8_t au8TypeCapabilities[2];
-	size_t u16TypeCapabilities_len;	/* # of uint8_t elements */
-	int32_t i32Type;
-	uint8_t u8External;
-	int32_t i32AdminPointToPoint;
-	uint8_t u8OperPointToPoint;
-	uint8_t au8Name[32];
-	size_t u16Name_len;	/* # of uint8_t elements */
-	
-	neIeee8021BridgeBasePortEntry_t oNe;
-	
-	uint8_t u8RowStatus;
-	struct ieee8021BridgeBasePortEntry_t *pOldEntry;
-	
-	xBTree_Node_t oBTreeNode;
-} ieee8021BridgeBasePortEntry_t;
-
 extern xBTree_t oIeee8021BridgeBasePortTable_BTree;
 
 /* ieee8021BridgeBasePortTable table mapper */
@@ -314,6 +287,7 @@ ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
 #define ieee8021BridgeBasePortTable_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBasePortEntry_t, oNe))
+#define ieee8021BridgeBasePortTable_getByPriorityEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBasePortEntry_t, oPriority))
 void ieee8021BridgeBasePortTable_removeEntry (ieee8021BridgeBasePortEntry_t *poEntry);
 bool ieee8021BridgeBasePortTable_allocateIndex (
 	ieee8021BridgeBaseEntry_t *poComponent,
@@ -1210,6 +1184,38 @@ Netsnmp_Next_Data_Point ieee8021BridgeDot1dPortTable_getNext;
 Netsnmp_Get_Data_Point ieee8021BridgeDot1dPortTable_get;
 Netsnmp_Node_Handler ieee8021BridgeDot1dPortTable_mapper;
 #endif	/* SNMP_SRC */
+
+
+/* table ieee8021BridgeBasePortTable row entry data structure */
+/*typedef*/ struct ieee8021BridgeBasePortEntry_t
+{
+	/* Index values */
+	uint32_t u32ComponentId;
+	uint32_t u32Port;
+	
+	/* Column values */
+	uint32_t u32IfIndex;
+	uint64_t u64DelayExceededDiscards;
+	uint64_t u64MtuExceededDiscards;
+	uint8_t au8Capabilities[1];
+	size_t u16Capabilities_len;	/* # of uint8_t elements */
+	uint8_t au8TypeCapabilities[2];
+	size_t u16TypeCapabilities_len;	/* # of uint8_t elements */
+	int32_t i32Type;
+	uint8_t u8External;
+	int32_t i32AdminPointToPoint;
+	uint8_t u8OperPointToPoint;
+	uint8_t au8Name[32];
+	size_t u16Name_len;	/* # of uint8_t elements */
+	
+	neIeee8021BridgeBasePortEntry_t oNe;
+	ieee8021BridgePortPriorityEntry_t oPriority;
+	
+	uint8_t u8RowStatus;
+	struct ieee8021BridgeBasePortEntry_t *pOldEntry;
+	
+	xBTree_Node_t oBTreeNode;
+} /*ieee8021BridgeBasePortEntry_t*/;
 
 
 

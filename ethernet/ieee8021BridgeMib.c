@@ -3125,19 +3125,13 @@ ieee8021BridgePortPriorityTable_createEntry (
 	uint32_t u32BasePort)
 {
 	register ieee8021BridgePortPriorityEntry_t *poEntry = NULL;
+	register ieee8021BridgeBasePortEntry_t *poPort = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poPort = ieee8021BridgeBasePortTable_getByIndex (u32BasePortComponentId, u32BasePort)) == NULL)
 	{
 		return NULL;
 	}
-	
-	poEntry->u32BasePortComponentId = u32BasePortComponentId;
-	poEntry->u32BasePort = u32BasePort;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgePortPriorityTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poPort->oPriority;
 	
 	poEntry->i32NumTrafficClasses = 8;
 	poEntry->i32CodePointSelection = ieee8021BridgePortPriorityCodePointSelection_codePoint8p0d_c;
@@ -3145,7 +3139,6 @@ ieee8021BridgePortPriorityTable_createEntry (
 	poEntry->u8RequireDropEncoding = ieee8021BridgePortRequireDropEncoding_false_c;
 	poEntry->u8ServiceAccessPrioritySelection = ieee8021BridgePortServiceAccessPrioritySelection_false_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021BridgePortPriorityTable_BTree);
 	return poEntry;
 }
 
@@ -3154,24 +3147,14 @@ ieee8021BridgePortPriorityTable_getByIndex (
 	uint32_t u32BasePortComponentId,
 	uint32_t u32BasePort)
 {
-	register ieee8021BridgePortPriorityEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021BridgeBasePortEntry_t *poPort = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poPort = ieee8021BridgeBasePortTable_getByIndex (u32BasePortComponentId, u32BasePort)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32BasePortComponentId = u32BasePortComponentId;
-	poTmpEntry->u32BasePort = u32BasePort;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021BridgePortPriorityTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021BridgePortPriorityEntry_t, oBTreeNode);
+	return &poPort->oPriority;
 }
 
 ieee8021BridgePortPriorityEntry_t *
@@ -3179,38 +3162,20 @@ ieee8021BridgePortPriorityTable_getNextIndex (
 	uint32_t u32BasePortComponentId,
 	uint32_t u32BasePort)
 {
-	register ieee8021BridgePortPriorityEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021BridgeBasePortEntry_t *poPort = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poPort = ieee8021BridgeBasePortTable_getNextIndex (u32BasePortComponentId, u32BasePort)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32BasePortComponentId = u32BasePortComponentId;
-	poTmpEntry->u32BasePort = u32BasePort;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021BridgePortPriorityTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021BridgePortPriorityEntry_t, oBTreeNode);
+	return &poPort->oPriority;
 }
 
 /* remove a row from the table */
 void
 ieee8021BridgePortPriorityTable_removeEntry (ieee8021BridgePortPriorityEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgePortPriorityTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021BridgePortPriorityTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -3271,7 +3236,7 @@ ieee8021BridgePortPriorityTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021BridgePortPriorityTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021BridgeBasePortTable_BTree);
 	return ieee8021BridgePortPriorityTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -3280,20 +3245,20 @@ ieee8021BridgePortPriorityTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021BridgePortPriorityEntry_t *poEntry = NULL;
+	ieee8021BridgeBasePortEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePortPriorityEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgeBasePortEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BasePortComponentId);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BasePort);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortPriorityTable_BTree);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Port);
+	*my_data_context = (void*) &poEntry->oPriority;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgeBasePortTable_BTree);
 	return put_index_data;
 }
 
@@ -3302,11 +3267,11 @@ ieee8021BridgePortPriorityTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021BridgePortPriorityEntry_t *poEntry = NULL;
+	ieee8021BridgeBasePortEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	
-	poEntry = ieee8021BridgePortPriorityTable_getByIndex (
+	poEntry = ieee8021BridgeBasePortTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer);
 	if (poEntry == NULL)
@@ -3314,7 +3279,7 @@ ieee8021BridgePortPriorityTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oPriority;
 	return true;
 }
 
@@ -3329,6 +3294,7 @@ ieee8021BridgePortPriorityTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	ieee8021BridgePortPriorityEntry_t *table_entry;
+	register ieee8021BridgeBasePortEntry_t *poEntry = NULL;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -3340,13 +3306,14 @@ ieee8021BridgePortPriorityTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021BridgePortPriorityEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oPriority;
 			
 			switch (table_info->colnum)
 			{
@@ -3382,8 +3349,9 @@ ieee8021BridgePortPriorityTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021BridgePortPriorityEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oPriority;
 			
 			switch (table_info->colnum)
 			{
@@ -3446,10 +3414,9 @@ ieee8021BridgePortPriorityTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021BridgePortPriorityEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
@@ -3464,8 +3431,9 @@ ieee8021BridgePortPriorityTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021BridgePortPriorityEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oPriority;
 			
 			switch (table_info->colnum)
 			{
@@ -3561,12 +3529,13 @@ ieee8021BridgePortPriorityTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021BridgePortPriorityEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oPriority;
 			
 			switch (table_info->colnum)
 			{
