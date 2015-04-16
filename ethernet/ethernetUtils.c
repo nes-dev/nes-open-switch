@@ -623,6 +623,21 @@ neIeee8021BridgeBasePortAdminFlags_update (
 		switch (u8BitIndex)
 		{
 		case neIeee8021BridgeBasePortAdminFlags_bCosMapping_c:
+		{
+			register ieee8021BridgeUserPriorityRegenEntry_t *poPriorityRegenEntry = ieee8021BridgeUserPriorityRegenTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port, 0);
+			
+			if (u8BitNew && poPriorityRegenEntry == NULL &&
+				ieee8021BridgeUserPriorityRegenTable_createEntry (poEntry->u32ComponentId, poEntry->u32Port, 0) == NULL)
+			{
+				goto neIeee8021BridgeBasePortAdminFlags_update_cleanup;
+			}
+			else if (!u8BitNew && poPriorityRegenEntry != NULL)
+			{
+				ieee8021BridgeUserPriorityRegenTable_removeEntry (poPriorityRegenEntry);
+			}
+			break;
+		}
+		
 		case neIeee8021BridgeBasePortAdminFlags_bTCMapping_c:
 		case neIeee8021BridgeBasePortAdminFlags_bPCPMapping_c:
 		case neIeee8021BridgeBasePortAdminFlags_bServiceUni_c:
@@ -640,7 +655,7 @@ neIeee8021BridgeBasePortAdminFlags_update (
 	
 	bRetCode = true;
 	
-//neIeee8021BridgeBasePortAdminFlags_update_cleanup:
+neIeee8021BridgeBasePortAdminFlags_update_cleanup:
 	
 	return bRetCode;
 }
