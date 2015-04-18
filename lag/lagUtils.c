@@ -25,8 +25,10 @@
 
 
 #include "lagUtils.h"
+#include "lagMIB.h"
 #include "lag/lacp/lacpUtils.h"
 #include "if/ifUtils.h"
+#include "if/ifMIB.h"
 
 #include "lib/bitmap.h"
 
@@ -35,6 +37,10 @@
 
 
 static neIfTypeEnableHandler_t lag_aggEnableModify;
+static neIfTypeStatusModifier_t lag_aggStatusModify;
+static neIfTypeStackHandler_t lag_aggStackModify;
+
+neIfTypeStatusModifier_t lag_portStatusModify;
 
 
 bool lagUtilsInit (void)
@@ -50,6 +56,8 @@ bool lagUtilsInit (void)
 	}
 	
 	poNeIfTypeEntry->pfEnableHandler = lag_aggEnableModify;
+	poNeIfTypeEntry->pfStatusModifier = lag_aggStatusModify;
+	poNeIfTypeEntry->pfStackHandler = lag_aggStackModify;
 	
 	bRetCode = true;
 	
@@ -64,6 +72,21 @@ lag_aggEnableModify (
 	ifData_t *poIfEntry, int32_t i32AdminStatus)
 {
 	return false;
+}
+
+bool
+lag_aggStatusModify (
+	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+{
+	return false;
+}
+
+bool
+lag_aggStackModify (
+	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	uint8_t u8Action, bool isLocked)
+{
+	return true;
 }
 
 bool
