@@ -31,6 +31,7 @@
 
 #include "lib/bitmap.h"
 #include "lib/sync.h"
+#include "lib/message.h"
 #include "lib/thread.h"
 
 
@@ -42,11 +43,18 @@ static xThreadInfo_t oLacpThread =
 	.poStart = &lacp_start,
 };
 
+static xMessageQueue_t *poLacpMessageQueue = NULL;
+
 
 void *
 lacp_main (
 	void *pvArgv)
 {
+	if ((poLacpMessageQueue = xMessageQueue_create (oLacpThread.u32Index)) == NULL)
+	{
+		return NULL;
+	}
+	
 	if (xThread_create (&oLacpThread) == NULL)
 	{
 		Lacp_log (xLog_err_c, "xThread_create() failed\n");
@@ -60,10 +68,46 @@ void *
 lacp_start (
 	void *pvArgv)
 {
-	while (1)
+	xThread_waitPrepare (&oLacpThread);
+	
+	while (xThread_wait (&oLacpThread, NULL))
 	{
-		xThread_sleep (1);
+		if (xBitmap_getBit (oLacpThread.au8Flags, xThreadInfo_flagsMessage_c))
+		{
+			register xMessage_t *poMsg = NULL;
+			
+			while ((poMsg = xMessageAck_getMessage (poLacpMessageQueue)) != NULL)
+			{
+				/* TODO */
+				
+				if (!xMessageAck_remove (poMsg, poLacpMessageQueue))
+				{
+					break;
+				}
+			}
+			
+			while ((poMsg = xMessageDst_getMessage (poLacpMessageQueue)) != NULL)
+			{
+				/* TODO */
+				
+				switch (poMsg->poMsgInfo->u32Type)
+				{
+				default:
+					break;
+					
+				/* TODO */
+				}
+				
+				if (!xMessageDst_remove (poMsg, poLacpMessageQueue))
+				{
+					break;
+				}
+			}
+			
+			xMessage_cleanupThread (poLacpMessageQueue, &oLacpThread);
+		}
 	}
+	
 	return NULL;
 }
 

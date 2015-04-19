@@ -35,6 +35,8 @@ extern "C" {
 #endif	/* _POSIX_THREADS */
 
 #include <pthread.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <sched.h>
 #include <time.h>
 
@@ -83,9 +85,30 @@ typedef struct xThreadInfo_t
 typedef pthread_mutex_t xThreadMutex_t;
 
 
-extern xThreadInfo_t *xThread_create (xThreadInfo_t *pThread);
-extern xThreadInfo_t *xThread_getByIndex (uint32_t u32Index);
-extern xThreadInfo_t *xThread_getNext (xThreadInfo_t *pThread);
+extern xThreadInfo_t *
+	xThread_create (xThreadInfo_t *pThread);
+extern xThreadInfo_t *
+	xThread_getByIndex (uint32_t u32Index);
+extern xThreadInfo_t *
+	xThread_getNext (xThreadInfo_t *pThread);
+
+
+inline void
+xThread_waitPrepare (xThreadInfo_t *pThread)
+{
+	xMLock_lock (&pThread->oLock);
+	return;
+}
+
+inline bool
+xThread_wait (
+	xThreadInfo_t *pThread, void *pvTimeOut)
+{
+	return pvTimeOut == NULL ?
+		xCond_wait (&pThread->oSignal, &pThread->oLock) == 0:
+		xCond_timedWait (&pThread->oSignal, &pThread->oLock, (const struct timespec*) pvTimeOut) == 0;
+}
+
 #define xThread_sleep(u32Seconds) sleep (u32Seconds)
 #define xThread_uSleep(u32uSeconds) usleep (u32uSeconds)
 #define xThread_nSleep(u32Seconds, u32nSeconds) nanosleep (&(struct timespec){.tv_sec = u32Seconds, .tv_nsec = u32nSeconds}, NULL)
