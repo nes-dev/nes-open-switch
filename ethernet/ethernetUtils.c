@@ -35,6 +35,8 @@
 #include "hal/halEthernet.h"
 #include "lag/lagUtils.h"
 
+#include "lib/bitmap.h"
+
 #include "lib/list.h"
 #include "lib/bitmap.h"
 #include "lib/buffer.h"
@@ -639,6 +641,21 @@ neIeee8021BridgeBasePortAdminFlags_update (
 		}
 		
 		case neIeee8021BridgeBasePortAdminFlags_bTCMapping_c:
+		{
+			register ieee8021BridgeTrafficClassEntry_t *poTrafficClassEntry = ieee8021BridgeTrafficClassTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port, 0);
+			
+			if (u8BitNew && poTrafficClassEntry == NULL &&
+				ieee8021BridgeTrafficClassTable_createEntry (poEntry->u32ComponentId, poEntry->u32Port, 0) == NULL)
+			{
+				goto neIeee8021BridgeBasePortAdminFlags_update_cleanup;
+			}
+			else if (!u8BitNew && poTrafficClassEntry != NULL)
+			{
+				ieee8021BridgeTrafficClassTable_removeEntry (poTrafficClassEntry);
+			}
+			break;
+		}
+		
 		case neIeee8021BridgeBasePortAdminFlags_bPCPMapping_c:
 		case neIeee8021BridgeBasePortAdminFlags_bServiceUni_c:
 		case neIeee8021BridgeBasePortAdminFlags_bServiceEnni_c:
