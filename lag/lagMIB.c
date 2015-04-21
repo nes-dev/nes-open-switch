@@ -50,9 +50,9 @@ static oid dot3adAggPortTable_oid[] = {1,2,840,10006,300,43,1,2,1};
 static oid dot3adAggPortStatsTable_oid[] = {1,2,840,10006,300,43,1,2,2};
 static oid dot3adAggPortDebugTable_oid[] = {1,2,840,10006,300,43,1,2,3};
 static oid dot3adAggPortXTable_oid[] = {1,2,840,10006,300,43,1,2,4};
-static oid neAggTable_oid[] = {1,3,6,1,4,1,36969,71,1,1};
-static oid neAggPortListTable_oid[] = {1,3,6,1,4,1,36969,71,1,2};
-static oid neAggPortTable_oid[] = {1,3,6,1,4,1,36969,71,1,3};
+static oid neAggTable_oid[] = {1,3,6,1,4,1,36969,73,1,1};
+static oid neAggPortListTable_oid[] = {1,3,6,1,4,1,36969,73,1,2};
+static oid neAggPortTable_oid[] = {1,3,6,1,4,1,36969,73,1,3};
 
 
 
