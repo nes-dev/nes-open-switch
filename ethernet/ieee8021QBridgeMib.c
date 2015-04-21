@@ -7283,7 +7283,11 @@ ieee8021QBridgeLearningConstraintsTable_mapper (
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32Type = *request->requestvb->val.integer;
+				if (!ieee8021QBridgeLearningConstraintsType_handler (table_entry, *request->requestvb->val.integer, false))
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+					return SNMP_ERR_NOERROR;
+				}
 				break;
 			}
 		}
@@ -7299,8 +7303,11 @@ ieee8021QBridgeLearningConstraintsTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
+				case RS_NOTINSERVICE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int ieee8021QBridgeLearningConstraintsTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+				case RS_CREATEANDWAIT:
+				case RS_DESTROY:
+					if (!ieee8021QBridgeLearningConstraintsStatus_handler (table_entry, *request->requestvb->val.integer))
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -7353,15 +7360,8 @@ ieee8021QBridgeLearningConstraintsTable_mapper (
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_ACTIVE:
-					table_entry->u8Status = RS_ACTIVE;
-					break;
-					
 				case RS_CREATEANDWAIT:
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				case RS_NOTINSERVICE:
-					table_entry->u8Status = RS_NOTINSERVICE;
 					break;
 					
 				case RS_DESTROY:
