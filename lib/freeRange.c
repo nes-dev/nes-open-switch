@@ -94,12 +94,12 @@ xFreeRange_getFreeIndex (
 		register xFreeRange_Entry_t *poEntry = xGetParentByMemberPtr (poNode, xFreeRange_Entry_t, oBTreeNode);
 		
 		if (!bInRange ||
-			((poEntry->u32Start <= u32Start && u32Start >= poEntry->u32End) ||
-			 (poEntry->u32Start <= u32End && u32End >= poEntry->u32End)))
+			((poEntry->u32Start <= u32Start && u32Start <= poEntry->u32End) ||
+			 (poEntry->u32Start <= u32End && u32End <= poEntry->u32End)))
 		{
 			*pu32Index =
 				!bInRange ? poEntry->u32Start:
-				poEntry->u32Start <= u32Start && u32Start >= poEntry->u32End ? u32Start: poEntry->u32Start;
+				poEntry->u32Start <= u32Start && u32Start <= poEntry->u32End ? u32Start: poEntry->u32Start;
 				
 			bRetCode = true;
 			break;
@@ -124,7 +124,7 @@ xFreeRange_allocateIndex (
 	{
 		poEntry = xGetParentByMemberPtr (poNode, xFreeRange_Entry_t, oBTreeNode);
 		
-		if (poEntry->u32Start <= u32Index && u32Index >= poEntry->u32End)
+		if (poEntry->u32Start <= u32Index && u32Index <= poEntry->u32End)
 		{
 			bRetCode = true;
 			break;
@@ -141,12 +141,6 @@ xFreeRange_allocateIndex (
 	register uint32_t u32RangeStart = poEntry->u32Start;
 	register uint32_t u32RangeEnd = poEntry->u32End;
 	
-	if (u32RangeEnd > u32Index &&
-		!xFreeRange_createRange (poRange, u32Index - 1, u32RangeEnd))
-	{
-		goto xFreeRange_allocateIndex_cleanup;
-	}
-	
 	if (u32RangeStart == u32Index)
 	{
 		xBTree_nodeRemove (&poEntry->oBTreeNode, poRange);
@@ -157,14 +151,21 @@ xFreeRange_allocateIndex (
 		}
 		else
 		{
-			poEntry->u32Start--;
+			poEntry->u32Start++;
 			xBTree_nodeAdd (&poEntry->oBTreeNode, poRange);
 		}
 	}
-	
-	if (u32RangeEnd == u32Index)
+	else if (u32RangeEnd == u32Index)
 	{
 		poEntry->u32End--;
+	}
+	else
+	{
+		poEntry->u32End = u32Index - 1;
+		if (!xFreeRange_createRange (poRange, u32Index + 1, u32RangeEnd))
+		{
+			goto xFreeRange_allocateIndex_cleanup;
+		}
 	}
 	
 	bRetCode = true;
