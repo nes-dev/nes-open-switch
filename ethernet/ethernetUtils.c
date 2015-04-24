@@ -657,6 +657,35 @@ neIeee8021BridgeBasePortAdminFlags_update (
 		}
 		
 		case neIeee8021BridgeBasePortAdminFlags_bPCPMapping_c:
+		{
+			register ieee8021BridgePortDecodingEntry_t *poPcpDecodingEntry =
+				ieee8021BridgePortDecodingTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port, poEntry->oPriority.i32CodePointSelection, 0);
+				
+			if (u8BitNew && poPcpDecodingEntry == NULL &&
+				ieee8021BridgePortDecodingTable_createEntry (poEntry->u32ComponentId, poEntry->u32Port, poEntry->oPriority.i32CodePointSelection, 0) == NULL)
+			{
+				goto neIeee8021BridgeBasePortAdminFlags_update_cleanup;
+			}
+			else if (!u8BitNew && poPcpDecodingEntry != NULL)
+			{
+				ieee8021BridgePortDecodingTable_removeEntry (poPcpDecodingEntry);
+			}
+			
+			register ieee8021BridgePortEncodingEntry_t *poPcpEncodingEntry =
+				ieee8021BridgePortEncodingTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port, poEntry->oPriority.i32CodePointSelection, 0, 0);
+				
+			if (u8BitNew && poPcpEncodingEntry == NULL &&
+				ieee8021BridgePortEncodingTable_createEntry (poEntry->u32ComponentId, poEntry->u32Port, poEntry->oPriority.i32CodePointSelection, 0, 0) == NULL)
+			{
+				goto neIeee8021BridgeBasePortAdminFlags_update_cleanup;
+			}
+			else if (!u8BitNew && poPcpEncodingEntry != NULL)
+			{
+				ieee8021BridgePortEncodingTable_removeEntry (poPcpEncodingEntry);
+			}
+			break;
+		}
+		
 		case neIeee8021BridgeBasePortAdminFlags_bServiceUni_c:
 		case neIeee8021BridgeBasePortAdminFlags_bServiceEnni_c:
 		case neIeee8021BridgeBasePortAdminFlags_bServiceVuni_c:
