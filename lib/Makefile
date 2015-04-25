@@ -32,7 +32,7 @@ include ${MK_COMMON}
 CFLAGS +=
 
 SNMP_SRC :=
-MODULE_SRC := ieee802.c number.c bitmap.c binaryTree.c list.c buffer.c message.c thread.c freeRange.c ${SNMP_SRC}
+MODULE_SRC := ieee802.c number.c bitmap.c binaryTree.c list.c buffer.c log.c message.c thread.c freeRange.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
 

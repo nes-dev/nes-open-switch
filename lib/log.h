@@ -28,35 +28,28 @@ extern "C" {
 
 
 
-#include <stdio.h>
+#include <stdint.h>
+#include <syslog.h>
 
-#define xLog_emerg_c		0	/* system is unusable */
-#define xLog_alert_c		1	/* action must be taken immediately */
-#define xLog_crit_c			2	/* critical conditions */
-#define xLog_err_c			3	/* error conditions */
-#define xLog_warning_c		4	/* warning conditions */
-#define xLog_notice_c		5	/* normal but significant condition */
-#define xLog_info_c			6	/* informational */
-#define xLog_debug_c		7	/* debug-level messages */
 
-#ifdef LOG_TIME_USED
-#	include <time.h>
+#define xLog_emerg_c		LOG_EMERG		/* 0: system is unusable */
+#define xLog_alert_c		LOG_ALERT		/* 1: action must be taken immediately */
+#define xLog_crit_c			LOG_CRIT		/* 2: critical conditions */
+#define xLog_err_c			LOG_ERR			/* 3: error conditions */
+#define xLog_warning_c		LOG_WARNING		/* 4: warning conditions */
+#define xLog_notice_c		LOG_NOTICE		/* 5: normal but significant condition */
+#define xLog_info_c			LOG_INFO		/* 6: informational */
+#define xLog_debug_c		LOG_DEBUG		/* 7: debug-level messages */
 
-#	define LOG_TIME_BUFF_SIZE 20
-time_t 		_log_time_sec;
-struct tm 	_log_time_cal;
-char 		_log_time_buff[LOG_TIME_BUFF_SIZE];
-#endif
+int
+	xLog_printInt1 (
+		char *pcMod, uint16_t u16Pri, const char *pcFile, const char *pcFunc, uint32_t u32Line, char *pcFrmt, ...);
+int
+	xLog_appendInt1 (char *pcFrmt, ...);
 
-#define _MK_STR(_v) #_v
-#define _LOG_PRI(_p) _MK_STR(_p)
-#define _LOG_TIME_CAL (time (&_log_time_sec), gmtime_r (&_log_time_sec, &_log_time_cal), strftime (_log_time_buff, LOG_TIME_BUFF_SIZE, "%Y-%m-%d %H:%M:%S", &_log_time_cal), _log_time_buff)
-#define _LOG_TIME_SEC ((long long unsigned int) time (NULL))
-
-#define xLog_strTimeCal(_mod, _pri, _frmt, _args ...) fprintf (stderr, "%s <" _LOG_PRI(_pri) "> " _mod "@{%s:%s:%u}: " _frmt, _LOG_TIME_CAL, __FILE__, __func__, __LINE__, ## _args)
-#define xLog_strTimeSec(_mod, _pri, _frmt, _args ...) fprintf (stderr, "%llu <" _LOG_PRI(_pri) "> " _mod "@{%s:%s:%u}: " _frmt, _LOG_TIME_SEC, __FILE__, __func__, __LINE__, ## _args)
-#define xLog_str(_mod, _pri, _frmt, _args ...) fprintf (stderr, "<" _LOG_PRI(_pri) "> " _mod "@{%s:%s:%u}: " _frmt, __FILE__, __func__, __LINE__, ## _args)
-#define xLog_append(_frmt, _args ...) fprintf (stderr, _frmt, ## _args)
+#define xLog_print(_mod, _pri, _frmt, _args ...) xLog_printInt1 (_mod, _pri, __FILE__, __func__, __LINE__, _frmt, ## _args)
+#define xLog_str xLog_print
+#define xLog_append(_frmt, _args ...) xLog_appendInt1 (_frmt, ## _args)
 
 
 
