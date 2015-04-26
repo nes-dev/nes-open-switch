@@ -27,11 +27,12 @@ extern "C" {
 #	endif
 
 
-#define LOG_TIME_USED
+
 #include "lib/log.h"
 
 #define MOD_NAME "SWITCH"
-#define Switch_log(_pri, _frmt, _args ...) xLog_str (MOD_NAME, _pri, _frmt, ## _args)
+#define Switch_log(_pri, _frmt, _args ...) xLog_print (MOD_NAME, _pri, _frmt, ## _args)
+
 
 
 #	ifdef __cplusplus

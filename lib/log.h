@@ -48,7 +48,6 @@ int
 	xLog_appendInt1 (char *pcFrmt, ...);
 
 #define xLog_print(_mod, _pri, _frmt, _args ...) xLog_printInt1 (_mod, _pri, __FILE__, __func__, __LINE__, _frmt, ## _args)
-#define xLog_str xLog_print
 #define xLog_append(_frmt, _args ...) xLog_appendInt1 (_frmt, ## _args)
 
 

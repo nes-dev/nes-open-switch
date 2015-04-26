@@ -41,7 +41,7 @@
 #if 0
 #include "lib/log.h"
 
-#define Message_log(_pri, _frmt, _args ...) xLog_str (MOD_NAME, _pri, _frmt, ## _args)
+#define Message_log(_pri, _frmt, _args ...) xLog_print (MOD_NAME, _pri, _frmt, ## _args)
 #else
 #define Message_log(_pri, _frmt, _args ...)
 #endif

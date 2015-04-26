@@ -27,17 +27,16 @@ extern "C" {
 #	endif
 
 
+
+#include "lib/log.h"
+
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
 
-#include "lib/common.h"
-
-#define LOG_TIME_USED
-#include "lib/log.h"
-
 #define MOD_NAME "BRIDGE"
-#define Bridge_log(_pri, _frmt, _args ...) xLog_str (MOD_NAME, _pri, _frmt, ## _args)
+#define Bridge_log(_pri, _frmt, _args ...) xLog_print (MOD_NAME, _pri, _frmt, ## _args)
+
 
 
 #	ifdef __cplusplus

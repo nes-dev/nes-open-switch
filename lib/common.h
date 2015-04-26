@@ -63,7 +63,7 @@ enum
 	SIXTEEN		= 16,
 };
 
-// #define Switch_log(_module, _pri, _frmt, _args ...) xLog_strTimeSec (_module, _pri, _frmt, ## _args)
+// #define Switch_log(_module, _pri, _frmt, _args ...) xLog_print (_module, _pri, _frmt, ## _args)
 
 // #define PTHREAD_OK 0
 

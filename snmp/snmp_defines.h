@@ -27,11 +27,11 @@ extern "C" {
 #	endif
 
 
-#define LOG_TIME_USED
+
 #include "lib/log.h"
 
 #define MOD_NAME "SNMP"
-#define Snmp_log(_pri, _frmt, _args ...) xLog_str (MOD_NAME, _pri, _frmt, ## _args)
+#define Snmp_log(_pri, _frmt, _args ...) xLog_print (MOD_NAME, _pri, _frmt, ## _args)
 
 
 typedef enum SnmpState_t
@@ -40,6 +40,7 @@ typedef enum SnmpState_t
 	SnmpState_running_c,
 	SnmpState_shutdown_c,
 } SnmpState_t;
+
 
 
 #	ifdef __cplusplus

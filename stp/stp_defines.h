@@ -27,13 +27,12 @@ extern "C" {
 #	endif
 
 
-#include "lib/common.h"
 
-#define LOG_TIME_USED
 #include "lib/log.h"
 
 #define MOD_NAME "STP"
-#define Stp_log(_pri, _frmt, _args ...) xLog_str (MOD_NAME, _pri, _frmt, ## _args)
+#define Stp_log(_pri, _frmt, _args ...) xLog_print (MOD_NAME, _pri, _frmt, ## _args)
+
 
 
 #	ifdef __cplusplus

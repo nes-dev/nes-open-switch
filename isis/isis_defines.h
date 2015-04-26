@@ -27,16 +27,15 @@ extern "C" {
 #	endif
 
 
-#include "lib/common.h"
 
-#define LOG_TIME_USED
 #include "lib/log.h"
 
 #define MOD_NAME "ISIS"
-#define Isis_log(_pri, _frmt, _args ...) xLog_str (MOD_NAME, _pri, _frmt, ## _args)
+#define Isis_log(_pri, _frmt, _args ...) xLog_print (MOD_NAME, _pri, _frmt, ## _args)
 
 #define ISIS_BUFFER_LEN_MAX (1 << 12)
 #define ISIS_BUFFER_COUNT_MAX 16
+
 
 
 #	ifdef __cplusplus
