@@ -27,6 +27,7 @@ extern "C" {
 #	endif
 
 
+
 #include <stdint.h>
 
 #define APP_NAME "SWITCH"
@@ -57,7 +58,9 @@ typedef void *(ModuleRoutine_t) (void *);
 typedef struct ModuleInfo_t
 {
 	uint32_t			u32ModuleId;
+	ModuleRoutine_t	   *poInit;
 	ModuleRoutine_t	   *poStart;
+	ModuleRoutine_t	   *poReset;
 } ModuleInfo_t;
 
 #ifdef __SWITCH_MAIN_C__
@@ -78,21 +81,23 @@ typedef struct ModuleInfo_t
 
 static ModuleInfo_t aoModuleList[] =
 {
-	{ModuleId_snmp_c,				&snmp_main},
-	{ModuleId_if_c,					&if_main},
-	{ModuleId_system_c,				&system_main},
-	{ModuleId_hal_c,				&hal_main},
-	{ModuleId_ethernet_c,			&ethernet_main},
-	{ModuleId_lag_c,				&lag_main},
-	{ModuleId_bridge_c,				&bridge_main},
-	{ModuleId_cfm_c,				&cfm_main},
-	{ModuleId_isis_c,				&isis_main},
-	{ModuleId_stp_c,				&stp_main},
-	{ModuleId_spb_c,				&spb_main},
-	{ModuleId_inet_c,				&inet_main},
-	{ModuleId_tcpUdp_c,				&tcpUdp_main},
+	{ModuleId_snmp_c,			NULL,				&snmp_main,				NULL},
+	{ModuleId_if_c,				NULL,				&if_main,				NULL},
+	{ModuleId_system_c,			&system_init,		&system_main,			NULL},
+	{ModuleId_hal_c,			NULL,				&hal_main,				NULL},
+	{ModuleId_ethernet_c,		NULL,				&ethernet_main,			NULL},
+	{ModuleId_lag_c,			NULL,				&lag_main,				NULL},
+	{ModuleId_bridge_c,			NULL,				&bridge_main,			NULL},
+	{ModuleId_cfm_c,			NULL,				&cfm_main,				NULL},
+	{ModuleId_isis_c,			NULL,				&isis_main,				NULL},
+	{ModuleId_stp_c,			NULL,				&stp_main,				NULL},
+	{ModuleId_spb_c,			NULL,				&spb_main,				NULL},
+	{ModuleId_inet_c,			NULL,				&inet_main,				NULL},
+	{ModuleId_tcpUdp_c,			NULL,				&tcpUdp_main,			NULL},
 };
+
 #endif	// __SWITCH_MAIN_C__
+
 
 
 #	ifdef __cplusplus

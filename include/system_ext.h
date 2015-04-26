@@ -27,13 +27,11 @@ extern "C" {
 #	endif
 
 
-extern void *
-system_main (
-	void *pvArgv);
 
-extern void *
-system_start (
-	void *pvArgv);
+extern void *system_init (void *pvArgv);
+extern void *system_main (void *pvArgv);
+extern void *system_start (void *pvArgv);
+
 
 
 #	ifdef __cplusplus

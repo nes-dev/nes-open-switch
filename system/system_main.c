@@ -23,13 +23,14 @@
 #	define __SYSTEM_MAIN_C__
 
 
-#include "systemMIB_agent.h"
+#include "systemMIB.h"
 #include "entityMIB_agent.h"
 
 #include "system_ext.h"
 #include "system_defines.h"
 #include "switch_ext.h"
 
+#include "lib/freeRange.h"
 #include "lib/thread.h"
 
 
@@ -41,6 +42,15 @@ static xThreadInfo_t oSystemThread =
 	.poStart = &system_start,
 };
 
+
+void *
+system_init (
+	void *pvArgv)
+{
+	xFreeRange_createRange (&oSysORIndex_FreeRange, sysORIndex_start_c, sysORIndex_end_c);
+	
+	return NULL;
+}
 
 void *
 system_main (

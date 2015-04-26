@@ -38,7 +38,6 @@
 
 static oid system_oid[] = {1,3,6,1,2,1,1};
 
-/* array length = OID_LENGTH + 1 */
 static oid sysORTable_oid[] = {1,3,6,1,2,1,1,9};
 
 
@@ -266,7 +265,7 @@ system_mapper (netsnmp_mib_handler *handler,
  */
 /** initialize sysORTable table mapper **/
 
-static xFreeRange_t oSysORIndex_FreeRange = xFreeRange_initInline ();
+xFreeRange_t oSysORIndex_FreeRange = xFreeRange_initInline ();
 
 void
 sysORTable_init (void)
@@ -299,7 +298,6 @@ sysORTable_init (void)
 	netsnmp_register_table_iterator (reg, iinfo);
 	
 	/* Initialise the contents of the table here */
-	xFreeRange_createRange (&oSysORIndex_FreeRange, sysORIndex_start_c, sysORIndex_end_c);
 }
 
 static int8_t

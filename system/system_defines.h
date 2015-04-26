@@ -27,13 +27,19 @@ extern "C" {
 #	endif
 
 
+
 #include "lib/common.h"
 
+#include "lib/freeRange.h"
 #define LOG_TIME_USED
 #include "lib/log.h"
 
 #define MOD_NAME "SYSTEM"
 #define System_log(_pri, _frmt, _args ...) xLog_str (MOD_NAME, _pri, _frmt, ## _args)
+
+
+xFreeRange_t oSysORIndex_FreeRange;
+
 
 
 #	ifdef __cplusplus
