@@ -25,6 +25,8 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "systemMIB.h"
 
+#include "system_ext.h"
+
 #include "lib/freeRange.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"

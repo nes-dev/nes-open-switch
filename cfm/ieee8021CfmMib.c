@@ -23,8 +23,9 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
-#include "system/systemMIB.h"
 #include "ieee8021CfmMib.h"
+
+#include "system_ext.h"
 
 #include "lib/bitmap.h"
 #include "lib/binaryTree.h"

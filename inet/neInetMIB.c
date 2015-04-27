@@ -23,11 +23,12 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
-#include "system/systemMIB.h"
 #include "ethernet/ieee8021BridgeMib.h"
 #include "if/ifMIB.h"
 #include "ipMIB.h"
 #include "neInetMIB.h"
+
+#include "system_ext.h"
 
 #include "lib/bitmap.h"
 #include "lib/binaryTree.h"

@@ -28,9 +28,23 @@ extern "C" {
 
 
 
+#include "lib/snmp.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+
+
 extern void *system_init (void *pvArgv);
 extern void *system_main (void *pvArgv);
 extern void *system_start (void *pvArgv);
+
+bool
+	sysORTable_createRegister (
+		const char *pc8Descr,
+		xOid_t *poID, size_t u16ID_len);
+bool
+	sysORTable_removeRegister (
+		xOid_t *poID, size_t u16ID_len);
 
 
 

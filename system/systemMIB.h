@@ -133,11 +133,6 @@ sysOREntry_t * sysORTable_ID_getByIndex (
 sysOREntry_t * sysORTable_getNextIndex (
 	int32_t i32Index);
 void sysORTable_removeEntry (sysOREntry_t *poEntry);
-bool sysORTable_createRegister (
-	const char *pc8Descr,
-	xOid_t *poID, size_t u16ID_len);
-bool sysORTable_removeRegister (
-	xOid_t *poID, size_t u16ID_len);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point sysORTable_getFirst;
 Netsnmp_Next_Data_Point sysORTable_getNext;
