@@ -27,16 +27,18 @@ extern "C" {
 #	endif
 
 
+
+#include "if/ifUtils.h"
+
+
 #define TaskId_lag_c 0
 #define TaskId_lacp_c 1
 
-extern void *
-lag_main (
-	void *pvArgv);
+extern void *lag_main (void *pvArgv);
+extern void *lag_start (void *pvArgv);
 
-extern void *
-lag_start (
-	void *pvArgv);
+extern neIfTypeStatusModifier_t lag_aggPortStatusModify;
+
 
 
 #	ifdef __cplusplus

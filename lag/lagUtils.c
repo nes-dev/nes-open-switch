@@ -30,6 +30,8 @@
 #include "if/ifUtils.h"
 #include "if/ifMIB.h"
 
+#include "lag_ext.h"
+
 #include "lib/bitmap.h"
 
 #include <stdbool.h>
@@ -40,7 +42,7 @@ static neIfTypeEnableHandler_t lag_aggEnableModify;
 static neIfTypeStatusModifier_t lag_aggStatusModify;
 static neIfTypeStackHandler_t lag_aggStackModify;
 
-neIfTypeStatusModifier_t lag_portStatusModify;
+neIfTypeStatusModifier_t lag_aggPortStatusModify;
 
 
 bool lagUtilsInit (void)
@@ -90,7 +92,7 @@ lag_aggStackModify (
 }
 
 bool
-lag_portStatusModify (
+lag_aggPortStatusModify (
 	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
 {
 	register bool bRetCode = false;
@@ -98,7 +100,7 @@ lag_portStatusModify (
 	
 	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (poIfEntry->u32Index)) == NULL)
 	{
-		goto lag_portStatusModify_cleanup;
+		goto lag_aggPortStatusModify_cleanup;
 	}
 	
 	register bool bForce = poDot3adAggPortData->u8OperStatus == i32OperStatus && bPropagate;
@@ -107,12 +109,12 @@ lag_portStatusModify (
 	
 	if (!dot3adAggPortLacp_stateUpdate (poDot3adAggPortData, bForce))
 	{
-		goto lag_portStatusModify_cleanup;
+		goto lag_aggPortStatusModify_cleanup;
 	}
 	
 	bRetCode = true;
 	
-lag_portStatusModify_cleanup:
+lag_aggPortStatusModify_cleanup:
 	
 	return bRetCode;
 }

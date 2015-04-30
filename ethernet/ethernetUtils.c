@@ -33,10 +33,10 @@
 #include "if/ifUtils.h"
 #include "if/ifMIB.h"
 #include "hal/halEthernet.h"
-#include "lag/lagUtils.h"
+
+#include "lag_ext.h"
 
 #include "lib/bitmap.h"
-
 #include "lib/list.h"
 #include "lib/bitmap.h"
 #include "lib/buffer.h"
@@ -141,7 +141,7 @@ ieee8021If_ethernetStatusModify (
 	/* TODO */
 	
 	if (xBitmap_getBit (poIfEntry->oNe.au8AdminFlags, neIfAdminFlags_lag_c) &&
-		!lag_portStatusModify (poIfEntry, i32OperStatus, bPropagate))
+		!lag_aggPortStatusModify (poIfEntry, i32OperStatus, bPropagate))
 	{
 		goto ieee8021If_ethernetStatusModify_cleanup;
 	}

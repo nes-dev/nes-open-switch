@@ -26,6 +26,7 @@
 #include "switch_ext.h"
 #include "switch_defines.h"
 
+#include "lib/ieee802.h"
 #include "lib/thread.h"
 
 
@@ -58,7 +59,7 @@ switch_start (void)
 }
 
 
-uint16_t
+uint32_t
 xIeeeCrc16 (
 	uint8_t *pu8Buf, uint16_t u16BufSize)
 {
