@@ -34,8 +34,10 @@
 #include "lib/buffer.h"
 #include "lib/sync.h"
 #include "lib/snmp.h"
+#include "lib/time.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
@@ -177,13 +179,13 @@ ifMIBObjects_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (ifMIBObjects_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (ifMIBObjects_oid)])
 			{
 			case IFTABLELASTCHANGE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, oIfMIBObjects.u32TableLastChange);
+				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, (uint32_t) (xTime_centiTime (xTime_typeMono_c) - oIfMIBObjects.u32TableLastChange));
 				break;
 			case IFSTACKLASTCHANGE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, oIfMIBObjects.u32StackLastChange);
+				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, (uint32_t) (xTime_centiTime (xTime_typeMono_c) - oIfMIBObjects.u32StackLastChange));
 				break;
 				
 			default:
@@ -589,10 +591,10 @@ ifTable_createExt (
 	}
 	
 	oInterfaces.i32IfNumber++;
-	oIfMIBObjects.u32TableLastChange++;	/* TODO */
-	
+	oIfMIBObjects.u32TableLastChange = xTime_centiTime (xTime_typeMono_c);
 	
 ifTable_createExt_cleanup:
+	
 	return poEntry;
 }
 
@@ -609,10 +611,10 @@ ifTable_removeExt (ifEntry_t *poEntry)
 	bRetCode = true;
 	
 	oInterfaces.i32IfNumber--;
-	oIfMIBObjects.u32TableLastChange--;	/* TODO */
-	
+	oIfMIBObjects.u32TableLastChange = xTime_centiTime (xTime_typeMono_c);
 	
 ifTable_removeExt_cleanup:
+	
 	return bRetCode;
 }
 
@@ -912,7 +914,7 @@ ifTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32OperStatus);
 				break;
 			case IFLASTCHANGE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, table_entry->u32LastChange);
+				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, (uint32_t) (xTime_centiTime (xTime_typeMono_c) - table_entry->u32LastChange));
 				break;
 			case IFINOCTETS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32InOctets);
@@ -981,7 +983,6 @@ ifTable_mapper (
 		{
 			table_entry = (ifEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -1744,8 +1745,7 @@ ifStackTable_createExt (
 		goto ifStackTable_createExt_cleanup;
 	}
 	
-	oIfMIBObjects.u32StackLastChange++;	/* TODO */
-	
+	oIfMIBObjects.u32StackLastChange = xTime_centiTime (xTime_typeMono_c);
 	
 ifStackTable_createExt_cleanup:
 	
@@ -1764,8 +1764,7 @@ ifStackTable_removeExt (ifStackEntry_t *poEntry)
 	ifStackTable_removeEntry (poEntry);
 	bRetCode = true;
 	
-	oIfMIBObjects.u32StackLastChange--;	/* TODO */
-	
+	oIfMIBObjects.u32StackLastChange = xTime_centiTime (xTime_typeMono_c);
 	
 ifStackTable_removeExt_cleanup:
 	
@@ -1829,7 +1828,7 @@ ifStackStatus_handler (
 	ifStackEntry_t *poEntry,
 	uint8_t u8Status)
 {
-	oIfMIBObjects.u32StackLastChange += 0;	/* TODO */
+	oIfMIBObjects.u32StackLastChange = xTime_centiTime (xTime_typeMono_c);
 	
 	return false;
 }
