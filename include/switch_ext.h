@@ -30,7 +30,13 @@ extern "C" {
 
 #include <stdint.h>
 
-#define APP_NAME "SWITCH"
+#define SWITCH_NAME		"SWITCH"
+#define SWITCH_DESCR	"NES Switch network protocol stack"
+#define SWITCH_CONTACT	"NES Dev <nes.open.switch@gmail.com>"
+
+extern const char *pcSwitchName;
+extern const char *pcSwitchDescr;
+extern const char *pcSwitchContact;
 
 #define PKT_IP_ENC_USED 4
 #define PKT_L2_ENC_USED
@@ -78,6 +84,11 @@ typedef struct ModuleInfo_t
 #include "spb_ext.h"
 #include "inet_ext.h"
 #include "tcpUdp_ext.h"
+
+
+const char *pcSwitchName = SWITCH_NAME;
+const char *pcSwitchDescr = SWITCH_DESCR;
+const char *pcSwitchContact = SWITCH_CONTACT;
 
 static ModuleInfo_t aoModuleList[] =
 {

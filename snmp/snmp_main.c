@@ -72,11 +72,11 @@ snmp_main (
 		netsnmp_ds_set_boolean (NETSNMP_DS_APPLICATION_ID, NETSNMP_DS_AGENT_ROLE, 1);
 	}
 	
-	init_agent (APP_NAME);
+	init_agent (pcSwitchName);
 	
 	snmpMIB_init ();
 	
-	init_snmp (APP_NAME);
+	init_snmp (pcSwitchName);
 	if (bSnmpAgentMaster == true)
 	{
 		init_master_agent ();
@@ -108,7 +108,7 @@ snmp_start (
 	}
 	
 	Snmp_log (xLog_info_c, "SNMP agent stopping ...\n");
-	snmp_shutdown (APP_NAME);
+	snmp_shutdown (pcSwitchName);
 	
 	return NULL;
 }

@@ -33,6 +33,10 @@
 #include "lib/freeRange.h"
 #include "lib/thread.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
 
 static xThreadInfo_t oSystemThread =
 {
@@ -48,6 +52,15 @@ system_init (
 	void *pvArgv)
 {
 	xFreeRange_createRange (&oSysORIndex_FreeRange, sysORIndex_start_c, sysORIndex_end_c);
+	
+	oSystem.u16Descr_len = strlen (pcSwitchDescr);
+	memcpy (oSystem.au8Descr, pcSwitchDescr, oSystem.u16Descr_len);
+	oSystem.u16Contact_len = strlen (pcSwitchContact);
+	memcpy (oSystem.au8Contact, pcSwitchContact, oSystem.u16Contact_len);
+	oSystem.u16Name_len = strlen (pcSwitchName);
+	memcpy (oSystem.au8Name, pcSwitchName, oSystem.u16Name_len);
+	oSystem.u16Location_len = 0;
+	memset (oSystem.au8Location, 0, sizeof (oSystem.au8Location));
 	
 	return NULL;
 }

@@ -32,6 +32,8 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
@@ -81,10 +83,11 @@ system_t oSystem;
 
 /** system scalar mapper **/
 int
-system_mapper (netsnmp_mib_handler *handler,
+system_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid system_oid[];
 	netsnmp_request_info *request;
@@ -97,7 +100,7 @@ system_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (system_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (system_oid)])
 			{
 			case SYSDESCR:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oSystem.au8Descr, oSystem.u16Descr_len);
@@ -140,7 +143,7 @@ system_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (system_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (system_oid)])
 			{
 			case SYSCONTACT:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_OCTET_STR);
@@ -180,7 +183,7 @@ system_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (system_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (system_oid)])
 			{
 			case SYSCONTACT:
 				/* XXX: perform the value change here */
@@ -222,7 +225,7 @@ system_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (system_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (system_oid)])
 			{
 			case SYSCONTACT:
 				/* XXX: UNDO and return to previous value for the object */

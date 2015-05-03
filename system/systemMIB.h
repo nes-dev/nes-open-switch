@@ -31,6 +31,9 @@ extern "C" {
 #include "lib/sync.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define TOBE_REPLACED 1
 
 
