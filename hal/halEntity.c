@@ -24,7 +24,7 @@
 
 
 #include "hal_defines.h"
-#include "system/entityMIB.h"
+#include "entity/entityMIB.h"
 
 #include "lib/buffer.h"
 

@@ -45,8 +45,9 @@ extern const char *pcSwitchContact;
 enum
 {
 	ModuleId_snmp_c				= 1,
-	ModuleId_if_c,
 	ModuleId_system_c,
+	ModuleId_if_c,
+	ModuleId_entity_c,
 	ModuleId_hal_c,
 	ModuleId_ethernet_c,
 	ModuleId_lag_c,
@@ -72,8 +73,9 @@ typedef struct ModuleInfo_t
 #ifdef __SWITCH_MAIN_C__
 
 #include "snmp_ext.h"
-#include "if_ext.h"
 #include "system_ext.h"
+#include "if_ext.h"
+#include "entity_ext.h"
 #include "hal_ext.h"
 #include "ethernet_ext.h"
 #include "lag_ext.h"
@@ -93,8 +95,9 @@ const char *pcSwitchContact = SWITCH_CONTACT;
 static ModuleInfo_t aoModuleList[] =
 {
 	{ModuleId_snmp_c,			NULL,				&snmp_main,				NULL},
-	{ModuleId_if_c,				NULL,				&if_main,				NULL},
 	{ModuleId_system_c,			&system_init,		&system_main,			NULL},
+	{ModuleId_if_c,				NULL,				&if_main,				NULL},
+	{ModuleId_entity_c,			NULL,				&entity_main,			NULL},
 	{ModuleId_hal_c,			NULL,				&hal_main,				NULL},
 	{ModuleId_ethernet_c,		NULL,				&ethernet_main,			NULL},
 	{ModuleId_lag_c,			NULL,				&lag_main,				NULL},

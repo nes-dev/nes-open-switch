@@ -25,7 +25,7 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "if/ifMIB.h"
 #include "entityMIB.h"
-#include "systemUtils.h"
+#include "entityUtils.h"
 
 #include "system_ext.h"
 

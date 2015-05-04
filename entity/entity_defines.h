@@ -19,8 +19,8 @@
  */
 //set ts=4 sw=4
 
-#ifndef __SYSTEMUTILS_H__
-#	define __SYSTEMUTILS_H__
+#ifndef __ENTITY_DEFINES_H__
+#	define __ENTITY_DEFINES_H__
 
 #	ifdef __cplusplus
 extern "C" {
@@ -28,24 +28,10 @@ extern "C" {
 
 
 
-#include "entityMIB.h"
+#include "lib/log.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-
-
-extern bool
-	neEntPhysicalRowStatus_update (
-		neEntPhysicalEntry_t *poEntry,
-		uint8_t u8RowStatus);
-extern bool
-	neEntChassisRowStatus_update (
-		neEntChassisEntry_t *poEntry,
-		uint8_t u8RowStatus);
-extern bool
-	neEntPortRowStatus_update (
-		neEntPortEntry_t *poEntry,
-		uint8_t u8RowStatus);
+#define MOD_NAME "ENTITY"
+#define Entity_log(_pri, _frmt, _args ...) xLog_print (MOD_NAME, _pri, _frmt, ## _args)
 
 
 
@@ -53,4 +39,4 @@ extern bool
 }
 #	endif
 
-#endif	// __SYSTEMUTILS_H__
+#endif	// __ENTITY_DEFINES_H__

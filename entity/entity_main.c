@@ -19,60 +19,40 @@
  */
 //set ts=4 sw=4
 
-#ifndef __SYSTEM_MAIN_C__
-#	define __SYSTEM_MAIN_C__
+#ifndef __ENTITY_MAIN_C__
+#	define __ENTITY_MAIN_C__
 
 
-#include "systemMIB.h"
+#include "entityMIB_agent.h"
 
-#include "system_ext.h"
-#include "system_defines.h"
+#include "entity_ext.h"
+#include "entity_defines.h"
 #include "switch_ext.h"
 
-#include "lib/freeRange.h"
 #include "lib/thread.h"
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 
 
-static xThreadInfo_t oSystemThread =
+static xThreadInfo_t oEntityThread =
 {
-	.u32Index = XTHREAD_ID (ModuleId_system_c, 0),
+	.u32Index = XTHREAD_ID (ModuleId_entity_c, 0),
 	.u8SchedPolicy = SCHED_RR,
 	.u8Priority = 1,
-	.poStart = &system_start,
+	.poStart = &entity_start,
 };
 
 
 void *
-system_init (
+entity_main (
 	void *pvArgv)
 {
-	xFreeRange_createRange (&oSysORIndex_FreeRange, sysORIndex_start_c, sysORIndex_end_c);
+	entityMIB_init ();
 	
-	oSystem.u16Descr_len = strlen (pcSwitchDescr);
-	memcpy (oSystem.au8Descr, pcSwitchDescr, oSystem.u16Descr_len);
-	oSystem.u16Contact_len = strlen (pcSwitchContact);
-	memcpy (oSystem.au8Contact, pcSwitchContact, oSystem.u16Contact_len);
-	oSystem.u16Name_len = strlen (pcSwitchName);
-	memcpy (oSystem.au8Name, pcSwitchName, oSystem.u16Name_len);
-	oSystem.u16Location_len = 0;
-	memset (oSystem.au8Location, 0, sizeof (oSystem.au8Location));
-	
-	return NULL;
-}
-
-void *
-system_main (
-	void *pvArgv)
-{
-	systemMIB_init ();
-	
-	if (xThread_create (&oSystemThread) == NULL)
+	if (xThread_create (&oEntityThread) == NULL)
 	{
-		System_log (xLog_err_c, "xThread_create() failed\n");
+		Entity_log (xLog_err_c, "xThread_create() failed\n");
 		return NULL;
 	}
 	
@@ -80,7 +60,7 @@ system_main (
 }
 
 void *
-system_start (
+entity_start (
 	void *pvArgv)
 {
 	while (1)
@@ -91,4 +71,4 @@ system_start (
 }
 
 
-#endif	// __SYSTEM_MAIN_C__
+#endif	// __ENTITY_MAIN_C__

@@ -19,12 +19,12 @@
  */
 //set ts=4 sw=4
 
-#ifndef __SYSTEMUTILS_C__
-#	define __SYSTEMUTILS_C__
+#ifndef __ENTITYUTILS_C__
+#	define __ENTITYUTILS_C__
 
 
 
-#include "systemUtils.h"
+#include "entityUtils.h"
 #include "ethernet/ieee8021BridgeMib.h"
 #include "if/ifUtils.h"
 #include "if/ifMIB.h"
@@ -292,4 +292,4 @@ neEntPortRowStatus_update_cleanup:
 
 
 
-#endif	// __SYSTEMUTILS_C__
+#endif	// __ENTITYUTILS_C__

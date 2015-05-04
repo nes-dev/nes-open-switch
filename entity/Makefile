@@ -18,7 +18,7 @@
 #*  under the License.
 #*
 
-MODULE := system
+MODULE := entity
 MODULE_BIN = ${MODULE}${OBJ_EXT}
 MODULE_TREE :=
 
@@ -31,8 +31,8 @@ include ${MK_COMMON}
 
 CFLAGS +=
 
-SNMP_SRC := systemMIB.c
-MODULE_SRC := system_main.c ${SNMP_SRC}
+SNMP_SRC := entityMIB.c
+MODULE_SRC := entity_main.c entityUtils.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
 
