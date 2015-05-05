@@ -31,6 +31,7 @@
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
+#include "lib/time.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -103,13 +104,13 @@ system_mapper (
 			switch (request->requestvb->name[OID_LENGTH (system_oid)])
 			{
 			case SYSDESCR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oSystem.au8Descr, oSystem.u16Descr_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oSystem.pcDescr, oSystem.u16Descr_len);
 				break;
 			case SYSOBJECTID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) oSystem.aoObjectID, oSystem.u16ObjectID_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) oSystem.poObjectID, oSystem.u16ObjectID_len);
 				break;
 			case SYSUPTIME:
-				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, oSystem.u32UpTime);
+				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, (uint32_t) (xTime_centiTime (xTime_typeMono_c) - oSystem.u32UpTime));
 				break;
 			case SYSCONTACT:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oSystem.au8Contact, oSystem.u16Contact_len);
@@ -124,7 +125,7 @@ system_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oSystem.i32Services);
 				break;
 			case SYSORLASTCHANGE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, oSystem.u32ORLastChange);
+				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, (uint32_t) (xTime_centiTime (xTime_typeMono_c) - oSystem.u32ORLastChange));
 				break;
 				
 			default:

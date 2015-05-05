@@ -29,8 +29,10 @@
 #include "system_defines.h"
 #include "switch_ext.h"
 
+#include "lib/bitmap.h"
 #include "lib/freeRange.h"
 #include "lib/thread.h"
+#include "lib/time.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -52,14 +54,17 @@ system_init (
 {
 	xFreeRange_createRange (&oSysORIndex_FreeRange, sysORIndex_start_c, sysORIndex_end_c);
 	
+	oSystem.pcDescr = (void *) pcSwitchDescr;
 	oSystem.u16Descr_len = strlen (pcSwitchDescr);
-	memcpy (oSystem.au8Descr, pcSwitchDescr, oSystem.u16Descr_len);
+	oSystem.u32UpTime = xTime_centiTime (xTime_typeMono_c);
 	oSystem.u16Contact_len = strlen (pcSwitchContact);
 	memcpy (oSystem.au8Contact, pcSwitchContact, oSystem.u16Contact_len);
 	oSystem.u16Name_len = strlen (pcSwitchName);
 	memcpy (oSystem.au8Name, pcSwitchName, oSystem.u16Name_len);
 	oSystem.u16Location_len = 0;
 	memset (oSystem.au8Location, 0, sizeof (oSystem.au8Location));
+	oSystem.i32Services = xBitmask_bitMask (sysServices_physical_c) | xBitmask_bitMask (sysServices_datalink_c) | xBitmask_bitMask (sysServices_network_c);
+	oSystem.u32ORLastChange = oSystem.u32UpTime;
 	
 	return NULL;
 }

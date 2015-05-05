@@ -56,18 +56,29 @@ void systemMIB_init (void);
 #define SYSSERVICES 7
 #define SYSORLASTCHANGE 8
 
+enum
+{
+	sysServices_physical_c = 0,
+	sysServices_datalink_c = 1,
+	sysServices_network_c = 2,
+	sysServices_transport_c = 3,
+	sysServices_session_c = 4,
+	sysServices_presentation_c = 5,
+	sysServices_application_c = 6,
+};
+
 typedef struct system_t
 {
-	uint8_t au8Descr[255];
+	uint8_t *pcDescr;
 	size_t u16Descr_len;	/* # of uint8_t elements */
-	xOid_t aoObjectID[128];
+	xOid_t *poObjectID;
 	size_t u16ObjectID_len;	/* # of xOid_t elements */
 	uint32_t u32UpTime;
-	uint8_t au8Contact[255];
+	uint8_t au8Contact[64];
 	size_t u16Contact_len;	/* # of uint8_t elements */
-	uint8_t au8Name[255];
+	uint8_t au8Name[64];
 	size_t u16Name_len;	/* # of uint8_t elements */
-	uint8_t au8Location[255];
+	uint8_t au8Location[128];
 	size_t u16Location_len;	/* # of uint8_t elements */
 	int32_t i32Services;
 	uint32_t u32ORLastChange;
