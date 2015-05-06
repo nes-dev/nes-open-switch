@@ -27,6 +27,7 @@ extern "C" {
 #	endif
 
 
+
 #include <stdint.h>
 
 extern void *
@@ -37,6 +38,11 @@ extern void *
 lacp_start (
 	void *pvArgv);
 
+enum
+{
+	lacpMessage_PduRx_c = 1,
+};
+
 typedef struct lacpMessage_Pdu_t
 {
 	uint32_t u32IfIndex;
@@ -44,6 +50,7 @@ typedef struct lacpMessage_Pdu_t
 	void *pvData;
 	uint16_t u16Length;
 } lacpMessage_Pdu_t;
+
 
 
 #	ifdef __cplusplus

@@ -26,6 +26,7 @@
 #include "lagMIB_agent.h"
 
 #include "lag_ext.h"
+#include "lacp/lacp_ext.h"
 #include "lag_defines.h"
 #include "switch_ext.h"
 
@@ -34,7 +35,7 @@
 
 static xThreadInfo_t oLagThread =
 {
-	.u32Index = XTHREAD_ID (ModuleId_lag_c, 0),
+	.u32Index = XTHREAD_ID (ModuleId_lag_c, TaskId_lag_c),
 	.u8SchedPolicy = SCHED_RR,
 	.u8Priority = 1,
 	.poStart = &lag_start,
@@ -60,6 +61,8 @@ void *
 lag_start (
 	void *pvArgv)
 {
+	lacp_main (NULL);
+	
 	while (1)
 	{
 		xThread_sleep (1);

@@ -95,7 +95,9 @@ lacp_start (
 				default:
 					break;
 					
-				/* TODO */
+				case lacpMessage_PduRx_c:
+					dot3adAggPortLacp_processPduRx (poMsg->pvData);
+					break;
 				}
 				
 				if (!xMessageDst_remove (poMsg, poLacpMessageQueue))
