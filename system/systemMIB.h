@@ -123,9 +123,9 @@ typedef struct sysOREntry_t
 	int32_t i32Index;
 	
 	/* Column values */
-	xOid_t aoID[128];
+	xOid_t *poID;
 	size_t u16ID_len;	/* # of xOid_t elements */
-	uint8_t au8Descr[255];
+	uint8_t *pcDescr;
 	size_t u16Descr_len;	/* # of uint8_t elements */
 	uint32_t u32UpTime;
 	
@@ -139,7 +139,8 @@ extern xBTree_t oSysORTable_ID_BTree;
 /* sysORTable table mapper */
 void sysORTable_init (void);
 sysOREntry_t * sysORTable_createEntry (
-	int32_t i32Index);
+	int32_t i32Index,
+	uint16_t u16ID_len, uint16_t u16Descr_len);
 sysOREntry_t * sysORTable_getByIndex (
 	int32_t i32Index);
 sysOREntry_t * sysORTable_ID_getByIndex (

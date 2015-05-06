@@ -322,12 +322,12 @@ static int8_t
 sysORTable_ID_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register sysOREntry_t *pEntry1 = xBTree_entry (pNode1, sysOREntry_t, oBTreeNode);
-	register sysOREntry_t *pEntry2 = xBTree_entry (pNode2, sysOREntry_t, oBTreeNode);
+	register sysOREntry_t *pEntry1 = xBTree_entry (pNode1, sysOREntry_t, oID_BTreeNode);
+	register sysOREntry_t *pEntry2 = xBTree_entry (pNode2, sysOREntry_t, oID_BTreeNode);
 	
 	return
-		(xOidCmp (pEntry1->aoID, pEntry2->aoID, pEntry1->u16ID_len, pEntry2->u16ID_len) == -1) ? -1:
-		(xOidCmp (pEntry1->aoID, pEntry2->aoID, pEntry1->u16ID_len, pEntry2->u16ID_len) == 0) ? 0: 1;
+		(xOidCmp (pEntry1->poID, pEntry2->poID, pEntry1->u16ID_len, pEntry2->u16ID_len) == -1) ? -1:
+		(xOidCmp (pEntry1->poID, pEntry2->poID, pEntry1->u16ID_len, pEntry2->u16ID_len) == 0) ? 0: 1;
 }
 
 xBTree_t oSysORTable_BTree = xBTree_initInline (&sysORTable_BTreeNodeCmp);
@@ -336,11 +336,12 @@ xBTree_t oSysORTable_ID_BTree = xBTree_initInline (&sysORTable_ID_BTreeNodeCmp);
 /* create a new row in the table */
 sysOREntry_t *
 sysORTable_createEntry (
-	int32_t i32Index)
+	int32_t i32Index,
+	uint16_t u16ID_len, uint16_t u16Descr_len)
 {
 	register sysOREntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry) + u16ID_len * sizeof (poEntry->poID[0]) + u16Descr_len)) == NULL)
 	{
 		return NULL;
 	}
@@ -351,6 +352,9 @@ sysORTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->poID = (void *) (poEntry + 1);
+	poEntry->pcDescr = ((void *) (poEntry + 1)) + sizeof (poEntry->poID[0]) * u16ID_len;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oSysORTable_BTree);
 	return poEntry;
@@ -386,18 +390,18 @@ sysORTable_ID_getByIndex (
 	register sysOREntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if (poID == NULL || u16ID_len == 0 ||
-		u16ID_len > sizeof (poTmpEntry->aoID) / sizeof (poTmpEntry->aoID[0]))
+	if (poID == NULL || u16ID_len == 0)
 	{
 		return NULL;
 	}
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry) + u16ID_len * sizeof (poTmpEntry->poID[0]))) == NULL)
 	{
 		return NULL;
 	}
+	poTmpEntry->poID = (void *) (poTmpEntry + 1);
 	
-	memcpy (poTmpEntry->aoID, poID, u16ID_len * sizeof (poTmpEntry->aoID[0]));
+	memcpy (poTmpEntry->poID, poID, u16ID_len * sizeof (poTmpEntry->poID[0]));
 	poTmpEntry->u16ID_len = u16ID_len;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oID_BTreeNode, &oSysORTable_ID_BTree)) == NULL)
 	{
@@ -456,14 +460,13 @@ sysORTable_createRegister (
 	uint32_t u32Index = 0;
 	register sysOREntry_t *poEntry = NULL;
 	
-	if (pc8Descr == NULL || poID == NULL || u16ID_len == 0 ||
-		u16ID_len > sizeof (poEntry->aoID) / sizeof (poEntry->aoID[0]))
+	if (pc8Descr == NULL || poID == NULL || u16ID_len == 0)
 	{
 		goto sysORTable_createRegister_cleanup;
 	}
 	
 	u16Descr_len = strlen (pc8Descr);
-	if (u16Descr_len == 0 || u16Descr_len > sizeof (poEntry->au8Descr))
+	if (u16Descr_len == 0)
 	{
 		goto sysORTable_createRegister_cleanup;
 	}
@@ -480,7 +483,7 @@ sysORTable_createRegister (
 		goto sysORTable_createRegister_unlock;
 	}
 	
-	if ((poEntry = sysORTable_createEntry (u32Index)) != NULL)
+	if ((poEntry = sysORTable_createEntry (u32Index, u16ID_len, u16Descr_len)) == NULL)
 	{
 		goto sysORTable_createRegister_unlock;
 	}
@@ -490,9 +493,9 @@ sysORTable_createRegister (
 		goto sysORTable_createRegister_unlock;
 	}
 	
-	memcpy (poEntry->aoID, poID, u16ID_len * sizeof (poEntry->aoID[0]));
+	memcpy (poEntry->poID, poID, u16ID_len * sizeof (poEntry->poID[0]));
 	poEntry->u16ID_len = u16ID_len;
-	memcpy (poEntry->au8Descr, pc8Descr, u16Descr_len);
+	memcpy (poEntry->pcDescr, pc8Descr, u16Descr_len);
 	poEntry->u16Descr_len = u16Descr_len;
 	poEntry->u32UpTime = 0;	/* TODO */
 	
@@ -521,7 +524,7 @@ sysORTable_removeRegister (
 	register sysOREntry_t *poEntry = NULL;
 	
 	if (poID == NULL || u16ID_len == 0 ||
-		u16ID_len > sizeof (poEntry->aoID) / sizeof (poEntry->aoID[0]))
+		u16ID_len > sizeof (poEntry->poID) / sizeof (poEntry->poID[0]))
 	{
 		goto sysORTable_removeRegister_cleanup;
 	}
@@ -631,10 +634,10 @@ sysORTable_mapper (
 			switch (table_info->colnum)
 			{
 			case SYSORID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoID, table_entry->u16ID_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->poID, table_entry->u16ID_len * sizeof (xOid_t));
 				break;
 			case SYSORDESCR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Descr, table_entry->u16Descr_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->pcDescr, table_entry->u16Descr_len);
 				break;
 			case SYSORUPTIME:
 				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, table_entry->u32UpTime);
