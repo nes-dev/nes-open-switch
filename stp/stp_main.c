@@ -30,6 +30,9 @@
 #include "stp_defines.h"
 #include "switch_ext.h"
 
+#include "lib/bitmap.h"
+#include "lib/sync.h"
+#include "lib/message.h"
 #include "lib/thread.h"
 
 
@@ -41,6 +44,8 @@ static xThreadInfo_t oStpThread =
 	.poStart = &stp_start,
 };
 
+static xMessageQueue_t *poStpMessageQueue = NULL;
+
 
 void *
 stp_main (
@@ -48,6 +53,11 @@ stp_main (
 {
 	ieee8021SpanningTreeMib_init ();
 	ieee8021MstpMib_init ();
+	
+	if ((poStpMessageQueue = xMessageQueue_create (oStpThread.u32Index)) == NULL)
+	{
+		return NULL;
+	}
 	
 	if (xThread_create (&oStpThread) == NULL)
 	{
@@ -62,10 +72,44 @@ void *
 stp_start (
 	void *pvArgv)
 {
-	while (1)
+	xThread_waitPrepare (&oStpThread);
+	
+	while (xThread_wait (&oStpThread, NULL))
 	{
-		xThread_sleep (1);
+		if (xBitmap_getBit (oStpThread.au8Flags, xThreadInfo_flagsMessage_c))
+		{
+			register xMessage_t *poMsg = NULL;
+			
+			while ((poMsg = xMessageAck_getMessage (poStpMessageQueue)) != NULL)
+			{
+				/* TODO */
+				
+				if (!xMessageAck_remove (poMsg, poStpMessageQueue))
+				{
+					break;
+				}
+			}
+			
+			while ((poMsg = xMessageDst_getMessage (poStpMessageQueue)) != NULL)
+			{
+				/* TODO */
+				
+				switch (poMsg->poMsgInfo->u32Type)
+				{
+				default:
+					break;
+				}
+				
+				if (!xMessageDst_remove (poMsg, poStpMessageQueue))
+				{
+					break;
+				}
+			}
+			
+			xMessage_cleanupThread (poStpMessageQueue, &oStpThread);
+		}
 	}
+	
 	return NULL;
 }
 
