@@ -856,6 +856,18 @@ ieee8021BridgeXPortRowStatus_halUpdate_cleanup:
 }
 
 bool
+ieee8021BridgeTpPortStatus_update (
+	ieee8021BridgePhyData_t *poPhyData,
+	ieee8021BridgeTpPortEntry_t *poEntry, bool bMacLearn, bool bMacFwd)
+{
+	register bool bRetCode = false;
+	
+	bRetCode = true;
+	
+	return bRetCode;
+}
+
+bool
 ieee8021BridgeDot1dPortRowStatus_update (
 	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021BridgeDot1dPortEntry_t *poEntry, uint8_t u8RowStatus)

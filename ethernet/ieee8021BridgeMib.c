@@ -2908,57 +2908,49 @@ ieee8021BridgeTpPortTable_removeHier (
 
 bool
 ieee8021BridgeTpPortTable_handler (
-	uint32_t u32IfIndex, bool bEnable)
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021BridgePhyData_t *poPhyData, bool bMacLearn, bool bMacFwd)
 {
-	register ieee8021BridgePhyData_t *poIeee8021BridgePhyData = NULL;
+	register bool bRetCode = false;
 	register ieee8021BridgeTpPortEntry_t *poIeee8021BridgeTpPortEntry = NULL;
 	
+	poIeee8021BridgeTpPortEntry = ieee8021BridgeTpPortTable_getByIndex (poPhyData->u32ComponentId, poPhyData->u32Port);
 	
-	if (u32IfIndex == 0)
+	if (bMacFwd ^ (poIeee8021BridgeTpPortEntry != NULL))
+	{
+		goto ieee8021BridgeTpPortTable_handler_success;
+	}
+	
+	
+	if (!bMacFwd && !ieee8021BridgeTpPortStatus_update (poPhyData, poIeee8021BridgeTpPortEntry, bMacLearn, bMacFwd))
 	{
 		goto ieee8021BridgeTpPortTable_handler_cleanup;
 	}
 	
-	if ((poIeee8021BridgePhyData = ieee8021BridgePhyData_getByIndex (u32IfIndex, 0)) == NULL)
+	if (bMacFwd)
 	{
-		goto ieee8021BridgeTpPortTable_handler_success;
-	}
-	
-	poIeee8021BridgeTpPortEntry = ieee8021BridgeTpPortTable_getByIndex (poIeee8021BridgePhyData->u32ComponentId, poIeee8021BridgePhyData->u32Port);
-	
-	if (bEnable ^ (poIeee8021BridgeTpPortEntry == NULL))
-	{
-		goto ieee8021BridgeTpPortTable_handler_success;
-	}
-	
-	
-	if (bEnable)
-	{
-		if (ieee8021BridgeTpPortTable_createExt (poIeee8021BridgePhyData->u32ComponentId, poIeee8021BridgePhyData->u32Port) == NULL)
+		if ((poIeee8021BridgeTpPortEntry = ieee8021BridgeTpPortTable_createEntry (poPhyData->u32ComponentId, poPhyData->u32Port)) == NULL)
 		{
 			goto ieee8021BridgeTpPortTable_handler_cleanup;
 		}
-		
-		/* TODO: HAL */
 	}
 	else
 	{
-		/* TODO: HAL */
-		
-		if (!ieee8021BridgeTpPortTable_removeExt (poIeee8021BridgeTpPortEntry))
-		{
-			goto ieee8021BridgeTpPortTable_handler_cleanup;
-		}
+		ieee8021BridgeTpPortTable_removeEntry (poIeee8021BridgeTpPortEntry);
+	}
+	
+	if (bMacFwd && !ieee8021BridgeTpPortStatus_update (poPhyData, poIeee8021BridgeTpPortEntry, bMacLearn, bMacFwd))
+	{
+		goto ieee8021BridgeTpPortTable_handler_cleanup;
 	}
 	
 ieee8021BridgeTpPortTable_handler_success:
 	
-	return true;
-	
+	bRetCode = true;
 	
 ieee8021BridgeTpPortTable_handler_cleanup:
 	
-	return false;
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */

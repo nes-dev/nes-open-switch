@@ -2613,11 +2613,11 @@ ipAddressRowStatus_handler (
 			goto ipAddressRowStatus_handler_cleanup;
 		}
 		
-		if (poNeInetInterfaceEntry->i32TrafficEnable == neInetInterfaceTrafficEnable_true_c &&
+		/*if (poNeInetInterfaceEntry->i32TrafficEnable == neInetInterfaceTrafficEnable_true_c &&
 			!ieee8021BridgeTpPortTable_handler (poIpAddressData->u32IfIndex, false))
 		{
 			goto ipAddressRowStatus_handler_cleanup;
-		}
+		}*/
 		
 		/* TODO */
 		poEntry->u8RowStatus = xRowStatus_active_c;
@@ -2629,12 +2629,12 @@ ipAddressRowStatus_handler (
 			goto ipAddressRowStatus_handler_success;
 		}
 		
-		if (((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL ||
+		/*if (((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL ||
 			 poNeInetInterfaceEntry->i32TrafficEnable == neInetInterfaceTrafficEnable_true_c) &&
 			!ieee8021BridgeTpPortTable_handler (poIpAddressData->u32IfIndex, true))
 		{
 			goto ipAddressRowStatus_handler_cleanup;
-		}
+		}*/
 		
 		/* TODO */
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
@@ -2655,7 +2655,7 @@ ipAddressRowStatus_handler (
 		}
 		
 		{
-			uint32_t u32IfIndex = poIpAddressData->u32IfIndex;
+			//uint32_t u32IfIndex = poIpAddressData->u32IfIndex;
 			
 			if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL)
 			{
@@ -2668,12 +2668,12 @@ ipAddressRowStatus_handler (
 				goto ipAddressRowStatus_handler_cleanup;
 			}
 			
-			if (((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (u32IfIndex)) == NULL ||
+			/*if (((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (u32IfIndex)) == NULL ||
 				 poNeInetInterfaceEntry->i32TrafficEnable == neInetInterfaceTrafficEnable_true_c) &&
 				!ieee8021BridgeTpPortTable_handler (u32IfIndex, true))
 			{
 				goto ipAddressRowStatus_handler_cleanup;
-			}
+			}*/
 		}
 		
 		/* TODO */

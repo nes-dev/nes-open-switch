@@ -797,10 +797,10 @@ neInetInterfaceTrafficEnable_handler (
 		goto neInetInterfaceTrafficEnable_handler_success;
 	}
 	
-	if (!ieee8021BridgeTpPortTable_handler (poEntry->u32IfIndex, i32TrafficEnable != neInetInterfaceTrafficEnable_true_c))
+	/*if (!ieee8021BridgeTpPortTable_handler (poEntry->u32IfIndex, i32TrafficEnable != neInetInterfaceTrafficEnable_true_c))
 	{
 		goto neInetInterfaceTrafficEnable_handler_cleanup;
-	}
+	}*/
 	
 neInetInterfaceTrafficEnable_handler_success:
 	
