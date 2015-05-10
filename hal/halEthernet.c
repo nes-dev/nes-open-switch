@@ -56,6 +56,13 @@ halEthernet_ifConfigure ()
 }
 
 bool
+halEthernet_ifFdbConfigure ()
+{
+	/* TODO */
+	return false;
+}
+
+bool
 halEthernet_vlanConfigure ()
 {
 	/* TODO */

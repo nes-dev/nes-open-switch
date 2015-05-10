@@ -54,10 +54,16 @@ enum
 	halEthernet_ifAdminState_c,
 	halEthernet_ifOperState_c,
 	
+	halEthernet_fdbOperState_c,
+	
 	halEthernet_vlanNone_c,
 	halEthernet_vlanEnable_c,
 	halEthernet_vlanOperState_c,
 	halEthernet_vlanDisable_c,
+	
+	halEthernet_sidNone_c,
+	halEthernet_sidEnable_c,
+	halEthernet_sidDisable_c,
 	
 	halEthernet_if_bVlanNone,
 	halEthernet_if_bVlanDisable,
@@ -71,9 +77,10 @@ enum
 	halEthernet_if_bVlanMapEgressDisable,
 	halEthernet_if_bVlanMapEgressDestroy,
 	
-	halEthernet_sidNone_c,
-	halEthernet_sidEnable_c,
-	halEthernet_sidDisable_c,
+	halEthernet_if_bFdbNone_c,
+	halEthernet_if_bFdbLearn_c,
+	halEthernet_if_bFdbForward_c,
+	halEthernet_if_bFdbDisable_c,
 };
 
 typedef struct halEthernet_ifEntry_t
@@ -91,6 +98,8 @@ extern bool
 	halEthernet_portConfigure ();
 extern bool
 	halEthernet_ifConfigure ();
+extern bool
+	halEthernet_ifFdbConfigure ();
 extern bool
 	halEthernet_vlanConfigure ();
 extern bool

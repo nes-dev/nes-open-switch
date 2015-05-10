@@ -861,8 +861,22 @@ ieee8021BridgeTpPortStatus_update (
 	ieee8021BridgeTpPortEntry_t *poEntry, bool bMacLearn, bool bMacFwd)
 {
 	register bool bRetCode = false;
+	halEthernet_ifEntry_t oHalIfEntry;
+	
+	memset (&oHalIfEntry, 0, sizeof (oHalIfEntry));
+	oHalIfEntry.u32IfIndex = poPhyData->u32IfIndex;
+	!bMacLearn && !bMacFwd ? xBitmap_setBitRev (oHalIfEntry.au8Flags, halEthernet_if_bFdbDisable_c, 1): 0;
+	bMacLearn ? xBitmap_setBitRev (oHalIfEntry.au8Flags, halEthernet_if_bFdbLearn_c, 1): 0;
+	bMacFwd ? xBitmap_setBitRev (oHalIfEntry.au8Flags, halEthernet_if_bFdbForward_c, 1): 0;
+	
+	if (!halEthernet_ifFdbConfigure (&oHalIfEntry, halEthernet_fdbOperState_c, poEntry))
+	{
+		goto ieee8021BridgeTpPortStatus_update_cleanup;
+	}
 	
 	bRetCode = true;
+	
+ieee8021BridgeTpPortStatus_update_cleanup:
 	
 	return bRetCode;
 }
