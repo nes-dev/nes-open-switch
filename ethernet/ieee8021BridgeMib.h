@@ -433,6 +433,7 @@ typedef struct ieee8021BridgePhyData_t
 	uint32_t u32Port;
 	uint8_t au8TypeCapabilities[2];
 	size_t u16TypeCapabilities_len;	/* # of uint8_t elements */
+	uint8_t au8AdminFlags[3];
 	
 	xBTree_Node_t oIf_BTreeNode;
 	xBTree_Node_t oPhy_BTreeNode;

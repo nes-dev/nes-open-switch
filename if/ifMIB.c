@@ -2723,7 +2723,7 @@ neIfTable_createEntry (
 	/*poEntry->au8Name = ""*/;
 	/*poEntry->au8Descr = ""*/;
 	/*poEntry->au8PhysAddress = 0*/;
-	xBitmap_setBitsRev (poEntry->au8AdminFlags, 4, 1, neIfAdminFlags_speed100Mbps_c, neIfAdminFlags_autoNeg_c, neIfAdminFlags_loopDetect_c, neIfAdminFlags_macFwd_c);
+	xBitmap_setBitsRev (poEntry->au8AdminFlags, 4, 1, neIfAdminFlags_speed100Mbps_c, neIfAdminFlags_autoNeg_c, neIfAdminFlags_macLearn_c, neIfAdminFlags_macFwd_c);
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neIfStorageType_volatile_c;
 	
