@@ -32,7 +32,7 @@ include ${MK_COMMON}
 CFLAGS +=
 
 SNMP_SRC := neInetMIB.c clnsMIB.c ipMIB.c icmpMIB.c ipForward.c
-MODULE_SRC := inet_main.c ${SNMP_SRC}
+MODULE_SRC := inet_main.c inetUtils.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
 
