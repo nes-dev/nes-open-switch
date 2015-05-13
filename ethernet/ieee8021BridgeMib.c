@@ -1372,7 +1372,7 @@ ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBaseEntry_t *poComponent, 
 	
 	if ((poIeee8021BridgeTpPortEntry = ieee8021BridgeTpPortTable_getByIndex (poEntry->u32ComponentId, poEntry->u32Port)) != NULL)
 	{
-//		ieee8021BridgeTpPortTable_removeExt (poIeee8021BridgeTpPortEntry);
+		ieee8021BridgeTpPortTable_removeEntry (poIeee8021BridgeTpPortEntry);
 	}
 	
 	
@@ -1421,6 +1421,11 @@ ieee8021BridgeBasePortIfIndex_handler (
 		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
 	}
 	
+	if (!ieee8021BridgeTpPortTable_handler (poComponent, poPhyData, false, false))
+	{
+		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
+	}
+	
 	if (!ieee8021BridgePhyData_detachComponent (poEntry, poPhyData))
 	{
 		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
@@ -1448,6 +1453,14 @@ ieee8021BridgeBasePortIfIndex_handler_newIfIndex:
 	
 	if (!xBitmap_getBitRev (poPhyData->au8TypeCapabilities, poEntry->i32Type - 2) ||
 		!ieee8021BridgePhyData_attachComponent (poComponent, poEntry, poPhyData))
+	{
+		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
+	}
+	
+	register bool bMacLearn = xBitmap_getBitRev (poPhyData->au8AdminFlags, neIfAdminFlags_macLearn_c);
+	register bool bMacFwd = xBitmap_getBitRev (poPhyData->au8AdminFlags, neIfAdminFlags_macFwd_c);
+	
+	if (!ieee8021BridgeTpPortTable_handler (poComponent, poPhyData, bMacLearn, bMacFwd))
 	{
 		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
 	}
