@@ -29,6 +29,7 @@
 #include "if/ifMIB.h"
 
 #include "system_ext.h"
+#include "ethernet_ext.h"
 
 #include "lib/bitmap.h"
 #include "lib/freeRange.h"
@@ -38,6 +39,7 @@
 #include "lib/snmp.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 

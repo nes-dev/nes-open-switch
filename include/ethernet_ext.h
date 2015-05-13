@@ -27,18 +27,15 @@ extern "C" {
 #	endif
 
 
-#include <stdint.h>
 
 #include "lib/buffer.h"
 
+#include <stdbool.h>
+#include <stdint.h>
 
-extern void *
-ethernet_main (
-	void *pvArgv);
 
-extern void *
-ethernet_start (
-	void *pvArgv);
+extern void *ethernet_main (void *pvArgv);
+extern void *ethernet_start (void *pvArgv);
 
 
 /**
@@ -46,12 +43,34 @@ ethernet_start (
  */
 void L2MsgSend (xBuffer_Vector_t *poBufferVector, uint16_t u16BufferCount);
 
+bool
+	ieee8021BridgeTpPortStatus_handler (
+		uint32_t u32IfIndex, uint8_t *pu8AdminFlags, bool bLocked);
+
+bool
+	ieee8021BridgeChassis_createRegister (
+		uint32_t u32ChassisId);
+bool
+	ieee8021BridgeChassis_removeRegister (
+		uint32_t u32ChassisId);
+
+bool
+	ieee8021BridgePhyData_createRegister (
+		uint32_t u32IfIndex,
+		uint32_t u32PhyPort,
+		uint32_t u32ChassisId);
+bool
+	ieee8021BridgePhyData_removeRegister (
+		uint32_t u32IfIndex,
+		uint32_t u32PhyPort);
+
 
 #define PKT_IP_ENC_USED 4
 #define PKT_L2_ENC_USED
 #undef PKT_L2_VLAN_ENC_USED
 
 #define ETHERNET_PORT_MAP_SIZE 64
+
 
 
 #	ifdef __cplusplus

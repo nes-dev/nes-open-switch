@@ -25,10 +25,11 @@
 
 
 #include "entityUtils.h"
-#include "ethernet/ieee8021BridgeMib.h"
 #include "if/ifUtils.h"
 #include "if/ifMIB.h"
 #include "entityMIB.h"
+
+#include "ethernet_ext.h"
 
 #include "lib/bitmap.h"
 #include "lib/snmp.h"

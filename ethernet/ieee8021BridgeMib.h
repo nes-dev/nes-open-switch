@@ -411,10 +411,6 @@ Netsnmp_Node_Handler ieee8021BridgePhyPortTable_mapper;
 /**
  *	table ieee8021BridgeChassisTable definitions
  */
-bool ieee8021BridgeChassis_createRegister (
-	uint32_t u32ChassisId);
-bool ieee8021BridgeChassis_removeRegister (
-	uint32_t u32ChassisId);
 
 
 /**
@@ -454,13 +450,6 @@ ieee8021BridgePhyData_t * ieee8021BridgePhyData_getNextIndex (
 #define ieee8021BridgePhyData_getByIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgePhyData_t, oIf))
 #define ieee8021BridgePhyData_getByPhyEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgePhyData_t, oPhy))
 void ieee8021BridgePhyData_removeEntry (ieee8021BridgePhyData_t *poEntry);
-bool ieee8021BridgePhyData_createRegister (
-	uint32_t u32IfIndex,
-	uint32_t u32PhyPort,
-	uint32_t u32ChassisId);
-bool ieee8021BridgePhyData_removeRegister (
-	uint32_t u32IfIndex,
-	uint32_t u32PhyPort);
 ieee8021BridgePhyData_t * ieee8021BridgePhyData_createExt (
 	uint32_t u32IfIndex,
 	uint32_t u32PhyPort);
