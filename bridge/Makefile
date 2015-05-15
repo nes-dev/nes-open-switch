@@ -1,6 +1,6 @@
 #*
 #*  Copyright (c) 2008-2015
-#*      NES <nes.open.switch@gmail.com>
+#*      NES Dev <nes.open.switch@gmail.com>
 #*
 #*  All rights reserved. This source file is the sole property of NES, and
 #*  contain proprietary and confidential information related to NES.
