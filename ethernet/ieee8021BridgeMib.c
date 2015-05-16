@@ -3885,7 +3885,6 @@ ieee8021BridgeUserPriorityRegenTable_mapper (
 		{
 			table_entry = (ieee8021BridgeUserPriorityRegenEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -4246,7 +4245,6 @@ ieee8021BridgeTrafficClassTable_mapper (
 		{
 			table_entry = (ieee8021BridgeTrafficClassEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -5672,7 +5670,6 @@ ieee8021BridgeServiceAccessPriorityTable_mapper (
 		{
 			table_entry = (ieee8021BridgeServiceAccessPriorityEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);

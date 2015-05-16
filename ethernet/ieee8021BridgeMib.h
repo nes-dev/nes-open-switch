@@ -968,18 +968,18 @@ Netsnmp_Node_Handler ieee8021BridgeServiceAccessPriorityTable_mapper;
 typedef struct ieee8021BridgePortMrpEntry_t
 {
 	/* Index values */
-	uint32_t u32BasePortComponentId;
-	uint32_t u32BasePort;
+// 	uint32_t u32BasePortComponentId;
+// 	uint32_t u32BasePort;
 	
 	/* Column values */
 	int32_t i32JoinTime;
 	int32_t i32LeaveTime;
 	int32_t i32LeaveAllTime;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgePortMrpEntry_t;
 
-extern xBTree_t oIeee8021BridgePortMrpTable_BTree;
+// extern xBTree_t oIeee8021BridgePortMrpTable_BTree;
 
 /* ieee8021BridgePortMrpTable table mapper */
 void ieee8021BridgePortMrpTable_init (void);
