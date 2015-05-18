@@ -1201,6 +1201,7 @@ Netsnmp_Node_Handler ieee8021BridgeDot1dPortTable_mapper;
 	neIeee8021BridgeBasePortEntry_t oNe;
 	ieee8021BridgePortPriorityEntry_t oPriority;
 	ieee8021BridgePortMrpEntry_t oMrp;
+	ieee8021BridgePortMmrpEntry_t oMmrp;
 	
 	uint8_t u8RowStatus;
 	struct ieee8021BridgeBasePortEntry_t *pOldEntry;

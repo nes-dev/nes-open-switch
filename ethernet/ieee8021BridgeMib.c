@@ -6116,21 +6116,6 @@ ieee8021BridgePortMmrpTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-ieee8021BridgePortMmrpTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register ieee8021BridgePortMmrpEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021BridgePortMmrpEntry_t, oBTreeNode);
-	register ieee8021BridgePortMmrpEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021BridgePortMmrpEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32BasePortComponentId < pEntry2->u32BasePortComponentId) ||
-		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort < pEntry2->u32BasePort) ? -1:
-		(pEntry1->u32BasePortComponentId == pEntry2->u32BasePortComponentId && pEntry1->u32BasePort == pEntry2->u32BasePort) ? 0: 1;
-}
-
-xBTree_t oIeee8021BridgePortMmrpTable_BTree = xBTree_initInline (&ieee8021BridgePortMmrpTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 ieee8021BridgePortMmrpEntry_t *
 ieee8021BridgePortMmrpTable_createEntry (
@@ -6138,24 +6123,17 @@ ieee8021BridgePortMmrpTable_createEntry (
 	uint32_t u32BasePort)
 {
 	register ieee8021BridgePortMmrpEntry_t *poEntry = NULL;
+	register ieee8021BridgeBasePortEntry_t *poPort = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poPort = ieee8021BridgeBasePortTable_getByIndex (u32BasePortComponentId, u32BasePort)) == NULL)
 	{
 		return NULL;
 	}
-	
-	poEntry->u32BasePortComponentId = u32BasePortComponentId;
-	poEntry->u32BasePort = u32BasePort;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgePortMmrpTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poPort->oMmrp;
 	
 	poEntry->u8EnabledStatus = ieee8021BridgePortMmrpEnabledStatus_true_c;
 	poEntry->u8RestrictedGroupRegistration = ieee8021BridgePortRestrictedGroupRegistration_false_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021BridgePortMmrpTable_BTree);
 	return poEntry;
 }
 
@@ -6164,24 +6142,14 @@ ieee8021BridgePortMmrpTable_getByIndex (
 	uint32_t u32BasePortComponentId,
 	uint32_t u32BasePort)
 {
-	register ieee8021BridgePortMmrpEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021BridgeBasePortEntry_t *poPort = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poPort = ieee8021BridgeBasePortTable_getByIndex (u32BasePortComponentId, u32BasePort)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32BasePortComponentId = u32BasePortComponentId;
-	poTmpEntry->u32BasePort = u32BasePort;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021BridgePortMmrpTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021BridgePortMmrpEntry_t, oBTreeNode);
+	return &poPort->oMmrp;
 }
 
 ieee8021BridgePortMmrpEntry_t *
@@ -6189,38 +6157,20 @@ ieee8021BridgePortMmrpTable_getNextIndex (
 	uint32_t u32BasePortComponentId,
 	uint32_t u32BasePort)
 {
-	register ieee8021BridgePortMmrpEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021BridgeBasePortEntry_t *poPort = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poPort = ieee8021BridgeBasePortTable_getNextIndex (u32BasePortComponentId, u32BasePort)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32BasePortComponentId = u32BasePortComponentId;
-	poTmpEntry->u32BasePort = u32BasePort;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021BridgePortMmrpTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021BridgePortMmrpEntry_t, oBTreeNode);
+	return &poPort->oMmrp;
 }
 
 /* remove a row from the table */
 void
 ieee8021BridgePortMmrpTable_removeEntry (ieee8021BridgePortMmrpEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgePortMmrpTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021BridgePortMmrpTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -6230,7 +6180,7 @@ ieee8021BridgePortMmrpTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021BridgePortMmrpTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021BridgeBasePortTable_BTree);
 	return ieee8021BridgePortMmrpTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -6239,20 +6189,20 @@ ieee8021BridgePortMmrpTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021BridgePortMmrpEntry_t *poEntry = NULL;
+	ieee8021BridgeBasePortEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePortMmrpEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgeBasePortEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BasePortComponentId);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BasePort);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePortMmrpTable_BTree);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Port);
+	*my_data_context = (void*) &poEntry->oMmrp;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgeBasePortTable_BTree);
 	return put_index_data;
 }
 
@@ -6261,11 +6211,11 @@ ieee8021BridgePortMmrpTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021BridgePortMmrpEntry_t *poEntry = NULL;
+	ieee8021BridgeBasePortEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	
-	poEntry = ieee8021BridgePortMmrpTable_getByIndex (
+	poEntry = ieee8021BridgeBasePortTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer);
 	if (poEntry == NULL)
@@ -6273,7 +6223,7 @@ ieee8021BridgePortMmrpTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oMmrp;
 	return true;
 }
 
