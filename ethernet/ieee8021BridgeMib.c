@@ -2291,113 +2291,13 @@ ieee8021BridgeBaseIfToPortTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-#if 0
-static int8_t
-ieee8021BridgeBaseIfToPortTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register ieee8021BridgeBaseIfToPortEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021BridgeBaseIfToPortEntry_t, oBTreeNode);
-	register ieee8021BridgeBaseIfToPortEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021BridgeBaseIfToPortEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oIeee8021BridgeBaseIfToPortTable_BTree = xBTree_initInline (&ieee8021BridgeBaseIfToPortTable_BTreeNodeCmp);
-
-/* create a new row in the table */
-ieee8021BridgeBaseIfToPortEntry_t *
-ieee8021BridgeBaseIfToPortTable_createEntry (
-	uint32_t u32Index)
-{
-	register ieee8021BridgeBaseIfToPortEntry_t *poEntry = NULL;
-	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgeBaseIfToPortTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021BridgeBaseIfToPortTable_BTree);
-	return poEntry;
-}
-
-ieee8021BridgeBaseIfToPortEntry_t *
-ieee8021BridgeBaseIfToPortTable_getByIndex (
-	uint32_t u32Index)
-{
-	register ieee8021BridgeBaseIfToPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
-	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021BridgeBaseIfToPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021BridgeBaseIfToPortEntry_t, oBTreeNode);
-}
-
-ieee8021BridgeBaseIfToPortEntry_t *
-ieee8021BridgeBaseIfToPortTable_getNextIndex (
-	uint32_t u32Index)
-{
-	register ieee8021BridgeBaseIfToPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
-	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021BridgeBaseIfToPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021BridgeBaseIfToPortEntry_t, oBTreeNode);
-}
-
-/* remove a row from the table */
-void
-ieee8021BridgeBaseIfToPortTable_removeEntry (ieee8021BridgeBaseIfToPortEntry_t *poEntry)
-{
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021BridgeBaseIfToPortTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021BridgeBaseIfToPortTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
-	return;
-}
-#endif
-
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021BridgeBaseIfToPortTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021BridgePhyData_If_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021BridgePhyPortTable_If_BTree);
 	return ieee8021BridgeBaseIfToPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2406,18 +2306,18 @@ ieee8021BridgeBaseIfToPortTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021BridgePhyData_t *poEntry = NULL;
+	ieee8021BridgePhyPortEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePhyData_t, oIf_BTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePhyPortEntry_t, oIf_BTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32IfIndex);
 	*my_data_context = (void*) &poEntry->oIf;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oIf_BTreeNode, &oIeee8021BridgePhyData_If_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oIf_BTreeNode, &oIeee8021BridgePhyPortTable_If_BTree);
 	return put_index_data;
 }
 
@@ -2426,11 +2326,11 @@ ieee8021BridgeBaseIfToPortTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021BridgePhyData_t *poEntry = NULL;
+	ieee8021BridgePhyPortEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = ieee8021BridgePhyData_getByIndex (
-		*idx1->val.integer, 0);
+	poEntry = ieee8021BridgePhyPortTable_getByIndex (
+		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
 		return false;
@@ -2525,7 +2425,6 @@ ieee8021BridgePhyPortTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-#if 0
 static int8_t
 ieee8021BridgePhyPortTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
@@ -2538,7 +2437,20 @@ ieee8021BridgePhyPortTable_BTreeNodeCmp (
 		(pEntry1->u32Port == pEntry2->u32Port) ? 0: 1;
 }
 
+static int8_t
+ieee8021BridgePhyPortTable_If_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ieee8021BridgePhyPortEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021BridgePhyPortEntry_t, oIf_BTreeNode);
+	register ieee8021BridgePhyPortEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021BridgePhyPortEntry_t, oIf_BTreeNode);
+	
+	return
+		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ? -1:
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
+}
+
 xBTree_t oIeee8021BridgePhyPortTable_BTree = xBTree_initInline (&ieee8021BridgePhyPortTable_BTreeNodeCmp);
+xBTree_t oIeee8021BridgePhyPortTable_If_BTree = xBTree_initInline (&ieee8021BridgePhyPortTable_If_BTreeNodeCmp);
 
 /* create a new row in the table */
 ieee8021BridgePhyPortEntry_t *
@@ -2623,7 +2535,6 @@ ieee8021BridgePhyPortTable_removeEntry (ieee8021BridgePhyPortEntry_t *poEntry)
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
-#endif
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *

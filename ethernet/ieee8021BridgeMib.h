@@ -43,6 +43,7 @@ typedef struct ieee8021BridgeBasePortEntry_t ieee8021BridgeBasePortEntry_t;
 #include "lib/snmp.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define TOBE_REPLACED 1
 
@@ -328,8 +329,8 @@ typedef struct ieee8021BridgeBaseIfToPortEntry_t
 // 	uint32_t u32Index;
 	
 	/* Column values */
-// 	uint32_t u32ComponentId;
-// 	uint32_t u32Port;
+	uint32_t u32ComponentId;
+	uint32_t u32Port;
 	
 // 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgeBaseIfToPortEntry_t;
@@ -338,18 +339,6 @@ typedef struct ieee8021BridgeBaseIfToPortEntry_t
 
 /* ieee8021BridgeBaseIfToPortTable table mapper */
 void ieee8021BridgeBaseIfToPortTable_init (void);
-ieee8021BridgeBaseIfToPortEntry_t * ieee8021BridgeBaseIfToPortTable_createEntry (
-	uint32_t u32Index);
-ieee8021BridgeBaseIfToPortEntry_t * ieee8021BridgeBaseIfToPortTable_getByIndex (
-	uint32_t u32Index);
-ieee8021BridgeBaseIfToPortEntry_t * ieee8021BridgeBaseIfToPortTable_getNextIndex (
-	uint32_t u32Index);
-void ieee8021BridgeBaseIfToPortTable_removeEntry (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
-ieee8021BridgeBaseIfToPortEntry_t *ieee8021BridgeBaseIfToPortTable_createExt (
-	uint32_t u32Index);
-bool ieee8021BridgeBaseIfToPortTable_removeExt (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
-bool ieee8021BridgeBaseIfToPortTable_createHier (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
-bool ieee8021BridgeBaseIfToPortTable_removeHier (ieee8021BridgeBaseIfToPortEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgeBaseIfToPortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgeBaseIfToPortTable_getNext;
@@ -371,19 +360,33 @@ Netsnmp_Node_Handler ieee8021BridgeBaseIfToPortTable_mapper;
 typedef struct ieee8021BridgePhyPortEntry_t
 {
 	/* Index values */
-// 	uint32_t u32Port;
+	uint32_t u32Port;
 	
 	/* Column values */
-// 	uint32_t u32IfIndex;
+	uint32_t u32IfIndex;
 	uint8_t au8MacAddress[6];
 	size_t u16MacAddress_len;	/* # of uint8_t elements */
 // 	uint32_t u32ToComponentId;
 // 	uint32_t u32ToInternalPort;
 	
-// 	xBTree_Node_t oBTreeNode;
+	ieee8021BridgeBaseIfToPortEntry_t oIf;
+	
+	uint32_t u32ChassisId;
+	uint8_t au8TypeCapabilities[2];
+	size_t u16TypeCapabilities_len;	/* # of uint8_t elements */
+	int32_t i32Type;
+	int32_t i32Mtu;
+	uint8_t u8AdminStatus;
+	uint8_t u8OperStatus;
+	uint8_t au8AdminFlags[3];
+	uint8_t au8OperFlags[3];
+	
+	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oIf_BTreeNode;
 } ieee8021BridgePhyPortEntry_t;
 
-// extern xBTree_t oIeee8021BridgePhyPortTable_BTree;
+extern xBTree_t oIeee8021BridgePhyPortTable_BTree;
+extern xBTree_t oIeee8021BridgePhyPortTable_If_BTree;
 
 /* ieee8021BridgePhyPortTable table mapper */
 void ieee8021BridgePhyPortTable_init (void);
