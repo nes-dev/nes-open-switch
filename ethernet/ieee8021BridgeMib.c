@@ -2542,7 +2542,7 @@ ieee8021BridgePhyPortTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021BridgePhyData_Phy_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021BridgePhyPortTable_BTree);
 	return ieee8021BridgePhyPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2551,18 +2551,18 @@ ieee8021BridgePhyPortTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021BridgePhyData_t *poEntry = NULL;
+	ieee8021BridgePhyPortEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePhyData_t, oPhy_BTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021BridgePhyPortEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PhyPort);
-	*my_data_context = (void*) &poEntry->oPhy;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oPhy_BTreeNode, &oIeee8021BridgePhyData_Phy_BTree);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Port);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgePhyPortTable_BTree);
 	return put_index_data;
 }
 
@@ -2571,17 +2571,17 @@ ieee8021BridgePhyPortTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021BridgePhyData_t *poEntry = NULL;
+	ieee8021BridgePhyPortEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = ieee8021BridgePhyData_getByIndex (
-		0, *idx1->val.integer);
+	poEntry = ieee8021BridgePhyPortTable_getByIndex (
+		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oPhy;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -2613,21 +2613,19 @@ ieee8021BridgePhyPortTable_mapper (
 				continue;
 			}
 			
-			register ieee8021BridgePhyData_t *poEntry = ieee8021BridgePhyData_getByPhyEntry (table_entry);
-			
 			switch (table_info->colnum)
 			{
 			case IEEE8021BRIDGEPHYPORTIFINDEX:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, poEntry->u32IfIndex);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32IfIndex);
 				break;
 			case IEEE8021BRIDGEPHYMACADDRESS:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, table_entry->u16MacAddress_len);
 				break;
 			case IEEE8021BRIDGEPHYPORTTOCOMPONENTID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, poEntry->u32ComponentId);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->oIf.u32ComponentId);
 				break;
 			case IEEE8021BRIDGEPHYPORTTOINTERNALPORT:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, poEntry->u32Port);
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->oIf.u32Port);
 				break;
 				
 			default:
