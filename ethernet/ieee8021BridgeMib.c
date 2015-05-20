@@ -5767,7 +5767,7 @@ ieee8021BridgePortMrpTable_getNext (
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Port);
-	*my_data_context = (void*) &poEntry->oMrp;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021BridgeBasePortTable_BTree);
 	return put_index_data;
 }
@@ -5789,7 +5789,7 @@ ieee8021BridgePortMrpTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oMrp;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -5804,6 +5804,7 @@ ieee8021BridgePortMrpTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	ieee8021BridgePortMrpEntry_t *table_entry;
+	register ieee8021BridgeBasePortEntry_t *poEntry = NULL;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -5815,13 +5816,14 @@ ieee8021BridgePortMrpTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021BridgePortMrpEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oMrp;
 			
 			switch (table_info->colnum)
 			{
@@ -5848,8 +5850,9 @@ ieee8021BridgePortMrpTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021BridgePortMrpEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oMrp;
 			
 			switch (table_info->colnum)
 			{
@@ -5888,13 +5891,26 @@ ieee8021BridgePortMrpTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (ieee8021BridgePortMrpEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
+			}
+			table_entry = &poEntry->oMrp;
+			
+			switch (table_info->colnum)
+			{
+			case IEEE8021BRIDGEPORTMRPJOINTIME:
+			case IEEE8021BRIDGEPORTMRPLEAVETIME:
+			case IEEE8021BRIDGEPORTMRPLEAVEALLTIME:
+				if (poEntry->u8RowStatus == xRowStatus_active_c || poEntry->u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
 			}
 		}
 		break;
@@ -5906,8 +5922,9 @@ ieee8021BridgePortMrpTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021BridgePortMrpEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oMrp;
 			
 			switch (table_info->colnum)
 			{
@@ -5961,12 +5978,13 @@ ieee8021BridgePortMrpTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (ieee8021BridgePortMrpEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ieee8021BridgeBasePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oMrp;
 			
 			switch (table_info->colnum)
 			{
