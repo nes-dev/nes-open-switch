@@ -35,6 +35,7 @@ extern "C" {
 #include "neInetMIB.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define TOBE_REPLACED 1
 
@@ -695,8 +696,7 @@ bool ipAddressTable_removeExt (ipAddressEntry_t *poEntry);
 bool ipAddressIfIndex_handler (
 	ipAddressEntry_t *poEntry);
 bool ipAddressRowStatus_handler (
-	ipAddressEntry_t *poEntry,
-	int32_t i32RowStatus);
+	ipAddressEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ipAddressTable_getFirst;
 Netsnmp_Next_Data_Point ipAddressTable_getNext;

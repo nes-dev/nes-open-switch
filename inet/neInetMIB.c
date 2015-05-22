@@ -23,7 +23,6 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
-#include "ethernet/ieee8021BridgeMib.h"
 #include "if/ifMIB.h"
 #include "ipMIB.h"
 #include "neInetMIB.h"
@@ -36,6 +35,7 @@
 #include "lib/snmp.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
@@ -110,10 +110,11 @@ neInetScalars_t oNeInetScalars;
 
 /** neInetScalars scalar mapper **/
 int
-neInetScalars_mapper (netsnmp_mib_handler *handler,
+neInetScalars_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid neInetScalars_oid[];
 	netsnmp_request_info *request;
@@ -126,7 +127,7 @@ neInetScalars_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (neInetScalars_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (neInetScalars_oid)])
 			{
 			case NEINETFORWARDINGENABLE:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oNeInetScalars.au8ForwardingEnable, oNeInetScalars.u16ForwardingEnable_len);
@@ -148,7 +149,7 @@ neInetScalars_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (neInetScalars_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (neInetScalars_oid)])
 			{
 			case NEINETFORWARDINGENABLE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_OCTET_STR);
@@ -174,7 +175,7 @@ neInetScalars_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (neInetScalars_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (neInetScalars_oid)])
 			{
 			case NEINETFORWARDINGENABLE:
 				/* XXX: perform the value change here */
@@ -196,7 +197,7 @@ neInetScalars_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (neInetScalars_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (neInetScalars_oid)])
 			{
 			case NEINETFORWARDINGENABLE:
 				/* XXX: UNDO and return to previous value for the object */
@@ -223,10 +224,11 @@ neIpScalars_t oNeIpScalars;
 
 /** neIpScalars scalar mapper **/
 int
-neIpScalars_mapper (netsnmp_mib_handler *handler,
+neIpScalars_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid neIpScalars_oid[];
 	netsnmp_request_info *request;
@@ -239,7 +241,7 @@ neIpScalars_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (neIpScalars_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (neIpScalars_oid)])
 			{
 			case NEIPASN:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oNeIpScalars.u32Asn);
@@ -264,7 +266,7 @@ neIpScalars_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (neIpScalars_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (neIpScalars_oid)])
 			{
 			case NEIPASN:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
@@ -297,7 +299,7 @@ neIpScalars_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (neIpScalars_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (neIpScalars_oid)])
 			{
 			case NEIPASN:
 				/* XXX: perform the value change here */
@@ -325,7 +327,7 @@ neIpScalars_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (neIpScalars_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (neIpScalars_oid)])
 			{
 			case NEIPASN:
 				/* XXX: UNDO and return to previous value for the object */
@@ -948,7 +950,6 @@ neInetInterfaceTable_mapper (
 		{
 			table_entry = (neInetInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);

@@ -23,7 +23,6 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
-#include "ethernet/ieee8021BridgeMib.h"
 #include "if/ifMIB.h"
 #include "ipMIB.h"
 
@@ -35,6 +34,7 @@
 #include "lib/snmp.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
@@ -118,10 +118,11 @@ ip_t oIp;
 
 /** ip scalar mapper **/
 int
-ip_mapper (netsnmp_mib_handler *handler,
+ip_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid ip_oid[];
 	netsnmp_request_info *request;
@@ -134,7 +135,7 @@ ip_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (ip_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (ip_oid)])
 			{
 			case IPFORWARDING:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oIp.i32Forwarding);
@@ -180,7 +181,7 @@ ip_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (ip_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (ip_oid)])
 			{
 			case IPFORWARDING:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
@@ -241,7 +242,7 @@ ip_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (ip_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (ip_oid)])
 			{
 			case IPFORWARDING:
 				/* XXX: perform the value change here */
@@ -301,7 +302,7 @@ ip_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (ip_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (ip_oid)])
 			{
 			case IPFORWARDING:
 				/* XXX: UNDO and return to previous value for the object */
@@ -368,10 +369,11 @@ ipTrafficStats_t oIpTrafficStats;
 
 /** ipTrafficStats scalar mapper **/
 int
-ipTrafficStats_mapper (netsnmp_mib_handler *handler,
+ipTrafficStats_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid ipTrafficStats_oid[];
 	netsnmp_request_info *request;
@@ -383,7 +385,7 @@ ipTrafficStats_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (ipTrafficStats_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (ipTrafficStats_oid)])
 			{
 			case IPIFSTATSTABLELASTCHANGE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, oIpTrafficStats.u32IfStatsTableLastChange);
@@ -674,7 +676,6 @@ ipv4InterfaceTable_mapper (
 		{
 			table_entry = (ipv4InterfaceEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -1019,7 +1020,6 @@ ipv6InterfaceTable_mapper (
 		{
 			table_entry = (ipv6InterfaceEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -2583,8 +2583,7 @@ ipAddressIfIndex_handler_cleanup:
 
 bool
 ipAddressRowStatus_handler (
-	ipAddressEntry_t *poEntry,
-	int32_t u8RowStatus)
+	ipAddressEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register neInetInterfaceEntry_t *poNeInetInterfaceEntry = NULL;
 	register ipAddressData_t *poIpAddressData = ipAddressData_getByIpEntry (poEntry);
@@ -2613,12 +2612,6 @@ ipAddressRowStatus_handler (
 			goto ipAddressRowStatus_handler_cleanup;
 		}
 		
-		/*if (poNeInetInterfaceEntry->i32TrafficEnable == neInetInterfaceTrafficEnable_true_c &&
-			!ieee8021BridgeTpPortTable_handler (poIpAddressData->u32IfIndex, false))
-		{
-			goto ipAddressRowStatus_handler_cleanup;
-		}*/
-		
 		/* TODO */
 		poEntry->u8RowStatus = xRowStatus_active_c;
 		break;
@@ -2628,13 +2621,6 @@ ipAddressRowStatus_handler (
 		{
 			goto ipAddressRowStatus_handler_success;
 		}
-		
-		/*if (((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL ||
-			 poNeInetInterfaceEntry->i32TrafficEnable == neInetInterfaceTrafficEnable_true_c) &&
-			!ieee8021BridgeTpPortTable_handler (poIpAddressData->u32IfIndex, true))
-		{
-			goto ipAddressRowStatus_handler_cleanup;
-		}*/
 		
 		/* TODO */
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
@@ -2667,13 +2653,6 @@ ipAddressRowStatus_handler (
 			{
 				goto ipAddressRowStatus_handler_cleanup;
 			}
-			
-			/*if (((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (u32IfIndex)) == NULL ||
-				 poNeInetInterfaceEntry->i32TrafficEnable == neInetInterfaceTrafficEnable_true_c) &&
-				!ieee8021BridgeTpPortTable_handler (u32IfIndex, true))
-			{
-				goto ipAddressRowStatus_handler_cleanup;
-			}*/
 		}
 		
 		/* TODO */
