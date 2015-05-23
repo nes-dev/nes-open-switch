@@ -46,7 +46,7 @@ static oid neInetMIB_oid[] = {1,3,6,1,4,1,36969,53};
 static oid neInetScalars_oid[] = {1,3,6,1,4,1,36969,53,1,1};
 static oid neIpScalars_oid[] = {1,3,6,1,4,1,36969,53,3,1};
 
-static oid neInetInterfaceTable_oid[] = {1,3,6,1,4,1,36969,53,1,2};
+static oid neInetIfTable_oid[] = {1,3,6,1,4,1,36969,53,1,2};
 static oid neInetIntRouteTable_oid[] = {1,3,6,1,4,1,36969,53,1,3};
 static oid neInetRouteTable_oid[] = {1,3,6,1,4,1,36969,53,1,4};
 static oid neIpAddressTable_oid[] = {1,3,6,1,4,1,36969,53,3,2};
@@ -91,7 +91,7 @@ neInetMIB_init (void)
 	
 	
 	/* register neInetMIB group table mappers */
-	neInetInterfaceTable_init ();
+	neInetIfTable_init ();
 	neInetIntRouteTable_init ();
 	neInetRouteTable_init ();
 	neIpAddressTable_init ();
@@ -362,18 +362,18 @@ neIpScalars_mapper (
 /**
  *	table mapper(s) & helper(s)
  */
-/** initialize neInetInterfaceTable table mapper **/
+/** initialize neInetIfTable table mapper **/
 void
-neInetInterfaceTable_init (void)
+neInetIfTable_init (void)
 {
-	extern oid neInetInterfaceTable_oid[];
+	extern oid neInetIfTable_oid[];
 	netsnmp_handler_registration *reg;
 	netsnmp_iterator_info *iinfo;
 	netsnmp_table_registration_info *table_info;
 	
 	reg = netsnmp_create_handler_registration (
-		"neInetInterfaceTable", &neInetInterfaceTable_mapper,
-		neInetInterfaceTable_oid, OID_LENGTH (neInetInterfaceTable_oid),
+		"neInetIfTable", &neInetIfTable_mapper,
+		neInetIfTable_oid, OID_LENGTH (neInetIfTable_oid),
 		HANDLER_CAN_RWRITE
 		);
 		
@@ -381,13 +381,13 @@ neInetInterfaceTable_init (void)
 	netsnmp_table_helper_add_indexes (table_info,
 		ASN_INTEGER /* index: ifIndex */,
 		0);
-	table_info->min_column = NEINETINTERFACETRAFFICENABLE;
-	table_info->max_column = NEINETINTERFACEFORWARDINGENABLE;
+	table_info->min_column = NEINETIFTRAFFICENABLE;
+	table_info->max_column = NEINETIFFORWARDINGENABLE;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
-	iinfo->get_first_data_point = &neInetInterfaceTable_getFirst;
-	iinfo->get_next_data_point = &neInetInterfaceTable_getNext;
-	iinfo->get_data_point = &neInetInterfaceTable_get;
+	iinfo->get_first_data_point = &neInetIfTable_getFirst;
+	iinfo->get_next_data_point = &neInetIfTable_getNext;
+	iinfo->get_data_point = &neInetIfTable_get;
 	iinfo->table_reginfo = table_info;
 	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
 	
@@ -397,25 +397,25 @@ neInetInterfaceTable_init (void)
 }
 
 static int8_t
-neInetInterfaceTable_BTreeNodeCmp (
+neInetIfTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register neInetInterfaceEntry_t *pEntry1 = xBTree_entry (pNode1, neInetInterfaceEntry_t, oBTreeNode);
-	register neInetInterfaceEntry_t *pEntry2 = xBTree_entry (pNode2, neInetInterfaceEntry_t, oBTreeNode);
+	register neInetIfEntry_t *pEntry1 = xBTree_entry (pNode1, neInetIfEntry_t, oBTreeNode);
+	register neInetIfEntry_t *pEntry2 = xBTree_entry (pNode2, neInetIfEntry_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ? -1:
 		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
 }
 
-xBTree_t oNeInetInterfaceTable_BTree = xBTree_initInline (&neInetInterfaceTable_BTreeNodeCmp);
+xBTree_t oNeInetIfTable_BTree = xBTree_initInline (&neInetIfTable_BTreeNodeCmp);
 
 /* create a new row in the table */
-neInetInterfaceEntry_t *
-neInetInterfaceTable_createEntry (
+neInetIfEntry_t *
+neInetIfTable_createEntry (
 	uint32_t u32IfIndex)
 {
-	register neInetInterfaceEntry_t *poEntry = NULL;
+	register neInetIfEntry_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
@@ -423,24 +423,24 @@ neInetInterfaceTable_createEntry (
 	}
 	
 	poEntry->u32IfIndex = u32IfIndex;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeInetInterfaceTable_BTree) != NULL)
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeInetIfTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
 		return NULL;
 	}
 	
-	poEntry->i32TrafficEnable = neInetInterfaceTrafficEnable_true_c;
-	/*poEntry->au8ForwardingEnable = neInetInterfaceForwardingEnable_{ ipv4 , ipv6 , clnp }_c*/;
+	poEntry->i32TrafficEnable = neInetIfTrafficEnable_true_c;
+	/*poEntry->au8ForwardingEnable = neInetIfForwardingEnable_{ ipv4 , ipv6 , clnp }_c*/;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeInetInterfaceTable_BTree);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeInetIfTable_BTree);
 	return poEntry;
 }
 
-neInetInterfaceEntry_t *
-neInetInterfaceTable_getByIndex (
+neInetIfEntry_t *
+neInetIfTable_getByIndex (
 	uint32_t u32IfIndex)
 {
-	register neInetInterfaceEntry_t *poTmpEntry = NULL;
+	register neInetIfEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -449,21 +449,21 @@ neInetInterfaceTable_getByIndex (
 	}
 	
 	poTmpEntry->u32IfIndex = u32IfIndex;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeInetInterfaceTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeInetIfTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neInetInterfaceEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, neInetIfEntry_t, oBTreeNode);
 }
 
-neInetInterfaceEntry_t *
-neInetInterfaceTable_getNextIndex (
+neInetIfEntry_t *
+neInetIfTable_getNextIndex (
 	uint32_t u32IfIndex)
 {
-	register neInetInterfaceEntry_t *poTmpEntry = NULL;
+	register neInetIfEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -472,54 +472,54 @@ neInetInterfaceTable_getNextIndex (
 	}
 	
 	poTmpEntry->u32IfIndex = u32IfIndex;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeInetInterfaceTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeInetIfTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neInetInterfaceEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, neInetIfEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
-neInetInterfaceTable_removeEntry (neInetInterfaceEntry_t *poEntry)
+neInetIfTable_removeEntry (neInetIfEntry_t *poEntry)
 {
 	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeInetInterfaceTable_BTree) == NULL)
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeInetIfTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeInetInterfaceTable_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeInetIfTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
-neInetInterfaceEntry_t *
-neInetInterfaceTable_createExt (
+neInetIfEntry_t *
+neInetIfTable_createExt (
 	uint32_t u32IfIndex,
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len,
 	bool bUnNumAddr)
 {
-	neInetInterfaceEntry_t *poEntry = NULL;
+	neInetIfEntry_t *poEntry = NULL;
 	
 	if (!ifData_getByIndexExt (u32IfIndex, false, NULL))
 	{
 		return NULL;
 	}
 	
-	if ((poEntry = neInetInterfaceTable_getByIndex (u32IfIndex)) == NULL &&
-		(poEntry = neInetInterfaceTable_createEntry (u32IfIndex)) == NULL)
+	if ((poEntry = neInetIfTable_getByIndex (u32IfIndex)) == NULL &&
+		(poEntry = neInetIfTable_createEntry (u32IfIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	if (!neInetInterfaceTable_createHier (poEntry, i32AddrType, pau8Addr, u16Addr_len))
+	if (!neInetIfTable_createHier (poEntry, i32AddrType, pau8Addr, u16Addr_len))
 	{
-		neInetInterfaceTable_removeEntry (poEntry);
+		neInetIfTable_removeEntry (poEntry);
 		return NULL;
 	}
 	
@@ -572,8 +572,8 @@ neInetInterfaceTable_createExt (
 }
 
 bool
-neInetInterfaceTable_removeExt (
-	neInetInterfaceEntry_t *poEntry,
+neInetIfTable_removeExt (
+	neInetIfEntry_t *poEntry,
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len,
 	bool bUnNumAddr)
@@ -623,7 +623,7 @@ neInetInterfaceTable_removeExt (
 		}
 	}
 	
-	if (!neInetInterfaceTable_removeHier (poEntry, i32AddrType, pau8Addr, u16Addr_len))
+	if (!neInetIfTable_removeHier (poEntry, i32AddrType, pau8Addr, u16Addr_len))
 	{
 		return false;
 	}
@@ -631,15 +631,15 @@ neInetInterfaceTable_removeExt (
 	if (poEntry->u32NumIpv4Addresses == 0 && poEntry->u32NumIpv4zAddresses == 0 && poEntry->u32NumIpv4UnNumAddresses == 0 && poEntry->u32NumIpv4zUnNumAddresses == 0 &&
 		poEntry->u32NumIpv6Addresses == 0 && poEntry->u32NumIpv6zAddresses == 0 && poEntry->u32NumIpv6UnNumAddresses == 0 && poEntry->u32NumIpv6zUnNumAddresses == 0)
 	{
-		neInetInterfaceTable_removeEntry (poEntry);
+		neInetIfTable_removeEntry (poEntry);
 	}
 	
 	return true;
 }
 
 bool
-neInetInterfaceTable_createHier (
-	neInetInterfaceEntry_t *poEntry,
+neInetIfTable_createHier (
+	neInetIfEntry_t *poEntry,
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len)
 {
@@ -660,7 +660,7 @@ neInetInterfaceTable_createHier (
 		if ((poIpv4InterfaceEntry = ipv4InterfaceTable_getByIndex (poEntry->u32IfIndex)) == NULL &&
 			(poIpv4InterfaceEntry = ipv4InterfaceTable_createEntry (poEntry->u32IfIndex)) == NULL)
 		{
-			goto neInetInterfaceTable_createHier_cleanup;
+			goto neInetIfTable_createHier_cleanup;
 		}
 	}
 	else if (u8InetVersion == InetVersion_ipv6_c)
@@ -668,7 +668,7 @@ neInetInterfaceTable_createHier (
 		if ((poIpv6InterfaceEntry = ipv6InterfaceTable_getByIndex (poEntry->u32IfIndex)) == NULL &&
 			(poIpv6InterfaceEntry = ipv6InterfaceTable_createEntry (poEntry->u32IfIndex)) == NULL)
 		{
-			goto neInetInterfaceTable_createHier_cleanup;
+			goto neInetIfTable_createHier_cleanup;
 		}
 	}
 	
@@ -676,13 +676,13 @@ neInetInterfaceTable_createHier (
 	if ((poIpSystemStatsEntry = ipSystemStatsTable_getByIndex (u8InetVersion)) == NULL &&
 		(poIpSystemStatsEntry = ipSystemStatsTable_createEntry (u8InetVersion)) == NULL)
 	{
-		goto neInetInterfaceTable_createHier_cleanup;
+		goto neInetIfTable_createHier_cleanup;
 	}
 	
 	if ((poIpIfStatsEntry = ipIfStatsTable_getByIndex (u8InetVersion, poEntry->u32IfIndex)) == NULL &&
 		(poIpIfStatsEntry = ipIfStatsTable_createEntry (u8InetVersion, poEntry->u32IfIndex)) == NULL)
 	{
-		goto neInetInterfaceTable_createHier_cleanup;
+		goto neInetIfTable_createHier_cleanup;
 	}
 	
 	if (u8InetVersion == InetVersion_ipv6_c)
@@ -690,22 +690,22 @@ neInetInterfaceTable_createHier (
 		if ((poIpv6ScopeZoneIndexEntry = ipv6ScopeZoneIndexTable_getByIndex (poEntry->u32IfIndex)) == NULL &&
 			(poIpv6ScopeZoneIndexEntry = ipv6ScopeZoneIndexTable_createEntry (poEntry->u32IfIndex)) == NULL)
 		{
-			goto neInetInterfaceTable_createHier_cleanup;
+			goto neInetIfTable_createHier_cleanup;
 		}
 	}
 	
 	return true;
 	
 	
-neInetInterfaceTable_createHier_cleanup:
+neInetIfTable_createHier_cleanup:
 	
-	neInetInterfaceTable_removeHier (poEntry, i32AddrType, pau8Addr, u16Addr_len);
+	neInetIfTable_removeHier (poEntry, i32AddrType, pau8Addr, u16Addr_len);
 	return false;
 }
 
 bool
-neInetInterfaceTable_removeHier (
-	neInetInterfaceEntry_t *poEntry,
+neInetIfTable_removeHier (
+	neInetIfEntry_t *poEntry,
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len)
 {
@@ -784,76 +784,76 @@ neInetInterfaceTable_removeHier (
 }
 
 bool
-neInetInterfaceTrafficEnable_handler (
-	neInetInterfaceEntry_t *poEntry,
+neInetIfTrafficEnable_handler (
+	neInetIfEntry_t *poEntry,
 	int32_t i32TrafficEnable)
 {
-	if (i32TrafficEnable != neInetInterfaceTrafficEnable_true_c &&
-		i32TrafficEnable != neInetInterfaceTrafficEnable_false_c)
+	if (i32TrafficEnable != neInetIfTrafficEnable_true_c &&
+		i32TrafficEnable != neInetIfTrafficEnable_false_c)
 	{
-		goto neInetInterfaceTrafficEnable_handler_cleanup;
+		goto neInetIfTrafficEnable_handler_cleanup;
 	}
 	
 	if (poEntry->i32TrafficEnable == i32TrafficEnable)
 	{
-		goto neInetInterfaceTrafficEnable_handler_success;
+		goto neInetIfTrafficEnable_handler_success;
 	}
 	
-	/*if (!ieee8021BridgeTpPortTable_handler (poEntry->u32IfIndex, i32TrafficEnable != neInetInterfaceTrafficEnable_true_c))
+	/*if (!ieee8021BridgeTpPortTable_handler (poEntry->u32IfIndex, i32TrafficEnable != neInetIfTrafficEnable_true_c))
 	{
-		goto neInetInterfaceTrafficEnable_handler_cleanup;
+		goto neInetIfTrafficEnable_handler_cleanup;
 	}*/
 	
-neInetInterfaceTrafficEnable_handler_success:
+neInetIfTrafficEnable_handler_success:
 	
 	poEntry->i32TrafficEnable = i32TrafficEnable;
 	return true;
 	
 	
-neInetInterfaceTrafficEnable_handler_cleanup:
+neInetIfTrafficEnable_handler_cleanup:
 	
 	return false;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
-neInetInterfaceTable_getFirst (
+neInetIfTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oNeInetInterfaceTable_BTree);
-	return neInetInterfaceTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+	*my_loop_context = xBTree_nodeGetFirst (&oNeInetIfTable_BTree);
+	return neInetIfTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
 netsnmp_variable_list *
-neInetInterfaceTable_getNext (
+neInetIfTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neInetInterfaceEntry_t *poEntry = NULL;
+	neInetIfEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, neInetInterfaceEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, neInetIfEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32IfIndex);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeInetInterfaceTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeInetIfTable_BTree);
 	return put_index_data;
 }
 
 bool
-neInetInterfaceTable_get (
+neInetIfTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neInetInterfaceEntry_t *poEntry = NULL;
+	neInetIfEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = neInetInterfaceTable_getByIndex (
+	poEntry = neInetIfTable_getByIndex (
 		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
@@ -864,9 +864,9 @@ neInetInterfaceTable_get (
 	return true;
 }
 
-/* neInetInterfaceTable table mapper */
+/* neInetIfTable table mapper */
 int
-neInetInterfaceTable_mapper (
+neInetIfTable_mapper (
 	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
 	netsnmp_agent_request_info *reqinfo,
@@ -874,7 +874,7 @@ neInetInterfaceTable_mapper (
 {
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
-	neInetInterfaceEntry_t *table_entry;
+	neInetIfEntry_t *table_entry;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -886,7 +886,7 @@ neInetInterfaceTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neInetInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (neInetIfEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL)
 			{
@@ -896,10 +896,10 @@ neInetInterfaceTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEINETINTERFACETRAFFICENABLE:
+			case NEINETIFTRAFFICENABLE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TrafficEnable);
 				break;
-			case NEINETINTERFACEFORWARDINGENABLE:
+			case NEINETIFFORWARDINGENABLE:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ForwardingEnable, table_entry->u16ForwardingEnable_len);
 				break;
 				
@@ -916,12 +916,12 @@ neInetInterfaceTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neInetInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (neInetIfEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case NEINETINTERFACETRAFFICENABLE:
+			case NEINETIFTRAFFICENABLE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -929,7 +929,7 @@ neInetInterfaceTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case NEINETINTERFACEFORWARDINGENABLE:
+			case NEINETIFFORWARDINGENABLE:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8ForwardingEnable));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -948,7 +948,7 @@ neInetInterfaceTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neInetInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (neInetIfEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL)
 			{
@@ -965,12 +965,12 @@ neInetInterfaceTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neInetInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (neInetIfEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case NEINETINTERFACETRAFFICENABLE:
+			case NEINETIFTRAFFICENABLE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TrafficEnable))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -984,7 +984,7 @@ neInetInterfaceTable_mapper (
 				
 				table_entry->i32TrafficEnable = *request->requestvb->val.integer;
 				break;
-			case NEINETINTERFACEFORWARDINGENABLE:
+			case NEINETIFFORWARDINGENABLE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8ForwardingEnable))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1010,7 +1010,7 @@ neInetInterfaceTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neInetInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (neInetIfEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -1019,10 +1019,10 @@ neInetInterfaceTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case NEINETINTERFACETRAFFICENABLE:
+			case NEINETIFTRAFFICENABLE:
 				memcpy (&table_entry->i32TrafficEnable, pvOldDdata, sizeof (table_entry->i32TrafficEnable));
 				break;
-			case NEINETINTERFACEFORWARDINGENABLE:
+			case NEINETIFFORWARDINGENABLE:
 				memcpy (table_entry->au8ForwardingEnable, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16ForwardingEnable_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
@@ -2256,7 +2256,7 @@ neIpUnNumTable_createHier (
 	neIpUnNumEntry_t *poEntry)
 {
 	register ipAddressData_t *poIpAddressData = NULL;
-	register neInetInterfaceEntry_t *poNeInetInterfaceEntry = NULL;
+	register neInetIfEntry_t *poNeInetIfEntry = NULL;
 	
 	if (poEntry->u32LocalId == 0)
 	{
@@ -2268,8 +2268,8 @@ neIpUnNumTable_createHier (
 		goto neIpUnNumTable_createHier_cleanup;
 	}
 	
-	if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poEntry->u32IfIndex)) == NULL &&
-		(poNeInetInterfaceEntry = neInetInterfaceTable_createExt (poEntry->u32IfIndex, poEntry->i32AddressType, poEntry->au8LocalAddress, poEntry->u16LocalAddress_len, true)) == NULL)
+	if ((poNeInetIfEntry = neInetIfTable_getByIndex (poEntry->u32IfIndex)) == NULL &&
+		(poNeInetIfEntry = neInetIfTable_createExt (poEntry->u32IfIndex, poEntry->i32AddressType, poEntry->au8LocalAddress, poEntry->u16LocalAddress_len, true)) == NULL)
 	{
 		goto neIpUnNumTable_createHier_cleanup;
 	}
@@ -2292,14 +2292,14 @@ neIpUnNumTable_removeHier (
 	neIpUnNumEntry_t *poEntry)
 {
 	register ipAddressData_t *poIpAddressData = NULL;
-	register neInetInterfaceEntry_t *poNeInetInterfaceEntry = NULL;
+	register neInetIfEntry_t *poNeInetIfEntry = NULL;
 	
-	if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poEntry->u32IfIndex)) == NULL)
+	if ((poNeInetIfEntry = neInetIfTable_getByIndex (poEntry->u32IfIndex)) == NULL)
 	{
 		goto neIpUnNumTable_removeHier_cleanup;
 	}
 	
-	neInetInterfaceTable_removeExt (poNeInetInterfaceEntry, poEntry->i32AddressType, poEntry->au8LocalAddress, poEntry->u16LocalAddress_len, true);
+	neInetIfTable_removeExt (poNeInetIfEntry, poEntry->i32AddressType, poEntry->au8LocalAddress, poEntry->u16LocalAddress_len, true);
 	
 	if ((poIpAddressData = ipAddressData_getByIndex (poEntry->i32AddressType, poEntry->au8LocalAddress, poEntry->u16LocalAddress_len)) == NULL)
 	{

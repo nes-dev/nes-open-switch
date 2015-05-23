@@ -2500,7 +2500,7 @@ bool
 ipAddressIfIndex_handler (
 	ipAddressEntry_t *poEntry)
 {
-	register neInetInterfaceEntry_t *poNeInetInterfaceEntry = NULL;
+	register neInetIfEntry_t *poNeInetIfEntry = NULL;
 	register ipAddressData_t *poIpAddressData = ipAddressData_getByIpEntry (poEntry);
 	
 	
@@ -2514,7 +2514,7 @@ ipAddressIfIndex_handler (
 		goto ipAddressIfIndex_handler_newIfIndex;
 	}
 	
-	if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL)
+	if ((poNeInetIfEntry = neInetIfTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL)
 	{
 		goto ipAddressIfIndex_handler_cleanup;
 	}
@@ -2529,7 +2529,7 @@ ipAddressIfIndex_handler (
 		poIpAddressData->u32PrefixLength = 0;
 	}
 	
-	if (!neInetInterfaceTable_removeExt (poNeInetInterfaceEntry, poIpAddressData->i32AddrType, poIpAddressData->au8Addr, poIpAddressData->u16Addr_len, false))
+	if (!neInetIfTable_removeExt (poNeInetIfEntry, poIpAddressData->i32AddrType, poIpAddressData->au8Addr, poIpAddressData->u16Addr_len, false))
 	{
 		goto ipAddressIfIndex_handler_cleanup;
 	}
@@ -2553,8 +2553,8 @@ ipAddressIfIndex_handler_newIfIndex:
 		goto ipAddressIfIndex_handler_cleanup;
 	}
 	
-	if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->oIp.u32IfIndex)) == NULL &&
-		(poNeInetInterfaceEntry = neInetInterfaceTable_createExt (
+	if ((poNeInetIfEntry = neInetIfTable_getByIndex (poIpAddressData->oIp.u32IfIndex)) == NULL &&
+		(poNeInetIfEntry = neInetIfTable_createExt (
 			poIpAddressData->oIp.u32IfIndex, poIpAddressData->i32AddrType, poIpAddressData->au8Addr, poIpAddressData->u16Addr_len, false)) == NULL)
 	{
 		goto ipAddressIfIndex_handler_cleanup;
@@ -2585,7 +2585,7 @@ bool
 ipAddressRowStatus_handler (
 	ipAddressEntry_t *poEntry, uint8_t u8RowStatus)
 {
-	register neInetInterfaceEntry_t *poNeInetInterfaceEntry = NULL;
+	register neInetIfEntry_t *poNeInetIfEntry = NULL;
 	register ipAddressData_t *poIpAddressData = ipAddressData_getByIpEntry (poEntry);
 	
 	switch (u8RowStatus)
@@ -2607,7 +2607,7 @@ ipAddressRowStatus_handler (
 			goto ipAddressRowStatus_handler_cleanup;
 		}
 		
-		if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL)
+		if ((poNeInetIfEntry = neInetIfTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL)
 		{
 			goto ipAddressRowStatus_handler_cleanup;
 		}
@@ -2643,7 +2643,7 @@ ipAddressRowStatus_handler (
 		{
 			//uint32_t u32IfIndex = poIpAddressData->u32IfIndex;
 			
-			if ((poNeInetInterfaceEntry = neInetInterfaceTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL)
+			if ((poNeInetIfEntry = neInetIfTable_getByIndex (poIpAddressData->u32IfIndex)) == NULL)
 			{
 				goto ipAddressRowStatus_handler_cleanup;
 			}

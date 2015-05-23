@@ -92,25 +92,25 @@ Netsnmp_Node_Handler neIpScalars_mapper;
  *	table mapper(s)
  */
 /**
- *	table neInetInterfaceTable definitions
+ *	table neInetIfTable definitions
  */
-#define NEINETINTERFACETRAFFICENABLE 1
-#define NEINETINTERFACEFORWARDINGENABLE 2
+#define NEINETIFTRAFFICENABLE 1
+#define NEINETIFFORWARDINGENABLE 2
 
 enum
 {
-	/* enums for column neInetInterfaceTrafficEnable */
-	neInetInterfaceTrafficEnable_true_c = 1,
-	neInetInterfaceTrafficEnable_false_c = 2,
+	/* enums for column neInetIfTrafficEnable */
+	neInetIfTrafficEnable_true_c = 1,
+	neInetIfTrafficEnable_false_c = 2,
 
-	/* enums for column neInetInterfaceForwardingEnable */
-	neInetInterfaceForwardingEnable_ipv4_c = 0,
-	neInetInterfaceForwardingEnable_ipv6_c = 1,
-	neInetInterfaceForwardingEnable_clnp_c = 2,
+	/* enums for column neInetIfForwardingEnable */
+	neInetIfForwardingEnable_ipv4_c = 0,
+	neInetIfForwardingEnable_ipv6_c = 1,
+	neInetIfForwardingEnable_clnp_c = 2,
 };
 
-/* table neInetInterfaceTable row entry data structure */
-typedef struct neInetInterfaceEntry_t
+/* table neInetIfTable row entry data structure */
+typedef struct neInetIfEntry_t
 {
 	/* Index values */
 	uint32_t u32IfIndex;
@@ -130,42 +130,42 @@ typedef struct neInetInterfaceEntry_t
 	uint32_t u32NumIpv6zUnNumAddresses;
 	
 	xBTree_Node_t oBTreeNode;
-} neInetInterfaceEntry_t;
+} neInetIfEntry_t;
 
-extern xBTree_t oNeInetInterfaceTable_BTree;
+extern xBTree_t oNeInetIfTable_BTree;
 
-/* neInetInterfaceTable table mapper */
-void neInetInterfaceTable_init (void);
-neInetInterfaceEntry_t * neInetInterfaceTable_createEntry (
+/* neInetIfTable table mapper */
+void neInetIfTable_init (void);
+neInetIfEntry_t * neInetIfTable_createEntry (
 	uint32_t u32IfIndex);
-neInetInterfaceEntry_t * neInetInterfaceTable_getByIndex (
+neInetIfEntry_t * neInetIfTable_getByIndex (
 	uint32_t u32IfIndex);
-neInetInterfaceEntry_t * neInetInterfaceTable_getNextIndex (
+neInetIfEntry_t * neInetIfTable_getNextIndex (
 	uint32_t u32IfIndex);
-void neInetInterfaceTable_removeEntry (neInetInterfaceEntry_t *poEntry);
-neInetInterfaceEntry_t *neInetInterfaceTable_createExt (
+void neInetIfTable_removeEntry (neInetIfEntry_t *poEntry);
+neInetIfEntry_t *neInetIfTable_createExt (
 	uint32_t u32IfIndex,
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len,
 	bool bUnNumAddr);
-bool neInetInterfaceTable_removeExt (
-	neInetInterfaceEntry_t *poEntry,
+bool neInetIfTable_removeExt (
+	neInetIfEntry_t *poEntry,
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len,
 	bool bUnNumAddr);
-bool neInetInterfaceTable_createHier (
-	neInetInterfaceEntry_t *poEntry,
+bool neInetIfTable_createHier (
+	neInetIfEntry_t *poEntry,
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len);
-bool neInetInterfaceTable_removeHier (
-	neInetInterfaceEntry_t *poEntry,
+bool neInetIfTable_removeHier (
+	neInetIfEntry_t *poEntry,
 	int32_t i32AddrType,
 	uint8_t *pau8Addr, size_t u16Addr_len);
 #ifdef SNMP_SRC
-Netsnmp_First_Data_Point neInetInterfaceTable_getFirst;
-Netsnmp_Next_Data_Point neInetInterfaceTable_getNext;
-Netsnmp_Get_Data_Point neInetInterfaceTable_get;
-Netsnmp_Node_Handler neInetInterfaceTable_mapper;
+Netsnmp_First_Data_Point neInetIfTable_getFirst;
+Netsnmp_Next_Data_Point neInetIfTable_getNext;
+Netsnmp_Get_Data_Point neInetIfTable_get;
+Netsnmp_Node_Handler neInetIfTable_mapper;
 #endif	/* SNMP_SRC */
 
 
