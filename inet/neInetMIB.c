@@ -2321,7 +2321,7 @@ neIpUnNumTable_removeHier_cleanup:
 bool
 neIpUnNumRowStatus_handler (
 	neIpUnNumEntry_t *poEntry,
-	int32_t u8RowStatus)
+	uint8_t u8RowStatus)
 {
 	if (!ifData_getByIndexExt (poEntry->u32IfIndex, false, NULL))
 	{

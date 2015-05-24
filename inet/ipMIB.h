@@ -545,8 +545,8 @@ typedef struct ipAddressPrefixEntry_t
 	
 	/* Column values */
 	int32_t i32Origin;
-	int32_t i32OnLinkFlag;
-	int32_t i32AutonomousFlag;
+	uint8_t u8OnLinkFlag;
+	uint8_t u8AutonomousFlag;
 	uint32_t u32AdvPreferredLifetime;
 	uint32_t u32AdvValidLifetime;
 	
@@ -1019,11 +1019,11 @@ typedef struct ipv6RouterAdvertEntry_t
 	uint32_t u32IfIndex;
 	
 	/* Column values */
-	int32_t i32SendAdverts;
+	uint8_t u8SendAdverts;
 	uint32_t u32MaxInterval;
 	uint32_t u32MinInterval;
-	int32_t i32ManagedFlag;
-	int32_t i32OtherConfigFlag;
+	uint8_t u8ManagedFlag;
+	uint8_t u8OtherConfigFlag;
 	uint32_t u32LinkMTU;
 	uint32_t u32ReachableTime;
 	uint32_t u32RetransmitTime;

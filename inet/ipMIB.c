@@ -2149,10 +2149,10 @@ ipAddressPrefixTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Origin);
 				break;
 			case IPADDRESSPREFIXONLINKFLAG:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32OnLinkFlag);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8OnLinkFlag);
 				break;
 			case IPADDRESSPREFIXAUTONOMOUSFLAG:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32AutonomousFlag);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8AutonomousFlag);
 				break;
 			case IPADDRESSPREFIXADVPREFERREDLIFETIME:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32AdvPreferredLifetime);
@@ -4218,10 +4218,10 @@ ipv6RouterAdvertTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32SendAdverts = ipv6RouterAdvertSendAdverts_false_c;
+	poEntry->u8SendAdverts = ipv6RouterAdvertSendAdverts_false_c;
 	poEntry->u32MaxInterval = 600;
-	poEntry->i32ManagedFlag = ipv6RouterAdvertManagedFlag_false_c;
-	poEntry->i32OtherConfigFlag = ipv6RouterAdvertOtherConfigFlag_false_c;
+	poEntry->u8ManagedFlag = ipv6RouterAdvertManagedFlag_false_c;
+	poEntry->u8OtherConfigFlag = ipv6RouterAdvertOtherConfigFlag_false_c;
 	poEntry->u32LinkMTU = 0;
 	poEntry->u32ReachableTime = 0;
 	poEntry->u32RetransmitTime = 0;
@@ -4374,7 +4374,7 @@ ipv6RouterAdvertTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IPV6ROUTERADVERTSENDADVERTS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SendAdverts);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8SendAdverts);
 				break;
 			case IPV6ROUTERADVERTMAXINTERVAL:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32MaxInterval);
@@ -4383,10 +4383,10 @@ ipv6RouterAdvertTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32MinInterval);
 				break;
 			case IPV6ROUTERADVERTMANAGEDFLAG:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ManagedFlag);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8ManagedFlag);
 				break;
 			case IPV6ROUTERADVERTOTHERCONFIGFLAG:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32OtherConfigFlag);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8OtherConfigFlag);
 				break;
 			case IPV6ROUTERADVERTLINKMTU:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32LinkMTU);
@@ -4609,18 +4609,18 @@ ipv6RouterAdvertTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IPV6ROUTERADVERTSENDADVERTS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SendAdverts))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8SendAdverts))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32SendAdverts, sizeof (table_entry->i32SendAdverts));
+					memcpy (pvOldDdata, &table_entry->u8SendAdverts, sizeof (table_entry->u8SendAdverts));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32SendAdverts = *request->requestvb->val.integer;
+				table_entry->u8SendAdverts = *request->requestvb->val.integer;
 				break;
 			case IPV6ROUTERADVERTMAXINTERVAL:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32MaxInterval))) == NULL)
@@ -4651,32 +4651,32 @@ ipv6RouterAdvertTable_mapper (
 				table_entry->u32MinInterval = *request->requestvb->val.integer;
 				break;
 			case IPV6ROUTERADVERTMANAGEDFLAG:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32ManagedFlag))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8ManagedFlag))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32ManagedFlag, sizeof (table_entry->i32ManagedFlag));
+					memcpy (pvOldDdata, &table_entry->u8ManagedFlag, sizeof (table_entry->u8ManagedFlag));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32ManagedFlag = *request->requestvb->val.integer;
+				table_entry->u8ManagedFlag = *request->requestvb->val.integer;
 				break;
 			case IPV6ROUTERADVERTOTHERCONFIGFLAG:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32OtherConfigFlag))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8OtherConfigFlag))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32OtherConfigFlag, sizeof (table_entry->i32OtherConfigFlag));
+					memcpy (pvOldDdata, &table_entry->u8OtherConfigFlag, sizeof (table_entry->u8OtherConfigFlag));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32OtherConfigFlag = *request->requestvb->val.integer;
+				table_entry->u8OtherConfigFlag = *request->requestvb->val.integer;
 				break;
 			case IPV6ROUTERADVERTLINKMTU:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32LinkMTU))) == NULL)
@@ -4788,7 +4788,7 @@ ipv6RouterAdvertTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IPV6ROUTERADVERTSENDADVERTS:
-				memcpy (&table_entry->i32SendAdverts, pvOldDdata, sizeof (table_entry->i32SendAdverts));
+				memcpy (&table_entry->u8SendAdverts, pvOldDdata, sizeof (table_entry->u8SendAdverts));
 				break;
 			case IPV6ROUTERADVERTMAXINTERVAL:
 				memcpy (&table_entry->u32MaxInterval, pvOldDdata, sizeof (table_entry->u32MaxInterval));
@@ -4797,10 +4797,10 @@ ipv6RouterAdvertTable_mapper (
 				memcpy (&table_entry->u32MinInterval, pvOldDdata, sizeof (table_entry->u32MinInterval));
 				break;
 			case IPV6ROUTERADVERTMANAGEDFLAG:
-				memcpy (&table_entry->i32ManagedFlag, pvOldDdata, sizeof (table_entry->i32ManagedFlag));
+				memcpy (&table_entry->u8ManagedFlag, pvOldDdata, sizeof (table_entry->u8ManagedFlag));
 				break;
 			case IPV6ROUTERADVERTOTHERCONFIGFLAG:
-				memcpy (&table_entry->i32OtherConfigFlag, pvOldDdata, sizeof (table_entry->i32OtherConfigFlag));
+				memcpy (&table_entry->u8OtherConfigFlag, pvOldDdata, sizeof (table_entry->u8OtherConfigFlag));
 				break;
 			case IPV6ROUTERADVERTLINKMTU:
 				memcpy (&table_entry->u32LinkMTU, pvOldDdata, sizeof (table_entry->u32LinkMTU));
