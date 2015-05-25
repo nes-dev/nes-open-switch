@@ -489,8 +489,7 @@ bool neIpUnNumTable_removeExt (neIpUnNumEntry_t *poEntry);
 bool neIpUnNumTable_createHier (neIpUnNumEntry_t *poEntry);
 bool neIpUnNumTable_removeHier (neIpUnNumEntry_t *poEntry);
 bool neIpUnNumRowStatus_handler (
-	neIpUnNumEntry_t *poEntry,
-	int32_t i32RowStatus);
+	neIpUnNumEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neIpUnNumTable_getFirst;
 Netsnmp_Next_Data_Point neIpUnNumTable_getNext;

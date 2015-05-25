@@ -31,7 +31,7 @@ include ${MK_COMMON}
 
 CFLAGS +=
 
-SNMP_SRC := ieee8021PbMib.c ieee8021PbbMib.c ieee8021PbbTeMib.c mefUniEvcMib.c mefEnniOvcMib.c
+SNMP_SRC := ieee8021PbMib.c ieee8021PbbMib.c ieee8021PbbTeMib.c
 MODULE_SRC := bridge_main.c bridgeUtils.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})

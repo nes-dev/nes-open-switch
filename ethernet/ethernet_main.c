@@ -26,6 +26,8 @@
 #include "neIeee8021BridgeMIB_agent.h"
 #include "ieee8021BridgeMib_agent.h"
 #include "ieee8021QBridgeMib_agent.h"
+#include "mefUniEvcMib_agent.h"
+#include "mefEnniOvcMib_agent.h"
 #include "ethernetUtils.h"
 
 #include "switch_ext.h"
@@ -53,9 +55,11 @@ ethernet_main (
 {
 	ethernetUtilsInit ();
 	
-	neIeee8021BridgeMIB_init ();
 	ieee8021BridgeMib_init ();
 	ieee8021QBridgeMib_init ();
+	neIeee8021BridgeMIB_init ();
+	mefUniEvcMib_init ();
+	mefEnniOvcMib_init ();
 	
 	if (xThread_create (&oEthernetThread) == NULL)
 	{
