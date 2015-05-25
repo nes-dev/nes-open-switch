@@ -1027,8 +1027,8 @@ enum
 typedef struct ieee8021BridgePortMmrpEntry_t
 {
 	/* Index values */
-	uint32_t u32BasePortComponentId;
-	uint32_t u32BasePort;
+// 	uint32_t u32BasePortComponentId;
+// 	uint32_t u32BasePort;
 	
 	/* Column values */
 	uint8_t u8EnabledStatus;
@@ -1037,10 +1037,10 @@ typedef struct ieee8021BridgePortMmrpEntry_t
 	size_t u16LastPduOrigin_len;	/* # of uint8_t elements */
 	uint8_t u8RestrictedGroupRegistration;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ieee8021BridgePortMmrpEntry_t;
 
-extern xBTree_t oIeee8021BridgePortMmrpTable_BTree;
+// extern xBTree_t oIeee8021BridgePortMmrpTable_BTree;
 
 /* ieee8021BridgePortMmrpTable table mapper */
 void ieee8021BridgePortMmrpTable_init (void);
