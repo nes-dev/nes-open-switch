@@ -204,6 +204,72 @@ ieee8021SpanningTreeTable_removeEntry (ieee8021SpanningTreeEntry_t *poEntry)
 	return;
 }
 
+bool
+ieee8021StpRowStatus_handler (
+	ieee8021SpanningTreeEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
+	
+	if (poEntry->u8RowStatus == u8RealStatus)
+	{
+		goto ieee8021StpRowStatus_handler_success;
+	}
+	if (u8RowStatus & xRowStatus_fromParent_c &&
+		((u8RealStatus == xRowStatus_active_c && poEntry->u8RowStatus != xRowStatus_notReady_c) ||
+		 (u8RealStatus == xRowStatus_notInService_c && poEntry->u8RowStatus != xRowStatus_active_c)))
+	{
+		goto ieee8021StpRowStatus_handler_success;
+	}
+	
+	
+	switch (u8RealStatus)
+	{
+	case xRowStatus_active_c:
+		/*if (!ieee8021StpRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto ieee8021StpRowStatus_handler_cleanup;
+		}*/
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+		
+	case xRowStatus_notInService_c:
+		/*if (!ieee8021StpRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto ieee8021StpRowStatus_handler_cleanup;
+		}*/
+		
+		poEntry->u8RowStatus =
+			poEntry->u8RowStatus == xRowStatus_active_c && (u8RowStatus & xRowStatus_fromParent_c) ? xRowStatus_notReady_c: xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		goto ieee8021StpRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+		/*if (!ieee8021StpRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto ieee8021StpRowStatus_handler_cleanup;
+		}*/
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+ieee8021StpRowStatus_handler_success:
+	
+	bRetCode = true;
+	
+ieee8021StpRowStatus_handler_cleanup:
+	
+	return bRetCode || (u8RowStatus & xRowStatus_fromParent_c);
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021SpanningTreeTable_getFirst (
@@ -413,7 +479,6 @@ ieee8021SpanningTreeTable_mapper (
 		{
 			table_entry = (ieee8021SpanningTreeEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -908,7 +973,6 @@ ieee8021SpanningTreePortTable_mapper (
 		{
 			table_entry = (ieee8021SpanningTreePortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);

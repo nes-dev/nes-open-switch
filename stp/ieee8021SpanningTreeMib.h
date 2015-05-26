@@ -102,6 +102,9 @@ typedef struct ieee8021SpanningTreeEntry_t
 	int32_t i32Version;
 	int32_t i32RstpTxHoldCount;
 	
+	uint8_t u8RowStatus;
+	struct ieee8021SpanningTreeEntry_t *pOldEntry;
+	
 	xBTree_Node_t oBTreeNode;
 } ieee8021SpanningTreeEntry_t;
 
@@ -116,6 +119,8 @@ ieee8021SpanningTreeEntry_t * ieee8021SpanningTreeTable_getByIndex (
 ieee8021SpanningTreeEntry_t * ieee8021SpanningTreeTable_getNextIndex (
 	uint32_t u32ComponentId);
 void ieee8021SpanningTreeTable_removeEntry (ieee8021SpanningTreeEntry_t *poEntry);
+bool ieee8021StpRowStatus_handler (
+	ieee8021SpanningTreeEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021SpanningTreeTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021SpanningTreeTable_getNext;
