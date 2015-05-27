@@ -201,122 +201,6 @@ Netsnmp_Node_Handler ieee8021BridgeBaseTable_mapper;
 
 
 /**
- *	table ieee8021BridgeBasePortTable definitions
- */
-#define IEEE8021BRIDGEBASEPORTCOMPONENTID 1
-#define IEEE8021BRIDGEBASEPORT 2
-#define IEEE8021BRIDGEBASEPORTIFINDEX 3
-#define IEEE8021BRIDGEBASEPORTDELAYEXCEEDEDDISCARDS 4
-#define IEEE8021BRIDGEBASEPORTMTUEXCEEDEDDISCARDS 5
-#define IEEE8021BRIDGEBASEPORTCAPABILITIES 6
-#define IEEE8021BRIDGEBASEPORTTYPECAPABILITIES 7
-#define IEEE8021BRIDGEBASEPORTTYPE 8
-#define IEEE8021BRIDGEBASEPORTEXTERNAL 9
-#define IEEE8021BRIDGEBASEPORTADMINPOINTTOPOINT 10
-#define IEEE8021BRIDGEBASEPORTOPERPOINTTOPOINT 11
-#define IEEE8021BRIDGEBASEPORTNAME 12
-
-enum
-{
-	ieee8021BridgeBasePort_zero_c = 0,
-	ieee8021BridgeBasePort_start_c = 1,
-	ieee8021BridgeBasePort_end_c = 0xFFFFFFFF,
-	
-	/* enums for column ieee8021BridgeBasePortCapabilities */
-	ieee8021BridgeBasePortCapabilities_dot1qDot1qTagging_c = 0,
-	ieee8021BridgeBasePortCapabilities_dot1qConfigurableAcceptableFrameTypes_c = 1,
-	ieee8021BridgeBasePortCapabilities_dot1qIngressFiltering_c = 2,
-
-	/* enums for column ieee8021BridgeBasePortTypeCapabilities */
-	ieee8021BridgeBasePortTypeCapabilities_customerVlanPort_c = 0,
-	ieee8021BridgeBasePortTypeCapabilities_providerNetworkPort_c = 1,
-	ieee8021BridgeBasePortTypeCapabilities_customerNetworkPort_c = 2,
-	ieee8021BridgeBasePortTypeCapabilities_customerEdgePort_c = 3,
-	ieee8021BridgeBasePortTypeCapabilities_customerBackbonePort_c = 4,
-	ieee8021BridgeBasePortTypeCapabilities_virtualInstancePort_c = 5,
-	ieee8021BridgeBasePortTypeCapabilities_dBridgePort_c = 6,
-	ieee8021BridgeBasePortTypeCapabilities_remoteCustomerAccessPort_c = 7,
-	ieee8021BridgeBasePortTypeCapabilities_stationFacingBridgePort_c = 8,
-	ieee8021BridgeBasePortTypeCapabilities_uplinkAccessPort_c = 9,
-	ieee8021BridgeBasePortTypeCapabilities_uplinkRelayPort_c = 10,
-	ieee8021BridgeBasePortTypeCapabilities_providerEdgePort_c = 11,
-	ieee8021BridgeBasePortTypeCapabilities_providerInstancePort_c = 12,
-
-	/* enums for column ieee8021BridgeBasePortType */
-	ieee8021BridgeBasePortType_none_c = 1,
-	ieee8021BridgeBasePortType_customerVlanPort_c = 2,
-	ieee8021BridgeBasePortType_providerNetworkPort_c = 3,
-	ieee8021BridgeBasePortType_customerNetworkPort_c = 4,
-	ieee8021BridgeBasePortType_customerEdgePort_c = 5,
-	ieee8021BridgeBasePortType_customerBackbonePort_c = 6,
-	ieee8021BridgeBasePortType_virtualInstancePort_c = 7,
-	ieee8021BridgeBasePortType_dBridgePort_c = 8,
-	ieee8021BridgeBasePortType_remoteCustomerAccessPort_c = 9,
-	ieee8021BridgeBasePortType_stationFacingBridgePort_c = 10,
-	ieee8021BridgeBasePortType_uplinkAccessPort_c = 11,
-	ieee8021BridgeBasePortType_uplinkRelayPort_c = 12,
-	ieee8021BridgeBasePortType_providerEdgePort_c = 13,
-	ieee8021BridgeBasePortType_providerInstancePort_c = 14,
-	ieee8021BridgeBasePortType_min_c = ieee8021BridgeBasePortType_customerVlanPort_c,
-	ieee8021BridgeBasePortType_max_c = ieee8021BridgeBasePortType_providerInstancePort_c,
-
-	/* enums for column ieee8021BridgeBasePortExternal */
-	ieee8021BridgeBasePortExternal_true_c = 1,
-	ieee8021BridgeBasePortExternal_false_c = 2,
-
-	/* enums for column ieee8021BridgeBasePortAdminPointToPoint */
-	ieee8021BridgeBasePortAdminPointToPoint_forceTrue_c = 1,
-	ieee8021BridgeBasePortAdminPointToPoint_forceFalse_c = 2,
-	ieee8021BridgeBasePortAdminPointToPoint_auto_c = 3,
-
-	/* enums for column ieee8021BridgeBasePortOperPointToPoint */
-	ieee8021BridgeBasePortOperPointToPoint_true_c = 1,
-	ieee8021BridgeBasePortOperPointToPoint_false_c = 2,
-};
-
-extern xBTree_t oIeee8021BridgeBasePortTable_BTree;
-
-/* ieee8021BridgeBasePortTable table mapper */
-void ieee8021BridgeBasePortTable_init (void);
-ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_createEntry (
-	uint32_t u32ComponentId,
-	uint32_t u32Port);
-ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getByIndex (
-	uint32_t u32ComponentId,
-	uint32_t u32Port);
-ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getNextIndex (
-	uint32_t u32ComponentId,
-	uint32_t u32Port);
-#define ieee8021BridgeBasePortTable_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBasePortEntry_t, oNe))
-#define ieee8021BridgeBasePortTable_getByPriorityEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBasePortEntry_t, oPriority))
-void ieee8021BridgeBasePortTable_removeEntry (ieee8021BridgeBasePortEntry_t *poEntry);
-bool ieee8021BridgeBasePortTable_allocateIndex (
-	ieee8021BridgeBaseEntry_t *poComponent,
-	uint32_t *pu32Port);
-bool ieee8021BridgeBasePortTable_removeIndex (
-	ieee8021BridgeBaseEntry_t *poComponent,
-	uint32_t u32Port);
-ieee8021BridgeBasePortEntry_t *ieee8021BridgeBasePortTable_createExt (
-	ieee8021BridgeBaseEntry_t *poComponent,
-	uint32_t u32Port);
-bool ieee8021BridgeBasePortTable_removeExt (ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poEntry);
-bool ieee8021BridgeBasePortTable_createHier (ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poEntry);
-bool ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poEntry);
-bool ieee8021BridgeBasePortIfIndex_handler (
-	ieee8021BridgeBaseEntry_t *poComponent,
-	ieee8021BridgeBasePortEntry_t *poEntry);
-bool ieee8021BridgeBasePortRowStatus_handler (
-	ieee8021BridgeBaseEntry_t *poComponent,
-	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point ieee8021BridgeBasePortTable_getFirst;
-Netsnmp_Next_Data_Point ieee8021BridgeBasePortTable_getNext;
-Netsnmp_Get_Data_Point ieee8021BridgeBasePortTable_get;
-Netsnmp_Node_Handler ieee8021BridgeBasePortTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
  *	table ieee8021BridgeBaseIfToPortTable definitions
  */
 #define IEEE8021BRIDGEBASEIFINDEXCOMPONENTID 1
@@ -388,18 +272,26 @@ typedef struct ieee8021BridgePhyPortEntry_t
 extern xBTree_t oIeee8021BridgePhyPortTable_BTree;
 extern xBTree_t oIeee8021BridgePhyPortTable_If_BTree;
 
+#define ieee8021BridgePhyPortTable_wrLock() (xRwLock_wrLock (&oBridge.oPhyPortLock))
+#define ieee8021BridgePhyPortTable_rdLock() (xRwLock_rdLock (&oBridge.oPhyPortLock))
+#define ieee8021BridgePhyPortTable_unLock() (xRwLock_unlock (&oBridge.oPhyPortLock))
+
 /* ieee8021BridgePhyPortTable table mapper */
 void ieee8021BridgePhyPortTable_init (void);
 ieee8021BridgePhyPortEntry_t * ieee8021BridgePhyPortTable_createEntry (
+	uint32_t u32IfIndex,
 	uint32_t u32Port);
 ieee8021BridgePhyPortEntry_t * ieee8021BridgePhyPortTable_getByIndex (
+	uint32_t u32IfIndex,
 	uint32_t u32Port);
 ieee8021BridgePhyPortEntry_t * ieee8021BridgePhyPortTable_getNextIndex (
+	uint32_t u32IfIndex,
 	uint32_t u32Port);
+#define ieee8021BridgePhyPortTable_getByIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgePhyPortEntry_t, oIf))
 void ieee8021BridgePhyPortTable_removeEntry (ieee8021BridgePhyPortEntry_t *poEntry);
 ieee8021BridgePhyPortEntry_t * ieee8021BridgePhyPortTable_createExt (
-	uint32_t u32Port,
-	uint32_t u32IfIndex);
+	uint32_t u32IfIndex,
+	uint32_t u32Port);
 bool ieee8021BridgePhyPortTable_removeExt (ieee8021BridgePhyPortEntry_t *poEntry);
 bool ieee8021BridgePhyPortTable_createHier (ieee8021BridgePhyPortEntry_t *poEntry);
 bool ieee8021BridgePhyPortTable_removeHier (ieee8021BridgePhyPortEntry_t *poEntry);
@@ -1179,6 +1071,80 @@ Netsnmp_Node_Handler ieee8021BridgeDot1dPortTable_mapper;
 #endif	/* SNMP_SRC */
 
 
+/**
+ *	table ieee8021BridgeBasePortTable definitions
+ */
+#define IEEE8021BRIDGEBASEPORTCOMPONENTID 1
+#define IEEE8021BRIDGEBASEPORT 2
+#define IEEE8021BRIDGEBASEPORTIFINDEX 3
+#define IEEE8021BRIDGEBASEPORTDELAYEXCEEDEDDISCARDS 4
+#define IEEE8021BRIDGEBASEPORTMTUEXCEEDEDDISCARDS 5
+#define IEEE8021BRIDGEBASEPORTCAPABILITIES 6
+#define IEEE8021BRIDGEBASEPORTTYPECAPABILITIES 7
+#define IEEE8021BRIDGEBASEPORTTYPE 8
+#define IEEE8021BRIDGEBASEPORTEXTERNAL 9
+#define IEEE8021BRIDGEBASEPORTADMINPOINTTOPOINT 10
+#define IEEE8021BRIDGEBASEPORTOPERPOINTTOPOINT 11
+#define IEEE8021BRIDGEBASEPORTNAME 12
+
+enum
+{
+	ieee8021BridgeBasePort_zero_c = 0,
+	ieee8021BridgeBasePort_start_c = 1,
+	ieee8021BridgeBasePort_end_c = 0xFFFFFFFF,
+	
+	/* enums for column ieee8021BridgeBasePortCapabilities */
+	ieee8021BridgeBasePortCapabilities_dot1qDot1qTagging_c = 0,
+	ieee8021BridgeBasePortCapabilities_dot1qConfigurableAcceptableFrameTypes_c = 1,
+	ieee8021BridgeBasePortCapabilities_dot1qIngressFiltering_c = 2,
+
+	/* enums for column ieee8021BridgeBasePortTypeCapabilities */
+	ieee8021BridgeBasePortTypeCapabilities_customerVlanPort_c = 0,
+	ieee8021BridgeBasePortTypeCapabilities_providerNetworkPort_c = 1,
+	ieee8021BridgeBasePortTypeCapabilities_customerNetworkPort_c = 2,
+	ieee8021BridgeBasePortTypeCapabilities_customerEdgePort_c = 3,
+	ieee8021BridgeBasePortTypeCapabilities_customerBackbonePort_c = 4,
+	ieee8021BridgeBasePortTypeCapabilities_virtualInstancePort_c = 5,
+	ieee8021BridgeBasePortTypeCapabilities_dBridgePort_c = 6,
+	ieee8021BridgeBasePortTypeCapabilities_remoteCustomerAccessPort_c = 7,
+	ieee8021BridgeBasePortTypeCapabilities_stationFacingBridgePort_c = 8,
+	ieee8021BridgeBasePortTypeCapabilities_uplinkAccessPort_c = 9,
+	ieee8021BridgeBasePortTypeCapabilities_uplinkRelayPort_c = 10,
+	ieee8021BridgeBasePortTypeCapabilities_providerEdgePort_c = 11,
+	ieee8021BridgeBasePortTypeCapabilities_providerInstancePort_c = 12,
+
+	/* enums for column ieee8021BridgeBasePortType */
+	ieee8021BridgeBasePortType_none_c = 1,
+	ieee8021BridgeBasePortType_customerVlanPort_c = 2,
+	ieee8021BridgeBasePortType_providerNetworkPort_c = 3,
+	ieee8021BridgeBasePortType_customerNetworkPort_c = 4,
+	ieee8021BridgeBasePortType_customerEdgePort_c = 5,
+	ieee8021BridgeBasePortType_customerBackbonePort_c = 6,
+	ieee8021BridgeBasePortType_virtualInstancePort_c = 7,
+	ieee8021BridgeBasePortType_dBridgePort_c = 8,
+	ieee8021BridgeBasePortType_remoteCustomerAccessPort_c = 9,
+	ieee8021BridgeBasePortType_stationFacingBridgePort_c = 10,
+	ieee8021BridgeBasePortType_uplinkAccessPort_c = 11,
+	ieee8021BridgeBasePortType_uplinkRelayPort_c = 12,
+	ieee8021BridgeBasePortType_providerEdgePort_c = 13,
+	ieee8021BridgeBasePortType_providerInstancePort_c = 14,
+	ieee8021BridgeBasePortType_min_c = ieee8021BridgeBasePortType_customerVlanPort_c,
+	ieee8021BridgeBasePortType_max_c = ieee8021BridgeBasePortType_providerInstancePort_c,
+
+	/* enums for column ieee8021BridgeBasePortExternal */
+	ieee8021BridgeBasePortExternal_true_c = 1,
+	ieee8021BridgeBasePortExternal_false_c = 2,
+
+	/* enums for column ieee8021BridgeBasePortAdminPointToPoint */
+	ieee8021BridgeBasePortAdminPointToPoint_forceTrue_c = 1,
+	ieee8021BridgeBasePortAdminPointToPoint_forceFalse_c = 2,
+	ieee8021BridgeBasePortAdminPointToPoint_auto_c = 3,
+
+	/* enums for column ieee8021BridgeBasePortOperPointToPoint */
+	ieee8021BridgeBasePortOperPointToPoint_true_c = 1,
+	ieee8021BridgeBasePortOperPointToPoint_false_c = 2,
+};
+
 /* table ieee8021BridgeBasePortTable row entry data structure */
 /*typedef*/ struct ieee8021BridgeBasePortEntry_t
 {
@@ -1211,6 +1177,47 @@ Netsnmp_Node_Handler ieee8021BridgeDot1dPortTable_mapper;
 	
 	xBTree_Node_t oBTreeNode;
 } /*ieee8021BridgeBasePortEntry_t*/;
+
+extern xBTree_t oIeee8021BridgeBasePortTable_BTree;
+
+/* ieee8021BridgeBasePortTable table mapper */
+void ieee8021BridgeBasePortTable_init (void);
+ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_createEntry (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getByIndex (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+ieee8021BridgeBasePortEntry_t * ieee8021BridgeBasePortTable_getNextIndex (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+#define ieee8021BridgeBasePortTable_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBasePortEntry_t, oNe))
+#define ieee8021BridgeBasePortTable_getByPriorityEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021BridgeBasePortEntry_t, oPriority))
+void ieee8021BridgeBasePortTable_removeEntry (ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_allocateIndex (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	uint32_t *pu32Port);
+bool ieee8021BridgeBasePortTable_removeIndex (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	uint32_t u32Port);
+ieee8021BridgeBasePortEntry_t *ieee8021BridgeBasePortTable_createExt (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	uint32_t u32Port);
+bool ieee8021BridgeBasePortTable_removeExt (ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_createHier (ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortTable_removeHier (ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortIfIndex_handler (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021BridgeBasePortEntry_t *poEntry);
+bool ieee8021BridgeBasePortRowStatus_handler (
+	ieee8021BridgeBaseEntry_t *poComponent,
+	ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point ieee8021BridgeBasePortTable_getFirst;
+Netsnmp_Next_Data_Point ieee8021BridgeBasePortTable_getNext;
+Netsnmp_Get_Data_Point ieee8021BridgeBasePortTable_get;
+Netsnmp_Node_Handler ieee8021BridgeBasePortTable_mapper;
+#endif	/* SNMP_SRC */
 
 
 
