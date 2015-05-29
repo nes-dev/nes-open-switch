@@ -19,53 +19,41 @@
  */
 //set ts=4 sw=4
 
-#ifndef __IEEE802_H__
-#	define __IEEE802_H__
+#ifndef __STP_PROTO_CONSTS_H__
+#	define __STP_PROTO_CONSTS_H__
 
 #	ifdef __cplusplus
 extern "C" {
 #	endif
 
 
-
-#include <stdint.h>
-
-
-enum
-{
-	IeeeEui48_size_c		= 6,
-	IeeeEui64_size_c		= 8,
-};
-
-typedef uint8_t IeeeEui48_t [IeeeEui48_size_c];
-typedef uint8_t IeeeEui64_t [IeeeEui64_size_c];
-
-typedef struct IeeeEui48Header_t
-{
-	IeeeEui48_t			oDestAddress;
-	IeeeEui48_t			oSrcAddress;
-	uint16_t			u16Type;
-} IeeeEui48Header_t;
-
-uint32_t xIeeeCrc32 (uint8_t *pu8Buf, uint16_t u16BufSize);
-uint32_t xIeeeCrc16 (uint8_t *pu8Buf, uint16_t u16BufSize);
-
-
-const IeeeEui48_t IeeeEui_customerBridgeGroupAddress;
-const IeeeEui48_t IeeeEui_slowProtocolsMulticast;
-const IeeeEui48_t IeeeEui_providerBridgeGroupAddress;
-
-enum
-{
-	IeeeLlc_spanningTreeProtocol_c		= 0x42,
+enum {
+	Stp_ProtocolIdentifier_c		= 0,
 	
-	IeeeEtherType_slowProtocols_c		= 0x8809,
+	Stp_BpduType_StpBpdu_c			= 0,
+	Stp_BpduType_StpTcn_c			= 0x80,
+	Stp_BpduType_RstBpdu_c			= 0x02,
 	
-	IeeeSlowProtocolsType_unused_c		= 0x00,
-	IeeeSlowProtocolsType_lacp_c		= 0x01,
-	IeeeSlowProtocolsType_marker_c		= 0x02,
-	IeeeSlowProtocolsType_oam_c			= 0x03,
-	IeeeSlowProtocolsType_ossp_c		= 0x0A,
+	Stp_Version_Stp_c				= 0,
+	Stp_Version_Rstp_c				= 2,
+	Stp_Version_Mstp_c				= 3,
+	Stp_Version_Spb_c				= 4,
+	
+	Stp_CistFlag_bTopologyChange_c			= 0,
+	Stp_CistFlag_bProposal_c				= 1,
+	Stp_CistFlag_PortRoleMask_c				= 0x06,
+	Stp_CistFlag_bLearning_c				= 4,
+	Stp_CistFlag_bForwarding_c				= 5,
+	Stp_CistFlag_bAgreement_c				= 6,
+	Stp_CistFlag_bTcAcknowledge_c			= 7,
+	
+	Stp_MstiFlag_bTopologyChange_c			= 0,
+	Stp_MstiFlag_bProposal_c				= 1,
+	Stp_MstiFlag_PortRoleMask_c				= 0x06,
+	Stp_MstiFlag_bLearning_c				= 4,
+	Stp_MstiFlag_bForwarding_c				= 5,
+	Stp_MstiFlag_bAgreement_c				= 6,
+	Stp_MstiFlag_bMaster_c					= 7,
 };
 
 
@@ -74,4 +62,4 @@ enum
 }
 #	endif
 
-#endif	// __IEEE802_H__
+#endif	// __STP_PROTO_CONSTS_H__
