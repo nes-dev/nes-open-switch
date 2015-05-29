@@ -2550,6 +2550,93 @@ ieee8021BridgePhyPortTable_removeEntry (ieee8021BridgePhyPortEntry_t *poEntry)
 	return;
 }
 
+ieee8021BridgePhyPortEntry_t *
+ieee8021BridgePhyPortTable_createExt (
+	uint32_t u32IfIndex,
+	uint32_t u32Port)
+{
+	register ieee8021BridgePhyPortEntry_t *poEntry = NULL;
+	
+	if (u32IfIndex == 0)
+	{
+		goto ieee8021BridgePhyPortTable_createExt_cleanup;
+	}
+	
+	poEntry = ieee8021BridgePhyPortTable_createEntry (
+		u32IfIndex,
+		u32Port);
+	if (poEntry == NULL)
+	{
+		goto ieee8021BridgePhyPortTable_createExt_cleanup;
+	}
+	
+	if (!ieee8021BridgePhyPortTable_createHier (poEntry))
+	{
+		ieee8021BridgePhyPortTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto ieee8021BridgePhyPortTable_createExt_cleanup;
+	}
+	
+ieee8021BridgePhyPortTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+ieee8021BridgePhyPortTable_removeExt (ieee8021BridgePhyPortEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!ieee8021BridgePhyPortTable_removeHier (poEntry))
+	{
+		goto ieee8021BridgePhyPortTable_removeExt_cleanup;
+	}
+	
+	ieee8021BridgePhyPortTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+ieee8021BridgePhyPortTable_removeExt_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgePhyPortTable_createHier (
+	ieee8021BridgePhyPortEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
+	{
+		goto ieee8021BridgePhyPortTable_createHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgePhyPortTable_createHier_cleanup:
+	
+	!bRetCode ? ieee8021BridgePhyPortTable_removeHier (poEntry): false;
+	return bRetCode;
+}
+
+bool
+ieee8021BridgePhyPortTable_removeHier (
+	ieee8021BridgePhyPortEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!ifData_removeReference (poEntry->u32IfIndex, false, true, false))
+	{
+		goto ieee8021BridgePhyPortTable_removeHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+ieee8021BridgePhyPortTable_removeHier_cleanup:
+	
+	return bRetCode;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 ieee8021BridgePhyPortTable_getFirst (
