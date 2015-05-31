@@ -55,6 +55,16 @@ bool
 		uint32_t u32ChassisId);
 
 bool
+	ieee8021BridgePhyPortTable_createRegister (
+		uint32_t u32IfIndex,
+		uint32_t u32PhyPort,
+		uint32_t u32ChassisId);
+bool
+	ieee8021BridgePhyPortTable_removeRegister (
+		uint32_t u32IfIndex,
+		uint32_t u32PhyPort);
+
+bool
 	ieee8021BridgePhyData_createRegister (
 		uint32_t u32IfIndex,
 		uint32_t u32PhyPort,
