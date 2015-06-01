@@ -2717,10 +2717,10 @@ ieee8021BridgePhyPortTable_removeRegister_componentCleanup:
 		goto ieee8021BridgePhyPortTable_removeRegister_cleanup;
 	}
 	
-	/*if (!ieee8021BridgePhyPortTable_detachComponent (poPort, poEntry))
+	if (!ieee8021BridgePhyPortTable_detachComponent (poPort, poEntry))
 	{
 		goto ieee8021BridgePhyPortTable_removeRegister_cleanup;
-	}*/
+	}
 	
 	
 ieee8021BridgePhyPortTable_removeRegister_remove:
@@ -2738,6 +2738,58 @@ ieee8021BridgePhyPortTable_removeRegister_cleanup:
 	
 	poComponent != NULL ? ieee8021BridgeBase_unLock (poComponent): false;
 	ieee8021BridgePhyPortTable_unLock ();
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgePhyPortTable_attachComponent (
+	ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poPort,
+	ieee8021BridgePhyPortEntry_t *poPhy)
+{
+	register bool bRetCode = false;
+	
+	if (poComponent == NULL || poPort == NULL || poPhy == NULL)
+	{
+		goto ieee8021BridgePhyPortTable_attachComponent_cleanup;
+	}
+	
+	if (poComponent->u32ChassisId != 0 && poPhy->u32ChassisId != 0 && poComponent->u32ChassisId != poPhy->u32ChassisId)
+	{
+		goto ieee8021BridgePhyPortTable_attachComponent_cleanup;
+	}
+	
+	poPhy->oIf.u32ComponentId = poPort->u32ComponentId;
+	poPhy->oIf.u32Port = poPort->u32Port;
+	memcpy (poPort->au8Capabilities, poPhy->au8TypeCapabilities, sizeof (poPort->au8Capabilities));
+	poPort->u32IfIndex = poPhy->u32IfIndex;
+	poPort->u8External = poPhy->u32Port == 0 ? ieee8021BridgeBasePortExternal_false_c: ieee8021BridgeBasePortExternal_true_c;
+	bRetCode = true;
+	
+ieee8021BridgePhyPortTable_attachComponent_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+ieee8021BridgePhyPortTable_detachComponent (
+	ieee8021BridgeBasePortEntry_t *poPort,
+	ieee8021BridgePhyPortEntry_t *poPhy)
+{
+	register bool bRetCode = false;
+	
+	if (poPort == NULL || poPhy == NULL)
+	{
+		goto ieee8021BridgePhyPortTable_detachComponent_cleanup;
+	}
+	
+	poPhy->oIf.u32ComponentId = 0;
+	poPhy->oIf.u32Port = 0;
+	memset (poPort->au8Capabilities, 0, sizeof (poPort->au8Capabilities));
+	poPort->u8External = ieee8021BridgeBasePortExternal_false_c;
+	bRetCode = true;
+	
+ieee8021BridgePhyPortTable_detachComponent_cleanup:
 	
 	return bRetCode;
 }

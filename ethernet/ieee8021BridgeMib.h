@@ -295,6 +295,12 @@ ieee8021BridgePhyPortEntry_t * ieee8021BridgePhyPortTable_createExt (
 bool ieee8021BridgePhyPortTable_removeExt (ieee8021BridgePhyPortEntry_t *poEntry);
 bool ieee8021BridgePhyPortTable_createHier (ieee8021BridgePhyPortEntry_t *poEntry);
 bool ieee8021BridgePhyPortTable_removeHier (ieee8021BridgePhyPortEntry_t *poEntry);
+bool ieee8021BridgePhyPortTable_attachComponent (
+	ieee8021BridgeBaseEntry_t *poComponent, ieee8021BridgeBasePortEntry_t *poPort,
+	ieee8021BridgePhyPortEntry_t *poPhy);
+bool ieee8021BridgePhyPortTable_detachComponent (
+	ieee8021BridgeBasePortEntry_t *poPort,
+	ieee8021BridgePhyPortEntry_t *poPhy);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgePhyPortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgePhyPortTable_getNext;
