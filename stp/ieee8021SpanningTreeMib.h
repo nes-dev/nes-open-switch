@@ -200,6 +200,8 @@ typedef struct ieee8021SpanningTreePortEntry_t
 	int32_t i32RstpPortOperEdgePort;
 	int32_t i32RstpPortAdminPathCost;
 	
+	uint8_t u8RowStatus;
+	
 	xBTree_Node_t oBTreeNode;
 } ieee8021SpanningTreePortEntry_t;
 
@@ -217,6 +219,8 @@ ieee8021SpanningTreePortEntry_t * ieee8021SpanningTreePortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
 void ieee8021SpanningTreePortTable_removeEntry (ieee8021SpanningTreePortEntry_t *poEntry);
+bool ieee8021StpPortRowStatus_handler (
+	ieee8021SpanningTreePortEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021SpanningTreePortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021SpanningTreePortTable_getNext;
