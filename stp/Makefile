@@ -32,7 +32,7 @@ include ${MK_COMMON}
 CFLAGS +=
 
 SNMP_SRC := ieee8021SpanningTreeMib.c ieee8021MstpMib.c neIeee8021StpMIB.c
-MODULE_SRC := stp_main.c ${SNMP_SRC}
+MODULE_SRC := stp_main.c stpUtils.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
 

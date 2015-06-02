@@ -27,8 +27,14 @@ extern "C" {
 
 
 
+#include "ieee8021MstpMib.h"
+#include "neIeee8021StpMIB.h"
+
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
+
+#include <stdbool.h>
+#include <stdint.h>
 
 #define TOBE_REPLACED 1
 
@@ -130,6 +136,62 @@ Netsnmp_Node_Handler ieee8021SpanningTreeTable_mapper;
 
 
 /**
+ *	table ieee8021SpanningTreePortExtensionTable definitions
+ */
+#define IEEE8021SPANNINGTREEPORTRSTPAUTOEDGEPORT 1
+#define IEEE8021SPANNINGTREEPORTRSTPAUTOISOLATEPORT 2
+#define IEEE8021SPANNINGTREEPORTRSTPISOLATEPORT 3
+
+enum
+{
+	/* enums for column ieee8021SpanningTreePortRstpAutoEdgePort */
+	ieee8021SpanningTreePortRstpAutoEdgePort_true_c = 1,
+	ieee8021SpanningTreePortRstpAutoEdgePort_false_c = 2,
+
+	/* enums for column ieee8021SpanningTreePortRstpAutoIsolatePort */
+	ieee8021SpanningTreePortRstpAutoIsolatePort_true_c = 1,
+	ieee8021SpanningTreePortRstpAutoIsolatePort_false_c = 2,
+
+	/* enums for column ieee8021SpanningTreePortRstpIsolatePort */
+	ieee8021SpanningTreePortRstpIsolatePort_true_c = 1,
+	ieee8021SpanningTreePortRstpIsolatePort_false_c = 2,
+};
+
+/* table ieee8021SpanningTreePortExtensionTable row entry data structure */
+typedef struct ieee8021SpanningTreePortExtensionEntry_t
+{
+	/* Index values */
+// 	uint32_t u32ComponentId;
+// 	uint32_t u32Port;
+	
+	/* Column values */
+	uint8_t u8AutoEdgePort;
+	uint8_t u8AutoIsolatePort;
+	uint8_t u8IsolatePort;
+	
+// 	xBTree_Node_t oBTreeNode;
+} ieee8021SpanningTreePortExtensionEntry_t;
+
+// extern xBTree_t oIeee8021SpanningTreePortExtensionTable_BTree;
+
+/* ieee8021SpanningTreePortExtensionTable table mapper */
+void ieee8021SpanningTreePortExtensionTable_init (void);
+ieee8021SpanningTreePortExtensionEntry_t * ieee8021SpanningTreePortExtensionTable_createEntry (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+ieee8021SpanningTreePortExtensionEntry_t * ieee8021SpanningTreePortExtensionTable_getByIndex (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+ieee8021SpanningTreePortExtensionEntry_t * ieee8021SpanningTreePortExtensionTable_getNextIndex (
+	uint32_t u32ComponentId,
+	uint32_t u32Port);
+void ieee8021SpanningTreePortExtensionTable_removeEntry (ieee8021SpanningTreePortExtensionEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_Node_Handler ieee8021SpanningTreePortExtensionTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
  *	table ieee8021SpanningTreePortTable definitions
  */
 #define IEEE8021SPANNINGTREEPORTCOMPONENTID 1
@@ -200,6 +262,9 @@ typedef struct ieee8021SpanningTreePortEntry_t
 	int32_t i32RstpPortOperEdgePort;
 	int32_t i32RstpPortAdminPathCost;
 	
+	ieee8021MstpCistPortEntry_t oCist;
+	
+	uint8_t u8AdminStatus;
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;
