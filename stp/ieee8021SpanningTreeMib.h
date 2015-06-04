@@ -161,18 +161,18 @@ enum
 typedef struct ieee8021SpanningTreePortExtensionEntry_t
 {
 	/* Index values */
-// 	uint32_t u32ComponentId;
-// 	uint32_t u32Port;
+	uint32_t u32ComponentId;
+	uint32_t u32Port;
 	
 	/* Column values */
 	uint8_t u8AutoEdgePort;
 	uint8_t u8AutoIsolatePort;
 	uint8_t u8IsolatePort;
 	
-// 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oBTreeNode;
 } ieee8021SpanningTreePortExtensionEntry_t;
 
-// extern xBTree_t oIeee8021SpanningTreePortExtensionTable_BTree;
+extern xBTree_t oIeee8021SpanningTreePortExtensionTable_BTree;
 
 /* ieee8021SpanningTreePortExtensionTable table mapper */
 void ieee8021SpanningTreePortExtensionTable_init (void);
@@ -187,6 +187,9 @@ ieee8021SpanningTreePortExtensionEntry_t * ieee8021SpanningTreePortExtensionTabl
 	uint32_t u32Port);
 void ieee8021SpanningTreePortExtensionTable_removeEntry (ieee8021SpanningTreePortExtensionEntry_t *poEntry);
 #ifdef SNMP_SRC
+Netsnmp_First_Data_Point ieee8021SpanningTreePortExtensionTable_getFirst;
+Netsnmp_Next_Data_Point ieee8021SpanningTreePortExtensionTable_getNext;
+Netsnmp_Get_Data_Point ieee8021SpanningTreePortExtensionTable_get;
 Netsnmp_Node_Handler ieee8021SpanningTreePortExtensionTable_mapper;
 #endif	/* SNMP_SRC */
 
@@ -205,10 +208,10 @@ Netsnmp_Node_Handler ieee8021SpanningTreePortExtensionTable_mapper;
 #define IEEE8021SPANNINGTREEPORTDESIGNATEDBRIDGE 9
 #define IEEE8021SPANNINGTREEPORTDESIGNATEDPORT 10
 #define IEEE8021SPANNINGTREEPORTFORWARDTRANSITIONS 11
-#define IEEE8021SPANNINGTREERSTPPORTPROTOCOLMIGRATION 12
-#define IEEE8021SPANNINGTREERSTPPORTADMINEDGEPORT 13
-#define IEEE8021SPANNINGTREERSTPPORTOPEREDGEPORT 14
-#define IEEE8021SPANNINGTREERSTPPORTADMINPATHCOST 15
+#define IEEE8021SPANNINGTREEPORTRSTPPROTOCOLMIGRATION 12
+#define IEEE8021SPANNINGTREEPORTRSTPADMINEDGEPORT 13
+#define IEEE8021SPANNINGTREEPORTRSTPOPEREDGEPORT 14
+#define IEEE8021SPANNINGTREEPORTRSTPADMINPATHCOST 15
 
 enum
 {
@@ -224,17 +227,17 @@ enum
 	ieee8021SpanningTreePortEnabled_true_c = 1,
 	ieee8021SpanningTreePortEnabled_false_c = 2,
 
-	/* enums for column ieee8021SpanningTreeRstpPortProtocolMigration */
-	ieee8021SpanningTreeRstpPortProtocolMigration_true_c = 1,
-	ieee8021SpanningTreeRstpPortProtocolMigration_false_c = 2,
+	/* enums for column ieee8021SpanningTreePortRstpProtocolMigration */
+	ieee8021SpanningTreePortRstpProtocolMigration_true_c = 1,
+	ieee8021SpanningTreePortRstpProtocolMigration_false_c = 2,
 
-	/* enums for column ieee8021SpanningTreeRstpPortAdminEdgePort */
-	ieee8021SpanningTreeRstpPortAdminEdgePort_true_c = 1,
-	ieee8021SpanningTreeRstpPortAdminEdgePort_false_c = 2,
+	/* enums for column ieee8021SpanningTreePortRstpAdminEdgePort */
+	ieee8021SpanningTreePortRstpAdminEdgePort_true_c = 1,
+	ieee8021SpanningTreePortRstpAdminEdgePort_false_c = 2,
 
-	/* enums for column ieee8021SpanningTreeRstpPortOperEdgePort */
-	ieee8021SpanningTreeRstpPortOperEdgePort_true_c = 1,
-	ieee8021SpanningTreeRstpPortOperEdgePort_false_c = 2,
+	/* enums for column ieee8021SpanningTreePortRstpOperEdgePort */
+	ieee8021SpanningTreePortRstpOperEdgePort_true_c = 1,
+	ieee8021SpanningTreePortRstpOperEdgePort_false_c = 2,
 };
 
 /* table ieee8021SpanningTreePortTable row entry data structure */
@@ -247,7 +250,7 @@ typedef struct ieee8021SpanningTreePortEntry_t
 	/* Column values */
 	int32_t i32Priority;
 	int32_t i32State;
-	int32_t i32Enabled;
+	uint8_t u8Enabled;
 	int32_t i32PathCost;
 	uint8_t au8DesignatedRoot[8];
 	size_t u16DesignatedRoot_len;	/* # of uint8_t elements */
@@ -257,10 +260,10 @@ typedef struct ieee8021SpanningTreePortEntry_t
 	uint8_t au8DesignatedPort[2];
 	size_t u16DesignatedPort_len;	/* # of uint8_t elements */
 	uint64_t u64ForwardTransitions;
-	int32_t i32RstpPortProtocolMigration;
-	int32_t i32RstpPortAdminEdgePort;
-	int32_t i32RstpPortOperEdgePort;
-	int32_t i32RstpPortAdminPathCost;
+	uint8_t u8RstpProtocolMigration;
+	uint8_t u8RstpAdminEdgePort;
+	uint8_t u8RstpOperEdgePort;
+	int32_t i32RstpAdminPathCost;
 	
 	ieee8021MstpCistPortEntry_t oCist;
 	

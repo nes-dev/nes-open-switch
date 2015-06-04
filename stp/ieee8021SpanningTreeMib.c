@@ -39,6 +39,7 @@ static oid ieee8021SpanningTreeMib_oid[] = {1,3,111,2,802,1,1,3};
 
 static oid ieee8021SpanningTreeTable_oid[] = {1,3,111,2,802,1,1,3,1,1};
 static oid ieee8021SpanningTreePortTable_oid[] = {1,3,111,2,802,1,1,3,1,2};
+static oid ieee8021SpanningTreePortExtensionTable_oid[] = {1,3,111,2,802,1,1,3,1,3};
 
 static oid snmptrap_oid[] = {1,3,6,1,6,3,1,1,4,1,0};
 
@@ -61,6 +62,7 @@ ieee8021SpanningTreeMib_init (void)
 	/* register ieee8021SpanningTreeMib group table mappers */
 	ieee8021SpanningTreeTable_init ();
 	ieee8021SpanningTreePortTable_init ();
+	ieee8021SpanningTreePortExtensionTable_init ();
 	
 	/* register ieee8021SpanningTreeMib modules */
 	sysORTable_createRegister ("ieee8021SpanningTreeMib", ieee8021SpanningTreeMib_oid, OID_LENGTH (ieee8021SpanningTreeMib_oid));
@@ -650,7 +652,7 @@ ieee8021SpanningTreePortTable_init (void)
 		ASN_UNSIGNED /* index: ieee8021SpanningTreePort */,
 		0);
 	table_info->min_column = IEEE8021SPANNINGTREEPORTPRIORITY;
-	table_info->max_column = IEEE8021SPANNINGTREERSTPPORTADMINPATHCOST;
+	table_info->max_column = IEEE8021SPANNINGTREEPORTRSTPADMINPATHCOST;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &ieee8021SpanningTreePortTable_getFirst;
@@ -938,7 +940,7 @@ ieee8021SpanningTreePortTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32State);
 				break;
 			case IEEE8021SPANNINGTREEPORTENABLED:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Enabled);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Enabled);
 				break;
 			case IEEE8021SPANNINGTREEPORTPATHCOST:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PathCost);
@@ -958,17 +960,17 @@ ieee8021SpanningTreePortTable_mapper (
 			case IEEE8021SPANNINGTREEPORTFORWARDTRANSITIONS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER64, table_entry->u64ForwardTransitions);
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTPROTOCOLMIGRATION:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RstpPortProtocolMigration);
+			case IEEE8021SPANNINGTREEPORTRSTPPROTOCOLMIGRATION:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RstpProtocolMigration);
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTADMINEDGEPORT:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RstpPortAdminEdgePort);
+			case IEEE8021SPANNINGTREEPORTRSTPADMINEDGEPORT:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RstpAdminEdgePort);
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTOPEREDGEPORT:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RstpPortOperEdgePort);
+			case IEEE8021SPANNINGTREEPORTRSTPOPEREDGEPORT:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RstpOperEdgePort);
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTADMINPATHCOST:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RstpPortAdminPathCost);
+			case IEEE8021SPANNINGTREEPORTRSTPADMINPATHCOST:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RstpAdminPathCost);
 				break;
 				
 			default:
@@ -1013,7 +1015,7 @@ ieee8021SpanningTreePortTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTPROTOCOLMIGRATION:
+			case IEEE8021SPANNINGTREEPORTRSTPPROTOCOLMIGRATION:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1021,7 +1023,7 @@ ieee8021SpanningTreePortTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTADMINEDGEPORT:
+			case IEEE8021SPANNINGTREEPORTRSTPADMINEDGEPORT:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1029,7 +1031,7 @@ ieee8021SpanningTreePortTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTADMINPATHCOST:
+			case IEEE8021SPANNINGTREEPORTRSTPADMINPATHCOST:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1085,18 +1087,18 @@ ieee8021SpanningTreePortTable_mapper (
 				table_entry->i32Priority = *request->requestvb->val.integer;
 				break;
 			case IEEE8021SPANNINGTREEPORTENABLED:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Enabled))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8Enabled))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32Enabled, sizeof (table_entry->i32Enabled));
+					memcpy (pvOldDdata, &table_entry->u8Enabled, sizeof (table_entry->u8Enabled));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32Enabled = *request->requestvb->val.integer;
+				table_entry->u8Enabled = *request->requestvb->val.integer;
 				break;
 			case IEEE8021SPANNINGTREEPORTPATHCOST:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PathCost))) == NULL)
@@ -1112,47 +1114,47 @@ ieee8021SpanningTreePortTable_mapper (
 				
 				table_entry->i32PathCost = *request->requestvb->val.integer;
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTPROTOCOLMIGRATION:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32RstpPortProtocolMigration))) == NULL)
+			case IEEE8021SPANNINGTREEPORTRSTPPROTOCOLMIGRATION:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8RstpProtocolMigration))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32RstpPortProtocolMigration, sizeof (table_entry->i32RstpPortProtocolMigration));
+					memcpy (pvOldDdata, &table_entry->u8RstpProtocolMigration, sizeof (table_entry->u8RstpProtocolMigration));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32RstpPortProtocolMigration = *request->requestvb->val.integer;
+				table_entry->u8RstpProtocolMigration = *request->requestvb->val.integer;
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTADMINEDGEPORT:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32RstpPortAdminEdgePort))) == NULL)
+			case IEEE8021SPANNINGTREEPORTRSTPADMINEDGEPORT:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8RstpAdminEdgePort))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32RstpPortAdminEdgePort, sizeof (table_entry->i32RstpPortAdminEdgePort));
+					memcpy (pvOldDdata, &table_entry->u8RstpAdminEdgePort, sizeof (table_entry->u8RstpAdminEdgePort));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32RstpPortAdminEdgePort = *request->requestvb->val.integer;
+				table_entry->u8RstpAdminEdgePort = *request->requestvb->val.integer;
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTADMINPATHCOST:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32RstpPortAdminPathCost))) == NULL)
+			case IEEE8021SPANNINGTREEPORTRSTPADMINPATHCOST:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32RstpAdminPathCost))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32RstpPortAdminPathCost, sizeof (table_entry->i32RstpPortAdminPathCost));
+					memcpy (pvOldDdata, &table_entry->i32RstpAdminPathCost, sizeof (table_entry->i32RstpAdminPathCost));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32RstpPortAdminPathCost = *request->requestvb->val.integer;
+				table_entry->i32RstpAdminPathCost = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -1175,19 +1177,386 @@ ieee8021SpanningTreePortTable_mapper (
 				memcpy (&table_entry->i32Priority, pvOldDdata, sizeof (table_entry->i32Priority));
 				break;
 			case IEEE8021SPANNINGTREEPORTENABLED:
-				memcpy (&table_entry->i32Enabled, pvOldDdata, sizeof (table_entry->i32Enabled));
+				memcpy (&table_entry->u8Enabled, pvOldDdata, sizeof (table_entry->u8Enabled));
 				break;
 			case IEEE8021SPANNINGTREEPORTPATHCOST:
 				memcpy (&table_entry->i32PathCost, pvOldDdata, sizeof (table_entry->i32PathCost));
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTPROTOCOLMIGRATION:
-				memcpy (&table_entry->i32RstpPortProtocolMigration, pvOldDdata, sizeof (table_entry->i32RstpPortProtocolMigration));
+			case IEEE8021SPANNINGTREEPORTRSTPPROTOCOLMIGRATION:
+				memcpy (&table_entry->u8RstpProtocolMigration, pvOldDdata, sizeof (table_entry->u8RstpProtocolMigration));
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTADMINEDGEPORT:
-				memcpy (&table_entry->i32RstpPortAdminEdgePort, pvOldDdata, sizeof (table_entry->i32RstpPortAdminEdgePort));
+			case IEEE8021SPANNINGTREEPORTRSTPADMINEDGEPORT:
+				memcpy (&table_entry->u8RstpAdminEdgePort, pvOldDdata, sizeof (table_entry->u8RstpAdminEdgePort));
 				break;
-			case IEEE8021SPANNINGTREERSTPPORTADMINPATHCOST:
-				memcpy (&table_entry->i32RstpPortAdminPathCost, pvOldDdata, sizeof (table_entry->i32RstpPortAdminPathCost));
+			case IEEE8021SPANNINGTREEPORTRSTPADMINPATHCOST:
+				memcpy (&table_entry->i32RstpAdminPathCost, pvOldDdata, sizeof (table_entry->i32RstpAdminPathCost));
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize ieee8021SpanningTreePortExtensionTable table mapper **/
+void
+ieee8021SpanningTreePortExtensionTable_init (void)
+{
+	extern oid ieee8021SpanningTreePortExtensionTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"ieee8021SpanningTreePortExtensionTable", &ieee8021SpanningTreePortExtensionTable_mapper,
+		ieee8021SpanningTreePortExtensionTable_oid, OID_LENGTH (ieee8021SpanningTreePortExtensionTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_UNSIGNED /* index: ieee8021SpanningTreePortComponentId */,
+		ASN_UNSIGNED /* index: ieee8021SpanningTreePort */,
+		0);
+	table_info->min_column = IEEE8021SPANNINGTREEPORTRSTPAUTOEDGEPORT;
+	table_info->max_column = IEEE8021SPANNINGTREEPORTRSTPISOLATEPORT;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &ieee8021SpanningTreePortExtensionTable_getFirst;
+	iinfo->get_next_data_point = &ieee8021SpanningTreePortExtensionTable_getNext;
+	iinfo->get_data_point = &ieee8021SpanningTreePortExtensionTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+ieee8021SpanningTreePortExtensionTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ieee8021SpanningTreePortExtensionEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021SpanningTreePortExtensionEntry_t, oBTreeNode);
+	register ieee8021SpanningTreePortExtensionEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021SpanningTreePortExtensionEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32ComponentId < pEntry2->u32ComponentId) ||
+		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32Port < pEntry2->u32Port) ? -1:
+		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32Port == pEntry2->u32Port) ? 0: 1;
+}
+
+xBTree_t oIeee8021SpanningTreePortExtensionTable_BTree = xBTree_initInline (&ieee8021SpanningTreePortExtensionTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+ieee8021SpanningTreePortExtensionEntry_t *
+ieee8021SpanningTreePortExtensionTable_createEntry (
+	uint32_t u32ComponentId,
+	uint32_t u32Port)
+{
+	register ieee8021SpanningTreePortExtensionEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32ComponentId = u32ComponentId;
+	poEntry->u32Port = u32Port;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021SpanningTreePortExtensionTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->u8AutoEdgePort = ieee8021SpanningTreePortRstpAutoEdgePort_true_c;
+	poEntry->u8AutoIsolatePort = ieee8021SpanningTreePortRstpAutoIsolatePort_false_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021SpanningTreePortExtensionTable_BTree);
+	return poEntry;
+}
+
+ieee8021SpanningTreePortExtensionEntry_t *
+ieee8021SpanningTreePortExtensionTable_getByIndex (
+	uint32_t u32ComponentId,
+	uint32_t u32Port)
+{
+	register ieee8021SpanningTreePortExtensionEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32ComponentId = u32ComponentId;
+	poTmpEntry->u32Port = u32Port;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021SpanningTreePortExtensionTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ieee8021SpanningTreePortExtensionEntry_t, oBTreeNode);
+}
+
+ieee8021SpanningTreePortExtensionEntry_t *
+ieee8021SpanningTreePortExtensionTable_getNextIndex (
+	uint32_t u32ComponentId,
+	uint32_t u32Port)
+{
+	register ieee8021SpanningTreePortExtensionEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32ComponentId = u32ComponentId;
+	poTmpEntry->u32Port = u32Port;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021SpanningTreePortExtensionTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ieee8021SpanningTreePortExtensionEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+ieee8021SpanningTreePortExtensionTable_removeEntry (ieee8021SpanningTreePortExtensionEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021SpanningTreePortExtensionTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021SpanningTreePortExtensionTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+ieee8021SpanningTreePortExtensionTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021SpanningTreePortExtensionTable_BTree);
+	return ieee8021SpanningTreePortExtensionTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+ieee8021SpanningTreePortExtensionTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	ieee8021SpanningTreePortExtensionEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, ieee8021SpanningTreePortExtensionEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Port);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021SpanningTreePortExtensionTable_BTree);
+	return put_index_data;
+}
+
+bool
+ieee8021SpanningTreePortExtensionTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	ieee8021SpanningTreePortExtensionEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	
+	poEntry = ieee8021SpanningTreePortExtensionTable_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* ieee8021SpanningTreePortExtensionTable table mapper */
+int
+ieee8021SpanningTreePortExtensionTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	ieee8021SpanningTreePortExtensionEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (ieee8021SpanningTreePortExtensionEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case IEEE8021SPANNINGTREEPORTRSTPAUTOEDGEPORT:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8AutoEdgePort);
+				break;
+			case IEEE8021SPANNINGTREEPORTRSTPAUTOISOLATEPORT:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8AutoIsolatePort);
+				break;
+			case IEEE8021SPANNINGTREEPORTRSTPISOLATEPORT:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8IsolatePort);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (ieee8021SpanningTreePortExtensionEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case IEEE8021SPANNINGTREEPORTRSTPAUTOEDGEPORT:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case IEEE8021SPANNINGTREEPORTRSTPAUTOISOLATEPORT:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (ieee8021SpanningTreePortExtensionEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (ieee8021SpanningTreePortExtensionEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case IEEE8021SPANNINGTREEPORTRSTPAUTOEDGEPORT:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8AutoEdgePort))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8AutoEdgePort, sizeof (table_entry->u8AutoEdgePort));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8AutoEdgePort = *request->requestvb->val.integer;
+				break;
+			case IEEE8021SPANNINGTREEPORTRSTPAUTOISOLATEPORT:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8AutoIsolatePort))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8AutoIsolatePort, sizeof (table_entry->u8AutoIsolatePort));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8AutoIsolatePort = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (ieee8021SpanningTreePortExtensionEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case IEEE8021SPANNINGTREEPORTRSTPAUTOEDGEPORT:
+				memcpy (&table_entry->u8AutoEdgePort, pvOldDdata, sizeof (table_entry->u8AutoEdgePort));
+				break;
+			case IEEE8021SPANNINGTREEPORTRSTPAUTOISOLATEPORT:
+				memcpy (&table_entry->u8AutoIsolatePort, pvOldDdata, sizeof (table_entry->u8AutoIsolatePort));
 				break;
 			}
 		}
