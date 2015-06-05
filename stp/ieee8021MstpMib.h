@@ -68,7 +68,7 @@ typedef struct ieee8021MstpCistEntry_t
 	/* Column values */
 	uint8_t au8BridgeIdentifier[8];
 	size_t u16BridgeIdentifier_len;	/* # of uint8_t elements */
-	int32_t i32TopologyChange;
+	uint8_t u8TopologyChange;
 	uint8_t au8RegionalRootIdentifier[8];
 	size_t u16RegionalRootIdentifier_len;	/* # of uint8_t elements */
 	uint32_t u32PathCost;
@@ -135,14 +135,14 @@ typedef struct ieee8021MstpEntry_t
 {
 	/* Index values */
 	uint32_t u32ComponentId;
-	uint32_t u32Id;
+	uint16_t u16Id;
 	
 	/* Column values */
 	uint8_t au8BridgeId[8];
 	size_t u16BridgeId_len;	/* # of uint8_t elements */
 	uint32_t u32TimeSinceTopologyChange;
 	uint64_t u64TopologyChanges;
-	int32_t i32TopologyChange;
+	uint8_t u8TopologyChange;
 	uint8_t au8DesignatedRoot[8];
 	size_t u16DesignatedRoot_len;	/* # of uint8_t elements */
 	int32_t i32RootPathCost;
@@ -167,13 +167,13 @@ extern xBTree_t oIeee8021MstpTable_BTree;
 void ieee8021MstpTable_init (void);
 ieee8021MstpEntry_t * ieee8021MstpTable_createEntry (
 	uint32_t u32ComponentId,
-	uint32_t u32Id);
+	uint16_t u16Id);
 ieee8021MstpEntry_t * ieee8021MstpTable_getByIndex (
 	uint32_t u32ComponentId,
-	uint32_t u32Id);
+	uint16_t u16Id);
 ieee8021MstpEntry_t * ieee8021MstpTable_getNextIndex (
 	uint32_t u32ComponentId,
-	uint32_t u32Id);
+	uint16_t u16Id);
 void ieee8021MstpTable_removeEntry (ieee8021MstpEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021MstpTable_getFirst;
@@ -278,25 +278,25 @@ typedef struct ieee8021MstpCistPortEntry_t
 	int32_t i32AdminPathCost;
 	uint8_t au8DesignatedRoot[8];
 	size_t u16DesignatedRoot_len;	/* # of uint8_t elements */
-	int32_t i32TopologyChangeAck;
+	uint8_t u8TopologyChangeAck;
 	int32_t i32HelloTime;
-	int32_t i32AdminEdgePort;
-	int32_t i32OperEdgePort;
-	int32_t i32MacEnabled;
-	int32_t i32MacOperational;
-	int32_t i32RestrictedRole;
-	int32_t i32RestrictedTcn;
+	uint8_t u8AdminEdgePort;
+	uint8_t u8OperEdgePort;
+	uint8_t u8MacEnabled;
+	uint8_t u8MacOperational;
+	uint8_t u8RestrictedRole;
+	uint8_t u8RestrictedTcn;
 	int32_t i32Role;
-	int32_t i32Disputed;
+	uint8_t u8Disputed;
 	uint8_t au8CistRegionalRootId[8];
 	size_t u16CistRegionalRootId_len;	/* # of uint8_t elements */
 	uint32_t u32CistPathCost;
-	int32_t i32ProtocolMigration;
-	int32_t i32EnableBPDURx;
-	int32_t i32EnableBPDUTx;
+	uint8_t u8ProtocolMigration;
+	uint8_t u8EnableBPDURx;
+	uint8_t u8EnableBPDUTx;
 	uint8_t au8PseudoRootId[8];
 	size_t u16PseudoRootId_len;	/* # of uint8_t elements */
-	int32_t i32IsL2Gp;
+	uint8_t u8IsL2Gp;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021MstpCistPortEntry_t;
@@ -365,7 +365,7 @@ typedef struct ieee8021MstpPortEntry_t
 {
 	/* Index values */
 	uint32_t u32ComponentId;
-	uint32_t u32MstId;
+	uint16_t u16MstId;
 	uint32_t u32Num;
 	
 	/* Column values */
@@ -380,7 +380,7 @@ typedef struct ieee8021MstpPortEntry_t
 	size_t u16DesignatedBridge_len;	/* # of uint8_t elements */
 	uint32_t u32DesignatedPort;
 	int32_t i32Role;
-	int32_t i32Disputed;
+	uint8_t u8Disputed;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021MstpPortEntry_t;
@@ -391,15 +391,15 @@ extern xBTree_t oIeee8021MstpPortTable_BTree;
 void ieee8021MstpPortTable_init (void);
 ieee8021MstpPortEntry_t * ieee8021MstpPortTable_createEntry (
 	uint32_t u32ComponentId,
-	uint32_t u32MstId,
+	uint16_t u16MstId,
 	uint32_t u32Num);
 ieee8021MstpPortEntry_t * ieee8021MstpPortTable_getByIndex (
 	uint32_t u32ComponentId,
-	uint32_t u32MstId,
+	uint16_t u16MstId,
 	uint32_t u32Num);
 ieee8021MstpPortEntry_t * ieee8021MstpPortTable_getNextIndex (
 	uint32_t u32ComponentId,
-	uint32_t u32MstId,
+	uint16_t u16MstId,
 	uint32_t u32Num);
 void ieee8021MstpPortTable_removeEntry (ieee8021MstpPortEntry_t *poEntry);
 #ifdef SNMP_SRC
@@ -480,8 +480,8 @@ typedef struct ieee8021MstpCistPortExtensionEntry_t
 	uint32_t u32Num;
 	
 	/* Column values */
-	int32_t i32AutoEdgePort;
-	int32_t i32AutoIsolatePort;
+	uint8_t u8EdgePort;
+	uint8_t u8IsolatePort;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021MstpCistPortExtensionEntry_t;
@@ -523,7 +523,7 @@ typedef struct ieee8021MstpFidToMstiV2Entry_t
 	uint32_t u32Fid;
 	
 	/* Column values */
-	uint32_t u32MstId;
+	uint16_t u16MstId;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021MstpFidToMstiV2Entry_t;
@@ -565,7 +565,7 @@ typedef struct ieee8021MstpVlanV2Entry_t
 	uint32_t u32Id;
 	
 	/* Column values */
-	uint32_t u32MstId;
+	uint16_t u16MstId;
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021MstpVlanV2Entry_t;
