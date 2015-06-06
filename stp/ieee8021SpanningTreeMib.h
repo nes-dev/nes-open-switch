@@ -81,6 +81,7 @@ enum
 	ieee8021SpanningTreeVersion_stp_c = 0,
 	ieee8021SpanningTreeVersion_rstp_c = 2,
 	ieee8021SpanningTreeVersion_mstp_c = 3,
+	ieee8021SpanningTreeVersion_spb_c = 4,
 };
 
 /* table ieee8021SpanningTreeTable row entry data structure */

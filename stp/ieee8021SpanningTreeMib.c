@@ -31,6 +31,9 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
@@ -125,9 +128,9 @@ ieee8021SpanningTreeEntry_t *
 ieee8021SpanningTreeTable_createEntry (
 	uint32_t u32ComponentId)
 {
-	ieee8021SpanningTreeEntry_t *poEntry = NULL;
+	register ieee8021SpanningTreeEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021SpanningTreeEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -139,7 +142,12 @@ ieee8021SpanningTreeTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32RstpTxHoldCount = 3;
+	poEntry->i32Priority = 32768;
+	poEntry->i32BridgeMaxAge = 2000;
+	poEntry->i32BridgeHelloTime = 200;
+	poEntry->i32BridgeForwardDelay = 1500;
+	poEntry->i32Version = ieee8021SpanningTreeVersion_mstp_c;
+	poEntry->i32RstpTxHoldCount = 6;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021SpanningTreeTable_BTree);
 	return poEntry;
@@ -152,7 +160,7 @@ ieee8021SpanningTreeTable_getByIndex (
 	register ieee8021SpanningTreeEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021SpanningTreeEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -175,7 +183,7 @@ ieee8021SpanningTreeTable_getNextIndex (
 	register ieee8021SpanningTreeEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021SpanningTreeEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -687,9 +695,9 @@ ieee8021SpanningTreePortTable_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32Port)
 {
-	ieee8021SpanningTreePortEntry_t *poEntry = NULL;
+	register ieee8021SpanningTreePortEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021SpanningTreePortEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -701,6 +709,9 @@ ieee8021SpanningTreePortTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->i32Priority = 128;
+	poEntry->u8Enabled = ieee8021SpanningTreePortEnabled_true_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021SpanningTreePortTable_BTree);
 	return poEntry;
@@ -714,7 +725,7 @@ ieee8021SpanningTreePortTable_getByIndex (
 	register ieee8021SpanningTreePortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021SpanningTreePortEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -739,7 +750,7 @@ ieee8021SpanningTreePortTable_getNextIndex (
 	register ieee8021SpanningTreePortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021SpanningTreePortEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
