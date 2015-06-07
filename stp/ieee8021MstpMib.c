@@ -31,6 +31,9 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
@@ -130,9 +133,9 @@ ieee8021MstpCistEntry_t *
 ieee8021MstpCistTable_createEntry (
 	uint32_t u32ComponentId)
 {
-	ieee8021MstpCistEntry_t *poEntry = NULL;
+	register ieee8021MstpCistEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021MstpCistEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -155,7 +158,7 @@ ieee8021MstpCistTable_getByIndex (
 	register ieee8021MstpCistEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpCistEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -178,7 +181,7 @@ ieee8021MstpCistTable_getNextIndex (
 	register ieee8021MstpCistEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpCistEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -466,9 +469,9 @@ ieee8021MstpTable_createEntry (
 	uint32_t u32ComponentId,
 	uint16_t u16Id)
 {
-	ieee8021MstpEntry_t *poEntry = NULL;
+	register ieee8021MstpEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021MstpEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -495,7 +498,7 @@ ieee8021MstpTable_getByIndex (
 	register ieee8021MstpEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -520,7 +523,7 @@ ieee8021MstpTable_getNextIndex (
 	register ieee8021MstpEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -969,9 +972,9 @@ ieee8021MstpCistPortTable_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32Num)
 {
-	ieee8021MstpCistPortEntry_t *poEntry = NULL;
+	register ieee8021MstpCistPortEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021MstpCistPortEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1003,7 +1006,7 @@ ieee8021MstpCistPortTable_getByIndex (
 	register ieee8021MstpCistPortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpCistPortEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1028,7 +1031,7 @@ ieee8021MstpCistPortTable_getNextIndex (
 	register ieee8021MstpCistPortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpCistPortEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1599,9 +1602,9 @@ ieee8021MstpPortTable_createEntry (
 	uint16_t u16MstId,
 	uint32_t u32Num)
 {
-	ieee8021MstpPortEntry_t *poEntry = NULL;
+	register ieee8021MstpPortEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021MstpPortEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1628,7 +1631,7 @@ ieee8021MstpPortTable_getByIndex (
 	register ieee8021MstpPortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpPortEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1655,7 +1658,7 @@ ieee8021MstpPortTable_getNextIndex (
 	register ieee8021MstpPortEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpPortEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -1990,9 +1993,9 @@ ieee8021MstpConfigIdEntry_t *
 ieee8021MstpConfigIdTable_createEntry (
 	uint32_t u32ComponentId)
 {
-	ieee8021MstpConfigIdEntry_t *poEntry = NULL;
+	register ieee8021MstpConfigIdEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021MstpConfigIdEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2015,7 +2018,7 @@ ieee8021MstpConfigIdTable_getByIndex (
 	register ieee8021MstpConfigIdEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpConfigIdEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2038,7 +2041,7 @@ ieee8021MstpConfigIdTable_getNextIndex (
 	register ieee8021MstpConfigIdEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpConfigIdEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2378,9 +2381,9 @@ ieee8021MstpCistPortExtensionTable_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32Num)
 {
-	ieee8021MstpCistPortExtensionEntry_t *poEntry = NULL;
+	register ieee8021MstpCistPortExtensionEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021MstpCistPortExtensionEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2405,7 +2408,7 @@ ieee8021MstpCistPortExtensionTable_getByIndex (
 	register ieee8021MstpCistPortExtensionEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpCistPortExtensionEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2430,7 +2433,7 @@ ieee8021MstpCistPortExtensionTable_getNextIndex (
 	register ieee8021MstpCistPortExtensionEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpCistPortExtensionEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2739,9 +2742,9 @@ ieee8021MstpFidToMstiV2Table_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32Fid)
 {
-	ieee8021MstpFidToMstiV2Entry_t *poEntry = NULL;
+	register ieee8021MstpFidToMstiV2Entry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021MstpFidToMstiV2Entry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2766,7 +2769,7 @@ ieee8021MstpFidToMstiV2Table_getByIndex (
 	register ieee8021MstpFidToMstiV2Entry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpFidToMstiV2Entry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -2791,7 +2794,7 @@ ieee8021MstpFidToMstiV2Table_getNextIndex (
 	register ieee8021MstpFidToMstiV2Entry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpFidToMstiV2Entry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3072,9 +3075,9 @@ ieee8021MstpVlanV2Table_createEntry (
 	uint32_t u32ComponentId,
 	uint32_t u32Id)
 {
-	ieee8021MstpVlanV2Entry_t *poEntry = NULL;
+	register ieee8021MstpVlanV2Entry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (ieee8021MstpVlanV2Entry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -3124,7 +3127,7 @@ ieee8021MstpVlanV2Table_getNextIndex (
 	register ieee8021MstpVlanV2Entry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (ieee8021MstpVlanV2Entry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
