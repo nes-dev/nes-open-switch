@@ -266,6 +266,7 @@ typedef struct ieee8021SpanningTreePortEntry_t
 	uint8_t u8RstpOperEdgePort;
 	int32_t i32RstpAdminPathCost;
 	
+	ieee8021SpanningTreePortExtensionEntry_t oExtension;
 	ieee8021MstpCistPortEntry_t oCist;
 	
 	uint8_t u8AdminStatus;
