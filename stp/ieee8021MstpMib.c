@@ -1931,40 +1931,20 @@ ieee8021MstpConfigIdTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-ieee8021MstpConfigIdTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register ieee8021MstpConfigIdEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021MstpConfigIdEntry_t, oBTreeNode);
-	register ieee8021MstpConfigIdEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021MstpConfigIdEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32ComponentId < pEntry2->u32ComponentId) ? -1:
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId) ? 0: 1;
-}
-
-xBTree_t oIeee8021MstpConfigIdTable_BTree = xBTree_initInline (&ieee8021MstpConfigIdTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 ieee8021MstpConfigIdEntry_t *
 ieee8021MstpConfigIdTable_createEntry (
 	uint32_t u32ComponentId)
 {
 	register ieee8021MstpConfigIdEntry_t *poEntry = NULL;
+	register ieee8021SpanningTreeEntry_t *poSpanningTree = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poSpanningTree = ieee8021SpanningTreeTable_getByIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poSpanningTree->oConfigId;
 	
-	poEntry->u32ComponentId = u32ComponentId;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021MstpConfigIdTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021MstpConfigIdTable_BTree);
 	return poEntry;
 }
 
@@ -1972,60 +1952,34 @@ ieee8021MstpConfigIdEntry_t *
 ieee8021MstpConfigIdTable_getByIndex (
 	uint32_t u32ComponentId)
 {
-	register ieee8021MstpConfigIdEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021SpanningTreeEntry_t *poSpanningTree = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poSpanningTree = ieee8021SpanningTreeTable_getByIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021MstpConfigIdTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021MstpConfigIdEntry_t, oBTreeNode);
+	return &poSpanningTree->oConfigId;
 }
 
 ieee8021MstpConfigIdEntry_t *
 ieee8021MstpConfigIdTable_getNextIndex (
 	uint32_t u32ComponentId)
 {
-	register ieee8021MstpConfigIdEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021SpanningTreeEntry_t *poSpanningTree = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poSpanningTree = ieee8021SpanningTreeTable_getNextIndex (u32ComponentId)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021MstpConfigIdTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021MstpConfigIdEntry_t, oBTreeNode);
+	return &poSpanningTree->oConfigId;
 }
 
 /* remove a row from the table */
 void
 ieee8021MstpConfigIdTable_removeEntry (ieee8021MstpConfigIdEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021MstpConfigIdTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021MstpConfigIdTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -2035,7 +1989,7 @@ ieee8021MstpConfigIdTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021MstpConfigIdTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021SpanningTreeTable_BTree);
 	return ieee8021MstpConfigIdTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2044,18 +1998,18 @@ ieee8021MstpConfigIdTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021MstpConfigIdEntry_t *poEntry = NULL;
+	ieee8021SpanningTreeEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ieee8021MstpConfigIdEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021SpanningTreeEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021MstpConfigIdTable_BTree);
+	*my_data_context = (void*) &poEntry->oConfigId;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021SpanningTreeTable_BTree);
 	return put_index_data;
 }
 
@@ -2064,17 +2018,17 @@ ieee8021MstpConfigIdTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021MstpConfigIdEntry_t *poEntry = NULL;
+	ieee8021SpanningTreeEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = ieee8021MstpConfigIdTable_getByIndex (
+	poEntry = ieee8021SpanningTreeTable_getByIndex (
 		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oConfigId;
 	return true;
 }
 

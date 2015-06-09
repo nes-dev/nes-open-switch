@@ -110,6 +110,7 @@ typedef struct ieee8021SpanningTreeEntry_t
 	int32_t i32RstpTxHoldCount;
 	
 	ieee8021MstpCistEntry_t oCist;
+	ieee8021MstpConfigIdEntry_t oConfigId;
 	uint8_t u8RowStatus;
 	struct ieee8021SpanningTreeEntry_t *pOldEntry;
 	
