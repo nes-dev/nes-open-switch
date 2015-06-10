@@ -479,17 +479,17 @@ enum
 typedef struct ieee8021MstpCistPortExtensionEntry_t
 {
 	/* Index values */
-	uint32_t u32ComponentId;
-	uint32_t u32Num;
+// 	uint32_t u32ComponentId;
+// 	uint32_t u32Num;
 	
 	/* Column values */
 	uint8_t u8EdgePort;
 	uint8_t u8IsolatePort;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ieee8021MstpCistPortExtensionEntry_t;
 
-extern xBTree_t oIeee8021MstpCistPortExtensionTable_BTree;
+// extern xBTree_t oIeee8021MstpCistPortExtensionTable_BTree;
 
 /* ieee8021MstpCistPortExtensionTable table mapper */
 void ieee8021MstpCistPortExtensionTable_init (void);

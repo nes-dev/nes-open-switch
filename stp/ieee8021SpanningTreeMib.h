@@ -270,6 +270,7 @@ typedef struct ieee8021SpanningTreePortEntry_t
 	
 	ieee8021SpanningTreePortExtensionEntry_t oExtension;
 	ieee8021MstpCistPortEntry_t oCist;
+	ieee8021MstpCistPortExtensionEntry_t oCistExtension;
 	
 	uint8_t u8AdminStatus;
 	uint8_t u8RowStatus;
