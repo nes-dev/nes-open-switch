@@ -164,18 +164,18 @@ enum
 typedef struct ieee8021SpanningTreePortExtensionEntry_t
 {
 	/* Index values */
-	uint32_t u32ComponentId;
-	uint32_t u32Port;
+// 	uint32_t u32ComponentId;
+// 	uint32_t u32Port;
 	
 	/* Column values */
 	uint8_t u8AutoEdgePort;
 	uint8_t u8AutoIsolatePort;
 	uint8_t u8IsolatePort;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ieee8021SpanningTreePortExtensionEntry_t;
 
-extern xBTree_t oIeee8021SpanningTreePortExtensionTable_BTree;
+// extern xBTree_t oIeee8021SpanningTreePortExtensionTable_BTree;
 
 /* ieee8021SpanningTreePortExtensionTable table mapper */
 void ieee8021SpanningTreePortExtensionTable_init (void);
@@ -291,6 +291,7 @@ ieee8021SpanningTreePortEntry_t * ieee8021SpanningTreePortTable_getByIndex (
 ieee8021SpanningTreePortEntry_t * ieee8021SpanningTreePortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
+#define ieee8021SpanningTreePortTable_getByExtensionEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021SpanningTreePortEntry_t, oExtension))
 void ieee8021SpanningTreePortTable_removeEntry (ieee8021SpanningTreePortEntry_t *poEntry);
 bool ieee8021StpPortRowStatus_handler (
 	ieee8021SpanningTreePortEntry_t *poEntry, uint8_t u8RowStatus);

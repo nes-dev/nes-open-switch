@@ -1,16 +1,16 @@
 <p align="center" >
-    <a href="https://plus.google.com/105236054684418980818" rel="publisher">
+    <a href="https://google.com/+NES-Open-Switch" rel="publisher">
     <img src="https://lh3.googleusercontent.com/-BG0WKlNqXzc/VI4W7Q2s8cI/AAAAAAAAAUM/al7oMaYej0I/s256-no/nes-open-switch-2.png" alt="NES Open Switch" title="NES Open Switch">
     </a><br>
-    <a href="https://plus.google.com/105236054684418980818" rel="publisher">Home page</a>
+    <a href="https://google.com/+NES-Open-Switch" rel="publisher">Home page</a>
 </p>
 
 <hr>
 
-<a href="https://plus.google.com/+NES-Dev?rel=author" rel="author"></a>
-<a href="https://plus.google.com/105236054684418980818?rel=publisher" rel="publisher"></a>
+<a href="https://google.com/+NES-Dev?rel=author" rel="author"></a>
+<a href="https://google.com/+NES-Open-Switch?rel=publisher" rel="publisher"></a>
 Copyright (c) 2008-2015
-    NES &lt;nes.open.switch@gmail.com&gt;
+    NES Dev &lt;nes.open.switch@gmail.com&gt;
 
 NES Open Switch
 ===============
