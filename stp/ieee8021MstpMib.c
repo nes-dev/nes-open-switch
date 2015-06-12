@@ -908,21 +908,6 @@ ieee8021MstpCistPortTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-ieee8021MstpCistPortTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register ieee8021MstpCistPortEntry_t *pEntry1 = xBTree_entry (pNode1, ieee8021MstpCistPortEntry_t, oBTreeNode);
-	register ieee8021MstpCistPortEntry_t *pEntry2 = xBTree_entry (pNode2, ieee8021MstpCistPortEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32ComponentId < pEntry2->u32ComponentId) ||
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32Num < pEntry2->u32Num) ? -1:
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32Num == pEntry2->u32Num) ? 0: 1;
-}
-
-xBTree_t oIeee8021MstpCistPortTable_BTree = xBTree_initInline (&ieee8021MstpCistPortTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 ieee8021MstpCistPortEntry_t *
 ieee8021MstpCistPortTable_createEntry (
@@ -930,19 +915,13 @@ ieee8021MstpCistPortTable_createEntry (
 	uint32_t u32Num)
 {
 	register ieee8021MstpCistPortEntry_t *poEntry = NULL;
+	register ieee8021SpanningTreePortEntry_t *poSpanningTreePort = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poSpanningTreePort = ieee8021SpanningTreePortTable_getByIndex (u32ComponentId, u32Num)) == NULL)
 	{
 		return NULL;
 	}
-	
-	poEntry->u32ComponentId = u32ComponentId;
-	poEntry->u32Num = u32Num;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021MstpCistPortTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poSpanningTreePort->oCist;
 	
 	poEntry->u8AdminEdgePort = ieee8021MstpCistPortAdminEdgePort_true_c;
 	poEntry->u8RestrictedRole = ieee8021MstpCistPortRestrictedRole_false_c;
@@ -951,7 +930,6 @@ ieee8021MstpCistPortTable_createEntry (
 	poEntry->u8EnableBPDUTx = ieee8021MstpCistPortEnableBPDUTx_true_c;
 	poEntry->u8IsL2Gp = ieee8021MstpCistPortIsL2Gp_false_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIeee8021MstpCistPortTable_BTree);
 	return poEntry;
 }
 
@@ -960,24 +938,14 @@ ieee8021MstpCistPortTable_getByIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Num)
 {
-	register ieee8021MstpCistPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021SpanningTreePortEntry_t *poSpanningTreePort = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poSpanningTreePort = ieee8021SpanningTreePortTable_getByIndex (u32ComponentId, u32Num)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	poTmpEntry->u32Num = u32Num;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021MstpCistPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021MstpCistPortEntry_t, oBTreeNode);
+	return &poSpanningTreePort->oCist;
 }
 
 ieee8021MstpCistPortEntry_t *
@@ -985,38 +953,20 @@ ieee8021MstpCistPortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Num)
 {
-	register ieee8021MstpCistPortEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register ieee8021SpanningTreePortEntry_t *poSpanningTreePort = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poSpanningTreePort = ieee8021SpanningTreePortTable_getNextIndex (u32ComponentId, u32Num)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ComponentId = u32ComponentId;
-	poTmpEntry->u32Num = u32Num;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021MstpCistPortTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ieee8021MstpCistPortEntry_t, oBTreeNode);
+	return &poSpanningTreePort->oCist;
 }
 
 /* remove a row from the table */
 void
 ieee8021MstpCistPortTable_removeEntry (ieee8021MstpCistPortEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021MstpCistPortTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIeee8021MstpCistPortTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -1026,7 +976,7 @@ ieee8021MstpCistPortTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021MstpCistPortTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oIeee8021SpanningTreePortTable_BTree);
 	return ieee8021MstpCistPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -1035,20 +985,20 @@ ieee8021MstpCistPortTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021MstpCistPortEntry_t *poEntry = NULL;
+	ieee8021SpanningTreePortEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ieee8021MstpCistPortEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ieee8021SpanningTreePortEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Num);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021MstpCistPortTable_BTree);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Port);
+	*my_data_context = (void*) &poEntry->oCist;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021SpanningTreePortTable_BTree);
 	return put_index_data;
 }
 
@@ -1057,11 +1007,11 @@ ieee8021MstpCistPortTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ieee8021MstpCistPortEntry_t *poEntry = NULL;
+	ieee8021SpanningTreePortEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	
-	poEntry = ieee8021MstpCistPortTable_getByIndex (
+	poEntry = ieee8021SpanningTreePortTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer);
 	if (poEntry == NULL)
@@ -1069,7 +1019,7 @@ ieee8021MstpCistPortTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oCist;
 	return true;
 }
 
