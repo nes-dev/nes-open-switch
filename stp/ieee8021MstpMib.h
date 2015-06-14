@@ -273,8 +273,8 @@ enum
 typedef struct ieee8021MstpCistPortEntry_t
 {
 	/* Index values */
-	uint32_t u32ComponentId;
-	uint32_t u32Num;
+// 	uint32_t u32ComponentId;
+// 	uint32_t u32Num;
 	
 	/* Column values */
 	uint32_t u32Uptime;
@@ -301,10 +301,10 @@ typedef struct ieee8021MstpCistPortEntry_t
 	size_t u16PseudoRootId_len;	/* # of uint8_t elements */
 	uint8_t u8IsL2Gp;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } ieee8021MstpCistPortEntry_t;
 
-extern xBTree_t oIeee8021MstpCistPortTable_BTree;
+// extern xBTree_t oIeee8021MstpCistPortTable_BTree;
 
 /* ieee8021MstpCistPortTable table mapper */
 void ieee8021MstpCistPortTable_init (void);

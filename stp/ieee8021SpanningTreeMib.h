@@ -292,6 +292,7 @@ ieee8021SpanningTreePortEntry_t * ieee8021SpanningTreePortTable_getNextIndex (
 	uint32_t u32ComponentId,
 	uint32_t u32Port);
 #define ieee8021SpanningTreePortTable_getByExtensionEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021SpanningTreePortEntry_t, oExtension))
+#define ieee8021SpanningTreePortTable_getByMstpCistEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ieee8021SpanningTreePortEntry_t, oCist))
 void ieee8021SpanningTreePortTable_removeEntry (ieee8021SpanningTreePortEntry_t *poEntry);
 bool ieee8021StpPortRowStatus_handler (
 	ieee8021SpanningTreePortEntry_t *poEntry, uint8_t u8RowStatus);
