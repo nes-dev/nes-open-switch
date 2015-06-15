@@ -44,7 +44,7 @@ enum
 {
 	LacpPduHeader_size_c					= 2,
 	LacpPduTrailer_Lacp_size_c				= 50,
-	LacpPduTrailer_Marker_size_c			= 80,
+	LacpPduTrailer_Marker_size_c			= 90,
 };
 
 typedef struct LacpPduHeader_t
@@ -74,30 +74,30 @@ typedef struct LacpPduTrailer_Lacp_t
 #define LacpPduTrailer_Lacp_serialize(b, h)\
 {\
 	memcpy (XBUFFER_ADDR (b), XBUFFER_ADDR (h), LacpPduTrailer_Lacp_size_c);\
-	*(uint32_t*) &XBUFFER_ADDR (b)[50]		= htonl ((h)->u32Fcs);\
+	/**(uint32_t*) &XBUFFER_ADDR (b)[50]		= htonl ((h)->u32Fcs);*/\
 }
 
 #define LacpPduTrailer_Lacp_marshal(h, b)\
 {\
 	memcpy (XBUFFER_ADDR (h), XBUFFER_ADDR (b), LacpPduTrailer_Lacp_size_c);\
-	(h)->u32Fcs								= ntohl (*(uint32_t*) &XBUFFER_ADDR (b)[50]);\
+	/*(h)->u32Fcs								= ntohl (*(uint32_t*) &XBUFFER_ADDR (b)[50]);*/\
 }
 
 typedef struct LacpPduTrailer_Marker_t
 {
-	uint8_t		au8Reserved[80];
+	uint8_t		au8Reserved[90];
 } LacpPduTrailer_Marker_t;
 
 #define LacpPduTrailer_Marker_serialize(b, h)\
 {\
 	memcpy (XBUFFER_ADDR (b), XBUFFER_ADDR (h), LacpPduTrailer_Marker_size_c);\
-	*(uint32_t*) &XBUFFER_ADDR (b)[80]		= htonl ((h)->u32Fcs);\
+	/**(uint32_t*) &XBUFFER_ADDR (b)[80]		= htonl ((h)->u32Fcs);*/\
 }
 
 #define LacpPduTrailer_Marker_marshal(h, b)\
 {\
 	memcpy (XBUFFER_ADDR (h), XBUFFER_ADDR (b), LacpPduTrailer_Marker_size_c);\
-	(h)->u32Fcs								= ntohl (*(uint32_t*) &XBUFFER_ADDR (b)[80]);\
+	/*(h)->u32Fcs								= ntohl (*(uint32_t*) &XBUFFER_ADDR (b)[80]);*/\
 }
 
 
@@ -265,7 +265,7 @@ typedef struct LacpPdu_Lacp_t
 	LacpTlv_Partner_t oPartner;
 	LacpTlv_Collector_t oCollector;
 	LacpTlv_Terminator_t oTerminator;
-// 	LacpPduTrailer_Lacp_t oTrailer;
+	LacpPduTrailer_Lacp_t oTrailer;
 } LacpPdu_Lacp_t;
 
 
@@ -315,7 +315,7 @@ typedef struct LacpPdu_Marker_t
 {
 	LacpPduHeader_t oHeader;
 	LacpTlv_Marker_t oMarker;
-// 	LacpPduTrailer_Marker_t oTrailer;
+	LacpPduTrailer_Marker_t oTrailer;
 } LacpPdu_Marker_t;
 
 
@@ -345,7 +345,7 @@ typedef struct LacpPdu_MarkerResponse_t
 {
 	LacpPduHeader_t oHeader;
 	LacpTlv_MarkerResponse_t oMarkerResponse;
-// 	LacpPduTrailer_Marker_t oTrailer;
+	LacpPduTrailer_Marker_t oTrailer;
 } LacpPdu_MarkerResponse_t;
 
 
