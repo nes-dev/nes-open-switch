@@ -260,13 +260,33 @@ enum
 
 typedef struct LacpPdu_Lacp_t
 {
-	LacpPduHeader_t oHeader;
-	LacpTlv_Actor_t oActor;
-	LacpTlv_Partner_t oPartner;
-	LacpTlv_Collector_t oCollector;
-	LacpTlv_Terminator_t oTerminator;
-	LacpPduTrailer_Lacp_t oTrailer;
+	LacpPduHeader_t				oHeader;
+	LacpTlv_Actor_t				oActor;
+	LacpTlv_Partner_t			oPartner;
+	LacpTlv_Collector_t			oCollector;
+	LacpTlv_Terminator_t		oTerminator;
+	LacpPduTrailer_Lacp_t		oTrailer;
 } LacpPdu_Lacp_t;
+
+#define LacpPdu_Lacp_serialize(b, h)\
+{\
+	LacpPduHeader_serialize (&XBUFFER_ADDR (b)[0], &(h)->oHeader);\
+	LacpTlv_Actor_serialize (&XBUFFER_ADDR (b)[2], &(h)->oActor);\
+	LacpTlv_Partner_serialize (&XBUFFER_ADDR (b)[22], &(h)->oPartner);\
+	LacpTlv_Collector_serialize (&XBUFFER_ADDR (b)[42], &(h)->oCollector);\
+	LacpTlv_Terminator_serialize (&XBUFFER_ADDR (b)[58], &(h)->oTerminator);\
+	LacpPduTrailer_Lacp_serialize (&XBUFFER_ADDR (b)[60], &(h)->oTrailer);\
+}
+
+#define LacpPdu_Lacp_marshal(h, b)\
+{\
+	LacpPduHeader_marshal (&(h)->oHeader, &XBUFFER_ADDR (b)[0]);\
+	LacpTlv_Actor_marshal (&(h)->oActor, &XBUFFER_ADDR (b)[2]);\
+	LacpTlv_Partner_marshal (&(h)->oPartner, &XBUFFER_ADDR (b)[22]);\
+	LacpTlv_Collector_marshal (&(h)->oCollector, &XBUFFER_ADDR (b)[42]);\
+	LacpTlv_Terminator_marshal (&(h)->oTerminator, &XBUFFER_ADDR (b)[58]);\
+	LacpPduTrailer_Lacp_marshal (&(h)->oTrailer, &XBUFFER_ADDR (b)[60]);\
+}
 
 
 /**
