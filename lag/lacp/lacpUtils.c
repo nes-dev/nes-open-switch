@@ -514,17 +514,13 @@ dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry)
 	{
 		goto dot3adAggPortLacp_lacpPduTx_cleanup;
 	}
-	if ((pvBuffer = xBuffer_cAlloc (LacpPdu_Lacp_size_c)) == NULL)
+	if ((pvBuffer = xBuffer_cAlloc (sizeof (*poPdu))) == NULL)
 	{
 		goto dot3adAggPortLacp_lacpPduTx_cleanup;
 	}
 	
-	register void *pvBufferOffset = pvBuffer;
-	
 	poPdu->oHeader.u8Type = IeeeSlowProtocolsType_lacp_c;
 	poPdu->oHeader.u8Version = Lacp_Version1_c;
-	LacpPduHeader_serialize (pvBufferOffset, &poPdu->oActor);
-	pvBufferOffset += LacpPduHeader_size_c;
 	
 	poPdu->oActor.oHeader.u8Type = LacpTlv_Actor_c;
 	poPdu->oActor.oHeader.u8Length = LacpTlv_Actor_size_c;
@@ -534,8 +530,6 @@ dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry)
 	poPdu->oActor.u16PortPriority = poEntry->oPort.i32ActorPortPriority;
 	poPdu->oActor.u16PortNumber = poEntry->oPort.i32ActorPort;
 	xBitmap_copyFromRev (poPdu->oActor.au8State, poEntry->oPort.au8ActorOperState, dot3adAggPortState_bitMin, dot3adAggPortState_bitMax_c);
-	LacpTlv_Actor_serialize (pvBufferOffset, &poPdu->oActor);
-	pvBufferOffset += LacpTlv_Actor_size_c;
 	
 	poPdu->oPartner.oHeader.u8Type = LacpTlv_Partner_c;
 	poPdu->oPartner.oHeader.u8Length = LacpTlv_Partner_size_c;
@@ -545,36 +539,30 @@ dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry)
 	poPdu->oPartner.u16PortPriority = poEntry->oPort.i32PartnerOperPortPriority;
 	poPdu->oPartner.u16PortNumber = poEntry->oPort.i32PartnerOperPort;
 	xBitmap_copyFromRev (poPdu->oPartner.au8State, poEntry->oPort.au8PartnerOperState, dot3adAggPortState_bitMin, dot3adAggPortState_bitMax_c);
-	LacpTlv_Partner_serialize (pvBufferOffset, &poPdu->oPartner);
-	pvBufferOffset += LacpTlv_Partner_size_c;
 	
 	poPdu->oCollector.oHeader.u8Type = LacpTlv_Collector_c;
 	poPdu->oCollector.oHeader.u8Length = LacpTlv_Collector_size_c;
 	poPdu->oCollector.u16MaxDelay = poEntry->i32CollectorMaxDelay;
-	LacpTlv_Collector_serialize (pvBufferOffset, &poPdu->oCollector);
-	pvBufferOffset += LacpTlv_Collector_size_c;
 	
 	poPdu->oTerminator.oHeader.u8Type = LacpTlv_Terminator_c;
 	poPdu->oTerminator.oHeader.u8Length = LacpTlv_Terminator_size_c;
-	LacpTlv_Terminator_serialize (pvBufferOffset, &poPdu->oTerminator);
-	pvBufferOffset += LacpTlv_Terminator_size_c;
 	
-	pvBufferOffset += LacpPduTrailer_Lacp_size_c;
+	LacpPdu_Lacp_serialize (pvBuffer, poPdu);
+	xBuffer_free (poPdu);
+	poPdu = NULL;
 	
 // 	if (!ethernet_portTx (pvBuffer, poEntry->u32Index))
 // 	{
 // 		goto dot3adAggPortLacp_lacpPduTx_cleanup;
 // 	}
-	pvBuffer = NULL;
 	
+	pvBuffer = NULL;
 	bRetCode = true;
 	
 dot3adAggPortLacp_lacpPduTx_cleanup:
 	
-	if (poPdu != NULL)
-	{
-		xBuffer_free (poPdu);
-	}
+	pvBuffer != NULL ? xBuffer_free (pvBuffer): false;
+	poPdu != NULL ? xBuffer_free (poPdu): false;
 	return bRetCode;
 }
 
