@@ -33,7 +33,6 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-
 #define TOBE_REPLACED 1
 
 
@@ -139,12 +138,17 @@ Netsnmp_Node_Handler neIeee8021MstpTable_mapper;
  *	table neIeee8021MstpCistPortTable definitions
  */
 #define NEIEEE8021MSTPCISTPORTRESTRICTEDDOMAINROLE 1
+#define NEIEEE8021MSTPCISTPORTISOPERSTP 2
 
 enum
 {
 	/* enums for column neIeee8021MstpCistPortRestrictedDomainRole */
 	neIeee8021MstpCistPortRestrictedDomainRole_true_c = 1,
 	neIeee8021MstpCistPortRestrictedDomainRole_false_c = 2,
+
+	/* enums for column neIeee8021MstpCistPortIsOperStp */
+	neIeee8021MstpCistPortIsOperStp_true_c = 1,
+	neIeee8021MstpCistPortIsOperStp_false_c = 2,
 };
 
 /* table neIeee8021MstpCistPortTable row entry data structure */
@@ -156,6 +160,7 @@ typedef struct neIeee8021MstpCistPortEntry_t
 	
 	/* Column values */
 	uint8_t u8RestrictedDomainRole;
+	uint8_t u8IsOperStp;
 	
 	xBTree_Node_t oBTreeNode;
 } neIeee8021MstpCistPortEntry_t;

@@ -953,7 +953,7 @@ neIeee8021MstpCistPortTable_init (void)
 		ASN_UNSIGNED /* index: ieee8021MstpCistPortNum */,
 		0);
 	table_info->min_column = NEIEEE8021MSTPCISTPORTRESTRICTEDDOMAINROLE;
-	table_info->max_column = NEIEEE8021MSTPCISTPORTRESTRICTEDDOMAINROLE;
+	table_info->max_column = NEIEEE8021MSTPCISTPORTISOPERSTP;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &neIeee8021MstpCistPortTable_getFirst;
@@ -1159,6 +1159,9 @@ neIeee8021MstpCistPortTable_mapper (
 			{
 			case NEIEEE8021MSTPCISTPORTRESTRICTEDDOMAINROLE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RestrictedDomainRole);
+				break;
+			case NEIEEE8021MSTPCISTPORTISOPERSTP:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8IsOperStp);
 				break;
 				
 			default:
