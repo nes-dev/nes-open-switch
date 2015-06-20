@@ -417,7 +417,7 @@ bool ieee8021BridgeTpPortTable_createHier (ieee8021BridgeTpPortEntry_t *poEntry)
 bool ieee8021BridgeTpPortTable_removeHier (ieee8021BridgeTpPortEntry_t *poEntry);
 bool ieee8021BridgeTpPortTable_handler (
 	ieee8021BridgeBaseEntry_t *poComponent,
-	ieee8021BridgePhyData_t *poPhyData, bool bMacLearn, bool bMacFwd);
+	ieee8021BridgePhyPortEntry_t *poPhy, bool bMacLearn, bool bMacFwd);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021BridgeTpPortTable_getFirst;
 Netsnmp_Next_Data_Point ieee8021BridgeTpPortTable_getNext;
