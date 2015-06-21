@@ -3039,72 +3039,6 @@ ieee8021BridgeTpPortTable_removeEntry (ieee8021BridgeTpPortEntry_t *poEntry)
 }
 
 bool
-ieee8021BridgeTpPortStatus_handler (
-	uint32_t u32IfIndex, uint8_t *pu8AdminFlags, bool bLocked)
-{
-	register bool bRetCode = false;
-	register ieee8021BridgePhyData_t *poPhyData = NULL;
-	register ieee8021BridgeBaseEntry_t *poIeee8021BridgeBaseEntry = NULL;
-	register bool bMacLearn = xBitmap_getBitRev (pu8AdminFlags, neIfAdminFlags_macLearn_c);
-	register bool bMacFwd = xBitmap_getBitRev (pu8AdminFlags, neIfAdminFlags_macFwd_c);
-	register bool bPhyLocked = false;
-	register bool bBridgeLocked = false;
-	
-	
-	if (u32IfIndex == 0 || pu8AdminFlags == NULL || (bMacLearn && !bMacFwd))
-	{
-		goto ieee8021BridgeTpPortStatus_handler_cleanup;
-	}
-	
-	
-	if (!bLocked)
-	{
-		ieee8021BridgePhyData_rdLock ();
-		bPhyLocked = true;
-	}
-	
-	if ((poPhyData = ieee8021BridgePhyData_getByIndex (u32IfIndex, 0)) == NULL ||
-		poPhyData->u32ComponentId == 0 || poPhyData->u32Port == 0)
-	{
-		goto ieee8021BridgeTpPortStatus_handler_success;
-	}
-	
-	ieee8021Bridge_wrLock ();
-	bBridgeLocked = true;
-	
-	if ((poIeee8021BridgeBaseEntry = ieee8021BridgeBaseTable_getByIndex (poPhyData->u32ComponentId)) == NULL)
-	{
-		goto ieee8021BridgeTpPortStatus_handler_cleanup;
-	}
-	
-	ieee8021BridgeBase_wrLock (poIeee8021BridgeBaseEntry);
-	
-	
-	/*if (!ieee8021BridgeTpPortTable_handler (poIeee8021BridgeBaseEntry, poPhyData, bMacLearn, bMacFwd))
-	{
-		goto ieee8021BridgeTpPortStatus_handler_cleanup;
-	}*/
-	
-ieee8021BridgeTpPortStatus_handler_success:
-	
-	if (poPhyData != NULL)
-	{
-		xBitmap_setBitRev (poPhyData->au8AdminFlags, neIfAdminFlags_macLearn_c, bMacLearn);
-		xBitmap_setBitRev (poPhyData->au8AdminFlags, neIfAdminFlags_macFwd_c, bMacFwd);
-	}
-	
-	bRetCode = true;
-	
-ieee8021BridgeTpPortStatus_handler_cleanup:
-	
-	poIeee8021BridgeBaseEntry != NULL ? ieee8021BridgeBase_unLock (poIeee8021BridgeBaseEntry): false;
-	bBridgeLocked ? ieee8021Bridge_unLock (): false;
-	bPhyLocked ? ieee8021BridgePhyData_rdLock (): false;
-	
-	return bRetCode;
-}
-
-bool
 ieee8021BridgeTpPortTable_handler (
 	ieee8021BridgeBaseEntry_t *poComponent,
 	ieee8021BridgePhyPortEntry_t *poPhy, bool bMacLearn, bool bMacFwd)
@@ -3120,10 +3054,10 @@ ieee8021BridgeTpPortTable_handler (
 	}
 	
 	
-	/*if (!bMacFwd && !ieee8021BridgeTpPortStatus_update (poPhy, poIeee8021BridgeTpPortEntry, bMacLearn, bMacFwd))
+	if (!bMacFwd && !ieee8021BridgeTpPortStatus_update (poPhy, poIeee8021BridgeTpPortEntry, bMacLearn, bMacFwd))
 	{
 		goto ieee8021BridgeTpPortTable_handler_cleanup;
-	}*/
+	}
 	
 	if (bMacFwd)
 	{
@@ -3137,10 +3071,10 @@ ieee8021BridgeTpPortTable_handler (
 		ieee8021BridgeTpPortTable_removeEntry (poIeee8021BridgeTpPortEntry);
 	}
 	
-	/*if (bMacFwd && !ieee8021BridgeTpPortStatus_update (poPhy, poIeee8021BridgeTpPortEntry, bMacLearn, bMacFwd))
+	if (bMacFwd && !ieee8021BridgeTpPortStatus_update (poPhy, poIeee8021BridgeTpPortEntry, bMacLearn, bMacFwd))
 	{
 		goto ieee8021BridgeTpPortTable_handler_cleanup;
-	}*/
+	}
 	
 ieee8021BridgeTpPortTable_handler_success:
 	

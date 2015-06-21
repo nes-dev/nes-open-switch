@@ -64,16 +64,6 @@ bool
 		uint32_t u32IfIndex,
 		uint32_t u32PhyPort);
 
-bool
-	ieee8021BridgePhyData_createRegister (
-		uint32_t u32IfIndex,
-		uint32_t u32PhyPort,
-		uint32_t u32ChassisId);
-bool
-	ieee8021BridgePhyData_removeRegister (
-		uint32_t u32IfIndex,
-		uint32_t u32PhyPort);
-
 
 #define PKT_IP_ENC_USED 4
 #define PKT_L2_ENC_USED

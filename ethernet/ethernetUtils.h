@@ -53,10 +53,6 @@ bool
 	neIeee8021BridgeBasePortAdminFlags_update (
 		ieee8021BridgeBasePortEntry_t *poEntry, uint8_t *pu8AdminFlags);
 bool
-	ieee8021BridgeXPortRowStatus_halUpdate (
-		ieee8021BridgeBaseEntry_t *poComponent,
-		void *pvEntry, int32_t i32Type, uint8_t u8CurStatus, uint8_t u8RowStatus);
-bool
 	ieee8021BridgeBasePortTable_hierUpdate (
 		ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
 bool
@@ -64,8 +60,12 @@ bool
 		ieee8021BridgeBaseEntry_t *poComponent,
 		ieee8021BridgeBasePortEntry_t *poEntry, uint8_t u8RowStatus);
 bool
+	ieee8021BridgeXPortRowStatus_halUpdate (
+		ieee8021BridgeBaseEntry_t *poComponent,
+		void *pvEntry, int32_t i32Type, uint8_t u8CurStatus, uint8_t u8RowStatus);
+bool
 	ieee8021BridgeTpPortStatus_update (
-		ieee8021BridgePhyData_t *poPhyData,
+		ieee8021BridgePhyPortEntry_t *poPhy,
 		ieee8021BridgeTpPortEntry_t *poEntry, bool bMacLearn, bool bMacFwd);
 bool
 	ieee8021BridgeDot1dPortRowStatus_update (

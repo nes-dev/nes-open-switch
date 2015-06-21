@@ -201,7 +201,7 @@ neEntPortRowStatus_update (
 		switch (u8RowStatus)
 		{
 		case xRowStatus_active_c:
-			if (!ieee8021BridgePhyData_createRegister (poEntry->oK.u32IfIndex, poEntry->u32PhysicalIndex, poEntry->u32ChassisIndex))
+			if (!ieee8021BridgePhyPortTable_createRegister (poEntry->oK.u32IfIndex, poEntry->u32PhysicalIndex, poEntry->u32ChassisIndex))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
@@ -232,7 +232,7 @@ neEntPortRowStatus_update (
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			
-			if (!ieee8021BridgePhyData_removeRegister (poEntry->oK.u32IfIndex, poEntry->u32PhysicalIndex))
+			if (!ieee8021BridgePhyPortTable_removeRegister (poEntry->oK.u32IfIndex, poEntry->u32PhysicalIndex))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
