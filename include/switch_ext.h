@@ -57,6 +57,8 @@ enum
 	ModuleId_stp_c,
 	ModuleId_spb_c,
 	ModuleId_inet_c,
+	ModuleId_ted_c,
+	ModuleId_mpls_c,
 	ModuleId_tcpUdp_c,
 };
 
@@ -85,6 +87,8 @@ typedef struct ModuleInfo_t
 #include "stp_ext.h"
 #include "spb_ext.h"
 #include "inet_ext.h"
+#include "ted_ext.h"
+#include "mpls_ext.h"
 #include "tcpUdp_ext.h"
 
 
@@ -107,6 +111,8 @@ static ModuleInfo_t aoModuleList[] =
 	{ModuleId_stp_c,			NULL,				&stp_main,				NULL},
 	{ModuleId_spb_c,			NULL,				&spb_main,				NULL},
 	{ModuleId_inet_c,			NULL,				&inet_main,				NULL},
+	{ModuleId_ted_c,			NULL,				&ted_main,				NULL},
+	{ModuleId_mpls_c,			NULL,				&mpls_main,				NULL},
 	{ModuleId_tcpUdp_c,			NULL,				&tcpUdp_main,			NULL},
 };
 
