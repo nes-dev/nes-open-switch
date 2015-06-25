@@ -40,6 +40,7 @@ int mplsTunnelUp_trap (void);
 int mplsTunnelDown_trap (void);
 int mplsTunnelRerouted_trap (void);
 int mplsTunnelReoptimized_trap (void);
+int gmplsTunnelDown_trap (void);
 
 
 

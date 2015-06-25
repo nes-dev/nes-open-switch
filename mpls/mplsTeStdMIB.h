@@ -103,6 +103,22 @@ extern mplsTeObjects_t oMplsTeObjects;
 Netsnmp_Node_Handler mplsTeObjects_mapper;
 #endif	/* SNMP_SRC */
 
+/** definitions for scalar(s) of gmplsTeScalars **/
+#define GMPLSTUNNELSCONFIGURED 1
+#define GMPLSTUNNELSACTIVE 2
+
+typedef struct gmplsTeScalars_t
+{
+	uint32_t u32Configured;
+	uint32_t u32Active;
+} gmplsTeScalars_t;
+
+extern gmplsTeScalars_t oGmplsTeScalars;
+
+#ifdef SNMP_SRC
+Netsnmp_Node_Handler gmplsTeScalars_mapper;
+#endif	/* SNMP_SRC */
+
 
 
 /**
@@ -308,6 +324,619 @@ Netsnmp_First_Data_Point mplsTunnelCRLDPResTable_getFirst;
 Netsnmp_Next_Data_Point mplsTunnelCRLDPResTable_getNext;
 Netsnmp_Get_Data_Point mplsTunnelCRLDPResTable_get;
 Netsnmp_Node_Handler mplsTunnelCRLDPResTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table gmplsTunnelTable definitions
+ */
+#define GMPLSTUNNELUNNUMIF 1
+#define GMPLSTUNNELATTRIBUTES 2
+#define GMPLSTUNNELLSPENCODING 3
+#define GMPLSTUNNELSWITCHINGTYPE 4
+#define GMPLSTUNNELLINKPROTECTION 5
+#define GMPLSTUNNELGPID 6
+#define GMPLSTUNNELSECONDARY 7
+#define GMPLSTUNNELDIRECTION 8
+#define GMPLSTUNNELPATHCOMP 9
+#define GMPLSTUNNELUPSTREAMNOTIFYRECIPIENTTYPE 10
+#define GMPLSTUNNELUPSTREAMNOTIFYRECIPIENT 11
+#define GMPLSTUNNELSENDRESVNOTIFYRECIPIENTTYPE 12
+#define GMPLSTUNNELSENDRESVNOTIFYRECIPIENT 13
+#define GMPLSTUNNELDOWNSTREAMNOTIFYRECIPIENTTYPE 14
+#define GMPLSTUNNELDOWNSTREAMNOTIFYRECIPIENT 15
+#define GMPLSTUNNELSENDPATHNOTIFYRECIPIENTTYPE 16
+#define GMPLSTUNNELSENDPATHNOTIFYRECIPIENT 17
+#define GMPLSTUNNELADMINSTATUSFLAGS 18
+#define GMPLSTUNNELEXTRAPARAMSPTR 19
+
+enum
+{
+	/* enums for column gmplsTunnelUnnumIf */
+	gmplsTunnelUnnumIf_true_c = 1,
+	gmplsTunnelUnnumIf_false_c = 2,
+
+	/* enums for column gmplsTunnelAttributes */
+	gmplsTunnelAttributes_labelRecordingDesired_c = 0,
+
+	/* enums for column gmplsTunnelLSPEncoding */
+	gmplsTunnelLSPEncoding_tunnelLspNotGmpls_c = 0,
+	gmplsTunnelLSPEncoding_tunnelLspPacket_c = 1,
+	gmplsTunnelLSPEncoding_tunnelLspEthernet_c = 2,
+	gmplsTunnelLSPEncoding_tunnelLspAnsiEtsiPdh_c = 3,
+	gmplsTunnelLSPEncoding_tunnelLspSdhSonet_c = 5,
+	gmplsTunnelLSPEncoding_tunnelLspDigitalWrapper_c = 7,
+	gmplsTunnelLSPEncoding_tunnelLspLambda_c = 8,
+	gmplsTunnelLSPEncoding_tunnelLspFiber_c = 9,
+	gmplsTunnelLSPEncoding_tunnelLspFiberChannel_c = 11,
+	gmplsTunnelLSPEncoding_tunnelDigitalPath_c = 12,
+	gmplsTunnelLSPEncoding_tunnelOpticalChannel_c = 13,
+	gmplsTunnelLSPEncoding_tunnelLine_c = 14,
+
+	/* enums for column gmplsTunnelSwitchingType */
+	gmplsTunnelSwitchingType_unknown_c = 0,
+	gmplsTunnelSwitchingType_psc1_c = 1,
+	gmplsTunnelSwitchingType_psc2_c = 2,
+	gmplsTunnelSwitchingType_psc3_c = 3,
+	gmplsTunnelSwitchingType_psc4_c = 4,
+	gmplsTunnelSwitchingType_evpl_c = 30,
+	gmplsTunnelSwitchingType_pbb_c = 40,
+	gmplsTunnelSwitchingType_l2sc_c = 51,
+	gmplsTunnelSwitchingType_tdm_c = 100,
+	gmplsTunnelSwitchingType_otntdm_c = 110,
+	gmplsTunnelSwitchingType_dcsc_c = 125,
+	gmplsTunnelSwitchingType_lsc_c = 150,
+	gmplsTunnelSwitchingType_fsc_c = 200,
+
+	/* enums for column gmplsTunnelLinkProtection */
+	gmplsTunnelLinkProtection_extraTraffic_c = 0,
+	gmplsTunnelLinkProtection_unprotected_c = 1,
+	gmplsTunnelLinkProtection_shared_c = 2,
+	gmplsTunnelLinkProtection_dedicatedOneToOne_c = 3,
+	gmplsTunnelLinkProtection_dedicatedOnePlusOne_c = 4,
+	gmplsTunnelLinkProtection_enhanced_c = 5,
+
+	/* enums for column gmplsTunnelGPid */
+	gmplsTunnelGPid_unknown_c = 0,
+	gmplsTunnelGPid_asynchE4_c = 5,
+	gmplsTunnelGPid_asynchDS3T3_c = 6,
+	gmplsTunnelGPid_asynchE3_c = 7,
+	gmplsTunnelGPid_bitsynchE3_c = 8,
+	gmplsTunnelGPid_bytesynchE3_c = 9,
+	gmplsTunnelGPid_asynchDS2T2_c = 10,
+	gmplsTunnelGPid_bitsynchDS2T2_c = 11,
+	gmplsTunnelGPid_reservedByRFC3471first_c = 12,
+	gmplsTunnelGPid_asynchE1_c = 13,
+	gmplsTunnelGPid_bytesynchE1_c = 14,
+	gmplsTunnelGPid_bytesynch31ByDS0_c = 15,
+	gmplsTunnelGPid_asynchDS1T1_c = 16,
+	gmplsTunnelGPid_bitsynchDS1T1_c = 17,
+	gmplsTunnelGPid_bytesynchDS1T1_c = 18,
+	gmplsTunnelGPid_vc1vc12_c = 19,
+	gmplsTunnelGPid_reservedByRFC3471second_c = 20,
+	gmplsTunnelGPid_reservedByRFC3471third_c = 21,
+	gmplsTunnelGPid_ds1SFAsynch_c = 22,
+	gmplsTunnelGPid_ds1ESFAsynch_c = 23,
+	gmplsTunnelGPid_ds3M23Asynch_c = 24,
+	gmplsTunnelGPid_ds3CBitParityAsynch_c = 25,
+	gmplsTunnelGPid_vtLovc_c = 26,
+	gmplsTunnelGPid_stsSpeHovc_c = 27,
+	gmplsTunnelGPid_posNoScramble16BitCrc_c = 28,
+	gmplsTunnelGPid_posNoScramble32BitCrc_c = 29,
+	gmplsTunnelGPid_posScramble16BitCrc_c = 30,
+	gmplsTunnelGPid_posScramble32BitCrc_c = 31,
+	gmplsTunnelGPid_atm_c = 32,
+	gmplsTunnelGPid_ethernet_c = 33,
+	gmplsTunnelGPid_sdhSonet_c = 34,
+	gmplsTunnelGPid_digitalwrapper_c = 36,
+	gmplsTunnelGPid_lambda_c = 37,
+	gmplsTunnelGPid_ansiEtsiPdh_c = 38,
+	gmplsTunnelGPid_lapsSdh_c = 40,
+	gmplsTunnelGPid_fddi_c = 41,
+	gmplsTunnelGPid_dqdb_c = 42,
+	gmplsTunnelGPid_fiberChannel3_c = 43,
+	gmplsTunnelGPid_hdlc_c = 44,
+	gmplsTunnelGPid_ethernetV2DixOnly_c = 45,
+	gmplsTunnelGPid_ethernet802dot3Only_c = 46,
+	gmplsTunnelGPid_g709ODUj_c = 47,
+	gmplsTunnelGPid_g709OTUk_c = 48,
+	gmplsTunnelGPid_g709CBRorCBRa_c = 49,
+	gmplsTunnelGPid_g709CBRb_c = 50,
+	gmplsTunnelGPid_g709BSOT_c = 51,
+	gmplsTunnelGPid_g709BSNT_c = 52,
+	gmplsTunnelGPid_gfpIPorPPP_c = 53,
+	gmplsTunnelGPid_gfpEthernetMAC_c = 54,
+	gmplsTunnelGPid_gfpEthernetPHY_c = 55,
+	gmplsTunnelGPid_g709ESCON_c = 56,
+	gmplsTunnelGPid_g709FICON_c = 57,
+	gmplsTunnelGPid_g709FiberChannel_c = 58,
+	gmplsTunnelGPid_framedGFP_c = 59,
+	gmplsTunnelGPid_sTM1_c = 60,
+	gmplsTunnelGPid_sTM4_c = 61,
+	gmplsTunnelGPid_infiniBand_c = 62,
+	gmplsTunnelGPid_sDI_c = 63,
+	gmplsTunnelGPid_sDI1point001_c = 64,
+	gmplsTunnelGPid_dVBASI_c = 65,
+	gmplsTunnelGPid_g709ODU125G_c = 66,
+	gmplsTunnelGPid_g709ODUAny_c = 67,
+	gmplsTunnelGPid_nullTest_c = 68,
+	gmplsTunnelGPid_randomTest_c = 69,
+	gmplsTunnelGPid_sixtyfourB66BGFPFEthernet_c = 70,
+
+	/* enums for column gmplsTunnelSecondary */
+	gmplsTunnelSecondary_true_c = 1,
+	gmplsTunnelSecondary_false_c = 2,
+
+	/* enums for column gmplsTunnelDirection */
+	gmplsTunnelDirection_forward_c = 0,
+	gmplsTunnelDirection_bidirectional_c = 1,
+
+	/* enums for column gmplsTunnelPathComp */
+	gmplsTunnelPathComp_dynamicFull_c = 1,
+	gmplsTunnelPathComp_explicit_c = 2,
+	gmplsTunnelPathComp_dynamicPartial_c = 3,
+
+	/* enums for column gmplsTunnelUpstreamNotifyRecipientType */
+	gmplsTunnelUpstreamNotifyRecipientType_unknown_c = 0,
+	gmplsTunnelUpstreamNotifyRecipientType_ipv4_c = 1,
+	gmplsTunnelUpstreamNotifyRecipientType_ipv6_c = 2,
+	gmplsTunnelUpstreamNotifyRecipientType_ipv4z_c = 3,
+	gmplsTunnelUpstreamNotifyRecipientType_ipv6z_c = 4,
+	gmplsTunnelUpstreamNotifyRecipientType_dns_c = 16,
+
+	/* enums for column gmplsTunnelSendResvNotifyRecipientType */
+	gmplsTunnelSendResvNotifyRecipientType_unknown_c = 0,
+	gmplsTunnelSendResvNotifyRecipientType_ipv4_c = 1,
+	gmplsTunnelSendResvNotifyRecipientType_ipv6_c = 2,
+	gmplsTunnelSendResvNotifyRecipientType_ipv4z_c = 3,
+	gmplsTunnelSendResvNotifyRecipientType_ipv6z_c = 4,
+	gmplsTunnelSendResvNotifyRecipientType_dns_c = 16,
+
+	/* enums for column gmplsTunnelDownstreamNotifyRecipientType */
+	gmplsTunnelDownstreamNotifyRecipientType_unknown_c = 0,
+	gmplsTunnelDownstreamNotifyRecipientType_ipv4_c = 1,
+	gmplsTunnelDownstreamNotifyRecipientType_ipv6_c = 2,
+	gmplsTunnelDownstreamNotifyRecipientType_ipv4z_c = 3,
+	gmplsTunnelDownstreamNotifyRecipientType_ipv6z_c = 4,
+	gmplsTunnelDownstreamNotifyRecipientType_dns_c = 16,
+
+	/* enums for column gmplsTunnelSendPathNotifyRecipientType */
+	gmplsTunnelSendPathNotifyRecipientType_unknown_c = 0,
+	gmplsTunnelSendPathNotifyRecipientType_ipv4_c = 1,
+	gmplsTunnelSendPathNotifyRecipientType_ipv6_c = 2,
+	gmplsTunnelSendPathNotifyRecipientType_ipv4z_c = 3,
+	gmplsTunnelSendPathNotifyRecipientType_ipv6z_c = 4,
+	gmplsTunnelSendPathNotifyRecipientType_dns_c = 16,
+
+	/* enums for column gmplsTunnelAdminStatusFlags */
+	gmplsTunnelAdminStatusFlags_reflect_c = 0,
+	gmplsTunnelAdminStatusFlags_reserved1_c = 1,
+	gmplsTunnelAdminStatusFlags_reserved2_c = 2,
+	gmplsTunnelAdminStatusFlags_reserved3_c = 3,
+	gmplsTunnelAdminStatusFlags_reserved4_c = 4,
+	gmplsTunnelAdminStatusFlags_reserved5_c = 5,
+	gmplsTunnelAdminStatusFlags_reserved6_c = 6,
+	gmplsTunnelAdminStatusFlags_reserved7_c = 7,
+	gmplsTunnelAdminStatusFlags_reserved8_c = 8,
+	gmplsTunnelAdminStatusFlags_reserved9_c = 9,
+	gmplsTunnelAdminStatusFlags_reserved10_c = 10,
+	gmplsTunnelAdminStatusFlags_reserved11_c = 11,
+	gmplsTunnelAdminStatusFlags_reserved12_c = 12,
+	gmplsTunnelAdminStatusFlags_reserved13_c = 13,
+	gmplsTunnelAdminStatusFlags_reserved14_c = 14,
+	gmplsTunnelAdminStatusFlags_reserved15_c = 15,
+	gmplsTunnelAdminStatusFlags_reserved16_c = 16,
+	gmplsTunnelAdminStatusFlags_reserved17_c = 17,
+	gmplsTunnelAdminStatusFlags_reserved18_c = 18,
+	gmplsTunnelAdminStatusFlags_reserved19_c = 19,
+	gmplsTunnelAdminStatusFlags_reserved20_c = 20,
+	gmplsTunnelAdminStatusFlags_reserved21_c = 21,
+	gmplsTunnelAdminStatusFlags_reserved22_c = 22,
+	gmplsTunnelAdminStatusFlags_oamFlowsEnabled_c = 23,
+	gmplsTunnelAdminStatusFlags_oamAlarmsEnabled_c = 24,
+	gmplsTunnelAdminStatusFlags_handover_c = 25,
+	gmplsTunnelAdminStatusFlags_lockout_c = 26,
+	gmplsTunnelAdminStatusFlags_inhibitAlarmCommunication_c = 27,
+	gmplsTunnelAdminStatusFlags_callControl_c = 28,
+	gmplsTunnelAdminStatusFlags_testing_c = 29,
+	gmplsTunnelAdminStatusFlags_administrativelyDown_c = 30,
+	gmplsTunnelAdminStatusFlags_deleteInProgress_c = 31,
+};
+
+/* table gmplsTunnelTable row entry data structure */
+typedef struct gmplsTunnelEntry_t
+{
+	/* Index values */
+	uint32_t u32Index;
+	uint32_t u32Instance;
+	uint32_t u32IngressLSRId;
+	uint32_t u32EgressLSRId;
+	
+	/* Column values */
+	uint8_t u8UnnumIf;
+	uint8_t au8Attributes[1];
+	size_t u16Attributes_len;	/* # of uint8_t elements */
+	int32_t i32LSPEncoding;
+	int32_t i32SwitchingType;
+	uint8_t au8LinkProtection[1];
+	size_t u16LinkProtection_len;	/* # of uint8_t elements */
+	int32_t i32GPid;
+	uint8_t u8Secondary;
+	int32_t i32Direction;
+	int32_t i32PathComp;
+	int32_t i32UpstreamNotifyRecipientType;
+	uint8_t au8UpstreamNotifyRecipient[255];
+	size_t u16UpstreamNotifyRecipient_len;	/* # of uint8_t elements */
+	int32_t i32SendResvNotifyRecipientType;
+	uint8_t au8SendResvNotifyRecipient[255];
+	size_t u16SendResvNotifyRecipient_len;	/* # of uint8_t elements */
+	int32_t i32DownstreamNotifyRecipientType;
+	uint8_t au8DownstreamNotifyRecipient[255];
+	size_t u16DownstreamNotifyRecipient_len;	/* # of uint8_t elements */
+	int32_t i32SendPathNotifyRecipientType;
+	uint8_t au8SendPathNotifyRecipient[255];
+	size_t u16SendPathNotifyRecipient_len;	/* # of uint8_t elements */
+	uint8_t au8AdminStatusFlags[4];
+	size_t u16AdminStatusFlags_len;	/* # of uint8_t elements */
+	xOid_t aoExtraParamsPtr[128];
+	size_t u16ExtraParamsPtr_len;	/* # of xOid_t elements */
+	
+	xBTree_Node_t oBTreeNode;
+} gmplsTunnelEntry_t;
+
+extern xBTree_t oGmplsTunnelTable_BTree;
+
+/* gmplsTunnelTable table mapper */
+void gmplsTunnelTable_init (void);
+gmplsTunnelEntry_t * gmplsTunnelTable_createEntry (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+gmplsTunnelEntry_t * gmplsTunnelTable_getByIndex (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+gmplsTunnelEntry_t * gmplsTunnelTable_getNextIndex (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+void gmplsTunnelTable_removeEntry (gmplsTunnelEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point gmplsTunnelTable_getFirst;
+Netsnmp_Next_Data_Point gmplsTunnelTable_getNext;
+Netsnmp_Get_Data_Point gmplsTunnelTable_get;
+Netsnmp_Node_Handler gmplsTunnelTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table gmplsTunnelHopTable definitions
+ */
+#define GMPLSTUNNELHOPLABELSTATUSES 1
+#define GMPLSTUNNELHOPEXPLICITFORWARDLABEL 2
+#define GMPLSTUNNELHOPEXPLICITFORWARDLABELPTR 3
+#define GMPLSTUNNELHOPEXPLICITREVERSELABEL 4
+#define GMPLSTUNNELHOPEXPLICITREVERSELABELPTR 5
+
+enum
+{
+	/* enums for column gmplsTunnelHopLabelStatuses */
+	gmplsTunnelHopLabelStatuses_forwardPresent_c = 0,
+	gmplsTunnelHopLabelStatuses_reversePresent_c = 1,
+};
+
+/* table gmplsTunnelHopTable row entry data structure */
+typedef struct gmplsTunnelHopEntry_t
+{
+	/* Index values */
+	uint32_t u32ListIndex;
+	uint32_t u32PathOptionIndex;
+	uint32_t u32Index;
+	
+	/* Column values */
+	uint8_t au8LabelStatuses[1];
+	size_t u16LabelStatuses_len;	/* # of uint8_t elements */
+	uint32_t u32ExplicitForwardLabel;
+	xOid_t aoExplicitForwardLabelPtr[128];
+	size_t u16ExplicitForwardLabelPtr_len;	/* # of xOid_t elements */
+	uint32_t u32ExplicitReverseLabel;
+	xOid_t aoExplicitReverseLabelPtr[128];
+	size_t u16ExplicitReverseLabelPtr_len;	/* # of xOid_t elements */
+	
+	xBTree_Node_t oBTreeNode;
+} gmplsTunnelHopEntry_t;
+
+extern xBTree_t oGmplsTunnelHopTable_BTree;
+
+/* gmplsTunnelHopTable table mapper */
+void gmplsTunnelHopTable_init (void);
+gmplsTunnelHopEntry_t * gmplsTunnelHopTable_createEntry (
+	uint32_t u32ListIndex,
+	uint32_t u32PathOptionIndex,
+	uint32_t u32Index);
+gmplsTunnelHopEntry_t * gmplsTunnelHopTable_getByIndex (
+	uint32_t u32ListIndex,
+	uint32_t u32PathOptionIndex,
+	uint32_t u32Index);
+gmplsTunnelHopEntry_t * gmplsTunnelHopTable_getNextIndex (
+	uint32_t u32ListIndex,
+	uint32_t u32PathOptionIndex,
+	uint32_t u32Index);
+void gmplsTunnelHopTable_removeEntry (gmplsTunnelHopEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point gmplsTunnelHopTable_getFirst;
+Netsnmp_Next_Data_Point gmplsTunnelHopTable_getNext;
+Netsnmp_Get_Data_Point gmplsTunnelHopTable_get;
+Netsnmp_Node_Handler gmplsTunnelHopTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table gmplsTunnelARHopTable definitions
+ */
+#define GMPLSTUNNELARHOPLABELSTATUSES 1
+#define GMPLSTUNNELARHOPEXPLICITFORWARDLABEL 2
+#define GMPLSTUNNELARHOPEXPLICITFORWARDLABELPTR 3
+#define GMPLSTUNNELARHOPEXPLICITREVERSELABEL 4
+#define GMPLSTUNNELARHOPEXPLICITREVERSELABELPTR 5
+#define GMPLSTUNNELARHOPPROTECTION 6
+
+enum
+{
+	/* enums for column gmplsTunnelARHopLabelStatuses */
+	gmplsTunnelARHopLabelStatuses_forwardPresent_c = 0,
+	gmplsTunnelARHopLabelStatuses_reversePresent_c = 1,
+	gmplsTunnelARHopLabelStatuses_forwardGlobal_c = 2,
+	gmplsTunnelARHopLabelStatuses_reverseGlobal_c = 3,
+
+	/* enums for column gmplsTunnelARHopProtection */
+	gmplsTunnelARHopProtection_localAvailable_c = 0,
+	gmplsTunnelARHopProtection_localInUse_c = 1,
+};
+
+/* table gmplsTunnelARHopTable row entry data structure */
+typedef struct gmplsTunnelARHopEntry_t
+{
+	/* Index values */
+	uint32_t u32ListIndex;
+	uint32_t u32Index;
+	
+	/* Column values */
+	uint8_t au8LabelStatuses[1];
+	size_t u16LabelStatuses_len;	/* # of uint8_t elements */
+	uint32_t u32ExplicitForwardLabel;
+	xOid_t aoExplicitForwardLabelPtr[128];
+	size_t u16ExplicitForwardLabelPtr_len;	/* # of xOid_t elements */
+	uint32_t u32ExplicitReverseLabel;
+	xOid_t aoExplicitReverseLabelPtr[128];
+	size_t u16ExplicitReverseLabelPtr_len;	/* # of xOid_t elements */
+	uint8_t au8Protection[1];
+	size_t u16Protection_len;	/* # of uint8_t elements */
+	
+	xBTree_Node_t oBTreeNode;
+} gmplsTunnelARHopEntry_t;
+
+extern xBTree_t oGmplsTunnelARHopTable_BTree;
+
+/* gmplsTunnelARHopTable table mapper */
+void gmplsTunnelARHopTable_init (void);
+gmplsTunnelARHopEntry_t * gmplsTunnelARHopTable_createEntry (
+	uint32_t u32ListIndex,
+	uint32_t u32Index);
+gmplsTunnelARHopEntry_t * gmplsTunnelARHopTable_getByIndex (
+	uint32_t u32ListIndex,
+	uint32_t u32Index);
+gmplsTunnelARHopEntry_t * gmplsTunnelARHopTable_getNextIndex (
+	uint32_t u32ListIndex,
+	uint32_t u32Index);
+void gmplsTunnelARHopTable_removeEntry (gmplsTunnelARHopEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point gmplsTunnelARHopTable_getFirst;
+Netsnmp_Next_Data_Point gmplsTunnelARHopTable_getNext;
+Netsnmp_Get_Data_Point gmplsTunnelARHopTable_get;
+Netsnmp_Node_Handler gmplsTunnelARHopTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table gmplsTunnelCHopTable definitions
+ */
+#define GMPLSTUNNELCHOPLABELSTATUSES 1
+#define GMPLSTUNNELCHOPEXPLICITFORWARDLABEL 2
+#define GMPLSTUNNELCHOPEXPLICITFORWARDLABELPTR 3
+#define GMPLSTUNNELCHOPEXPLICITREVERSELABEL 4
+#define GMPLSTUNNELCHOPEXPLICITREVERSELABELPTR 5
+
+enum
+{
+	/* enums for column gmplsTunnelCHopLabelStatuses */
+	gmplsTunnelCHopLabelStatuses_forwardPresent_c = 0,
+	gmplsTunnelCHopLabelStatuses_reversePresent_c = 1,
+};
+
+/* table gmplsTunnelCHopTable row entry data structure */
+typedef struct gmplsTunnelCHopEntry_t
+{
+	/* Index values */
+	uint32_t u32ListIndex;
+	uint32_t u32Index;
+	
+	/* Column values */
+	uint8_t au8LabelStatuses[1];
+	size_t u16LabelStatuses_len;	/* # of uint8_t elements */
+	uint32_t u32ExplicitForwardLabel;
+	xOid_t aoExplicitForwardLabelPtr[128];
+	size_t u16ExplicitForwardLabelPtr_len;	/* # of xOid_t elements */
+	uint32_t u32ExplicitReverseLabel;
+	xOid_t aoExplicitReverseLabelPtr[128];
+	size_t u16ExplicitReverseLabelPtr_len;	/* # of xOid_t elements */
+	
+	xBTree_Node_t oBTreeNode;
+} gmplsTunnelCHopEntry_t;
+
+extern xBTree_t oGmplsTunnelCHopTable_BTree;
+
+/* gmplsTunnelCHopTable table mapper */
+void gmplsTunnelCHopTable_init (void);
+gmplsTunnelCHopEntry_t * gmplsTunnelCHopTable_createEntry (
+	uint32_t u32ListIndex,
+	uint32_t u32Index);
+gmplsTunnelCHopEntry_t * gmplsTunnelCHopTable_getByIndex (
+	uint32_t u32ListIndex,
+	uint32_t u32Index);
+gmplsTunnelCHopEntry_t * gmplsTunnelCHopTable_getNextIndex (
+	uint32_t u32ListIndex,
+	uint32_t u32Index);
+void gmplsTunnelCHopTable_removeEntry (gmplsTunnelCHopEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point gmplsTunnelCHopTable_getFirst;
+Netsnmp_Next_Data_Point gmplsTunnelCHopTable_getNext;
+Netsnmp_Get_Data_Point gmplsTunnelCHopTable_get;
+Netsnmp_Node_Handler gmplsTunnelCHopTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table gmplsTunnelReversePerfTable definitions
+ */
+#define GMPLSTUNNELREVERSEPERFPACKETS 1
+#define GMPLSTUNNELREVERSEPERFHCPACKETS 2
+#define GMPLSTUNNELREVERSEPERFERRORS 3
+#define GMPLSTUNNELREVERSEPERFBYTES 4
+#define GMPLSTUNNELREVERSEPERFHCBYTES 5
+
+/* table gmplsTunnelReversePerfTable row entry data structure */
+typedef struct gmplsTunnelReversePerfEntry_t
+{
+	/* Index values */
+	uint32_t u32Index;
+	uint32_t u32Instance;
+	uint32_t u32IngressLSRId;
+	uint32_t u32EgressLSRId;
+	
+	/* Column values */
+	uint32_t u32Packets;
+	uint64_t u64HCPackets;
+	uint32_t u32Errors;
+	uint32_t u32Bytes;
+	uint64_t u64HCBytes;
+	
+	xBTree_Node_t oBTreeNode;
+} gmplsTunnelReversePerfEntry_t;
+
+extern xBTree_t oGmplsTunnelReversePerfTable_BTree;
+
+/* gmplsTunnelReversePerfTable table mapper */
+void gmplsTunnelReversePerfTable_init (void);
+gmplsTunnelReversePerfEntry_t * gmplsTunnelReversePerfTable_createEntry (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+gmplsTunnelReversePerfEntry_t * gmplsTunnelReversePerfTable_getByIndex (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+gmplsTunnelReversePerfEntry_t * gmplsTunnelReversePerfTable_getNextIndex (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+void gmplsTunnelReversePerfTable_removeEntry (gmplsTunnelReversePerfEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point gmplsTunnelReversePerfTable_getFirst;
+Netsnmp_Next_Data_Point gmplsTunnelReversePerfTable_getNext;
+Netsnmp_Get_Data_Point gmplsTunnelReversePerfTable_get;
+Netsnmp_Node_Handler gmplsTunnelReversePerfTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table gmplsTunnelErrorTable definitions
+ */
+#define GMPLSTUNNELERRORLASTERRORTYPE 1
+#define GMPLSTUNNELERRORLASTTIME 2
+#define GMPLSTUNNELERRORREPORTERTYPE 3
+#define GMPLSTUNNELERRORREPORTER 4
+#define GMPLSTUNNELERRORCODE 5
+#define GMPLSTUNNELERRORSUBCODE 6
+#define GMPLSTUNNELERRORTLVS 7
+#define GMPLSTUNNELERRORHELPSTRING 8
+
+enum
+{
+	/* enums for column gmplsTunnelErrorLastErrorType */
+	gmplsTunnelErrorLastErrorType_noError_c = 0,
+	gmplsTunnelErrorLastErrorType_unknown_c = 1,
+	gmplsTunnelErrorLastErrorType_protocol_c = 2,
+	gmplsTunnelErrorLastErrorType_pathComputation_c = 3,
+	gmplsTunnelErrorLastErrorType_localConfiguration_c = 4,
+	gmplsTunnelErrorLastErrorType_localResources_c = 5,
+	gmplsTunnelErrorLastErrorType_localOther_c = 6,
+
+	/* enums for column gmplsTunnelErrorReporterType */
+	gmplsTunnelErrorReporterType_unknown_c = 0,
+	gmplsTunnelErrorReporterType_ipv4_c = 1,
+	gmplsTunnelErrorReporterType_ipv6_c = 2,
+	gmplsTunnelErrorReporterType_ipv4z_c = 3,
+	gmplsTunnelErrorReporterType_ipv6z_c = 4,
+	gmplsTunnelErrorReporterType_dns_c = 16,
+};
+
+/* table gmplsTunnelErrorTable row entry data structure */
+typedef struct gmplsTunnelErrorEntry_t
+{
+	/* Index values */
+	uint32_t u32Index;
+	uint32_t u32Instance;
+	uint32_t u32IngressLSRId;
+	uint32_t u32EgressLSRId;
+	
+	/* Column values */
+	int32_t i32LastErrorType;
+	uint32_t u32LastTime;
+	int32_t i32ReporterType;
+	uint8_t au8Reporter[255];
+	size_t u16Reporter_len;	/* # of uint8_t elements */
+	uint32_t u32Code;
+	uint32_t u32Subcode;
+	uint8_t au8TLVs[65535];
+	size_t u16TLVs_len;	/* # of uint8_t elements */
+	uint8_t au8HelpString[255];
+	size_t u16HelpString_len;	/* # of uint8_t elements */
+	
+	xBTree_Node_t oBTreeNode;
+} gmplsTunnelErrorEntry_t;
+
+extern xBTree_t oGmplsTunnelErrorTable_BTree;
+
+/* gmplsTunnelErrorTable table mapper */
+void gmplsTunnelErrorTable_init (void);
+gmplsTunnelErrorEntry_t * gmplsTunnelErrorTable_createEntry (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+gmplsTunnelErrorEntry_t * gmplsTunnelErrorTable_getByIndex (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+gmplsTunnelErrorEntry_t * gmplsTunnelErrorTable_getNextIndex (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+void gmplsTunnelErrorTable_removeEntry (gmplsTunnelErrorEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point gmplsTunnelErrorTable_getFirst;
+Netsnmp_Next_Data_Point gmplsTunnelErrorTable_getNext;
+Netsnmp_Get_Data_Point gmplsTunnelErrorTable_get;
+Netsnmp_Node_Handler gmplsTunnelErrorTable_mapper;
 #endif	/* SNMP_SRC */
 
 
@@ -761,6 +1390,13 @@ int mplsTunnelUp_trap (void);
 int mplsTunnelDown_trap (void);
 int mplsTunnelRerouted_trap (void);
 int mplsTunnelReoptimized_trap (void);
+
+
+/* definitions for notification(s) of gmplsTeNotifications */
+#	define GMPLSTUNNELDOWN 1
+
+/* gmplsTeNotifications mapper(s) */
+int gmplsTunnelDown_trap (void);
 
 
 
