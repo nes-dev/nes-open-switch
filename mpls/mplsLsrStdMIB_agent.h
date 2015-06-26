@@ -5,7 +5,7 @@
  *  All rights reserved. This source file is the sole property of NES, and
  *  contain proprietary and confidential information related to NES.
  *
- *  Licensed under the NES RED License, Version 1.0 (the "License"); you may
+ *  Licensed under the NES RED Licensee, Version 1.0 (the "License"); you may
  *  not use this file except in compliance with the License. You may obtain a
  *  copy of the License bundled along with this file. Any kind of reproduction
  *  or duplication of any part of this file which conflicts with the License
@@ -17,55 +17,32 @@
  *  License for the specific language governing permissions and limitations
  *  under the License.
  */
-//set ts=4 sw=4
 
-#ifndef __MPLS_MAIN_C__
-#	define __MPLS_MAIN_C__
+#ifndef __MPLSLSRSTDMIB_AGENT_H__
+#	define __MPLSLSRSTDMIB_AGENT_H__
 
-
-#include "mplsLsrStdMIB_agent.h"
-#include "mplsTeStdMIB_agent.h"
-
-#include "mpls_ext.h"
-#include "mpls_defines.h"
-#include "switch_ext.h"
-
-#include "lib/thread.h"
+#	ifdef __cplusplus
+extern "C" {
+#	endif
 
 
-static xThreadInfo_t oMplsThread =
-{
-	.u32Index = XTHREAD_ID (ModuleId_mpls_c, 0),
-	.u8SchedPolicy = SCHED_RR,
-	.u8Priority = 1,
-	.poStart = &mpls_start,
-};
+
+/**
+ *	agent MIB function
+ */
+void mplsLsrStdMIB_init (void);
 
 
-void *
-mpls_main (void *pvArgv)
-{
-	mplsLsrStdMIB_init ();
-	mplsTeStdMIB_init ();
-	
-	if (xThread_create (&oMplsThread) == NULL)
-	{
-		Mpls_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
-	}
-	
-	return NULL;
+/**
+ *	notification mapper(s)
+ */
+int mplsXCUp_trap (void);
+int mplsXCDown_trap (void);
+
+
+
+#	ifdef __cplusplus
 }
+#	endif
 
-void *
-mpls_start (void *pvArgv)
-{
-	while (1)
-	{
-		xThread_sleep (1);
-	}
-	return NULL;
-}
-
-
-#endif	// __MPLS_MAIN_C__
+#endif /* __MPLSLSRSTDMIB_AGENT_H__ */

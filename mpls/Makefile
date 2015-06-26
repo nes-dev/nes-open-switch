@@ -31,7 +31,7 @@ include ${MK_COMMON}
 
 CFLAGS +=
 
-SNMP_SRC := mplsTeStdMIB.c
+SNMP_SRC := mplsLsrStdMIB.c mplsTeStdMIB.c
 MODULE_SRC := mpls_main.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
