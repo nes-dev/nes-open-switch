@@ -36,6 +36,7 @@
 #include "lib/snmp.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
@@ -103,10 +104,11 @@ ieee8021PbbBackboneEdgeBridgeObjects_t oIeee8021PbbBackboneEdgeBridgeObjects;
 
 /** ieee8021PbbBackboneEdgeBridgeObjects scalar mapper **/
 int
-ieee8021PbbBackboneEdgeBridgeObjects_mapper (netsnmp_mib_handler *handler,
+ieee8021PbbBackboneEdgeBridgeObjects_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid ieee8021PbbBackboneEdgeBridgeObjects_oid[];
 	netsnmp_request_info *request;
@@ -119,7 +121,7 @@ ieee8021PbbBackboneEdgeBridgeObjects_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (ieee8021PbbBackboneEdgeBridgeObjects_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (ieee8021PbbBackboneEdgeBridgeObjects_oid)])
 			{
 			case IEEE8021PBBBACKBONEEDGEBRIDGEADDRESS:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oIeee8021PbbBackboneEdgeBridgeObjects.au8BackboneEdgeBridgeAddress, oIeee8021PbbBackboneEdgeBridgeObjects.u16BackboneEdgeBridgeAddress_len);
@@ -156,7 +158,7 @@ ieee8021PbbBackboneEdgeBridgeObjects_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (ieee8021PbbBackboneEdgeBridgeObjects_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (ieee8021PbbBackboneEdgeBridgeObjects_oid)])
 			{
 			case IEEE8021PBBBACKBONEEDGEBRIDGENAME:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_OCTET_STR);
@@ -182,7 +184,7 @@ ieee8021PbbBackboneEdgeBridgeObjects_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (ieee8021PbbBackboneEdgeBridgeObjects_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (ieee8021PbbBackboneEdgeBridgeObjects_oid)])
 			{
 			case IEEE8021PBBBACKBONEEDGEBRIDGENAME:
 				/* XXX: perform the value change here */
@@ -204,7 +206,7 @@ ieee8021PbbBackboneEdgeBridgeObjects_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (ieee8021PbbBackboneEdgeBridgeObjects_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (ieee8021PbbBackboneEdgeBridgeObjects_oid)])
 			{
 			case IEEE8021PBBBACKBONEEDGEBRIDGENAME:
 				/* XXX: UNDO and return to previous value for the object */
@@ -517,22 +519,22 @@ ieee8021PbbVipTable_createHier (
 	poIeee8021BridgeBasePortEntry->u32IfIndex = poVipIfData->u32Index;
 	ifData_unLock (poVipIfData);
 	
-	ieee8021BridgePhyData_wrLock ();
+	ieee8021BridgePhyPortTable_wrLock ();
 	bPhyLocked = true;
 	
-	register ieee8021BridgePhyData_t *poVipPhyData = NULL;
+	register ieee8021BridgePhyPortEntry_t *poVipPhy = NULL;
 	
-	if ((poVipPhyData = ieee8021BridgePhyData_createExt (poIeee8021BridgeBasePortEntry->u32IfIndex, 0)) == NULL)
+	if ((poVipPhy = ieee8021BridgePhyPortTable_createExt (poIeee8021BridgeBasePortEntry->u32IfIndex, 0)) == NULL)
 	{
 		goto ieee8021PbbVipTable_createHier_cleanup;
 	}
-	xBitmap_setBitRev (poVipPhyData->au8TypeCapabilities, ieee8021BridgeBasePortTypeCapabilities_virtualInstancePort_c, 1);
+	xBitmap_setBitRev (poVipPhy->au8TypeCapabilities, ieee8021BridgeBasePortTypeCapabilities_virtualInstancePort_c, 1);
 	
 	bRetCode = true;
 	
 ieee8021PbbVipTable_createHier_cleanup:
 	
-	bPhyLocked ? ieee8021BridgePhyData_unLock (): false;
+	bPhyLocked ? ieee8021BridgePhyPortTable_unLock (): false;
 	!bRetCode ? ieee8021PbbVipTable_removeHier (poEntry): false;
 	return bRetCode;
 }
@@ -561,12 +563,12 @@ ieee8021PbbVipTable_removeHier (
 		goto ieee8021PbbVipTable_removeHier_baseHier;
 	}
 	
-	ieee8021BridgePhyData_wrLock ();
+	ieee8021BridgePhyPortTable_wrLock ();
 	
-	register ieee8021BridgePhyData_t *poVipPhyData = NULL;
+	register ieee8021BridgePhyPortEntry_t *poVipPhy = NULL;
 	
-	if ((poVipPhyData = ieee8021BridgePhyData_getByIndex (poIeee8021BridgeBasePortEntry->u32IfIndex, 0)) == NULL ||
-		!ieee8021BridgePhyData_removeExt (poVipPhyData))
+	if ((poVipPhy = ieee8021BridgePhyPortTable_getByIndex (poIeee8021BridgeBasePortEntry->u32IfIndex, 0)) == NULL ||
+		!ieee8021BridgePhyPortTable_removeExt (poVipPhy))
 	{
 		goto ieee8021PbbVipTable_removeHier_phyUnlock;
 	}
@@ -575,7 +577,7 @@ ieee8021PbbVipTable_removeHier (
 	
 ieee8021PbbVipTable_removeHier_phyUnlock:
 	
-	ieee8021BridgePhyData_unLock ();
+	ieee8021BridgePhyPortTable_unLock ();
 	if (!bRetCode)
 	{
 		goto ieee8021PbbVipTable_removeHier_cleanup;
@@ -1562,26 +1564,26 @@ ieee8021PbbPipTable_createHier (
 		goto ieee8021PbbPipTable_createHier_cleanup;
 	}
 	
-	ieee8021BridgePhyData_wrLock ();
+	ieee8021BridgePhyPortTable_wrLock ();
 	bPhyLocked = true;
 	
-	register ieee8021BridgePhyData_t *poPipPhyData = NULL;
+	register ieee8021BridgePhyPortEntry_t *poPipPhy = NULL;
 	
-	if ((poPipPhyData = ieee8021BridgePhyData_getByIndex (poEntry->u32IfIndex, 0)) == NULL ||
-		(poPipPhyData = ieee8021BridgePhyData_createExt (poEntry->u32IfIndex, 0)) == NULL)
+	if ((poPipPhy = ieee8021BridgePhyPortTable_getByIndex (poEntry->u32IfIndex, 0)) == NULL ||
+		(poPipPhy = ieee8021BridgePhyPortTable_createExt (poEntry->u32IfIndex, 0)) == NULL)
 	{
 		goto ieee8021PbbPipTable_createHier_cleanup;
 	}
 	
-	poEntry->bExternal = poPipPhyData->u32PhyPort != 0;
-	poEntry->u32ChassisId = poPipPhyData->u32ChassisId;
-	xBitmap_setBitRev (poPipPhyData->au8TypeCapabilities, ieee8021BridgeBasePortTypeCapabilities_providerInstancePort_c, 1);
+	poEntry->bExternal = poPipPhy->u32Port != 0;
+	poEntry->u32ChassisId = poPipPhy->u32ChassisId;
+	xBitmap_setBitRev (poPipPhy->au8TypeCapabilities, ieee8021BridgeBasePortTypeCapabilities_providerInstancePort_c, 1);
 	
 	bRetCode = true;
 	
 ieee8021PbbPipTable_createHier_cleanup:
 	
-	bPhyLocked ? ieee8021BridgePhyData_unLock (): false;
+	bPhyLocked ? ieee8021BridgePhyPortTable_unLock (): false;
 	!bRetCode ? ieee8021PbbPipTable_removeHier (poEntry): false;
 	return bRetCode;
 }
@@ -1597,12 +1599,12 @@ ieee8021PbbPipTable_removeHier (
 		goto ieee8021PbbPipTable_removeHier_removeIf;
 	}
 	
-	ieee8021BridgePhyData_wrLock ();
+	ieee8021BridgePhyPortTable_wrLock ();
 	
-	register ieee8021BridgePhyData_t *poPipPhyData = NULL;
+	register ieee8021BridgePhyPortEntry_t *poPipPhy = NULL;
 	
-	if ((poPipPhyData = ieee8021BridgePhyData_getByIndex (poEntry->u32IfIndex, 0)) != NULL &&
-		!ieee8021BridgePhyData_removeExt (poPipPhyData))
+	if ((poPipPhy = ieee8021BridgePhyPortTable_getByIndex (poEntry->u32IfIndex, 0)) != NULL &&
+		!ieee8021BridgePhyPortTable_removeExt (poPipPhy))
 	{
 		goto ieee8021PbbPipTable_removeHier_phyUnlock;
 	}
@@ -1611,7 +1613,7 @@ ieee8021PbbPipTable_removeHier (
 	
 ieee8021PbbPipTable_removeHier_phyUnlock:
 	
-	ieee8021BridgePhyData_unLock ();
+	ieee8021BridgePhyPortTable_unLock ();
 	if (!bRetCode)
 	{
 		goto ieee8021PbbPipTable_removeHier_cleanup;
@@ -2512,7 +2514,6 @@ ieee8021PbbPipPriorityTable_mapper (
 		{
 			table_entry = (ieee8021PbbPipPriorityEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -2903,7 +2904,6 @@ ieee8021PbbPipDecodingTable_mapper (
 		{
 			table_entry = (ieee8021PbbPipDecodingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -3278,7 +3278,6 @@ ieee8021PbbPipEncodingTable_mapper (
 		{
 			table_entry = (ieee8021PbbPipEncodingEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
