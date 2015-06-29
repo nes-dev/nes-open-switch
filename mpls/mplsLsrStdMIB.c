@@ -27,6 +27,7 @@
 
 #include "system_ext.h"
 
+#include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
@@ -39,8 +40,11 @@
 
 
 static oid mplsLsrStdMIB_oid[] = {1,3,6,1,2,1,10,166,2};
+static oid gmplsLsrStdMIB_oid[] = {1,3,6,1,2,1,10,166,15};
+static oid gmplsLabelStdMIB_oid[] = {1,3,6,1,2,1,10,166,16};
 
 static oid mplsLsrObjects_oid[] = {1,3,6,1,2,1,10,166,2,1};
+static oid gmplsLabelObjects_oid[] = {1,3,6,1,2,1,10,166,16,1};
 
 static oid mplsInterfaceTable_oid[] = {1,3,6,1,2,1,10,166,2,1,1};
 static oid mplsInterfacePerfTable_oid[] = {1,3,6,1,2,1,10,166,2,1,2};
@@ -50,7 +54,10 @@ static oid mplsOutSegmentTable_oid[] = {1,3,6,1,2,1,10,166,2,1,7};
 static oid mplsOutSegmentPerfTable_oid[] = {1,3,6,1,2,1,10,166,2,1,8};
 static oid mplsXCTable_oid[] = {1,3,6,1,2,1,10,166,2,1,10};
 static oid mplsLabelStackTable_oid[] = {1,3,6,1,2,1,10,166,2,1,13};
-static oid mplsInSegmentMapTable_oid[] = {1,3,6,1,2,1,10,166,2,1,14};
+static oid gmplsInterfaceTable_oid[] = {1,3,6,1,2,1,10,166,15,1,1};
+static oid gmplsInSegmentTable_oid[] = {1,3,6,1,2,1,10,166,15,1,2};
+static oid gmplsOutSegmentTable_oid[] = {1,3,6,1,2,1,10,166,15,1,3};
+static oid gmplsLabelTable_oid[] = {1,3,6,1,2,1,10,166,16,1,2};
 
 static oid snmptrap_oid[] = {1,3,6,1,6,3,1,1,4,1,0};
 
@@ -66,7 +73,10 @@ void
 mplsLsrStdMIB_init (void)
 {
 	extern oid mplsLsrStdMIB_oid[];
+	extern oid gmplsLsrStdMIB_oid[];
+	extern oid gmplsLabelStdMIB_oid[];
 	extern oid mplsLsrObjects_oid[];
+	extern oid gmplsLabelObjects_oid[];
 	
 	DEBUGMSGTL (("mplsLsrStdMIB", "Initializing\n"));
 	
@@ -81,6 +91,17 @@ mplsLsrStdMIB_init (void)
 		MPLSXCNOTIFICATIONSENABLE
 	);
 	
+	/* register gmplsLabelObjects scalar mapper */
+	netsnmp_register_scalar_group (
+		netsnmp_create_handler_registration (
+			"gmplsLabelObjects_mapper", &gmplsLabelObjects_mapper,
+			gmplsLabelObjects_oid, OID_LENGTH (gmplsLabelObjects_oid),
+			HANDLER_CAN_RONLY
+		),
+		GMPLSLABELINDEXNEXT,
+		GMPLSLABELINDEXNEXT
+	);
+	
 	
 	/* register mplsLsrStdMIB group table mappers */
 	mplsInterfaceTable_init ();
@@ -91,10 +112,15 @@ mplsLsrStdMIB_init (void)
 	mplsOutSegmentPerfTable_init ();
 	mplsXCTable_init ();
 	mplsLabelStackTable_init ();
-	mplsInSegmentMapTable_init ();
+	gmplsInterfaceTable_init ();
+	gmplsInSegmentTable_init ();
+	gmplsOutSegmentTable_init ();
+	gmplsLabelTable_init ();
 	
 	/* register mplsLsrStdMIB modules */
 	sysORTable_createRegister ("mplsLsrStdMIB", mplsLsrStdMIB_oid, OID_LENGTH (mplsLsrStdMIB_oid));
+	sysORTable_createRegister ("gmplsLsrStdMIB", gmplsLsrStdMIB_oid, OID_LENGTH (gmplsLsrStdMIB_oid));
+	sysORTable_createRegister ("gmplsLabelStdMIB", gmplsLabelStdMIB_oid, OID_LENGTH (gmplsLabelStdMIB_oid));
 }
 
 
@@ -218,6 +244,49 @@ mplsLsrObjects_mapper (
 			}
 		}
 		break;
+		
+	default:
+		/* we should never get here, so this is a really bad error */
+		snmp_log (LOG_ERR, "unknown mode (%d) in handle_\n", reqinfo->mode);
+		return SNMP_ERR_GENERR;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+gmplsLabelObjects_t oGmplsLabelObjects;
+
+/** gmplsLabelObjects scalar mapper **/
+int
+gmplsLabelObjects_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	extern oid gmplsLabelObjects_oid[];
+	netsnmp_request_info *request;
+	/* We are never called for a GETNEXT if it's registered as a
+	   "group instance", as it's "magically" handled for us. */
+	
+	switch (reqinfo->mode)
+	{
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			switch (request->requestvb->name[OID_LENGTH (gmplsLabelObjects_oid)])
+			{
+			case GMPLSLABELINDEXNEXT:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oGmplsLabelObjects.u32IndexNext);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				continue;
+			}
+		}
+		break;
+		
 		
 	default:
 		/* we should never get here, so this is a really bad error */
@@ -3663,34 +3732,32 @@ mplsLabelStackTable_mapper (
 	return SNMP_ERR_NOERROR;
 }
 
-/** initialize mplsInSegmentMapTable table mapper **/
+/** initialize gmplsInterfaceTable table mapper **/
 void
-mplsInSegmentMapTable_init (void)
+gmplsInterfaceTable_init (void)
 {
-	extern oid mplsInSegmentMapTable_oid[];
+	extern oid gmplsInterfaceTable_oid[];
 	netsnmp_handler_registration *reg;
 	netsnmp_iterator_info *iinfo;
 	netsnmp_table_registration_info *table_info;
 	
 	reg = netsnmp_create_handler_registration (
-		"mplsInSegmentMapTable", &mplsInSegmentMapTable_mapper,
-		mplsInSegmentMapTable_oid, OID_LENGTH (mplsInSegmentMapTable_oid),
-		HANDLER_CAN_RONLY
+		"gmplsInterfaceTable", &gmplsInterfaceTable_mapper,
+		gmplsInterfaceTable_oid, OID_LENGTH (gmplsInterfaceTable_oid),
+		HANDLER_CAN_RWRITE
 		);
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
-		ASN_INTEGER /* index: mplsInSegmentMapInterface */,
-		ASN_UNSIGNED /* index: mplsInSegmentMapLabel */,
-		ASN_OBJECT_ID /* index: mplsInSegmentMapLabelPtrIndex */,
+		ASN_INTEGER /* index: mplsInterfaceIndex */,
 		0);
-	table_info->min_column = MPLSINSEGMENTMAPINDEX;
-	table_info->max_column = MPLSINSEGMENTMAPINDEX;
+	table_info->min_column = GMPLSINTERFACESIGNALINGCAPS;
+	table_info->max_column = GMPLSINTERFACERSVPHELLOPERIOD;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
-	iinfo->get_first_data_point = &mplsInSegmentMapTable_getFirst;
-	iinfo->get_next_data_point = &mplsInSegmentMapTable_getNext;
-	iinfo->get_data_point = &mplsInSegmentMapTable_get;
+	iinfo->get_first_data_point = &gmplsInterfaceTable_getFirst;
+	iinfo->get_next_data_point = &gmplsInterfaceTable_getNext;
+	iinfo->get_data_point = &gmplsInterfaceTable_get;
 	iinfo->table_reginfo = table_info;
 	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
 	
@@ -3700,56 +3767,50 @@ mplsInSegmentMapTable_init (void)
 }
 
 static int8_t
-mplsInSegmentMapTable_BTreeNodeCmp (
+gmplsInterfaceTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register mplsInSegmentMapEntry_t *pEntry1 = xBTree_entry (pNode1, mplsInSegmentMapEntry_t, oBTreeNode);
-	register mplsInSegmentMapEntry_t *pEntry2 = xBTree_entry (pNode2, mplsInSegmentMapEntry_t, oBTreeNode);
+	register gmplsInterfaceEntry_t *pEntry1 = xBTree_entry (pNode1, gmplsInterfaceEntry_t, oBTreeNode);
+	register gmplsInterfaceEntry_t *pEntry2 = xBTree_entry (pNode2, gmplsInterfaceEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->u32Interface < pEntry2->u32Interface) ||
-		(pEntry1->u32Interface == pEntry2->u32Interface && pEntry1->u32Label < pEntry2->u32Label) ||
-		(pEntry1->u32Interface == pEntry2->u32Interface && pEntry1->u32Label == pEntry2->u32Label && xOidCmp (pEntry1->aoLabelPtrIndex, pEntry2->aoLabelPtrIndex, pEntry1->u16LabelPtrIndex_len, pEntry2->u16LabelPtrIndex_len) == -1) ? -1:
-		(pEntry1->u32Interface == pEntry2->u32Interface && pEntry1->u32Label == pEntry2->u32Label && xOidCmp (pEntry1->aoLabelPtrIndex, pEntry2->aoLabelPtrIndex, pEntry1->u16LabelPtrIndex_len, pEntry2->u16LabelPtrIndex_len) == 0) ? 0: 1;
+		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
 }
 
-xBTree_t oMplsInSegmentMapTable_BTree = xBTree_initInline (&mplsInSegmentMapTable_BTreeNodeCmp);
+xBTree_t oGmplsInterfaceTable_BTree = xBTree_initInline (&gmplsInterfaceTable_BTreeNodeCmp);
 
 /* create a new row in the table */
-mplsInSegmentMapEntry_t *
-mplsInSegmentMapTable_createEntry (
-	uint32_t u32Interface,
-	uint32_t u32Label,
-	xOid_t *paoLabelPtrIndex, size_t u16LabelPtrIndex_len)
+gmplsInterfaceEntry_t *
+gmplsInterfaceTable_createEntry (
+	uint32_t u32Index)
 {
-	register mplsInSegmentMapEntry_t *poEntry = NULL;
+	register gmplsInterfaceEntry_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	poEntry->u32Interface = u32Interface;
-	poEntry->u32Label = u32Label;
-	memcpy (poEntry->aoLabelPtrIndex, paoLabelPtrIndex, u16LabelPtrIndex_len);
-	poEntry->u16LabelPtrIndex_len = u16LabelPtrIndex_len;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsInSegmentMapTable_BTree) != NULL)
+	poEntry->u32Index = u32Index;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsInterfaceTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
 		return NULL;
 	}
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oMplsInSegmentMapTable_BTree);
+	xBitmap_setBitsRev (poEntry->au8SignalingCaps, 1, 1, gmplsInterfaceSignalingCaps_rsvpGmpls_c);
+	poEntry->u32RsvpHelloPeriod = 3000;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oGmplsInterfaceTable_BTree);
 	return poEntry;
 }
 
-mplsInSegmentMapEntry_t *
-mplsInSegmentMapTable_getByIndex (
-	uint32_t u32Interface,
-	uint32_t u32Label,
-	xOid_t *paoLabelPtrIndex, size_t u16LabelPtrIndex_len)
+gmplsInterfaceEntry_t *
+gmplsInterfaceTable_getByIndex (
+	uint32_t u32Index)
 {
-	register mplsInSegmentMapEntry_t *poTmpEntry = NULL;
+	register gmplsInterfaceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -3757,27 +3818,22 @@ mplsInSegmentMapTable_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->u32Interface = u32Interface;
-	poTmpEntry->u32Label = u32Label;
-	memcpy (poTmpEntry->aoLabelPtrIndex, paoLabelPtrIndex, u16LabelPtrIndex_len);
-	poTmpEntry->u16LabelPtrIndex_len = u16LabelPtrIndex_len;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oMplsInSegmentMapTable_BTree)) == NULL)
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oGmplsInterfaceTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, mplsInSegmentMapEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, gmplsInterfaceEntry_t, oBTreeNode);
 }
 
-mplsInSegmentMapEntry_t *
-mplsInSegmentMapTable_getNextIndex (
-	uint32_t u32Interface,
-	uint32_t u32Label,
-	xOid_t *paoLabelPtrIndex, size_t u16LabelPtrIndex_len)
+gmplsInterfaceEntry_t *
+gmplsInterfaceTable_getNextIndex (
+	uint32_t u32Index)
 {
-	register mplsInSegmentMapEntry_t *poTmpEntry = NULL;
+	register gmplsInterfaceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -3785,83 +3841,72 @@ mplsInSegmentMapTable_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->u32Interface = u32Interface;
-	poTmpEntry->u32Label = u32Label;
-	memcpy (poTmpEntry->aoLabelPtrIndex, paoLabelPtrIndex, u16LabelPtrIndex_len);
-	poTmpEntry->u16LabelPtrIndex_len = u16LabelPtrIndex_len;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oMplsInSegmentMapTable_BTree)) == NULL)
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oGmplsInterfaceTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, mplsInSegmentMapEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, gmplsInterfaceEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
-mplsInSegmentMapTable_removeEntry (mplsInSegmentMapEntry_t *poEntry)
+gmplsInterfaceTable_removeEntry (gmplsInterfaceEntry_t *poEntry)
 {
 	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsInSegmentMapTable_BTree) == NULL)
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsInterfaceTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oMplsInSegmentMapTable_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oGmplsInterfaceTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
-mplsInSegmentMapTable_getFirst (
+gmplsInterfaceTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oMplsInSegmentMapTable_BTree);
-	return mplsInSegmentMapTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+	*my_loop_context = xBTree_nodeGetFirst (&oGmplsInterfaceTable_BTree);
+	return gmplsInterfaceTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
 netsnmp_variable_list *
-mplsInSegmentMapTable_getNext (
+gmplsInterfaceTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	mplsInSegmentMapEntry_t *poEntry = NULL;
+	gmplsInterfaceEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, mplsInSegmentMapEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, gmplsInterfaceEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Interface);
-	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Label);
-	idx = idx->next_variable;
-	snmp_set_var_value (idx, poEntry->aoLabelPtrIndex, poEntry->u16LabelPtrIndex_len);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsInSegmentMapTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oGmplsInterfaceTable_BTree);
 	return put_index_data;
 }
 
 bool
-mplsInSegmentMapTable_get (
+gmplsInterfaceTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	mplsInSegmentMapEntry_t *poEntry = NULL;
+	gmplsInterfaceEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
-	register netsnmp_variable_list *idx2 = idx1->next_variable;
-	register netsnmp_variable_list *idx3 = idx2->next_variable;
 	
-	poEntry = mplsInSegmentMapTable_getByIndex (
-		*idx1->val.integer,
-		*idx2->val.integer,
-		(void*) idx3->val.string, idx3->val_len);
+	poEntry = gmplsInterfaceTable_getByIndex (
+		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
 		return false;
@@ -3871,9 +3916,9 @@ mplsInSegmentMapTable_get (
 	return true;
 }
 
-/* mplsInSegmentMapTable table mapper */
+/* gmplsInterfaceTable table mapper */
 int
-mplsInSegmentMapTable_mapper (
+gmplsInterfaceTable_mapper (
 	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
 	netsnmp_agent_request_info *reqinfo,
@@ -3881,7 +3926,9 @@ mplsInSegmentMapTable_mapper (
 {
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
-	mplsInSegmentMapEntry_t *table_entry;
+	gmplsInterfaceEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
 	
 	switch (reqinfo->mode)
 	{
@@ -3891,7 +3938,7 @@ mplsInSegmentMapTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsInSegmentMapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL)
 			{
@@ -3901,8 +3948,11 @@ mplsInSegmentMapTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case MPLSINSEGMENTMAPINDEX:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Index, table_entry->u16Index_len);
+			case GMPLSINTERFACESIGNALINGCAPS:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8SignalingCaps, table_entry->u16SignalingCaps_len);
+				break;
+			case GMPLSINTERFACERSVPHELLOPERIOD:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32RsvpHelloPeriod);
 				break;
 				
 			default:
@@ -3912,6 +3962,1919 @@ mplsInSegmentMapTable_mapper (
 		}
 		break;
 		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINTERFACESIGNALINGCAPS:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8SignalingCaps));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSINTERFACERSVPHELLOPERIOD:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINTERFACESIGNALINGCAPS:
+			case GMPLSINTERFACERSVPHELLOPERIOD:
+				if (table_entry == NULL)
+				{
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = gmplsInterfaceTable_createEntry (
+						*idx1->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+				}
+				break;
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINTERFACESIGNALINGCAPS:
+			case GMPLSINTERFACERSVPHELLOPERIOD:
+				gmplsInterfaceTable_removeEntry (table_entry);
+				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINTERFACESIGNALINGCAPS:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8SignalingCaps))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16SignalingCaps_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8SignalingCaps, sizeof (table_entry->au8SignalingCaps));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8SignalingCaps, 0, sizeof (table_entry->au8SignalingCaps));
+				memcpy (table_entry->au8SignalingCaps, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16SignalingCaps_len = request->requestvb->val_len;
+				break;
+			case GMPLSINTERFACERSVPHELLOPERIOD:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32RsvpHelloPeriod))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32RsvpHelloPeriod, sizeof (table_entry->u32RsvpHelloPeriod));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32RsvpHelloPeriod = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINTERFACESIGNALINGCAPS:
+				if (pvOldDdata == table_entry)
+				{
+					gmplsInterfaceTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (table_entry->au8SignalingCaps, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+					table_entry->u16SignalingCaps_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				}
+				break;
+			case GMPLSINTERFACERSVPHELLOPERIOD:
+				if (pvOldDdata == table_entry)
+				{
+					gmplsInterfaceTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u32RsvpHelloPeriod, pvOldDdata, sizeof (table_entry->u32RsvpHelloPeriod));
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize gmplsInSegmentTable table mapper **/
+void
+gmplsInSegmentTable_init (void)
+{
+	extern oid gmplsInSegmentTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"gmplsInSegmentTable", &gmplsInSegmentTable_mapper,
+		gmplsInSegmentTable_oid, OID_LENGTH (gmplsInSegmentTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_OCTET_STR /* index: mplsInSegmentIndex */,
+		0);
+	table_info->min_column = GMPLSINSEGMENTDIRECTION;
+	table_info->max_column = GMPLSINSEGMENTEXTRAPARAMSPTR;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &gmplsInSegmentTable_getFirst;
+	iinfo->get_next_data_point = &gmplsInSegmentTable_getNext;
+	iinfo->get_data_point = &gmplsInSegmentTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+gmplsInSegmentTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register gmplsInSegmentEntry_t *pEntry1 = xBTree_entry (pNode1, gmplsInSegmentEntry_t, oBTreeNode);
+	register gmplsInSegmentEntry_t *pEntry2 = xBTree_entry (pNode2, gmplsInSegmentEntry_t, oBTreeNode);
+	
+	return
+		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == -1) ? -1:
+		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0) ? 0: 1;
+}
+
+xBTree_t oGmplsInSegmentTable_BTree = xBTree_initInline (&gmplsInSegmentTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+gmplsInSegmentEntry_t *
+gmplsInSegmentTable_createEntry (
+	uint8_t *pau8Index, size_t u16Index_len)
+{
+	register gmplsInSegmentEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poEntry->au8Index, pau8Index, u16Index_len);
+	poEntry->u16Index_len = u16Index_len;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsInSegmentTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->i32Direction = gmplsInSegmentDirection_forward_c;
+	/*poEntry->aoExtraParamsPtr = zeroDotZero*/;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oGmplsInSegmentTable_BTree);
+	return poEntry;
+}
+
+gmplsInSegmentEntry_t *
+gmplsInSegmentTable_getByIndex (
+	uint8_t *pau8Index, size_t u16Index_len)
+{
+	register gmplsInSegmentEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
+	poTmpEntry->u16Index_len = u16Index_len;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oGmplsInSegmentTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, gmplsInSegmentEntry_t, oBTreeNode);
+}
+
+gmplsInSegmentEntry_t *
+gmplsInSegmentTable_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len)
+{
+	register gmplsInSegmentEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
+	poTmpEntry->u16Index_len = u16Index_len;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oGmplsInSegmentTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, gmplsInSegmentEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+gmplsInSegmentTable_removeEntry (gmplsInSegmentEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsInSegmentTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oGmplsInSegmentTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+gmplsInSegmentTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oGmplsInSegmentTable_BTree);
+	return gmplsInSegmentTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+gmplsInSegmentTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	gmplsInSegmentEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, gmplsInSegmentEntry_t, oBTreeNode);
+	
+	snmp_set_var_value (idx, poEntry->au8Index, poEntry->u16Index_len);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oGmplsInSegmentTable_BTree);
+	return put_index_data;
+}
+
+bool
+gmplsInSegmentTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	gmplsInSegmentEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	
+	poEntry = gmplsInSegmentTable_getByIndex (
+		(void*) idx1->val.string, idx1->val_len);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* gmplsInSegmentTable table mapper */
+int
+gmplsInSegmentTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	gmplsInSegmentEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINSEGMENTDIRECTION:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Direction);
+				break;
+			case GMPLSINSEGMENTEXTRAPARAMSPTR:
+				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoExtraParamsPtr, table_entry->u16ExtraParamsPtr_len);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINSEGMENTDIRECTION:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSINSEGMENTEXTRAPARAMSPTR:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoExtraParamsPtr));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINSEGMENTDIRECTION:
+			case GMPLSINSEGMENTEXTRAPARAMSPTR:
+				if (table_entry == NULL)
+				{
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = gmplsInSegmentTable_createEntry (
+						(void*) idx1->val.string, idx1->val_len);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+				}
+				break;
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINSEGMENTDIRECTION:
+			case GMPLSINSEGMENTEXTRAPARAMSPTR:
+				gmplsInSegmentTable_removeEntry (table_entry);
+				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINSEGMENTDIRECTION:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Direction))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32Direction, sizeof (table_entry->i32Direction));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32Direction = *request->requestvb->val.integer;
+				break;
+			case GMPLSINSEGMENTEXTRAPARAMSPTR:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoExtraParamsPtr))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ExtraParamsPtr_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoExtraParamsPtr, sizeof (table_entry->aoExtraParamsPtr));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->aoExtraParamsPtr, 0, sizeof (table_entry->aoExtraParamsPtr));
+				memcpy (table_entry->aoExtraParamsPtr, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16ExtraParamsPtr_len = request->requestvb->val_len;
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSINSEGMENTDIRECTION:
+				if (pvOldDdata == table_entry)
+				{
+					gmplsInSegmentTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->i32Direction, pvOldDdata, sizeof (table_entry->i32Direction));
+				}
+				break;
+			case GMPLSINSEGMENTEXTRAPARAMSPTR:
+				if (pvOldDdata == table_entry)
+				{
+					gmplsInSegmentTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (table_entry->aoExtraParamsPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+					table_entry->u16ExtraParamsPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize gmplsOutSegmentTable table mapper **/
+void
+gmplsOutSegmentTable_init (void)
+{
+	extern oid gmplsOutSegmentTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"gmplsOutSegmentTable", &gmplsOutSegmentTable_mapper,
+		gmplsOutSegmentTable_oid, OID_LENGTH (gmplsOutSegmentTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_OCTET_STR /* index: mplsOutSegmentIndex */,
+		0);
+	table_info->min_column = GMPLSOUTSEGMENTDIRECTION;
+	table_info->max_column = GMPLSOUTSEGMENTEXTRAPARAMSPTR;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &gmplsOutSegmentTable_getFirst;
+	iinfo->get_next_data_point = &gmplsOutSegmentTable_getNext;
+	iinfo->get_data_point = &gmplsOutSegmentTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+gmplsOutSegmentTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register gmplsOutSegmentEntry_t *pEntry1 = xBTree_entry (pNode1, gmplsOutSegmentEntry_t, oBTreeNode);
+	register gmplsOutSegmentEntry_t *pEntry2 = xBTree_entry (pNode2, gmplsOutSegmentEntry_t, oBTreeNode);
+	
+	return
+		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == -1) ? -1:
+		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0) ? 0: 1;
+}
+
+xBTree_t oGmplsOutSegmentTable_BTree = xBTree_initInline (&gmplsOutSegmentTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+gmplsOutSegmentEntry_t *
+gmplsOutSegmentTable_createEntry (
+	uint8_t *pau8Index, size_t u16Index_len)
+{
+	register gmplsOutSegmentEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poEntry->au8Index, pau8Index, u16Index_len);
+	poEntry->u16Index_len = u16Index_len;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->i32Direction = gmplsOutSegmentDirection_forward_c;
+	poEntry->u32TTLDecrement = 0;
+	/*poEntry->aoExtraParamsPtr = zeroDotZero*/;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree);
+	return poEntry;
+}
+
+gmplsOutSegmentEntry_t *
+gmplsOutSegmentTable_getByIndex (
+	uint8_t *pau8Index, size_t u16Index_len)
+{
+	register gmplsOutSegmentEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
+	poTmpEntry->u16Index_len = u16Index_len;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, gmplsOutSegmentEntry_t, oBTreeNode);
+}
+
+gmplsOutSegmentEntry_t *
+gmplsOutSegmentTable_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len)
+{
+	register gmplsOutSegmentEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
+	poTmpEntry->u16Index_len = u16Index_len;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, gmplsOutSegmentEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+gmplsOutSegmentTable_removeEntry (gmplsOutSegmentEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+gmplsOutSegmentTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oGmplsOutSegmentTable_BTree);
+	return gmplsOutSegmentTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+gmplsOutSegmentTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	gmplsOutSegmentEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, gmplsOutSegmentEntry_t, oBTreeNode);
+	
+	snmp_set_var_value (idx, poEntry->au8Index, poEntry->u16Index_len);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree);
+	return put_index_data;
+}
+
+bool
+gmplsOutSegmentTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	gmplsOutSegmentEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	
+	poEntry = gmplsOutSegmentTable_getByIndex (
+		(void*) idx1->val.string, idx1->val_len);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* gmplsOutSegmentTable table mapper */
+int
+gmplsOutSegmentTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	gmplsOutSegmentEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsOutSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSOUTSEGMENTDIRECTION:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Direction);
+				break;
+			case GMPLSOUTSEGMENTTTLDECREMENT:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32TTLDecrement);
+				break;
+			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
+				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoExtraParamsPtr, table_entry->u16ExtraParamsPtr_len);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsOutSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSOUTSEGMENTDIRECTION:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSOUTSEGMENTTTLDECREMENT:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoExtraParamsPtr));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsOutSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSOUTSEGMENTDIRECTION:
+			case GMPLSOUTSEGMENTTTLDECREMENT:
+			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
+				if (table_entry == NULL)
+				{
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = gmplsOutSegmentTable_createEntry (
+						(void*) idx1->val.string, idx1->val_len);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+				}
+				break;
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsOutSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSOUTSEGMENTDIRECTION:
+			case GMPLSOUTSEGMENTTTLDECREMENT:
+			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
+				gmplsOutSegmentTable_removeEntry (table_entry);
+				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsOutSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSOUTSEGMENTDIRECTION:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Direction))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32Direction, sizeof (table_entry->i32Direction));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32Direction = *request->requestvb->val.integer;
+				break;
+			case GMPLSOUTSEGMENTTTLDECREMENT:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32TTLDecrement))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32TTLDecrement, sizeof (table_entry->u32TTLDecrement));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32TTLDecrement = *request->requestvb->val.integer;
+				break;
+			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoExtraParamsPtr))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ExtraParamsPtr_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoExtraParamsPtr, sizeof (table_entry->aoExtraParamsPtr));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->aoExtraParamsPtr, 0, sizeof (table_entry->aoExtraParamsPtr));
+				memcpy (table_entry->aoExtraParamsPtr, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16ExtraParamsPtr_len = request->requestvb->val_len;
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsOutSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSOUTSEGMENTDIRECTION:
+				if (pvOldDdata == table_entry)
+				{
+					gmplsOutSegmentTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->i32Direction, pvOldDdata, sizeof (table_entry->i32Direction));
+				}
+				break;
+			case GMPLSOUTSEGMENTTTLDECREMENT:
+				if (pvOldDdata == table_entry)
+				{
+					gmplsOutSegmentTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u32TTLDecrement, pvOldDdata, sizeof (table_entry->u32TTLDecrement));
+				}
+				break;
+			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
+				if (pvOldDdata == table_entry)
+				{
+					gmplsOutSegmentTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (table_entry->aoExtraParamsPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+					table_entry->u16ExtraParamsPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize gmplsLabelTable table mapper **/
+void
+gmplsLabelTable_init (void)
+{
+	extern oid gmplsLabelTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"gmplsLabelTable", &gmplsLabelTable_mapper,
+		gmplsLabelTable_oid, OID_LENGTH (gmplsLabelTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_INTEGER /* index: gmplsLabelInterface */,
+		ASN_UNSIGNED /* index: gmplsLabelIndex */,
+		ASN_UNSIGNED /* index: gmplsLabelSubindex */,
+		0);
+	table_info->min_column = GMPLSLABELTYPE;
+	table_info->max_column = GMPLSLABELROWSTATUS;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &gmplsLabelTable_getFirst;
+	iinfo->get_next_data_point = &gmplsLabelTable_getNext;
+	iinfo->get_data_point = &gmplsLabelTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+gmplsLabelTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register gmplsLabelEntry_t *pEntry1 = xBTree_entry (pNode1, gmplsLabelEntry_t, oBTreeNode);
+	register gmplsLabelEntry_t *pEntry2 = xBTree_entry (pNode2, gmplsLabelEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32Interface < pEntry2->u32Interface) ||
+		(pEntry1->u32Interface == pEntry2->u32Interface && pEntry1->u32Index < pEntry2->u32Index) ||
+		(pEntry1->u32Interface == pEntry2->u32Interface && pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Subindex < pEntry2->u32Subindex) ? -1:
+		(pEntry1->u32Interface == pEntry2->u32Interface && pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Subindex == pEntry2->u32Subindex) ? 0: 1;
+}
+
+xBTree_t oGmplsLabelTable_BTree = xBTree_initInline (&gmplsLabelTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+gmplsLabelEntry_t *
+gmplsLabelTable_createEntry (
+	uint32_t u32Interface,
+	uint32_t u32Index,
+	uint32_t u32Subindex)
+{
+	register gmplsLabelEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32Interface = u32Interface;
+	poEntry->u32Index = u32Index;
+	poEntry->u32Subindex = u32Subindex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsLabelTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->u32MplsLabel = 0;
+	poEntry->u32PortWavelength = 0;
+	/*poEntry->au8Freeform = 0*/;
+	poEntry->i32SonetSdhSignalIndex = 0;
+	poEntry->i32SdhVc = 0;
+	poEntry->i32SdhVcBranch = 0;
+	poEntry->i32SonetSdhBranch = 0;
+	poEntry->i32SonetSdhGroupBranch = 0;
+	poEntry->u32WavebandId = 0;
+	poEntry->u32WavebandStart = 0;
+	poEntry->u32WavebandEnd = 0;
+	poEntry->u8StorageType = gmplsLabelStorageType_volatile_c;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oGmplsLabelTable_BTree);
+	return poEntry;
+}
+
+gmplsLabelEntry_t *
+gmplsLabelTable_getByIndex (
+	uint32_t u32Interface,
+	uint32_t u32Index,
+	uint32_t u32Subindex)
+{
+	register gmplsLabelEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Interface = u32Interface;
+	poTmpEntry->u32Index = u32Index;
+	poTmpEntry->u32Subindex = u32Subindex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oGmplsLabelTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, gmplsLabelEntry_t, oBTreeNode);
+}
+
+gmplsLabelEntry_t *
+gmplsLabelTable_getNextIndex (
+	uint32_t u32Interface,
+	uint32_t u32Index,
+	uint32_t u32Subindex)
+{
+	register gmplsLabelEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Interface = u32Interface;
+	poTmpEntry->u32Index = u32Index;
+	poTmpEntry->u32Subindex = u32Subindex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oGmplsLabelTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, gmplsLabelEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+gmplsLabelTable_removeEntry (gmplsLabelEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsLabelTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oGmplsLabelTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+gmplsLabelTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oGmplsLabelTable_BTree);
+	return gmplsLabelTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+gmplsLabelTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	gmplsLabelEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, gmplsLabelEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Interface);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Subindex);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oGmplsLabelTable_BTree);
+	return put_index_data;
+}
+
+bool
+gmplsLabelTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	gmplsLabelEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	register netsnmp_variable_list *idx3 = idx2->next_variable;
+	
+	poEntry = gmplsLabelTable_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer,
+		*idx3->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* gmplsLabelTable table mapper */
+int
+gmplsLabelTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	gmplsLabelEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsLabelEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSLABELTYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
+				break;
+			case GMPLSLABELMPLSLABEL:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32MplsLabel);
+				break;
+			case GMPLSLABELPORTWAVELENGTH:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PortWavelength);
+				break;
+			case GMPLSLABELFREEFORM:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Freeform, table_entry->u16Freeform_len);
+				break;
+			case GMPLSLABELSONETSDHSIGNALINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SonetSdhSignalIndex);
+				break;
+			case GMPLSLABELSDHVC:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SdhVc);
+				break;
+			case GMPLSLABELSDHVCBRANCH:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SdhVcBranch);
+				break;
+			case GMPLSLABELSONETSDHBRANCH:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SonetSdhBranch);
+				break;
+			case GMPLSLABELSONETSDHGROUPBRANCH:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SonetSdhGroupBranch);
+				break;
+			case GMPLSLABELWAVEBANDID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32WavebandId);
+				break;
+			case GMPLSLABELWAVEBANDSTART:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32WavebandStart);
+				break;
+			case GMPLSLABELWAVEBANDEND:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32WavebandEnd);
+				break;
+			case GMPLSLABELSTORAGETYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
+				break;
+			case GMPLSLABELROWSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsLabelEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSLABELTYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELMPLSLABEL:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELPORTWAVELENGTH:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELFREEFORM:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8Freeform));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELSONETSDHSIGNALINDEX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELSDHVC:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELSDHVCBRANCH:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELSONETSDHBRANCH:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELSONETSDHGROUPBRANCH:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELWAVEBANDID:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELWAVEBANDSTART:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELWAVEBANDEND:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELSTORAGETYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case GMPLSLABELROWSTATUS:
+				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsLabelEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			register netsnmp_variable_list *idx2 = idx1->next_variable;
+			register netsnmp_variable_list *idx3 = idx2->next_variable;
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSLABELROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = gmplsLabelTable_createEntry (
+						*idx1->val.integer,
+						*idx2->val.integer,
+						*idx3->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+					
+				case RS_DESTROY:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsLabelEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSLABELROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					gmplsLabelTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsLabelEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSLABELTYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Type))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32Type, sizeof (table_entry->i32Type));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32Type = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELMPLSLABEL:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32MplsLabel))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32MplsLabel, sizeof (table_entry->u32MplsLabel));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32MplsLabel = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELPORTWAVELENGTH:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PortWavelength))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32PortWavelength, sizeof (table_entry->u32PortWavelength));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32PortWavelength = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELFREEFORM:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8Freeform))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16Freeform_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8Freeform, sizeof (table_entry->au8Freeform));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8Freeform, 0, sizeof (table_entry->au8Freeform));
+				memcpy (table_entry->au8Freeform, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16Freeform_len = request->requestvb->val_len;
+				break;
+			case GMPLSLABELSONETSDHSIGNALINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SonetSdhSignalIndex))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32SonetSdhSignalIndex, sizeof (table_entry->i32SonetSdhSignalIndex));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32SonetSdhSignalIndex = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELSDHVC:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SdhVc))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32SdhVc, sizeof (table_entry->i32SdhVc));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32SdhVc = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELSDHVCBRANCH:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SdhVcBranch))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32SdhVcBranch, sizeof (table_entry->i32SdhVcBranch));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32SdhVcBranch = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELSONETSDHBRANCH:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SonetSdhBranch))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32SonetSdhBranch, sizeof (table_entry->i32SonetSdhBranch));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32SonetSdhBranch = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELSONETSDHGROUPBRANCH:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SonetSdhGroupBranch))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32SonetSdhGroupBranch, sizeof (table_entry->i32SonetSdhGroupBranch));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32SonetSdhGroupBranch = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELWAVEBANDID:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32WavebandId))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32WavebandId, sizeof (table_entry->u32WavebandId));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32WavebandId = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELWAVEBANDSTART:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32WavebandStart))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32WavebandStart, sizeof (table_entry->u32WavebandStart));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32WavebandStart = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELWAVEBANDEND:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32WavebandEnd))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32WavebandEnd, sizeof (table_entry->u32WavebandEnd));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32WavebandEnd = *request->requestvb->val.integer;
+				break;
+			case GMPLSLABELSTORAGETYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8StorageType = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		/* Check the internal consistency of an active row */
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsLabelEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSLABELROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_ACTIVE:
+				case RS_CREATEANDGO:
+					if (/* TODO : int gmplsLabelTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (gmplsLabelEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSLABELTYPE:
+				memcpy (&table_entry->i32Type, pvOldDdata, sizeof (table_entry->i32Type));
+				break;
+			case GMPLSLABELMPLSLABEL:
+				memcpy (&table_entry->u32MplsLabel, pvOldDdata, sizeof (table_entry->u32MplsLabel));
+				break;
+			case GMPLSLABELPORTWAVELENGTH:
+				memcpy (&table_entry->u32PortWavelength, pvOldDdata, sizeof (table_entry->u32PortWavelength));
+				break;
+			case GMPLSLABELFREEFORM:
+				memcpy (table_entry->au8Freeform, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16Freeform_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case GMPLSLABELSONETSDHSIGNALINDEX:
+				memcpy (&table_entry->i32SonetSdhSignalIndex, pvOldDdata, sizeof (table_entry->i32SonetSdhSignalIndex));
+				break;
+			case GMPLSLABELSDHVC:
+				memcpy (&table_entry->i32SdhVc, pvOldDdata, sizeof (table_entry->i32SdhVc));
+				break;
+			case GMPLSLABELSDHVCBRANCH:
+				memcpy (&table_entry->i32SdhVcBranch, pvOldDdata, sizeof (table_entry->i32SdhVcBranch));
+				break;
+			case GMPLSLABELSONETSDHBRANCH:
+				memcpy (&table_entry->i32SonetSdhBranch, pvOldDdata, sizeof (table_entry->i32SonetSdhBranch));
+				break;
+			case GMPLSLABELSONETSDHGROUPBRANCH:
+				memcpy (&table_entry->i32SonetSdhGroupBranch, pvOldDdata, sizeof (table_entry->i32SonetSdhGroupBranch));
+				break;
+			case GMPLSLABELWAVEBANDID:
+				memcpy (&table_entry->u32WavebandId, pvOldDdata, sizeof (table_entry->u32WavebandId));
+				break;
+			case GMPLSLABELWAVEBANDSTART:
+				memcpy (&table_entry->u32WavebandStart, pvOldDdata, sizeof (table_entry->u32WavebandStart));
+				break;
+			case GMPLSLABELWAVEBANDEND:
+				memcpy (&table_entry->u32WavebandEnd, pvOldDdata, sizeof (table_entry->u32WavebandEnd));
+				break;
+			case GMPLSLABELSTORAGETYPE:
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
+				break;
+			case GMPLSLABELROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					gmplsLabelTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (gmplsLabelEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case GMPLSLABELROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_ACTIVE:
+					table_entry->u8RowStatus = RS_ACTIVE;
+					break;
+					
+				case RS_CREATEANDWAIT:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_NOTINSERVICE:
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
+					break;
+					
+				case RS_DESTROY:
+					gmplsLabelTable_removeEntry (table_entry);
+					break;
+				}
+			}
+		}
+		break;
 	}
 	
 	return SNMP_ERR_NOERROR;

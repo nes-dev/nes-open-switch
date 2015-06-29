@@ -80,6 +80,20 @@ extern mplsLsrObjects_t oMplsLsrObjects;
 Netsnmp_Node_Handler mplsLsrObjects_mapper;
 #endif	/* SNMP_SRC */
 
+/** definitions for scalar(s) of gmplsLabelObjects **/
+#define GMPLSLABELINDEXNEXT 1
+
+typedef struct gmplsLabelObjects_t
+{
+	uint32_t u32IndexNext;
+} gmplsLabelObjects_t;
+
+extern gmplsLabelObjects_t oGmplsLabelObjects;
+
+#ifdef SNMP_SRC
+Netsnmp_Node_Handler gmplsLabelObjects_mapper;
+#endif	/* SNMP_SRC */
+
 
 
 /**
@@ -728,6 +742,250 @@ Netsnmp_First_Data_Point mplsInSegmentMapTable_getFirst;
 Netsnmp_Next_Data_Point mplsInSegmentMapTable_getNext;
 Netsnmp_Get_Data_Point mplsInSegmentMapTable_get;
 Netsnmp_Node_Handler mplsInSegmentMapTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table gmplsInterfaceTable definitions
+ */
+#define GMPLSINTERFACESIGNALINGCAPS 1
+#define GMPLSINTERFACERSVPHELLOPERIOD 2
+
+enum
+{
+	/* enums for column gmplsInterfaceSignalingCaps */
+	gmplsInterfaceSignalingCaps_unknown_c = 0,
+	gmplsInterfaceSignalingCaps_rsvpGmpls_c = 1,
+	gmplsInterfaceSignalingCaps_crldpGmpls_c = 2,
+	gmplsInterfaceSignalingCaps_otherGmpls_c = 3,
+};
+
+/* table gmplsInterfaceTable row entry data structure */
+typedef struct gmplsInterfaceEntry_t
+{
+	/* Index values */
+	uint32_t u32Index;
+	
+	/* Column values */
+	uint8_t au8SignalingCaps[1];
+	size_t u16SignalingCaps_len;	/* # of uint8_t elements */
+	uint32_t u32RsvpHelloPeriod;
+	
+	xBTree_Node_t oBTreeNode;
+} gmplsInterfaceEntry_t;
+
+extern xBTree_t oGmplsInterfaceTable_BTree;
+
+/* gmplsInterfaceTable table mapper */
+void gmplsInterfaceTable_init (void);
+gmplsInterfaceEntry_t * gmplsInterfaceTable_createEntry (
+	uint32_t u32Index);
+gmplsInterfaceEntry_t * gmplsInterfaceTable_getByIndex (
+	uint32_t u32Index);
+gmplsInterfaceEntry_t * gmplsInterfaceTable_getNextIndex (
+	uint32_t u32Index);
+void gmplsInterfaceTable_removeEntry (gmplsInterfaceEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point gmplsInterfaceTable_getFirst;
+Netsnmp_Next_Data_Point gmplsInterfaceTable_getNext;
+Netsnmp_Get_Data_Point gmplsInterfaceTable_get;
+Netsnmp_Node_Handler gmplsInterfaceTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table gmplsInSegmentTable definitions
+ */
+#define GMPLSINSEGMENTDIRECTION 1
+#define GMPLSINSEGMENTEXTRAPARAMSPTR 2
+
+enum
+{
+	/* enums for column gmplsInSegmentDirection */
+	gmplsInSegmentDirection_forward_c = 1,
+	gmplsInSegmentDirection_reverse_c = 2,
+};
+
+/* table gmplsInSegmentTable row entry data structure */
+typedef struct gmplsInSegmentEntry_t
+{
+	/* Index values */
+	uint8_t au8Index[24];
+	size_t u16Index_len;	/* # of uint8_t elements */
+	
+	/* Column values */
+	int32_t i32Direction;
+	xOid_t aoExtraParamsPtr[128];
+	size_t u16ExtraParamsPtr_len;	/* # of xOid_t elements */
+	
+	xBTree_Node_t oBTreeNode;
+} gmplsInSegmentEntry_t;
+
+extern xBTree_t oGmplsInSegmentTable_BTree;
+
+/* gmplsInSegmentTable table mapper */
+void gmplsInSegmentTable_init (void);
+gmplsInSegmentEntry_t * gmplsInSegmentTable_createEntry (
+	uint8_t *pau8Index, size_t u16Index_len);
+gmplsInSegmentEntry_t * gmplsInSegmentTable_getByIndex (
+	uint8_t *pau8Index, size_t u16Index_len);
+gmplsInSegmentEntry_t * gmplsInSegmentTable_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len);
+void gmplsInSegmentTable_removeEntry (gmplsInSegmentEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point gmplsInSegmentTable_getFirst;
+Netsnmp_Next_Data_Point gmplsInSegmentTable_getNext;
+Netsnmp_Get_Data_Point gmplsInSegmentTable_get;
+Netsnmp_Node_Handler gmplsInSegmentTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table gmplsOutSegmentTable definitions
+ */
+#define GMPLSOUTSEGMENTDIRECTION 1
+#define GMPLSOUTSEGMENTTTLDECREMENT 2
+#define GMPLSOUTSEGMENTEXTRAPARAMSPTR 3
+
+enum
+{
+	/* enums for column gmplsOutSegmentDirection */
+	gmplsOutSegmentDirection_forward_c = 1,
+	gmplsOutSegmentDirection_reverse_c = 2,
+};
+
+/* table gmplsOutSegmentTable row entry data structure */
+typedef struct gmplsOutSegmentEntry_t
+{
+	/* Index values */
+	uint8_t au8Index[24];
+	size_t u16Index_len;	/* # of uint8_t elements */
+	
+	/* Column values */
+	int32_t i32Direction;
+	uint32_t u32TTLDecrement;
+	xOid_t aoExtraParamsPtr[128];
+	size_t u16ExtraParamsPtr_len;	/* # of xOid_t elements */
+	
+	xBTree_Node_t oBTreeNode;
+} gmplsOutSegmentEntry_t;
+
+extern xBTree_t oGmplsOutSegmentTable_BTree;
+
+/* gmplsOutSegmentTable table mapper */
+void gmplsOutSegmentTable_init (void);
+gmplsOutSegmentEntry_t * gmplsOutSegmentTable_createEntry (
+	uint8_t *pau8Index, size_t u16Index_len);
+gmplsOutSegmentEntry_t * gmplsOutSegmentTable_getByIndex (
+	uint8_t *pau8Index, size_t u16Index_len);
+gmplsOutSegmentEntry_t * gmplsOutSegmentTable_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len);
+void gmplsOutSegmentTable_removeEntry (gmplsOutSegmentEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point gmplsOutSegmentTable_getFirst;
+Netsnmp_Next_Data_Point gmplsOutSegmentTable_getNext;
+Netsnmp_Get_Data_Point gmplsOutSegmentTable_get;
+Netsnmp_Node_Handler gmplsOutSegmentTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table gmplsLabelTable definitions
+ */
+#define GMPLSLABELINTERFACE 1
+#define GMPLSLABELINDEX 2
+#define GMPLSLABELSUBINDEX 3
+#define GMPLSLABELTYPE 4
+#define GMPLSLABELMPLSLABEL 5
+#define GMPLSLABELPORTWAVELENGTH 6
+#define GMPLSLABELFREEFORM 7
+#define GMPLSLABELSONETSDHSIGNALINDEX 8
+#define GMPLSLABELSDHVC 9
+#define GMPLSLABELSDHVCBRANCH 10
+#define GMPLSLABELSONETSDHBRANCH 11
+#define GMPLSLABELSONETSDHGROUPBRANCH 12
+#define GMPLSLABELWAVEBANDID 13
+#define GMPLSLABELWAVEBANDSTART 14
+#define GMPLSLABELWAVEBANDEND 15
+#define GMPLSLABELSTORAGETYPE 16
+#define GMPLSLABELROWSTATUS 17
+
+enum
+{
+	/* enums for column gmplsLabelType */
+	gmplsLabelType_gmplsMplsLabel_c = 1,
+	gmplsLabelType_gmplsPortWavelengthLabel_c = 2,
+	gmplsLabelType_gmplsFreeformGeneralizedLabel_c = 3,
+	gmplsLabelType_gmplsSonetLabel_c = 4,
+	gmplsLabelType_gmplsSdhLabel_c = 5,
+	gmplsLabelType_gmplsWavebandLabel_c = 6,
+
+	/* enums for column gmplsLabelStorageType */
+	gmplsLabelStorageType_other_c = 1,
+	gmplsLabelStorageType_volatile_c = 2,
+	gmplsLabelStorageType_nonVolatile_c = 3,
+	gmplsLabelStorageType_permanent_c = 4,
+	gmplsLabelStorageType_readOnly_c = 5,
+
+	/* enums for column gmplsLabelRowStatus */
+	gmplsLabelRowStatus_active_c = 1,
+	gmplsLabelRowStatus_notInService_c = 2,
+	gmplsLabelRowStatus_notReady_c = 3,
+	gmplsLabelRowStatus_createAndGo_c = 4,
+	gmplsLabelRowStatus_createAndWait_c = 5,
+	gmplsLabelRowStatus_destroy_c = 6,
+};
+
+/* table gmplsLabelTable row entry data structure */
+typedef struct gmplsLabelEntry_t
+{
+	/* Index values */
+	uint32_t u32Interface;
+	uint32_t u32Index;
+	uint32_t u32Subindex;
+	
+	/* Column values */
+	int32_t i32Type;
+	uint32_t u32MplsLabel;
+	uint32_t u32PortWavelength;
+	uint8_t au8Freeform[64];
+	size_t u16Freeform_len;	/* # of uint8_t elements */
+	int32_t i32SonetSdhSignalIndex;
+	int32_t i32SdhVc;
+	int32_t i32SdhVcBranch;
+	int32_t i32SonetSdhBranch;
+	int32_t i32SonetSdhGroupBranch;
+	uint32_t u32WavebandId;
+	uint32_t u32WavebandStart;
+	uint32_t u32WavebandEnd;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
+	
+	xBTree_Node_t oBTreeNode;
+} gmplsLabelEntry_t;
+
+extern xBTree_t oGmplsLabelTable_BTree;
+
+/* gmplsLabelTable table mapper */
+void gmplsLabelTable_init (void);
+gmplsLabelEntry_t * gmplsLabelTable_createEntry (
+	uint32_t u32Interface,
+	uint32_t u32Index,
+	uint32_t u32Subindex);
+gmplsLabelEntry_t * gmplsLabelTable_getByIndex (
+	uint32_t u32Interface,
+	uint32_t u32Index,
+	uint32_t u32Subindex);
+gmplsLabelEntry_t * gmplsLabelTable_getNextIndex (
+	uint32_t u32Interface,
+	uint32_t u32Index,
+	uint32_t u32Subindex);
+void gmplsLabelTable_removeEntry (gmplsLabelEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point gmplsLabelTable_getFirst;
+Netsnmp_Next_Data_Point gmplsLabelTable_getNext;
+Netsnmp_Get_Data_Point gmplsLabelTable_get;
+Netsnmp_Node_Handler gmplsLabelTable_mapper;
 #endif	/* SNMP_SRC */
 
 
