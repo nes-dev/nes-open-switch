@@ -19,56 +19,24 @@
  */
 //set ts=4 sw=4
 
-#ifndef __MPLS_MAIN_C__
-#	define __MPLS_MAIN_C__
+#ifndef __MPLSUTILS_H__
+#	define __MPLSUTILS_H__
+
+#	ifdef __cplusplus
+extern "C" {
+#	endif
 
 
-#include "mplsLsrStdMIB_agent.h"
-#include "mplsTeStdMIB_agent.h"
-#include "mplsUtils.h"
 
-#include "mpls_ext.h"
-#include "mpls_defines.h"
-#include "switch_ext.h"
-
-#include "lib/thread.h"
+#include <stdbool.h>
 
 
-static xThreadInfo_t oMplsThread =
-{
-	.u32Index = XTHREAD_ID (ModuleId_mpls_c, 0),
-	.u8SchedPolicy = SCHED_RR,
-	.u8Priority = 1,
-	.poStart = &mpls_start,
-};
+bool mplsUtilsInit (void);
 
 
-void *
-mpls_main (void *pvArgv)
-{
-	mplsUtilsInit ();
-	
-	mplsLsrStdMIB_init ();
-	mplsTeStdMIB_init ();
-	
-	if (xThread_create (&oMplsThread) == NULL)
-	{
-		Mpls_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
-	}
-	
-	return NULL;
+
+#	ifdef __cplusplus
 }
+#	endif
 
-void *
-mpls_start (void *pvArgv)
-{
-	while (1)
-	{
-		xThread_sleep (1);
-	}
-	return NULL;
-}
-
-
-#endif	// __MPLS_MAIN_C__
+#endif	// __MPLSUTILS_H__
