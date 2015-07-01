@@ -19,54 +19,24 @@
  */
 //set ts=4 sw=4
 
-#ifndef __TED_MAIN_C__
-#	define __TED_MAIN_C__
+#ifndef __TEDUTILS_H__
+#	define __TEDUTILS_H__
+
+#	ifdef __cplusplus
+extern "C" {
+#	endif
 
 
-#include "teLinkStdMIB_agent.h"
-#include "tedUtils.h"
 
-#include "ted_ext.h"
-#include "ted_defines.h"
-#include "switch_ext.h"
-
-#include "lib/thread.h"
+#include <stdbool.h>
 
 
-static xThreadInfo_t oTedThread =
-{
-	.u32Index = XTHREAD_ID (ModuleId_ted_c, 0),
-	.u8SchedPolicy = SCHED_RR,
-	.u8Priority = 1,
-	.poStart = &ted_start,
-};
+bool tedUtilsInit (void);
 
 
-void *
-ted_main (void *pvArgv)
-{
-	tedUtilsInit ();
-	
-	teLinkStdMIB_init ();
-	
-	if (xThread_create (&oTedThread) == NULL)
-	{
-		Ted_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
-	}
-	
-	return NULL;
+
+#	ifdef __cplusplus
 }
+#	endif
 
-void *
-ted_start (void *pvArgv)
-{
-	while (1)
-	{
-		xThread_sleep (1);
-	}
-	return NULL;
-}
-
-
-#endif	// __TED_MAIN_C__
+#endif	// __TEDUTILS_H__

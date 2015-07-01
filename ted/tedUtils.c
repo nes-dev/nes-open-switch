@@ -19,54 +19,54 @@
  */
 //set ts=4 sw=4
 
-#ifndef __TED_MAIN_C__
-#	define __TED_MAIN_C__
+#ifndef __TEDUTILS_C__
+#	define __TEDUTILS_C__
 
 
-#include "teLinkStdMIB_agent.h"
+
 #include "tedUtils.h"
+#include "if/ifUtils.h"
+#include "if/ifMIB.h"
 
-#include "ted_ext.h"
-#include "ted_defines.h"
-#include "switch_ext.h"
-
-#include "lib/thread.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 
-static xThreadInfo_t oTedThread =
+static bool teLinkTable_stackModify (
+	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	uint8_t u8Action, bool isLocked);
+
+
+bool tedUtilsInit (void)
 {
-	.u32Index = XTHREAD_ID (ModuleId_ted_c, 0),
-	.u8SchedPolicy = SCHED_RR,
-	.u8Priority = 1,
-	.poStart = &ted_start,
-};
-
-
-void *
-ted_main (void *pvArgv)
-{
-	tedUtilsInit ();
+	register bool bRetCode = false;
+	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
 	
-	teLinkStdMIB_init ();
+	ifTable_wrLock ();
 	
-	if (xThread_create (&oTedThread) == NULL)
+	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_teLink_c)) == NULL)
 	{
-		Ted_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+		goto tedUtilsInit_cleanup;
 	}
 	
-	return NULL;
+	poNeIfTypeEntry->pfStackHandler = teLinkTable_stackModify;
+	
+	bRetCode = true;
+	
+tedUtilsInit_cleanup:
+	
+	ifTable_unLock ();
+	return bRetCode;
 }
 
-void *
-ted_start (void *pvArgv)
+bool
+teLinkTable_stackModify (
+	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	uint8_t u8Action, bool isLocked)
 {
-	while (1)
-	{
-		xThread_sleep (1);
-	}
-	return NULL;
+	return true;
 }
 
 
-#endif	// __TED_MAIN_C__
+
+#endif	// __TEDUTILS_C__
