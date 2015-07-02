@@ -122,10 +122,11 @@ interfaces_t oInterfaces =
 
 /** interfaces scalar mapper **/
 int
-interfaces_mapper (netsnmp_mib_handler *handler,
+interfaces_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid interfaces_oid[];
 	netsnmp_request_info *request;
@@ -137,7 +138,7 @@ interfaces_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (interfaces_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (interfaces_oid)])
 			{
 			case IFNUMBER:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oInterfaces.i32IfNumber);
@@ -164,10 +165,11 @@ ifMIBObjects_t oIfMIBObjects;
 
 /** ifMIBObjects scalar mapper **/
 int
-ifMIBObjects_mapper (netsnmp_mib_handler *handler,
+ifMIBObjects_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid ifMIBObjects_oid[];
 	netsnmp_request_info *request;
@@ -503,6 +505,20 @@ ifTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
+static int8_t
+ifTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register ifEntry_t *pEntry1 = xBTree_entry (pNode1, ifEntry_t, oBTreeNode);
+	register ifEntry_t *pEntry2 = xBTree_entry (pNode2, ifEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+xBTree_t oIfTable_BTree = xBTree_initInline (&ifTable_BTreeNodeCmp);
+
 /* create a new row in the table */
 ifEntry_t *
 ifTable_createEntry (
@@ -729,6 +745,33 @@ ifTable_removeHier (
 	}
 	
 	return true;
+}
+
+bool
+ifTable_getByIndexExt (
+	uint32_t u32Index, bool bWrLock,
+	ifEntry_t **ppoEntry)
+{
+	return false;
+}
+
+bool
+ifTable_createReference (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	int32_t i32AdminStatus,
+	bool bCreate, bool bReference, bool bActivate,
+	ifEntry_t **ppoEntry)
+{
+	return false;
+}
+
+bool
+ifTable_removeReference (
+	uint32_t u32IfIndex,
+	bool bCreate, bool bReference, bool bActivate)
+{
+	return false;
 }
 
 bool
@@ -1102,8 +1145,8 @@ ifXTable_createEntry (
 	poEntry = &poIfData->oIfX;
 	
 	poEntry->i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_disabled_c;
-	poEntry->i32PromiscuousMode = ifPromiscuousMode_false_c;
-	poEntry->i32ConnectorPresent = ifConnectorPresent_false_c;
+	poEntry->u8PromiscuousMode = ifPromiscuousMode_false_c;
+	poEntry->u8ConnectorPresent = ifConnectorPresent_false_c;
 	
 	xBitmap_setBit (poIfData->au8Flags, ifFlags_ifXCreated_c, 1);
 	return poEntry;
@@ -1281,10 +1324,10 @@ ifXTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_GAUGE, table_entry->u32HighSpeed);
 				break;
 			case IFPROMISCUOUSMODE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PromiscuousMode);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8PromiscuousMode);
 				break;
 			case IFCONNECTORPRESENT:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ConnectorPresent);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8ConnectorPresent);
 				break;
 			case IFALIAS:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Alias, table_entry->u16Alias_len);
@@ -1384,18 +1427,18 @@ ifXTable_mapper (
 				table_entry->i32LinkUpDownTrapEnable = *request->requestvb->val.integer;
 				break;
 			case IFPROMISCUOUSMODE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PromiscuousMode))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8PromiscuousMode))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PromiscuousMode, sizeof (table_entry->i32PromiscuousMode));
+					memcpy (pvOldDdata, &table_entry->u8PromiscuousMode, sizeof (table_entry->u8PromiscuousMode));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PromiscuousMode = *request->requestvb->val.integer;
+				table_entry->u8PromiscuousMode = *request->requestvb->val.integer;
 				break;
 			case IFALIAS:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8Alias))) == NULL)
@@ -1436,7 +1479,7 @@ ifXTable_mapper (
 				memcpy (&table_entry->i32LinkUpDownTrapEnable, pvOldDdata, sizeof (table_entry->i32LinkUpDownTrapEnable));
 				break;
 			case IFPROMISCUOUSMODE:
-				memcpy (&table_entry->i32PromiscuousMode, pvOldDdata, sizeof (table_entry->i32PromiscuousMode));
+				memcpy (&table_entry->u8PromiscuousMode, pvOldDdata, sizeof (table_entry->u8PromiscuousMode));
 				break;
 			case IFALIAS:
 				memcpy (table_entry->au8Alias, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);

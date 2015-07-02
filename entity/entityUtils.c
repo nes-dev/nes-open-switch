@@ -168,7 +168,7 @@ neEntPortRowStatus_update (
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			poIfData->oIfX.i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_enabled_c;
-			poIfData->oIfX.i32ConnectorPresent = ifConnectorPresent_true_c;
+			poIfData->oIfX.u8ConnectorPresent = ifConnectorPresent_true_c;
 			ifData_unLock (poIfData);
 			
 			xBTree_nodeAdd (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
@@ -262,7 +262,7 @@ neEntPortRowStatus_update (
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			poIfData->oIfX.i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_disabled_c;
-			poIfData->oIfX.i32ConnectorPresent = ifConnectorPresent_false_c;
+			poIfData->oIfX.u8ConnectorPresent = ifConnectorPresent_false_c;
 			ifData_unLock (poIfData);
 			
 			if (!ifData_removeReference (poEntry->oK.u32IfIndex, true, true, true))

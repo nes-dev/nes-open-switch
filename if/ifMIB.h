@@ -34,6 +34,7 @@ extern "C" {
 #include "lib/snmp.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define TOBE_REPLACED 1
 
@@ -93,376 +94,6 @@ Netsnmp_Node_Handler ifMIBObjects_mapper;
 /**
  *	table mapper(s)
  */
-/**
- *	table ifTable definitions
- */
-#define IFINDEX 1
-#define IFDESCR 2
-#define IFTYPE 3
-#define IFMTU 4
-#define IFSPEED 5
-#define IFPHYSADDRESS 6
-#define IFADMINSTATUS 7
-#define IFOPERSTATUS 8
-#define IFLASTCHANGE 9
-#define IFINOCTETS 10
-#define IFINUCASTPKTS 11
-#define IFINDISCARDS 13
-#define IFINERRORS 14
-#define IFINUNKNOWNPROTOS 15
-#define IFOUTOCTETS 16
-#define IFOUTUCASTPKTS 17
-#define IFOUTDISCARDS 19
-#define IFOUTERRORS 20
-
-enum
-{
-	/* enums for column ifType */
-	ifType_other_c = 1,
-	ifType_regular1822_c = 2,
-	ifType_hdh1822_c = 3,
-	ifType_ddnX25_c = 4,
-	ifType_rfc877x25_c = 5,
-	ifType_ethernetCsmacd_c = 6,
-	ifType_iso88023Csmacd_c = 7,
-	ifType_iso88024TokenBus_c = 8,
-	ifType_iso88025TokenRing_c = 9,
-	ifType_iso88026Man_c = 10,
-	ifType_starLan_c = 11,
-	ifType_proteon10Mbit_c = 12,
-	ifType_proteon80Mbit_c = 13,
-	ifType_hyperchannel_c = 14,
-	ifType_fddi_c = 15,
-	ifType_lapb_c = 16,
-	ifType_sdlc_c = 17,
-	ifType_ds1_c = 18,
-	ifType_e1_c = 19,
-	ifType_basicISDN_c = 20,
-	ifType_primaryISDN_c = 21,
-	ifType_propPointToPointSerial_c = 22,
-	ifType_ppp_c = 23,
-	ifType_softwareLoopback_c = 24,
-	ifType_eon_c = 25,
-	ifType_ethernet3Mbit_c = 26,
-	ifType_nsip_c = 27,
-	ifType_slip_c = 28,
-	ifType_ultra_c = 29,
-	ifType_ds3_c = 30,
-	ifType_sip_c = 31,
-	ifType_frameRelay_c = 32,
-	ifType_rs232_c = 33,
-	ifType_para_c = 34,
-	ifType_arcnet_c = 35,
-	ifType_arcnetPlus_c = 36,
-	ifType_atm_c = 37,
-	ifType_miox25_c = 38,
-	ifType_sonet_c = 39,
-	ifType_x25ple_c = 40,
-	ifType_iso88022llc_c = 41,
-	ifType_localTalk_c = 42,
-	ifType_smdsDxi_c = 43,
-	ifType_frameRelayService_c = 44,
-	ifType_v35_c = 45,
-	ifType_hssi_c = 46,
-	ifType_hippi_c = 47,
-	ifType_modem_c = 48,
-	ifType_aal5_c = 49,
-	ifType_sonetPath_c = 50,
-	ifType_sonetVT_c = 51,
-	ifType_smdsIcip_c = 52,
-	ifType_propVirtual_c = 53,
-	ifType_propMultiplexor_c = 54,
-	ifType_ieee80212_c = 55,
-	ifType_fibreChannel_c = 56,
-	ifType_hippiInterface_c = 57,
-	ifType_frameRelayInterconnect_c = 58,
-	ifType_aflane8023_c = 59,
-	ifType_aflane8025_c = 60,
-	ifType_cctEmul_c = 61,
-	ifType_fastEther_c = 62,
-	ifType_isdn_c = 63,
-	ifType_v11_c = 64,
-	ifType_v36_c = 65,
-	ifType_g703at64k_c = 66,
-	ifType_g703at2mb_c = 67,
-	ifType_qllc_c = 68,
-	ifType_fastEtherFX_c = 69,
-	ifType_channel_c = 70,
-	ifType_ieee80211_c = 71,
-	ifType_ibm370parChan_c = 72,
-	ifType_escon_c = 73,
-	ifType_dlsw_c = 74,
-	ifType_isdns_c = 75,
-	ifType_isdnu_c = 76,
-	ifType_lapd_c = 77,
-	ifType_ipSwitch_c = 78,
-	ifType_rsrb_c = 79,
-	ifType_atmLogical_c = 80,
-	ifType_ds0_c = 81,
-	ifType_ds0Bundle_c = 82,
-	ifType_bsc_c = 83,
-	ifType_async_c = 84,
-	ifType_cnr_c = 85,
-	ifType_iso88025Dtr_c = 86,
-	ifType_eplrs_c = 87,
-	ifType_arap_c = 88,
-	ifType_propCnls_c = 89,
-	ifType_hostPad_c = 90,
-	ifType_termPad_c = 91,
-	ifType_frameRelayMPI_c = 92,
-	ifType_x213_c = 93,
-	ifType_adsl_c = 94,
-	ifType_radsl_c = 95,
-	ifType_sdsl_c = 96,
-	ifType_vdsl_c = 97,
-	ifType_iso88025CRFPInt_c = 98,
-	ifType_myrinet_c = 99,
-	ifType_voiceEM_c = 100,
-	ifType_voiceFXO_c = 101,
-	ifType_voiceFXS_c = 102,
-	ifType_voiceEncap_c = 103,
-	ifType_voiceOverIp_c = 104,
-	ifType_atmDxi_c = 105,
-	ifType_atmFuni_c = 106,
-	ifType_atmIma_c = 107,
-	ifType_pppMultilinkBundle_c = 108,
-	ifType_ipOverCdlc_c = 109,
-	ifType_ipOverClaw_c = 110,
-	ifType_stackToStack_c = 111,
-	ifType_virtualIpAddress_c = 112,
-	ifType_mpc_c = 113,
-	ifType_ipOverAtm_c = 114,
-	ifType_iso88025Fiber_c = 115,
-	ifType_tdlc_c = 116,
-	ifType_gigabitEthernet_c = 117,
-	ifType_hdlc_c = 118,
-	ifType_lapf_c = 119,
-	ifType_v37_c = 120,
-	ifType_x25mlp_c = 121,
-	ifType_x25huntGroup_c = 122,
-	ifType_transpHdlc_c = 123,
-	ifType_interleave_c = 124,
-	ifType_fast_c = 125,
-	ifType_ip_c = 126,
-	ifType_docsCableMaclayer_c = 127,
-	ifType_docsCableDownstream_c = 128,
-	ifType_docsCableUpstream_c = 129,
-	ifType_a12MppSwitch_c = 130,
-	ifType_tunnel_c = 131,
-	ifType_coffee_c = 132,
-	ifType_ces_c = 133,
-	ifType_atmSubInterface_c = 134,
-	ifType_l2vlan_c = 135,
-	ifType_l3ipvlan_c = 136,
-	ifType_l3ipxvlan_c = 137,
-	ifType_digitalPowerline_c = 138,
-	ifType_mediaMailOverIp_c = 139,
-	ifType_dtm_c = 140,
-	ifType_dcn_c = 141,
-	ifType_ipForward_c = 142,
-	ifType_msdsl_c = 143,
-	ifType_ieee1394_c = 144,
-	ifType_if_gsn_c = 145,
-	ifType_dvbRccMacLayer_c = 146,
-	ifType_dvbRccDownstream_c = 147,
-	ifType_dvbRccUpstream_c = 148,
-	ifType_atmVirtual_c = 149,
-	ifType_mplsTunnel_c = 150,
-	ifType_srp_c = 151,
-	ifType_voiceOverAtm_c = 152,
-	ifType_voiceOverFrameRelay_c = 153,
-	ifType_idsl_c = 154,
-	ifType_compositeLink_c = 155,
-	ifType_ss7SigLink_c = 156,
-	ifType_propWirelessP2P_c = 157,
-	ifType_frForward_c = 158,
-	ifType_rfc1483_c = 159,
-	ifType_usb_c = 160,
-	ifType_ieee8023adLag_c = 161,
-	ifType_bgppolicyaccounting_c = 162,
-	ifType_frf16MfrBundle_c = 163,
-	ifType_h323Gatekeeper_c = 164,
-	ifType_h323Proxy_c = 165,
-	ifType_mpls_c = 166,
-	ifType_mfSigLink_c = 167,
-	ifType_hdsl2_c = 168,
-	ifType_shdsl_c = 169,
-	ifType_ds1FDL_c = 170,
-	ifType_pos_c = 171,
-	ifType_dvbAsiIn_c = 172,
-	ifType_dvbAsiOut_c = 173,
-	ifType_plc_c = 174,
-	ifType_nfas_c = 175,
-	ifType_tr008_c = 176,
-	ifType_gr303RDT_c = 177,
-	ifType_gr303IDT_c = 178,
-	ifType_isup_c = 179,
-	ifType_propDocsWirelessMaclayer_c = 180,
-	ifType_propDocsWirelessDownstream_c = 181,
-	ifType_propDocsWirelessUpstream_c = 182,
-	ifType_hiperlan2_c = 183,
-	ifType_propBWAp2Mp_c = 184,
-	ifType_sonetOverheadChannel_c = 185,
-	ifType_digitalWrapperOverheadChannel_c = 186,
-	ifType_aal2_c = 187,
-	ifType_radioMAC_c = 188,
-	ifType_atmRadio_c = 189,
-	ifType_imt_c = 190,
-	ifType_mvl_c = 191,
-	ifType_reachDSL_c = 192,
-	ifType_frDlciEndPt_c = 193,
-	ifType_atmVciEndPt_c = 194,
-	ifType_opticalChannel_c = 195,
-	ifType_opticalTransport_c = 196,
-	ifType_propAtm_c = 197,
-	ifType_voiceOverCable_c = 198,
-	ifType_infiniband_c = 199,
-	ifType_teLink_c = 200,
-	ifType_q2931_c = 201,
-	ifType_virtualTg_c = 202,
-	ifType_sipTg_c = 203,
-	ifType_sipSig_c = 204,
-	ifType_docsCableUpstreamChannel_c = 205,
-	ifType_econet_c = 206,
-	ifType_pon155_c = 207,
-	ifType_pon622_c = 208,
-	ifType_bridge_c = 209,
-	ifType_linegroup_c = 210,
-	ifType_voiceEMFGD_c = 211,
-	ifType_voiceFGDEANA_c = 212,
-	ifType_voiceDID_c = 213,
-	ifType_mpegTransport_c = 214,
-	ifType_sixToFour_c = 215,
-	ifType_gtp_c = 216,
-	ifType_pdnEtherLoop1_c = 217,
-	ifType_pdnEtherLoop2_c = 218,
-	ifType_opticalChannelGroup_c = 219,
-	ifType_homepna_c = 220,
-	ifType_gfp_c = 221,
-	ifType_ciscoISLvlan_c = 222,
-	ifType_actelisMetaLOOP_c = 223,
-	ifType_fcipLink_c = 224,
-	ifType_rpr_c = 225,
-	ifType_qam_c = 226,
-	ifType_lmp_c = 227,
-	ifType_cblVectaStar_c = 228,
-	ifType_docsCableMCmtsDownstream_c = 229,
-	ifType_adsl2_c = 230,
-	ifType_macSecControlledIF_c = 231,
-	ifType_macSecUncontrolledIF_c = 232,
-	ifType_aviciOpticalEther_c = 233,
-	ifType_atmbond_c = 234,
-	ifType_voiceFGDOS_c = 235,
-	ifType_mocaVersion1_c = 236,
-	ifType_ieee80216WMAN_c = 237,
-	ifType_adsl2plus_c = 238,
-	ifType_dvbRcsMacLayer_c = 239,
-	ifType_dvbTdm_c = 240,
-	ifType_dvbRcsTdma_c = 241,
-	ifType_x86Laps_c = 242,
-	ifType_wwanPP_c = 243,
-	ifType_wwanPP2_c = 244,
-	ifType_voiceEBS_c = 245,
-	ifType_ifPwType_c = 246,
-	ifType_ilan_c = 247,
-	ifType_pip_c = 248,
-	ifType_aluELP_c = 249,
-	ifType_gpon_c = 250,
-	ifType_vdsl2_c = 251,
-	ifType_capwapDot11Profile_c = 252,
-	ifType_capwapDot11Bss_c = 253,
-	ifType_capwapWtpVirtualRadio_c = 254,
-	ifType_bits_c = 255,
-	ifType_docsCableUpstreamRfPort_c = 256,
-	ifType_cableDownstreamRfPort_c = 257,
-	ifType_vmwareVirtualNic_c = 258,
-	ifType_ieee802154_c = 259,
-	ifType_otnOdu_c = 260,
-	ifType_otnOtu_c = 261,
-	ifType_ifVfiType_c = 262,
-	ifType_g9981_c = 263,
-	ifType_g9982_c = 264,
-	ifType_g9983_c = 265,
-	ifType_aluEpon_c = 266,
-	ifType_aluEponOnu_c = 267,
-	ifType_aluEponPhysicalUni_c = 268,
-	ifType_aluEponLogicalLink_c = 269,
-	ifType_aluGponOnu_c = 270,
-	ifType_aluGponPhysicalUni_c = 271,
-	ifType_vmwareNicTeam_c = 272,
-
-	/* enums for column ifAdminStatus */
-	ifAdminStatus_up_c = 1,
-	ifAdminStatus_down_c = 2,
-	ifAdminStatus_testing_c = 3,
-
-	/* enums for column ifOperStatus */
-	ifOperStatus_up_c = 1,
-	ifOperStatus_down_c = 2,
-	ifOperStatus_testing_c = 3,
-	ifOperStatus_unknown_c = 4,
-	ifOperStatus_dormant_c = 5,
-	ifOperStatus_notPresent_c = 6,
-	ifOperStatus_lowerLayerDown_c = 7,
-};
-
-/* table ifTable row entry data structure */
-typedef struct ifEntry_t
-{
-	/* Index values */
-// 	uint32_t u32Index;
-	
-	/* Column values */
-	uint8_t au8Descr[32];
-	size_t u16Descr_len;	/* # of uint8_t elements */
-	int32_t i32Type;
-	int32_t i32Mtu;
-	uint32_t u32Speed;
-	uint8_t au8PhysAddress[8];
-	size_t u16PhysAddress_len;	/* # of uint8_t elements */
-	int32_t i32AdminStatus;
-	int32_t i32OperStatus;
-	uint32_t u32LastChange;
-	uint32_t u32InOctets;
-	uint32_t u32InUcastPkts;
-	uint32_t u32InDiscards;
-	uint32_t u32InErrors;
-	uint32_t u32InUnknownProtos;
-	uint32_t u32OutOctets;
-	uint32_t u32OutUcastPkts;
-	uint32_t u32OutDiscards;
-	uint32_t u32OutErrors;
-	
-// 	xBTree_Node_t oBTreeNode;
-} ifEntry_t;
-
-extern xBTree_t oIfTable_BTree;
-
-/* ifTable table mapper */
-void ifTable_init (void);
-ifEntry_t * ifTable_createEntry (
-	uint32_t u32Index);
-ifEntry_t * ifTable_getByIndex (
-	uint32_t u32Index);
-ifEntry_t * ifTable_getNextIndex (
-	uint32_t u32Index);
-void ifTable_removeEntry (ifEntry_t *poEntry);
-ifEntry_t * ifTable_createExt (
-	uint32_t u32Index);
-bool ifTable_removeExt (ifEntry_t *poEntry);
-bool ifTable_createHier (ifEntry_t *poEntry);
-bool ifTable_removeHier (ifEntry_t *poEntry);
-bool ifAdminStatus_handler (
-	ifEntry_t *poEntry,
-	int32_t i32AdminStatus, bool bForce);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point ifTable_getFirst;
-Netsnmp_Next_Data_Point ifTable_getNext;
-Netsnmp_Get_Data_Point ifTable_get;
-Netsnmp_Node_Handler ifTable_mapper;
-#endif	/* SNMP_SRC */
-
-
 /**
  *	table ifXTable definitions
  */
@@ -524,8 +155,8 @@ typedef struct ifXEntry_t
 	uint64_t u64HCOutBroadcastPkts;
 	int32_t i32LinkUpDownTrapEnable;
 	uint32_t u32HighSpeed;
-	int32_t i32PromiscuousMode;
-	int32_t i32ConnectorPresent;
+	uint8_t u8PromiscuousMode;
+	uint8_t u8ConnectorPresent;
 	uint8_t au8Alias[64];
 	size_t u16Alias_len;	/* # of uint8_t elements */
 	uint32_t u32CounterDiscontinuityTime;
@@ -533,7 +164,7 @@ typedef struct ifXEntry_t
 // 	xBTree_Node_t oBTreeNode;
 } ifXEntry_t;
 
-extern xBTree_t oIfXTable_BTree;
+// extern xBTree_t oIfXTable_BTree;
 
 /* ifXTable table mapper */
 void ifXTable_init (void);
@@ -615,8 +246,7 @@ bool ifStackTable_removeExt (ifStackEntry_t *poEntry);
 bool ifStackTable_createHier (ifStackEntry_t *poEntry);
 bool ifStackTable_removeHier (ifStackEntry_t *poEntry);
 bool ifStackStatus_handler (
-	ifStackEntry_t *poEntry,
-	uint8_t u8Status);
+	ifStackEntry_t *poEntry, uint8_t u8Status);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ifStackTable_getFirst;
 Netsnmp_Next_Data_Point ifStackTable_getNext;
@@ -1101,8 +731,7 @@ bool neIfTable_removeExt (neIfEntry_t *poEntry);
 bool neIfTable_createHier (neIfEntry_t *poEntry);
 bool neIfTable_removeHier (neIfEntry_t *poEntry);
 bool neIfRowStatus_handler (
-	neIfEntry_t *poEntry,
-	uint8_t u8RowStatus);
+	neIfEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neIfTable_getFirst;
 Netsnmp_Next_Data_Point neIfTable_getNext;
@@ -1111,10 +740,399 @@ Netsnmp_Node_Handler neIfTable_mapper;
 #endif	/* SNMP_SRC */
 
 
+/**
+ *	table ifTable definitions
+ */
+#define IFINDEX 1
+#define IFDESCR 2
+#define IFTYPE 3
+#define IFMTU 4
+#define IFSPEED 5
+#define IFPHYSADDRESS 6
+#define IFADMINSTATUS 7
+#define IFOPERSTATUS 8
+#define IFLASTCHANGE 9
+#define IFINOCTETS 10
+#define IFINUCASTPKTS 11
+#define IFINDISCARDS 13
+#define IFINERRORS 14
+#define IFINUNKNOWNPROTOS 15
+#define IFOUTOCTETS 16
+#define IFOUTUCASTPKTS 17
+#define IFOUTDISCARDS 19
+#define IFOUTERRORS 20
+
 enum
 {
 	ifIndex_zero_c = 0,
 	
+	/* enums for column ifType */
+	ifType_other_c = 1,
+	ifType_regular1822_c = 2,
+	ifType_hdh1822_c = 3,
+	ifType_ddnX25_c = 4,
+	ifType_rfc877x25_c = 5,
+	ifType_ethernetCsmacd_c = 6,
+	ifType_iso88023Csmacd_c = 7,
+	ifType_iso88024TokenBus_c = 8,
+	ifType_iso88025TokenRing_c = 9,
+	ifType_iso88026Man_c = 10,
+	ifType_starLan_c = 11,
+	ifType_proteon10Mbit_c = 12,
+	ifType_proteon80Mbit_c = 13,
+	ifType_hyperchannel_c = 14,
+	ifType_fddi_c = 15,
+	ifType_lapb_c = 16,
+	ifType_sdlc_c = 17,
+	ifType_ds1_c = 18,
+	ifType_e1_c = 19,
+	ifType_basicISDN_c = 20,
+	ifType_primaryISDN_c = 21,
+	ifType_propPointToPointSerial_c = 22,
+	ifType_ppp_c = 23,
+	ifType_softwareLoopback_c = 24,
+	ifType_eon_c = 25,
+	ifType_ethernet3Mbit_c = 26,
+	ifType_nsip_c = 27,
+	ifType_slip_c = 28,
+	ifType_ultra_c = 29,
+	ifType_ds3_c = 30,
+	ifType_sip_c = 31,
+	ifType_frameRelay_c = 32,
+	ifType_rs232_c = 33,
+	ifType_para_c = 34,
+	ifType_arcnet_c = 35,
+	ifType_arcnetPlus_c = 36,
+	ifType_atm_c = 37,
+	ifType_miox25_c = 38,
+	ifType_sonet_c = 39,
+	ifType_x25ple_c = 40,
+	ifType_iso88022llc_c = 41,
+	ifType_localTalk_c = 42,
+	ifType_smdsDxi_c = 43,
+	ifType_frameRelayService_c = 44,
+	ifType_v35_c = 45,
+	ifType_hssi_c = 46,
+	ifType_hippi_c = 47,
+	ifType_modem_c = 48,
+	ifType_aal5_c = 49,
+	ifType_sonetPath_c = 50,
+	ifType_sonetVT_c = 51,
+	ifType_smdsIcip_c = 52,
+	ifType_propVirtual_c = 53,
+	ifType_propMultiplexor_c = 54,
+	ifType_ieee80212_c = 55,
+	ifType_fibreChannel_c = 56,
+	ifType_hippiInterface_c = 57,
+	ifType_frameRelayInterconnect_c = 58,
+	ifType_aflane8023_c = 59,
+	ifType_aflane8025_c = 60,
+	ifType_cctEmul_c = 61,
+	ifType_fastEther_c = 62,
+	ifType_isdn_c = 63,
+	ifType_v11_c = 64,
+	ifType_v36_c = 65,
+	ifType_g703at64k_c = 66,
+	ifType_g703at2mb_c = 67,
+	ifType_qllc_c = 68,
+	ifType_fastEtherFX_c = 69,
+	ifType_channel_c = 70,
+	ifType_ieee80211_c = 71,
+	ifType_ibm370parChan_c = 72,
+	ifType_escon_c = 73,
+	ifType_dlsw_c = 74,
+	ifType_isdns_c = 75,
+	ifType_isdnu_c = 76,
+	ifType_lapd_c = 77,
+	ifType_ipSwitch_c = 78,
+	ifType_rsrb_c = 79,
+	ifType_atmLogical_c = 80,
+	ifType_ds0_c = 81,
+	ifType_ds0Bundle_c = 82,
+	ifType_bsc_c = 83,
+	ifType_async_c = 84,
+	ifType_cnr_c = 85,
+	ifType_iso88025Dtr_c = 86,
+	ifType_eplrs_c = 87,
+	ifType_arap_c = 88,
+	ifType_propCnls_c = 89,
+	ifType_hostPad_c = 90,
+	ifType_termPad_c = 91,
+	ifType_frameRelayMPI_c = 92,
+	ifType_x213_c = 93,
+	ifType_adsl_c = 94,
+	ifType_radsl_c = 95,
+	ifType_sdsl_c = 96,
+	ifType_vdsl_c = 97,
+	ifType_iso88025CRFPInt_c = 98,
+	ifType_myrinet_c = 99,
+	ifType_voiceEM_c = 100,
+	ifType_voiceFXO_c = 101,
+	ifType_voiceFXS_c = 102,
+	ifType_voiceEncap_c = 103,
+	ifType_voiceOverIp_c = 104,
+	ifType_atmDxi_c = 105,
+	ifType_atmFuni_c = 106,
+	ifType_atmIma_c = 107,
+	ifType_pppMultilinkBundle_c = 108,
+	ifType_ipOverCdlc_c = 109,
+	ifType_ipOverClaw_c = 110,
+	ifType_stackToStack_c = 111,
+	ifType_virtualIpAddress_c = 112,
+	ifType_mpc_c = 113,
+	ifType_ipOverAtm_c = 114,
+	ifType_iso88025Fiber_c = 115,
+	ifType_tdlc_c = 116,
+	ifType_gigabitEthernet_c = 117,
+	ifType_hdlc_c = 118,
+	ifType_lapf_c = 119,
+	ifType_v37_c = 120,
+	ifType_x25mlp_c = 121,
+	ifType_x25huntGroup_c = 122,
+	ifType_transpHdlc_c = 123,
+	ifType_interleave_c = 124,
+	ifType_fast_c = 125,
+	ifType_ip_c = 126,
+	ifType_docsCableMaclayer_c = 127,
+	ifType_docsCableDownstream_c = 128,
+	ifType_docsCableUpstream_c = 129,
+	ifType_a12MppSwitch_c = 130,
+	ifType_tunnel_c = 131,
+	ifType_coffee_c = 132,
+	ifType_ces_c = 133,
+	ifType_atmSubInterface_c = 134,
+	ifType_l2vlan_c = 135,
+	ifType_l3ipvlan_c = 136,
+	ifType_l3ipxvlan_c = 137,
+	ifType_digitalPowerline_c = 138,
+	ifType_mediaMailOverIp_c = 139,
+	ifType_dtm_c = 140,
+	ifType_dcn_c = 141,
+	ifType_ipForward_c = 142,
+	ifType_msdsl_c = 143,
+	ifType_ieee1394_c = 144,
+	ifType_if_gsn_c = 145,
+	ifType_dvbRccMacLayer_c = 146,
+	ifType_dvbRccDownstream_c = 147,
+	ifType_dvbRccUpstream_c = 148,
+	ifType_atmVirtual_c = 149,
+	ifType_mplsTunnel_c = 150,
+	ifType_srp_c = 151,
+	ifType_voiceOverAtm_c = 152,
+	ifType_voiceOverFrameRelay_c = 153,
+	ifType_idsl_c = 154,
+	ifType_compositeLink_c = 155,
+	ifType_ss7SigLink_c = 156,
+	ifType_propWirelessP2P_c = 157,
+	ifType_frForward_c = 158,
+	ifType_rfc1483_c = 159,
+	ifType_usb_c = 160,
+	ifType_ieee8023adLag_c = 161,
+	ifType_bgppolicyaccounting_c = 162,
+	ifType_frf16MfrBundle_c = 163,
+	ifType_h323Gatekeeper_c = 164,
+	ifType_h323Proxy_c = 165,
+	ifType_mpls_c = 166,
+	ifType_mfSigLink_c = 167,
+	ifType_hdsl2_c = 168,
+	ifType_shdsl_c = 169,
+	ifType_ds1FDL_c = 170,
+	ifType_pos_c = 171,
+	ifType_dvbAsiIn_c = 172,
+	ifType_dvbAsiOut_c = 173,
+	ifType_plc_c = 174,
+	ifType_nfas_c = 175,
+	ifType_tr008_c = 176,
+	ifType_gr303RDT_c = 177,
+	ifType_gr303IDT_c = 178,
+	ifType_isup_c = 179,
+	ifType_propDocsWirelessMaclayer_c = 180,
+	ifType_propDocsWirelessDownstream_c = 181,
+	ifType_propDocsWirelessUpstream_c = 182,
+	ifType_hiperlan2_c = 183,
+	ifType_propBWAp2Mp_c = 184,
+	ifType_sonetOverheadChannel_c = 185,
+	ifType_digitalWrapperOverheadChannel_c = 186,
+	ifType_aal2_c = 187,
+	ifType_radioMAC_c = 188,
+	ifType_atmRadio_c = 189,
+	ifType_imt_c = 190,
+	ifType_mvl_c = 191,
+	ifType_reachDSL_c = 192,
+	ifType_frDlciEndPt_c = 193,
+	ifType_atmVciEndPt_c = 194,
+	ifType_opticalChannel_c = 195,
+	ifType_opticalTransport_c = 196,
+	ifType_propAtm_c = 197,
+	ifType_voiceOverCable_c = 198,
+	ifType_infiniband_c = 199,
+	ifType_teLink_c = 200,
+	ifType_q2931_c = 201,
+	ifType_virtualTg_c = 202,
+	ifType_sipTg_c = 203,
+	ifType_sipSig_c = 204,
+	ifType_docsCableUpstreamChannel_c = 205,
+	ifType_econet_c = 206,
+	ifType_pon155_c = 207,
+	ifType_pon622_c = 208,
+	ifType_bridge_c = 209,
+	ifType_linegroup_c = 210,
+	ifType_voiceEMFGD_c = 211,
+	ifType_voiceFGDEANA_c = 212,
+	ifType_voiceDID_c = 213,
+	ifType_mpegTransport_c = 214,
+	ifType_sixToFour_c = 215,
+	ifType_gtp_c = 216,
+	ifType_pdnEtherLoop1_c = 217,
+	ifType_pdnEtherLoop2_c = 218,
+	ifType_opticalChannelGroup_c = 219,
+	ifType_homepna_c = 220,
+	ifType_gfp_c = 221,
+	ifType_ciscoISLvlan_c = 222,
+	ifType_actelisMetaLOOP_c = 223,
+	ifType_fcipLink_c = 224,
+	ifType_rpr_c = 225,
+	ifType_qam_c = 226,
+	ifType_lmp_c = 227,
+	ifType_cblVectaStar_c = 228,
+	ifType_docsCableMCmtsDownstream_c = 229,
+	ifType_adsl2_c = 230,
+	ifType_macSecControlledIF_c = 231,
+	ifType_macSecUncontrolledIF_c = 232,
+	ifType_aviciOpticalEther_c = 233,
+	ifType_atmbond_c = 234,
+	ifType_voiceFGDOS_c = 235,
+	ifType_mocaVersion1_c = 236,
+	ifType_ieee80216WMAN_c = 237,
+	ifType_adsl2plus_c = 238,
+	ifType_dvbRcsMacLayer_c = 239,
+	ifType_dvbTdm_c = 240,
+	ifType_dvbRcsTdma_c = 241,
+	ifType_x86Laps_c = 242,
+	ifType_wwanPP_c = 243,
+	ifType_wwanPP2_c = 244,
+	ifType_voiceEBS_c = 245,
+	ifType_ifPwType_c = 246,
+	ifType_ilan_c = 247,
+	ifType_pip_c = 248,
+	ifType_aluELP_c = 249,
+	ifType_gpon_c = 250,
+	ifType_vdsl2_c = 251,
+	ifType_capwapDot11Profile_c = 252,
+	ifType_capwapDot11Bss_c = 253,
+	ifType_capwapWtpVirtualRadio_c = 254,
+	ifType_bits_c = 255,
+	ifType_docsCableUpstreamRfPort_c = 256,
+	ifType_cableDownstreamRfPort_c = 257,
+	ifType_vmwareVirtualNic_c = 258,
+	ifType_ieee802154_c = 259,
+	ifType_otnOdu_c = 260,
+	ifType_otnOtu_c = 261,
+	ifType_ifVfiType_c = 262,
+	ifType_g9981_c = 263,
+	ifType_g9982_c = 264,
+	ifType_g9983_c = 265,
+	ifType_aluEpon_c = 266,
+	ifType_aluEponOnu_c = 267,
+	ifType_aluEponPhysicalUni_c = 268,
+	ifType_aluEponLogicalLink_c = 269,
+	ifType_aluGponOnu_c = 270,
+	ifType_aluGponPhysicalUni_c = 271,
+	ifType_vmwareNicTeam_c = 272,
+
+	/* enums for column ifAdminStatus */
+	ifAdminStatus_up_c = 1,
+	ifAdminStatus_down_c = 2,
+	ifAdminStatus_testing_c = 3,
+
+	/* enums for column ifOperStatus */
+	ifOperStatus_up_c = 1,
+	ifOperStatus_down_c = 2,
+	ifOperStatus_testing_c = 3,
+	ifOperStatus_unknown_c = 4,
+	ifOperStatus_dormant_c = 5,
+	ifOperStatus_notPresent_c = 6,
+	ifOperStatus_lowerLayerDown_c = 7,
+};
+
+/* table ifTable row entry data structure */
+typedef struct ifEntry_t
+{
+	/* Index values */
+	uint32_t u32Index;
+	
+	/* Column values */
+	uint8_t au8Descr[32];
+	size_t u16Descr_len;	/* # of uint8_t elements */
+	int32_t i32Type;
+	int32_t i32Mtu;
+	uint32_t u32Speed;
+	uint8_t au8PhysAddress[8];
+	size_t u16PhysAddress_len;	/* # of uint8_t elements */
+	int32_t i32AdminStatus;
+	int32_t i32OperStatus;
+	uint32_t u32LastChange;
+	uint32_t u32InOctets;
+	uint32_t u32InUcastPkts;
+	uint32_t u32InDiscards;
+	uint32_t u32InErrors;
+	uint32_t u32InUnknownProtos;
+	uint32_t u32OutOctets;
+	uint32_t u32OutUcastPkts;
+	uint32_t u32OutDiscards;
+	uint32_t u32OutErrors;
+	
+	ifXEntry_t oX;
+	neIfEntry_t oNe;
+	
+	uint32_t u32NumReferences;
+	
+	xBTree_Node_t oBTreeNode;
+} ifEntry_t;
+
+extern xBTree_t oIfTable_BTree;
+
+/* ifTable table mapper */
+void ifTable_init (void);
+ifEntry_t * ifTable_createEntry (
+	uint32_t u32Index);
+ifEntry_t * ifTable_getByIndex (
+	uint32_t u32Index);
+ifEntry_t * ifTable_getNextIndex (
+	uint32_t u32Index);
+#define ifTable_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifEntry_t, oNe))
+#define ifTable_getByIfXEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifEntry_t, oX))
+void ifTable_removeEntry (ifEntry_t *poEntry);
+ifEntry_t * ifTable_createExt (
+	uint32_t u32Index);
+bool ifTable_removeExt (ifEntry_t *poEntry);
+bool ifTable_createHier (ifEntry_t *poEntry);
+bool ifTable_removeHier (ifEntry_t *poEntry);
+bool ifTable_getByIndexExt (
+	uint32_t u32Index, bool bWrLock,
+	ifEntry_t **ppoIfEntry);
+bool ifTable_createReference (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	int32_t i32AdminStatus,
+	bool bCreate, bool bReference, bool bActivate,
+	ifEntry_t **ppoIfEntry);
+bool ifTable_removeReference (
+	uint32_t u32IfIndex,
+	bool bCreate, bool bReference, bool bActivate);
+bool ifAdminStatus_handler (
+	ifEntry_t *poEntry,
+	int32_t i32AdminStatus, bool bForce);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point ifTable_getFirst;
+Netsnmp_Next_Data_Point ifTable_getNext;
+Netsnmp_Get_Data_Point ifTable_get;
+Netsnmp_Node_Handler ifTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+enum
+{
 	ifFlags_neCreated_c = 0,
 	ifFlags_ifCreated_c = 1,
 	ifFlags_ifXCreated_c = 2,
