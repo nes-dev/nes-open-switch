@@ -1088,9 +1088,14 @@ typedef struct ifEntry_t
 	uint32_t u32NumReferences;
 	
 	xBTree_Node_t oBTreeNode;
+	xRwLock_t oLock;
 } ifEntry_t;
 
 extern xBTree_t oIfTable_BTree;
+
+#define ifEntry_rdLock(poEntry) (xRwLock_rdLock (&(poEntry)->oLock))
+#define ifEntry_wrLock(poEntry) (xRwLock_wrLock (&(poEntry)->oLock))
+#define ifEntry_unLock(poEntry) (xRwLock_unlock (&(poEntry)->oLock))
 
 /* ifTable table mapper */
 void ifTable_init (void);

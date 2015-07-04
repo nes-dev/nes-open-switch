@@ -525,19 +525,24 @@ ifTable_createEntry (
 	uint32_t u32Index)
 {
 	register ifEntry_t *poEntry = NULL;
-	register ifData_t *poIfData = NULL;
 	
-	if ((poIfData = ifData_getByIndex (u32Index)) == NULL ||
-		xBitmap_getBit (poIfData->au8Flags, ifFlags_ifCreated_c))
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
-	poEntry = &poIfData->oIf;
+	
+	poEntry->u32Index = u32Index;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIfTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
 	
 	poEntry->i32AdminStatus = ifAdminStatus_down_c;
 	poEntry->i32OperStatus = xOperStatus_notPresent_c;
 	
-	xBitmap_setBit (poIfData->au8Flags, ifFlags_ifCreated_c, 1);
+	xRwLock_init (&poEntry->oLock, NULL);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfTable_BTree);
 	return poEntry;
 }
 
@@ -545,44 +550,61 @@ ifEntry_t *
 ifTable_getByIndex (
 	uint32_t u32Index)
 {
-	register ifData_t *poIfData = NULL;
+	register ifEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poIfData = ifData_getByIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poIfData->au8Flags, ifFlags_ifCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poIfData->oIf;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIfTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ifEntry_t, oBTreeNode);
 }
 
 ifEntry_t *
 ifTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register ifData_t *poIfData = NULL;
+	register ifEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poIfData = ifData_getNextIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poIfData->au8Flags, ifFlags_ifCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poIfData->oIf;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIfTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, ifEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
 ifTable_removeEntry (ifEntry_t *poEntry)
 {
-	if (poEntry == NULL)
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oIfTable_BTree) == NULL)
 	{
-		return;
+		return;    /* Nothing to remove */
 	}
 	
-	register ifData_t *poIfData = ifData_getByIfEntry (poEntry);
-	
-	xBitmap_setBit (poIfData->au8Flags, ifFlags_ifCreated_c, 0);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfTable_BTree);
+	xRwLock_destroy (&poEntry->oLock);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -638,22 +660,26 @@ bool
 ifTable_createHier (
 	ifEntry_t *poEntry)
 {
-	register ifData_t *poIfData = ifData_getByIfEntry (poEntry);
+	register bool bRetCode = false;
+	register bool bStackLocked = false;
 	
-	if (ifXTable_getByIndex (poIfData->u32Index) == NULL &&
-		ifXTable_createEntry (poIfData->u32Index) == NULL)
+	if (ifXTable_getByIndex (poEntry->u32Index) == NULL &&
+		ifXTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto ifTable_createHier_cleanup;
 	}
 	
+	ifStack_wrLock ();
+	bStackLocked = true;
+	
 	{
 		register ifStackEntry_t *poLowerStackEntry = NULL;
 		
-		if ((poLowerStackEntry = ifStackTable_getByIndex (poIfData->u32Index, 0)) == NULL &&
-			(poLowerStackEntry = ifStackTable_getNextIndex (poIfData->u32Index, 0)) != NULL &&
-			poLowerStackEntry->u32HigherLayer != poIfData->u32Index)
+		if ((poLowerStackEntry = ifStackTable_getByIndex (poEntry->u32Index, 0)) == NULL &&
+			(poLowerStackEntry = ifStackTable_getNextIndex (poEntry->u32Index, 0)) != NULL &&
+			poLowerStackEntry->u32HigherLayer != poEntry->u32Index)
 		{
-			if ((poLowerStackEntry = ifStackTable_createExt (poIfData->u32Index, 0)) == NULL)
+			if ((poLowerStackEntry = ifStackTable_createExt (poEntry->u32Index, 0)) == NULL)
 			{
 				goto ifTable_createHier_cleanup;
 			}
@@ -665,11 +691,11 @@ ifTable_createHier (
 	{
 		register ifStackEntry_t *poUpperStackEntry = NULL;
 		
-		if ((poUpperStackEntry = ifStackTable_getByIndex (0, poIfData->u32Index)) == NULL &&
-			(poUpperStackEntry = ifStackTable_LToH_getNextIndex (0, poIfData->u32Index)) != NULL &&
-			poUpperStackEntry->u32LowerLayer != poIfData->u32Index)
+		if ((poUpperStackEntry = ifStackTable_getByIndex (0, poEntry->u32Index)) == NULL &&
+			(poUpperStackEntry = ifStackTable_LToH_getNextIndex (0, poEntry->u32Index)) != NULL &&
+			poUpperStackEntry->u32LowerLayer != poEntry->u32Index)
 		{
-			if ((poUpperStackEntry = ifStackTable_createExt (0, poIfData->u32Index)) == NULL)
+			if ((poUpperStackEntry = ifStackTable_createExt (0, poEntry->u32Index)) == NULL)
 			{
 				goto ifTable_createHier_cleanup;
 			}
@@ -678,14 +704,17 @@ ifTable_createHier (
 		}
 	}
 	
+	ifStack_unLock ();
+	bStackLocked = false;
+	
 	{
 		register ifRcvAddressEntry_t *poIfRcvAddressEntry = NULL;
 		uint8_t au8Address[sizeof (poIfRcvAddressEntry->au8Address)] = {0};
 		size_t u16Address_len = 0;
 		
 		while (
-			(poIfRcvAddressEntry = ifRcvAddressTable_getNextIndex (poIfData->u32Index, au8Address, u16Address_len)) != NULL &&
-			poIfRcvAddressEntry->u32Index == poIfData->u32Index)
+			(poIfRcvAddressEntry = ifRcvAddressTable_getNextIndex (poEntry->u32Index, au8Address, u16Address_len)) != NULL &&
+			poIfRcvAddressEntry->u32Index == poEntry->u32Index)
 		{
 			memcpy (au8Address, poIfRcvAddressEntry->au8Address, sizeof (au8Address));
 			u16Address_len = poIfRcvAddressEntry->u16Address_len;
@@ -694,56 +723,72 @@ ifTable_createHier (
 		}
 	}
 	
-	return true;
-	
+	bRetCode = true;
 	
 ifTable_createHier_cleanup:
 	
-	ifTable_removeHier (poEntry);
-	return false;
+	bStackLocked ? ifStack_unLock (): false;
+	!bRetCode ? ifTable_removeHier (poEntry): false;
+	return bRetCode;
 }
 
 bool
 ifTable_removeHier (
 	ifEntry_t *poEntry)
 {
+	register bool bStackLocked = false;
 	register uint32_t u32Index = 0;
-	register ifData_t *poIfData = ifData_getByIfEntry (poEntry);
-	register ifXEntry_t *poIfXEntry = NULL;
-	register ifStackEntry_t *poLowerStackEntry = NULL;
-	register ifStackEntry_t *poUpperStackEntry = NULL;
 	
-	if ((poUpperStackEntry = ifStackTable_getByIndex (0, poIfData->u32Index)) != NULL)
-	{
-		ifStackTable_removeExt (poUpperStackEntry);
-	}
-	u32Index = 0;
-	while (
-		(poUpperStackEntry = ifStackTable_LToH_getNextIndex (u32Index, poIfData->u32Index)) != NULL &&
-		poUpperStackEntry->u32LowerLayer == poIfData->u32Index)
-	{
-		u32Index = poUpperStackEntry->u32HigherLayer;
-		ifStackTable_removeExt (poUpperStackEntry);
-	}
+	ifStack_wrLock ();
+	bStackLocked = true;
 	
-	if ((poLowerStackEntry = ifStackTable_getByIndex (poIfData->u32Index, 0)) != NULL)
 	{
-		ifStackTable_removeExt (poLowerStackEntry);
-	}
-	u32Index = 0;
-	while (
-		(poLowerStackEntry = ifStackTable_getNextIndex (poIfData->u32Index, u32Index)) != NULL &&
-		poLowerStackEntry->u32HigherLayer == poIfData->u32Index)
-	{
-		u32Index = poLowerStackEntry->u32LowerLayer;
-		ifStackTable_removeExt (poLowerStackEntry);
+		register ifStackEntry_t *poUpperStackEntry = NULL;
+		
+		if ((poUpperStackEntry = ifStackTable_getByIndex (0, poEntry->u32Index)) != NULL)
+		{
+			ifStackTable_removeExt (poUpperStackEntry);
+		}
+		u32Index = 0;
+		while (
+			(poUpperStackEntry = ifStackTable_LToH_getNextIndex (u32Index, poEntry->u32Index)) != NULL &&
+			poUpperStackEntry->u32LowerLayer == poEntry->u32Index)
+		{
+			u32Index = poUpperStackEntry->u32HigherLayer;
+			ifStackTable_removeExt (poUpperStackEntry);
+		}
 	}
 	
-	if ((poIfXEntry = ifXTable_getByIndex (poIfData->u32Index)) != NULL)
 	{
-		ifXTable_removeEntry (poIfXEntry);
+		register ifStackEntry_t *poLowerStackEntry = NULL;
+		
+		if ((poLowerStackEntry = ifStackTable_getByIndex (poEntry->u32Index, 0)) != NULL)
+		{
+			ifStackTable_removeExt (poLowerStackEntry);
+		}
+		u32Index = 0;
+		while (
+			(poLowerStackEntry = ifStackTable_getNextIndex (poEntry->u32Index, u32Index)) != NULL &&
+			poLowerStackEntry->u32HigherLayer == poEntry->u32Index)
+		{
+			u32Index = poLowerStackEntry->u32LowerLayer;
+			ifStackTable_removeExt (poLowerStackEntry);
+		}
 	}
 	
+	ifStack_unLock ();
+	bStackLocked = false;
+	
+	{
+		register ifXEntry_t *poIfXEntry = NULL;
+		
+		if ((poIfXEntry = ifXTable_getByIndex (poEntry->u32Index)) != NULL)
+		{
+			ifXTable_removeEntry (poIfXEntry);
+		}
+	}
+	
+	bStackLocked ? ifStack_unLock (): false;
 	return true;
 }
 
