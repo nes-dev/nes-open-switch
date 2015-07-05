@@ -714,7 +714,7 @@ typedef struct neIfEntry_t
 // 	xBTree_Node_t oBTreeNode;
 } neIfEntry_t;
 
-extern xBTree_t oNeIfTable_BTree;
+// extern xBTree_t oNeIfTable_BTree;
 
 /* neIfTable table mapper */
 void neIfTable_init (void);

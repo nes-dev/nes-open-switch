@@ -797,7 +797,25 @@ ifTable_getByIndexExt (
 	uint32_t u32Index, bool bWrLock,
 	ifEntry_t **ppoEntry)
 {
-	return false;
+	register ifEntry_t *poEntry = NULL;
+	
+	ifTable_rdLock ();
+	
+	if ((poEntry = ifTable_getByIndex (u32Index)) == NULL)
+	{
+		goto ifTable_getByIndexExt_cleanup;
+	}
+	
+	if (ppoEntry != NULL)
+	{
+		bWrLock ? ifEntry_wrLock (poEntry): ifEntry_rdLock (poEntry);
+		*ppoEntry = poEntry;
+	}
+	
+ifTable_getByIndexExt_cleanup:
+	
+	ifTable_unLock ();
+	return poEntry != NULL;
 }
 
 bool
@@ -808,7 +826,81 @@ ifTable_createReference (
 	bool bCreate, bool bReference, bool bActivate,
 	ifEntry_t **ppoEntry)
 {
-	return false;
+	register bool bRetCode = false;
+	register ifEntry_t *poEntry = NULL;
+	
+	if (u32IfIndex == ifIndex_zero_c &&
+		(i32Type == 0 || !bCreate || ppoEntry == NULL))
+	{
+		goto ifTable_createReference_cleanup;
+	}
+	
+	
+	bCreate ? ifTable_wrLock (): ifTable_rdLock ();
+	
+	if (u32IfIndex != ifIndex_zero_c && (poEntry = ifTable_getByIndex (u32IfIndex)) != NULL)
+	{
+		if (i32Type != 0 && poEntry->i32Type != 0 && poEntry->i32Type != i32Type)
+		{
+			poEntry = NULL;
+			goto ifTable_createReference_ifUnlock;
+		}
+	}
+	else if (bCreate)
+	{
+		register neIfEntry_t *poNeIfEntry = NULL;
+		
+		if (u32IfIndex == ifIndex_zero_c)
+		{
+			goto ifTable_createReference_ifUnlock;
+		}
+		
+		if ((poNeIfEntry = neIfTable_createExt (u32IfIndex)) == NULL)
+		{
+			goto ifTable_createReference_ifUnlock;
+		}
+		
+		poEntry = ifTable_getByNeEntry (poNeIfEntry);
+	}
+	else
+	{
+		goto ifTable_createReference_ifUnlock;
+	}
+	
+	ifEntry_wrLock (poEntry);
+	
+ifTable_createReference_ifUnlock:
+	ifTable_unLock ();
+	if (poEntry == NULL)
+	{
+		goto ifTable_createReference_cleanup;
+	}
+	
+	i32Type != 0 ? (poEntry->oNe.i32Type = i32Type): false;
+	i32AdminStatus != 0 ? (poEntry->i32AdminStatus = i32AdminStatus): false;
+	
+	if (bReference)
+	{
+		poEntry->u32NumReferences++;
+	}
+	if (bActivate && !neIfRowStatus_handler (&poEntry->oNe, xRowStatus_active_c))
+	{
+		goto ifTable_createReference_cleanup;
+	}
+	
+	if (ppoEntry != NULL)
+	{
+		*ppoEntry = poEntry;
+		poEntry = NULL;
+	}
+	
+	bRetCode = true;
+	
+ifTable_createReference_cleanup:
+	
+	poEntry != NULL ? ifEntry_unLock (poEntry): false;
+	!bRetCode && u32IfIndex != ifIndex_zero_c ? ifTable_removeReference (u32IfIndex, bCreate, bReference, bActivate): false;
+	return bRetCode;
 }
 
 bool
@@ -816,7 +908,48 @@ ifTable_removeReference (
 	uint32_t u32IfIndex,
 	bool bCreate, bool bReference, bool bActivate)
 {
-	return false;
+	register bool bRetCode = false;
+	register ifEntry_t *poEntry = NULL;
+	
+	bCreate ? ifTable_wrLock (): ifTable_rdLock ();
+	
+	if ((poEntry = ifTable_getByIndex (u32IfIndex)) == NULL)
+	{
+		goto ifTable_removeReference_success;
+	}
+	ifEntry_wrLock (poEntry);
+	
+	if (bActivate && !neIfRowStatus_handler (&poEntry->oNe, xRowStatus_destroy_c))
+	{
+		goto ifTable_removeReference_cleanup;
+	}
+	if (bReference && poEntry->u32NumReferences > 0)
+	{
+		poEntry->u32NumReferences--;
+	}
+	if (bCreate && poEntry->u32NumReferences == 0)
+	{
+		xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfTable_BTree);
+		ifEntry_unLock (poEntry);
+		
+		register ifEntry_t *poTmpEntry = poEntry;
+		
+		poEntry = NULL;
+		if (!neIfTable_removeExt (&poTmpEntry->oNe))
+		{
+			goto ifTable_removeReference_cleanup;
+		}
+	}
+	
+ifTable_removeReference_success:
+	
+	bRetCode = true;
+	
+ifTable_removeReference_cleanup:
+	
+	poEntry != NULL ? ifEntry_unLock (poEntry): false;
+	ifTable_unLock ();
+	return bRetCode;
 }
 
 bool
@@ -909,18 +1042,18 @@ ifTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ifData_t *poEntry = NULL;
+	ifEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ifData_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ifEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) &poEntry->oIf;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIfData_BTree);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIfTable_BTree);
 	return put_index_data;
 }
 
@@ -973,12 +1106,10 @@ ifTable_mapper (
 				continue;
 			}
 			
-			register ifData_t *poIfData = ifData_getByIfEntry (table_entry);
-			
 			switch (table_info->colnum)
 			{
 			case IFINDEX:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, poIfData->u32Index);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32Index);
 				break;
 			case IFDESCR:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Descr, table_entry->u16Descr_len);
