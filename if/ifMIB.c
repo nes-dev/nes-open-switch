@@ -2918,13 +2918,13 @@ neIfTable_createEntry (
 	uint32_t u32IfIndex)
 {
 	register neIfEntry_t *poEntry = NULL;
-	register ifData_t *poIfData = NULL;
+	register ifEntry_t *poIfEntry = NULL;
 	
-	if ((poIfData = ifData_createEntry (u32IfIndex)) == NULL)
+	if ((poIfEntry = ifTable_createExt (u32IfIndex)) == NULL)
 	{
 		return NULL;
 	}
-	poEntry = &poIfData->oNe;
+	poEntry = &poIfEntry->oNe;
 	
 	/*poEntry->au8Name = ""*/;
 	/*poEntry->au8Descr = ""*/;
@@ -2933,7 +2933,6 @@ neIfTable_createEntry (
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neIfStorageType_volatile_c;
 	
-	xBitmap_setBit (poIfData->au8Flags, ifFlags_neCreated_c, 1); 
 	return poEntry;
 }
 
@@ -2941,30 +2940,28 @@ neIfEntry_t *
 neIfTable_getByIndex (
 	uint32_t u32IfIndex)
 {
-	register ifData_t *poIfData = NULL;
+	register ifEntry_t *poIfEntry = NULL;
 	
-	if ((poIfData = ifData_getByIndex (u32IfIndex)) == NULL ||
-		!xBitmap_getBit (poIfData->au8Flags, ifFlags_neCreated_c))
+	if ((poIfEntry = ifTable_getByIndex (u32IfIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poIfData->oNe;
+	return &poIfEntry->oNe;
 }
 
 neIfEntry_t *
 neIfTable_getNextIndex (
 	uint32_t u32IfIndex)
 {
-	register ifData_t *poIfData = NULL;
+	register ifEntry_t *poIfEntry = NULL;
 	
-	if ((poIfData = ifData_getNextIndex (u32IfIndex)) == NULL ||
-		!xBitmap_getBit (poIfData->au8Flags, ifFlags_neCreated_c))
+	if ((poIfEntry = ifTable_getNextIndex (u32IfIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poIfData->oNe;
+	return &poIfEntry->oNe;
 }
 
 /* remove a row from the table */
@@ -2976,7 +2973,7 @@ neIfTable_removeEntry (neIfEntry_t *poEntry)
 		return;
 	}
 	
-	ifData_removeEntry (ifData_getByNeEntry (poEntry));
+	ifTable_removeExt (ifTable_getByNeEntry (poEntry));
 	return;
 }
 
@@ -3000,7 +2997,6 @@ neIfTable_createExt (
 		goto neIfTable_createExt_cleanup;
 	}
 	
-	
 neIfTable_createExt_cleanup:
 	
 	return poEntry;
@@ -3010,14 +3006,18 @@ bool
 neIfTable_removeExt (neIfEntry_t *poEntry)
 {
 	register bool bRetCode = false;
+	register ifEntry_t *poIfEntry = ifTable_getByNeEntry (poEntry);
 	
 	if (!neIfTable_removeHier (poEntry))
 	{
 		goto neIfTable_removeExt_cleanup;
 	}
-	neIfTable_removeEntry (poEntry);
-	bRetCode = true;
+	if (poIfEntry->u32NumReferences == 0)
+	{
+		neIfTable_removeEntry (poEntry);
+	}
 	
+	bRetCode = true;
 	
 neIfTable_removeExt_cleanup:
 	
@@ -3028,103 +3028,84 @@ bool
 neIfTable_createHier (
 	neIfEntry_t *poEntry)
 {
-	register ifData_t *poIfData = ifData_getByNeEntry (poEntry);
+	register bool bRetCode = false;
 	
-	if (ifTable_getByIndex (poIfData->u32Index) == NULL &&
-		ifTable_createExt (poIfData->u32Index) == NULL)
-	{
-		goto neIfTable_createHier_cleanup;
-	}
+	bRetCode = true;
 	
-	return true;
+// neIfTable_createHier_cleanup:
 	
-	
-neIfTable_createHier_cleanup:
-	
-	neIfTable_removeHier (poEntry);
-	return false;
+	!bRetCode ? neIfTable_removeHier (poEntry): false;
+	return bRetCode;
 }
 
 bool
 neIfTable_removeHier (
 	neIfEntry_t *poEntry)
 {
-	register ifEntry_t *poIfEntry = NULL;
-	register ifData_t *poIfData = ifData_getByNeEntry (poEntry);
+	register bool bRetCode = false;
 	
-	if (poIfData->u32NumReferences == 0 &&
-		(poIfEntry = ifTable_getByIndex (poIfData->u32Index)) != NULL)
-	{
-		ifTable_removeExt (poIfEntry);
-	}
+	bRetCode = true;
 	
-	return true;
+// neIfTable_removeHier_cleanup:
+	
+	return bRetCode;
 }
 
 bool
 neIfRowStatus_handler (
-	neIfEntry_t *poEntry,
-	uint8_t u8RowStatus)
+	neIfEntry_t *poEntry, uint8_t u8RowStatus)
 {
-	register ifData_t *poIfData = ifData_getByNeEntry (poEntry);
+	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
+	register ifEntry_t *poIfEntry = ifTable_getByNeEntry (poEntry);
 	
-	if (!xBitmap_getBit (poIfData->au8Flags, ifFlags_ifCreated_c) ||
-		!xBitmap_getBit (poIfData->au8Flags, ifFlags_ifXCreated_c))
-	{
-		goto neIfRowStatus_handler_cleanup;
-	}
-	
-	if (poEntry->u8RowStatus == u8RowStatus)
+	if (poEntry->u8RowStatus == u8RealStatus)
 	{
 		goto neIfRowStatus_handler_success;
 	}
 	
-	switch (u8RowStatus & xRowStatus_mask_c)
+	switch (u8RealStatus)
 	{
 	case xRowStatus_active_c:
-	{
-		if (poEntry->i32Type == 0)
+		if (poEntry->i32Type == 0 ||
+			(poIfEntry->i32Type != 0 && poEntry->i32Type != poIfEntry->i32Type))
 		{
 			goto neIfRowStatus_handler_cleanup;
 		}
 		
-		poIfData->oIf.i32Type = poEntry->i32Type;
-		poIfData->oIf.i32Mtu = poEntry->i32Mtu;
-		poIfData->oIf.u32Speed = 0;
-		xNumber_toUint32 (poEntry->au8Speed, sizeof (poEntry->au8Speed), 4, 7, &poIfData->oIf.u32Speed);
-		poIfData->oIfX.u32HighSpeed = 0;
-		xNumber_toUint32 (poEntry->au8Speed, sizeof (poEntry->au8Speed), 0, 3, &poIfData->oIfX.u32HighSpeed);
+		poIfEntry->i32Type = poEntry->i32Type;
+		poIfEntry->i32Mtu = poEntry->i32Mtu;
+		poIfEntry->u32Speed = 0;
+		xNumber_toUint32 (poEntry->au8Speed, sizeof (poEntry->au8Speed), 4, 7, &poIfEntry->u32Speed);
+		poIfEntry->oX.u32HighSpeed = 0;
+		xNumber_toUint32 (poEntry->au8Speed, sizeof (poEntry->au8Speed), 0, 3, &poIfEntry->oX.u32HighSpeed);
 		
 		/* TODO */
-		poEntry->u8RowStatus = xRowStatus_active_c;
 		
-		if (!ifAdminStatus_handler (&poIfData->oIf, poIfData->oIf.i32AdminStatus, true))
+		poEntry->u8RowStatus = u8RealStatus;
+		
+		if (!ifAdminStatus_handler (poIfEntry, poIfEntry->i32AdminStatus, true))
 		{
 			goto neIfRowStatus_handler_cleanup;
 		}
 		break;
-	}
-	
+		
 	case xRowStatus_notInService_c:
-		if (!ifAdminStatus_handler (&poIfData->oIf, xAdminStatus_down_c | xAdminStatus_fromParent_c, false))
+		if (!ifAdminStatus_handler (poIfEntry, xAdminStatus_down_c | xAdminStatus_fromParent_c, false))
 		{
 			goto neIfRowStatus_handler_cleanup;
 		}
 		
 		/* TODO */
-		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		poEntry->u8RowStatus = u8RealStatus;
 		break;
 		
 	case xRowStatus_createAndGo_c:
-		poEntry->u8RowStatus = xRowStatus_notReady_c;
-		break;
+		goto neIfRowStatus_handler_cleanup;
 		
 	case xRowStatus_createAndWait_c:
-		poEntry->u8RowStatus = xRowStatus_notInService_c;
-		break;
-		
 	case xRowStatus_destroy_c:
-		if (!ifAdminStatus_handler (&poIfData->oIf, xAdminStatus_down_c | xAdminStatus_fromParent_c, false))
+		if (!ifAdminStatus_handler (poIfEntry, xAdminStatus_down_c | xAdminStatus_fromParent_c, false))
 		{
 			goto neIfRowStatus_handler_cleanup;
 		}
@@ -3136,12 +3117,11 @@ neIfRowStatus_handler (
 	
 neIfRowStatus_handler_success:
 	
-	return true;
-	
+	bRetCode = true;
 	
 neIfRowStatus_handler_cleanup:
 	
-	return false;
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
@@ -3150,7 +3130,7 @@ neIfTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oIfData_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oIfTable_BTree);
 	return neIfTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -3159,18 +3139,18 @@ neIfTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	ifData_t *poEntry = NULL;
+	ifEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, ifData_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, ifEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) &poEntry->oNe;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIfData_BTree);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIfTable_BTree);
 	return put_index_data;
 }
 
@@ -3179,10 +3159,10 @@ neIfTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neIfEntry_t *poEntry = NULL;
+	ifEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = neIfTable_getByIndex (
+	poEntry = ifTable_getByIndex (
 		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
@@ -3204,6 +3184,7 @@ neIfTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	neIfEntry_t *table_entry;
+	register ifEntry_t *poEntry;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -3215,13 +3196,14 @@ neIfTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIfEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ifEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3269,8 +3251,9 @@ neIfTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIfEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ifEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3357,9 +3340,10 @@ neIfTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIfEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ifEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3428,12 +3412,13 @@ neIfTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neIfEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ifEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3454,8 +3439,9 @@ neIfTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neIfEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ifEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3596,8 +3582,9 @@ neIfTable_mapper (
 		/* Check the internal consistency of an active row */
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIfEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ifEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3624,12 +3611,13 @@ neIfTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neIfEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ifEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3679,8 +3667,9 @@ neIfTable_mapper (
 	case MODE_SET_COMMIT:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neIfEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (ifEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
