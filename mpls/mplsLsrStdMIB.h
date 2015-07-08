@@ -100,63 +100,6 @@ Netsnmp_Node_Handler gmplsLabelObjects_mapper;
  *	table mapper(s)
  */
 /**
- *	table mplsInterfaceTable definitions
- */
-#define MPLSINTERFACEINDEX 1
-#define MPLSINTERFACELABELMININ 2
-#define MPLSINTERFACELABELMAXIN 3
-#define MPLSINTERFACELABELMINOUT 4
-#define MPLSINTERFACELABELMAXOUT 5
-#define MPLSINTERFACETOTALBANDWIDTH 6
-#define MPLSINTERFACEAVAILABLEBANDWIDTH 7
-#define MPLSINTERFACELABELPARTICIPATIONTYPE 8
-
-enum
-{
-	/* enums for column mplsInterfaceLabelParticipationType */
-	mplsInterfaceLabelParticipationType_perPlatform_c = 0,
-	mplsInterfaceLabelParticipationType_perInterface_c = 1,
-};
-
-/* table mplsInterfaceTable row entry data structure */
-typedef struct mplsInterfaceEntry_t
-{
-	/* Index values */
-	uint32_t u32Index;
-	
-	/* Column values */
-	uint32_t u32LabelMinIn;
-	uint32_t u32LabelMaxIn;
-	uint32_t u32LabelMinOut;
-	uint32_t u32LabelMaxOut;
-	uint32_t u32TotalBandwidth;
-	uint32_t u32AvailableBandwidth;
-	uint8_t au8LabelParticipationType[1];
-	size_t u16LabelParticipationType_len;	/* # of uint8_t elements */
-	
-	xBTree_Node_t oBTreeNode;
-} mplsInterfaceEntry_t;
-
-extern xBTree_t oMplsInterfaceTable_BTree;
-
-/* mplsInterfaceTable table mapper */
-void mplsInterfaceTable_init (void);
-mplsInterfaceEntry_t * mplsInterfaceTable_createEntry (
-	uint32_t u32Index);
-mplsInterfaceEntry_t * mplsInterfaceTable_getByIndex (
-	uint32_t u32Index);
-mplsInterfaceEntry_t * mplsInterfaceTable_getNextIndex (
-	uint32_t u32Index);
-void mplsInterfaceTable_removeEntry (mplsInterfaceEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point mplsInterfaceTable_getFirst;
-Netsnmp_Next_Data_Point mplsInterfaceTable_getNext;
-Netsnmp_Get_Data_Point mplsInterfaceTable_get;
-Netsnmp_Node_Handler mplsInterfaceTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
  *	table mplsInterfacePerfTable definitions
  */
 #define MPLSINTERFACEPERFINLABELSINUSE 1
@@ -986,6 +929,67 @@ Netsnmp_First_Data_Point gmplsLabelTable_getFirst;
 Netsnmp_Next_Data_Point gmplsLabelTable_getNext;
 Netsnmp_Get_Data_Point gmplsLabelTable_get;
 Netsnmp_Node_Handler gmplsLabelTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table mplsInterfaceTable definitions
+ */
+#define MPLSINTERFACEINDEX 1
+#define MPLSINTERFACELABELMININ 2
+#define MPLSINTERFACELABELMAXIN 3
+#define MPLSINTERFACELABELMINOUT 4
+#define MPLSINTERFACELABELMAXOUT 5
+#define MPLSINTERFACETOTALBANDWIDTH 6
+#define MPLSINTERFACEAVAILABLEBANDWIDTH 7
+#define MPLSINTERFACELABELPARTICIPATIONTYPE 8
+
+enum
+{
+	/* enums for column mplsInterfaceLabelParticipationType */
+	mplsInterfaceLabelParticipationType_perPlatform_c = 0,
+	mplsInterfaceLabelParticipationType_perInterface_c = 1,
+};
+
+/* table mplsInterfaceTable row entry data structure */
+typedef struct mplsInterfaceEntry_t
+{
+	/* Index values */
+	uint32_t u32Index;
+	
+	/* Column values */
+	uint32_t u32LabelMinIn;
+	uint32_t u32LabelMaxIn;
+	uint32_t u32LabelMinOut;
+	uint32_t u32LabelMaxOut;
+	uint32_t u32TotalBandwidth;
+	uint32_t u32AvailableBandwidth;
+	uint8_t au8LabelParticipationType[1];
+	size_t u16LabelParticipationType_len;	/* # of uint8_t elements */
+	
+	gmplsInterfaceEntry_t oG;
+	
+	uint8_t u8RowStatus;
+	
+	xBTree_Node_t oBTreeNode;
+} mplsInterfaceEntry_t;
+
+extern xBTree_t oMplsInterfaceTable_BTree;
+
+/* mplsInterfaceTable table mapper */
+void mplsInterfaceTable_init (void);
+mplsInterfaceEntry_t * mplsInterfaceTable_createEntry (
+	uint32_t u32Index);
+mplsInterfaceEntry_t * mplsInterfaceTable_getByIndex (
+	uint32_t u32Index);
+mplsInterfaceEntry_t * mplsInterfaceTable_getNextIndex (
+	uint32_t u32Index);
+void mplsInterfaceTable_removeEntry (mplsInterfaceEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point mplsInterfaceTable_getFirst;
+Netsnmp_Next_Data_Point mplsInterfaceTable_getNext;
+Netsnmp_Get_Data_Point mplsInterfaceTable_get;
+Netsnmp_Node_Handler mplsInterfaceTable_mapper;
 #endif	/* SNMP_SRC */
 
 

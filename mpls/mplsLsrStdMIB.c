@@ -3766,43 +3766,23 @@ gmplsInterfaceTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-gmplsInterfaceTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register gmplsInterfaceEntry_t *pEntry1 = xBTree_entry (pNode1, gmplsInterfaceEntry_t, oBTreeNode);
-	register gmplsInterfaceEntry_t *pEntry2 = xBTree_entry (pNode2, gmplsInterfaceEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oGmplsInterfaceTable_BTree = xBTree_initInline (&gmplsInterfaceTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 gmplsInterfaceEntry_t *
 gmplsInterfaceTable_createEntry (
 	uint32_t u32Index)
 {
 	register gmplsInterfaceEntry_t *poEntry = NULL;
+	register mplsInterfaceEntry_t *poInterface = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poInterface = mplsInterfaceTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
-	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsInterfaceTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poInterface->oG;
 	
 	xBitmap_setBitsRev (poEntry->au8SignalingCaps, 1, 1, gmplsInterfaceSignalingCaps_rsvpGmpls_c);
 	poEntry->u32RsvpHelloPeriod = 3000;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oGmplsInterfaceTable_BTree);
 	return poEntry;
 }
 
@@ -3810,60 +3790,34 @@ gmplsInterfaceEntry_t *
 gmplsInterfaceTable_getByIndex (
 	uint32_t u32Index)
 {
-	register gmplsInterfaceEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsInterfaceEntry_t *poInterface = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poInterface = mplsInterfaceTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oGmplsInterfaceTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, gmplsInterfaceEntry_t, oBTreeNode);
+	return &poInterface->oG;
 }
 
 gmplsInterfaceEntry_t *
 gmplsInterfaceTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register gmplsInterfaceEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsInterfaceEntry_t *poInterface = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poInterface = mplsInterfaceTable_getNextIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oGmplsInterfaceTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, gmplsInterfaceEntry_t, oBTreeNode);
+	return &poInterface->oG;
 }
 
 /* remove a row from the table */
 void
 gmplsInterfaceTable_removeEntry (gmplsInterfaceEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsInterfaceTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oGmplsInterfaceTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -3873,7 +3827,7 @@ gmplsInterfaceTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oGmplsInterfaceTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsInterfaceTable_BTree);
 	return gmplsInterfaceTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -3882,18 +3836,18 @@ gmplsInterfaceTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	gmplsInterfaceEntry_t *poEntry = NULL;
+	mplsInterfaceEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, gmplsInterfaceEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, mplsInterfaceEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oGmplsInterfaceTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsInterfaceTable_BTree);
 	return put_index_data;
 }
 
@@ -3902,10 +3856,10 @@ gmplsInterfaceTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	gmplsInterfaceEntry_t *poEntry = NULL;
+	mplsInterfaceEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = gmplsInterfaceTable_getByIndex (
+	poEntry = mplsInterfaceTable_getByIndex (
 		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
@@ -3927,6 +3881,7 @@ gmplsInterfaceTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	gmplsInterfaceEntry_t *table_entry;
+	register mplsInterfaceEntry_t *poEntry = NULL;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -3938,13 +3893,14 @@ gmplsInterfaceTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oG;
 			
 			switch (table_info->colnum)
 			{
@@ -3968,8 +3924,9 @@ gmplsInterfaceTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oG;
 			
 			switch (table_info->colnum)
 			{
@@ -4000,40 +3957,23 @@ gmplsInterfaceTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			register netsnmp_variable_list *idx1 = table_info->indexes;
+			if (poEntry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			table_entry = &poEntry->oG;
 			
 			switch (table_info->colnum)
 			{
 			case GMPLSINTERFACESIGNALINGCAPS:
 			case GMPLSINTERFACERSVPHELLOPERIOD:
-				if (table_entry == NULL)
+				if (poEntry->u8RowStatus == xRowStatus_active_c || poEntry->u8RowStatus == xRowStatus_notReady_c)
 				{
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-						return SNMP_ERR_NOERROR;
-					}
-					
-					table_entry = gmplsInterfaceTable_createEntry (
-						*idx1->val.integer);
-					if (table_entry != NULL)
-					{
-						netsnmp_insert_iterator_context (request, table_entry);
-						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
-					}
-					else
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-						return SNMP_ERR_NOERROR;
-					}
-				}
-				break;
-			default:
-				if (table_entry == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
 				}
 				break;
 			}
@@ -4041,33 +3981,15 @@ gmplsInterfaceTable_mapper (
 		break;
 		
 	case MODE_SET_FREE:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
-			{
-				continue;
-			}
-			
-			switch (table_info->colnum)
-			{
-			case GMPLSINTERFACESIGNALINGCAPS:
-			case GMPLSINTERFACERSVPHELLOPERIOD:
-				gmplsInterfaceTable_removeEntry (table_entry);
-				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				break;
-			}
-		}
 		break;
 		
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oG;
 			
 			switch (table_info->colnum)
 			{
@@ -4111,12 +4033,13 @@ gmplsInterfaceTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (gmplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oG;
 			
 			switch (table_info->colnum)
 			{
