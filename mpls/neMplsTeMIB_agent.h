@@ -17,62 +17,25 @@
  *  License for the specific language governing permissions and limitations
  *  under the License.
  */
-//set ts=4 sw=4
 
-#ifndef __MPLS_MAIN_C__
-#	define __MPLS_MAIN_C__
+#ifndef __NEMPLSTEMIB_AGENT_H__
+#	define __NEMPLSTEMIB_AGENT_H__
 
-
-#include "neMplsLsrMIB_agent.h"
-#include "mplsLsrStdMIB_agent.h"
-#include "neMplsTeMIB_agent.h"
-#include "mplsTeStdMIB_agent.h"
-#include "mplsUtils.h"
-
-#include "mpls_ext.h"
-#include "mpls_defines.h"
-#include "switch_ext.h"
-
-#include "lib/thread.h"
+#	ifdef __cplusplus
+extern "C" {
+#	endif
 
 
-static xThreadInfo_t oMplsThread =
-{
-	.u32Index = XTHREAD_ID (ModuleId_mpls_c, 0),
-	.u8SchedPolicy = SCHED_RR,
-	.u8Priority = 1,
-	.poStart = &mpls_start,
-};
+
+/**
+ *	agent MIB function
+ */
+void neMplsTeMIB_init (void);
 
 
-void *
-mpls_main (void *pvArgv)
-{
-	mplsUtilsInit ();
-	
-	neMplsLsrMIB_init ();
-	mplsLsrStdMIB_init ();
-	neMplsTeMIB_init ();
-	mplsTeStdMIB_init ();
-	
-	if (xThread_create (&oMplsThread) == NULL)
-	{
-		Mpls_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
-	}
-	
-	return NULL;
+
+#	ifdef __cplusplus
 }
+#	endif
 
-void *
-mpls_start (void *pvArgv)
-{
-	while (1)
-	{
-		xThread_sleep (1);
-	}
-	return NULL;
-}
-
-
-#endif	// __MPLS_MAIN_C__
+#endif /* __NEMPLSTEMIB_AGENT_H__ */
