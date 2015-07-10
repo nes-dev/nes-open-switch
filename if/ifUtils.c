@@ -19,8 +19,8 @@
  */
 //set ts=4 sw=4
 
-#ifndef __IFUTILS_C__
-#	define __IFUTILS_C__
+#ifndef __IF_UTILS_C__
+#	define __IF_UTILS_C__
 
 
 
@@ -270,7 +270,6 @@ neIfStatus_change (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLo
 	
 	xBTree_scanSafe (pNode, pNextNode, pIfTree)
 	{
-		register ifData_t *poIfEntry = NULL;
 		register neIfStatusEntry_t *poEntry = xBTree_entry (pNode, neIfStatusEntry_t, oBTreeNode);
 		
 		if (poEntry->i32Type != 0 && i32Type != 0)
@@ -285,18 +284,20 @@ neIfStatus_change (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLo
 			}
 		}
 		
-		i32Type = poEntry->i32Type;
+		register ifEntry_t *poIfEntry = NULL;
 		
-		if ((poIfEntry = ifData_getByIndex (poEntry->u32Index)) == NULL)
+		if ((poIfEntry = ifTable_getByIndex (poEntry->u32Index)) == NULL)
 		{
+			xBTree_nodeRemove (&poEntry->oBTreeNode, pIfTree);
 			xBuffer_free (poEntry);
 			continue;
 		}
 		
-		ifData_rdLock (poIfEntry);
-		poEntry->i32Type = poIfEntry->oIf.i32Type;
-		ifData_unLock (poIfEntry);
+		ifEntry_rdLock (poIfEntry);
+		poEntry->i32Type = poIfEntry->i32Type;
+		ifEntry_unLock (poIfEntry);
 		
+		i32Type = poEntry->i32Type;
 		xBTree_nodeUpdate (&poEntry->oBTreeNode, pIfTree);
 	}
 	
@@ -346,7 +347,7 @@ neIfTypeStatusRx (
 	{
 		register uint32_t u32Index = 0;
 		register int32_t i32OperStatus = 0;
-		register ifData_t *poIfEntry = NULL;
+		register ifEntry_t *poIfEntry = NULL;
 		register neIfStatusEntry_t *poEntry = xBTree_entry (pNode, neIfStatusEntry_t, oBTreeNode);
 		
 		u32Index = poEntry->u32Index;
@@ -356,8 +357,8 @@ neIfTypeStatusRx (
 		
 		
 		if (u32Index == 0 ||
-			(poIfEntry = ifData_getByIndex (u32Index)) == NULL ||
-			!neIfTypeStatusModifier (poIfEntry, pfStatusModifier, i32OperStatus, bPropagate))
+			(poIfEntry = ifTable_getByIndex (u32Index)) == NULL /*||
+			!neIfTypeStatusModifier (poIfEntry, pfStatusModifier, i32OperStatus, bPropagate)*/)
 		{
 			continue;
 		}
@@ -375,14 +376,14 @@ neIfTypeStatusRx (
 			u32UpperIfIndex = poIfStackEntry->u32HigherLayer;
 			
 			if (u32UpperIfIndex == 0 ||
-				(poIfEntry = ifData_getByIndex (u32UpperIfIndex)) == NULL)
+				(poIfEntry = ifTable_getByIndex (u32UpperIfIndex)) == NULL)
 			{
 				continue;
 			}
 			
-			ifData_rdLock (poIfEntry);
-			i32UpperIfType = poIfEntry->oIf.i32Type;
-			ifData_unLock (poIfEntry);
+			ifEntry_rdLock (poIfEntry);
+			i32UpperIfType = poIfEntry->i32Type;
+			ifEntry_unLock (poIfEntry);
 			
 			if (neIfStatus_createEntry (i32UpperIfType, i32UpperIfStatus, u32UpperIfIndex, &oUpperIfTree) == NULL)
 			{
@@ -563,4 +564,4 @@ neIfTypeStackModify_cleanup:
 
 
 
-#endif	// __IFUTILS_C__
+#endif	// __IF_UTILS_C__

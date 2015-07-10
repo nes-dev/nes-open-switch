@@ -211,105 +211,6 @@ ifMIBObjects_mapper (
 /**
  *	table mapper(s) & helper(s)
  */
-static int8_t
-ifData_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register ifData_t *pEntry1 = xBTree_entry (pNode1, ifData_t, oBTreeNode);
-	register ifData_t *pEntry2 = xBTree_entry (pNode2, ifData_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-static xBTree_t oIfData_BTree = xBTree_initInline (&ifData_BTreeNodeCmp);
-
-ifData_t *
-ifData_createEntry (
-	uint32_t u32Index)
-{
-	register ifData_t *poEntry = NULL;
-	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIfData_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xRwLock_init (&poEntry->oLock, NULL);
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfData_BTree);
-	return poEntry;
-}
-
-ifData_t *
-ifData_getByIndex (
-	uint32_t u32Index)
-{
-	register ifData_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
-	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIfData_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ifData_t, oBTreeNode);
-}
-
-ifData_t *
-ifData_getNextIndex (
-	uint32_t u32Index)
-{
-	register ifData_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
-	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIfData_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, ifData_t, oBTreeNode);
-}
-
-void
-ifData_removeEntry (ifData_t *poEntry)
-{
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oIfData_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfData_BTree);
-	xRwLock_destroy (&poEntry->oLock);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
-	return;
-}
-
 bool
 ifData_getByIndexExt (
 	uint32_t u32Index, bool bWrLock,
@@ -317,22 +218,6 @@ ifData_getByIndexExt (
 {
 	register ifData_t *poIfData = NULL;
 	
-	ifTable_rdLock ();
-	
-	if ((poIfData = ifData_getByIndex (u32Index)) == NULL)
-	{
-		goto ifData_getByIndexExt_cleanup;
-	}
-	
-	if (ppoIfData != NULL)
-	{
-		bWrLock ? ifData_wrLock (poIfData): ifData_rdLock (poIfData);
-		*ppoIfData = poIfData;
-	}
-	
-ifData_getByIndexExt_cleanup:
-	
-	ifTable_unLock ();
 	return poIfData != NULL;
 }
 
@@ -344,79 +229,6 @@ ifData_createReference (
 	bool bCreate, bool bReference, bool bActivate,
 	ifData_t **ppoIfData)
 {
-	register ifData_t *poIfData = NULL;
-	
-	if (u32IfIndex == ifIndex_zero_c &&
-		(i32Type == 0 || !bCreate || ppoIfData == NULL))
-	{
-		return false;
-	}
-	
-	
-	bCreate ? ifTable_wrLock (): ifTable_rdLock ();
-	
-	if (u32IfIndex != ifIndex_zero_c && (poIfData = ifData_getByIndex (u32IfIndex)) != NULL)
-	{
-		if (i32Type != 0 && poIfData->oIf.i32Type != 0 && poIfData->oIf.i32Type != i32Type)
-		{
-			goto ifData_createReference_ifUnlock;
-		}
-	}
-	else if (bCreate)
-	{
-		register neIfEntry_t *poNeIfEntry = NULL;
-		
-		if ((poNeIfEntry = neIfTable_createExt (u32IfIndex)) == NULL)
-		{
-			goto ifData_createReference_ifUnlock;
-		}
-		
-		poIfData = ifData_getByNeEntry (poNeIfEntry);
-	}
-	else
-	{
-		goto ifData_createReference_ifUnlock;
-	}
-	
-	ifData_wrLock (poIfData);
-	
-ifData_createReference_ifUnlock:
-	ifTable_unLock ();
-	if (poIfData == NULL)
-	{
-		goto ifData_createReference_cleanup;
-	}
-	
-	i32Type != 0 ? (poIfData->oNe.i32Type = i32Type): false;
-	i32AdminStatus != 0 ? (poIfData->oIf.i32AdminStatus = i32AdminStatus): false;
-	
-	if (bReference)
-	{
-		poIfData->u32NumReferences++;
-	}
-	if (bActivate && !neIfRowStatus_handler (&poIfData->oNe, xRowStatus_active_c))
-	{
-		goto ifData_createReference_cleanup;
-	}
-	
-	if (ppoIfData == NULL)
-	{
-		ifData_unLock (poIfData);
-	}
-	else
-	{
-		*ppoIfData = poIfData;
-	}
-	return true;
-	
-	
-ifData_createReference_cleanup:
-	
-	poIfData != NULL ? ifData_unLock (poIfData): false;
-	if (u32IfIndex != ifIndex_zero_c)
-	{
-		ifData_removeReference (u32IfIndex, bCreate, bReference, bActivate);
-	}
 	return false;
 }
 
@@ -425,49 +237,6 @@ ifData_removeReference (
 	uint32_t u32IfIndex,
 	bool bCreate, bool bReference, bool bActivate)
 {
-	register ifData_t *poIfData = NULL;
-	
-	bCreate ? ifTable_wrLock (): ifTable_rdLock ();
-	
-	if ((poIfData = ifData_getByIndex (u32IfIndex)) == NULL)
-	{
-		goto ifData_removeReference_success;
-	}
-	ifData_wrLock (poIfData);
-	
-	if (bActivate && !neIfRowStatus_handler (&poIfData->oNe, xRowStatus_destroy_c))
-	{
-		goto ifData_removeReference_cleanup;
-	}
-	if (bReference && poIfData->u32NumReferences > 0)
-	{
-		poIfData->u32NumReferences--;
-	}
-	if (bCreate && poIfData->u32NumReferences == 0)
-	{
-		xBTree_nodeRemove (&poIfData->oBTreeNode, &oIfData_BTree);
-		ifData_unLock (poIfData);
-		
-		register ifData_t *poTmpIfData = poIfData;
-		
-		poIfData = NULL;
-		if (!neIfTable_removeExt (&poTmpIfData->oNe))
-		{
-			goto ifData_removeReference_cleanup;
-		}
-	}
-	
-ifData_removeReference_success:
-	
-	poIfData != NULL ? ifData_unLock (poIfData): false;
-	ifTable_unLock ();
-	return true;
-	
-	
-ifData_removeReference_cleanup:
-	
-	poIfData != NULL ? ifData_unLock (poIfData): false;
-	ifTable_unLock ();
 	return false;
 }
 
