@@ -38,7 +38,7 @@
 
 static bool
 	neIfTypeStatusModifier (
-		ifData_t *poIfEntry, neIfTypeStatusModifier_t *pfStatusModifier,
+		ifEntry_t *poEntry, neIfTypeStatusModifier_t *pfStatusModifier,
 		int32_t i32OperStatus, bool bPropagate);
 static inline int32_t
 	neIfStatus_getHigherLayerStatus (int32_t i32OperStatus);
@@ -72,7 +72,7 @@ neIfTypeTable_createExt (
 	poEntry->i32Type = i32Type;
 	
 	poEntry->pfEnableHandler = NULL;
-	poEntry->pfStatusTx = &neIfTypeStatusRx;
+	poEntry->pfStatusHandler = &neIfTypeStatusRx;
 	poEntry->pfStatusModifier = NULL;
 	poEntry->pfStackHandler = NULL;
 	
@@ -191,26 +191,17 @@ neIfStatus_removeEntry (
 
 bool
 neIfEnable_modify (
-	ifData_t *poIfEntry, int32_t i32AdminStatus)
+	ifEntry_t *poEntry, int32_t i32AdminStatus)
 {
 	register bool bRetCode = false;
 	register neIfTypeEntry_t *poIfTypeEntry = NULL;
 	
-	if (poIfEntry == NULL)
-	{
-		goto neIfEnable_modify_cleanup;
-	}
-	if ((poIfTypeEntry = neIfTypeTable_getByIndex (poIfEntry->oIf.i32Type)) == NULL)
+	if ((poIfTypeEntry = neIfTypeTable_getByIndex (poEntry->i32Type)) == NULL)
 	{
 		goto neIfEnable_modify_cleanup;
 	}
 	
-	if (poIfTypeEntry->pfEnableHandler != NULL)
-	{
-		return poIfTypeEntry->pfEnableHandler (poIfEntry, i32AdminStatus);
-	}
-	
-	bRetCode = true;
+	bRetCode = poIfTypeEntry->pfEnableHandler == NULL ? true: poIfTypeEntry->pfEnableHandler (poEntry, i32AdminStatus);
 	
 neIfEnable_modify_cleanup:
 	
@@ -242,16 +233,16 @@ neIfStatus_getHigherLayerStatus (
 }
 
 bool
-neIfStatus_modify (uint32_t u32IfIndex, int32_t i32OperStatus, bool bPropagate, bool bLocked)
+neIfStatus_modify (uint32_t u32IfIndex, int32_t i32Type, int32_t i32OperStatus, bool bPropagate, bool bLocked)
 {
 	neIfStatus_list_t oNeIfStatus_list = neIfStatus_list_init ();
 	
-	if (neIfStatus_createEntry (0, i32OperStatus, u32IfIndex, &oNeIfStatus_list) == NULL)
+	if (neIfStatus_createEntry (i32Type, i32OperStatus, u32IfIndex, &oNeIfStatus_list) == NULL)
 	{
 		return false;
 	}
 	
-	return neIfStatus_change (&oNeIfStatus_list, 0, bPropagate, bLocked);
+	return neIfStatus_change (&oNeIfStatus_list, i32Type, bPropagate, bLocked);
 }
 
 bool
@@ -357,8 +348,8 @@ neIfTypeStatusRx (
 		
 		
 		if (u32Index == 0 ||
-			(poIfEntry = ifTable_getByIndex (u32Index)) == NULL /*||
-			!neIfTypeStatusModifier (poIfEntry, pfStatusModifier, i32OperStatus, bPropagate)*/)
+			(poIfEntry = ifTable_getByIndex (u32Index)) == NULL ||
+			!neIfTypeStatusModifier (poIfEntry, pfStatusModifier, i32OperStatus, bPropagate))
 		{
 			continue;
 		}
@@ -401,15 +392,15 @@ neIfTypeStatusRx (
 		
 		if (i32Type != 0 && i32Type != poEntry->i32Type)
 		{
-			register neIfTypeStatusHandler_t *pfStatusTx = &neIfTypeStatusRx;
+			register neIfTypeStatusHandler_t *pfStatusHandler = &neIfTypeStatusRx;
 			
 			if ((poIfTypeEntry = neIfTypeTable_getByIndex (i32Type)) != NULL &&
-				poIfTypeEntry->pfStatusTx != NULL)
+				poIfTypeEntry->pfStatusHandler != NULL)
 			{
-				pfStatusTx = poIfTypeEntry->pfStatusTx;
+				pfStatusHandler = poIfTypeEntry->pfStatusHandler;
 			}
 			
-			pfStatusTx (&oTmpIfTree, i32Type, false, bLocked);
+			pfStatusHandler (&oTmpIfTree, i32Type, false, bLocked);
 			xBTree_init (&oTmpIfTree, &neIfStatus_BTreeNodeCmp);
 		}
 		
@@ -420,15 +411,15 @@ neIfTypeStatusRx (
 	
 	if (xBTree_count (&oTmpIfTree) != 0)
 	{
-		register neIfTypeStatusHandler_t *pfStatusTx = &neIfTypeStatusRx;
+		register neIfTypeStatusHandler_t *pfStatusHandler = &neIfTypeStatusRx;
 		
 		if ((poIfTypeEntry = neIfTypeTable_getByIndex (i32Type)) != NULL &&
-			poIfTypeEntry->pfStatusTx != NULL)
+			poIfTypeEntry->pfStatusHandler != NULL)
 		{
-			pfStatusTx = poIfTypeEntry->pfStatusTx;
+			pfStatusHandler = poIfTypeEntry->pfStatusHandler;
 		}
 		
-		pfStatusTx (&oTmpIfTree, i32Type, false, bLocked);
+		pfStatusHandler (&oTmpIfTree, i32Type, false, bLocked);
 		xBTree_init (&oTmpIfTree, &neIfStatus_BTreeNodeCmp);
 	}
 	
@@ -441,37 +432,44 @@ neIfTypeStatusRx (
 
 bool
 neIfTypeStatusModifier (
-	ifData_t *poIfEntry, neIfTypeStatusModifier_t *pfStatusModifier,
+	ifEntry_t *poEntry, neIfTypeStatusModifier_t *pfStatusModifier,
 	int32_t i32OperStatus, bool bPropagate)
 {
 	register bool bStatusModified = false;
 	
-	if (poIfEntry == NULL)
+	if (poEntry == NULL)
 	{
 		return false;
 	}
 	
 	
-	ifData_wrLock (poIfEntry);
+	ifEntry_wrLock (poEntry);
 	
-	if (poIfEntry->oNe.u8RowStatus == xRowStatus_active_c &&
-		poIfEntry->oIf.i32AdminStatus == xAdminStatus_up_c &&
-		(bPropagate || poIfEntry->oIf.i32OperStatus != i32OperStatus))
+// 	if (i32OperStatus == xOperStatus_notPresent_c)
+// 	{
+// 		goto neIfTypeStatusModifier_unlock;
+// 	}
+	
+	if (poEntry->oNe.u8RowStatus == xRowStatus_active_c &&
+		poEntry->i32AdminStatus == xAdminStatus_up_c &&
+		(bPropagate || poEntry->i32OperStatus != i32OperStatus))
 	{
 		if (pfStatusModifier != NULL &&
-			!pfStatusModifier (poIfEntry, i32OperStatus, bPropagate))
+			!pfStatusModifier (poEntry, i32OperStatus, bPropagate))
 		{
 			goto neIfTypeStatusModifier_unlock;
 		}
 		
-		poIfEntry->oIf.i32OperStatus = i32OperStatus;
+		poEntry->i32OperStatus = i32OperStatus;
 		bStatusModified = true;
 	}
 	
 neIfTypeStatusModifier_unlock:
 	
-	ifData_unLock (poIfEntry);
+	ifEntry_unLock (poEntry);
 	
+	
+// neIfTypeStatusModifier_cleanup:
 	
 	return bStatusModified || bPropagate;
 }

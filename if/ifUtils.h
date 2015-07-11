@@ -37,9 +37,9 @@ extern "C" {
 #include <stdint.h>
 
 
-typedef bool (neIfTypeEnableHandler_t) (ifData_t *poIfEntry, int32_t i32AdminStatus);
+typedef bool (neIfTypeEnableHandler_t) (ifEntry_t *poIfEntry, int32_t i32AdminStatus);
 typedef bool (neIfTypeStatusHandler_t) (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked);
-typedef bool (neIfTypeStatusModifier_t) (ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate);
+typedef bool (neIfTypeStatusModifier_t) (ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate);
 typedef bool (neIfTypeStackHandler_t) (ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry, uint8_t u8Action, bool bLocked);
 
 enum
@@ -58,7 +58,7 @@ typedef struct neIfTypeEntry_t
 	int32_t i32Type;
 	
 	neIfTypeEnableHandler_t *pfEnableHandler;
-	neIfTypeStatusHandler_t *pfStatusTx;
+	neIfTypeStatusHandler_t *pfStatusHandler;
 	neIfTypeStatusModifier_t *pfStatusModifier;
 	neIfTypeStackHandler_t *pfStackHandler;
 	
@@ -96,8 +96,8 @@ void neIfStatus_removeEntry (
 typedef xBTree_t neIfStatus_list_t;
 #define neIfStatus_list_init() xBTree_initInline (&neIfStatus_BTreeNodeCmp)
 bool neIfStatus_modify (
-	uint32_t u32IfIndex, int32_t i32OperStatus,
-	bool bPropagate, bool bLocked);
+	uint32_t u32IfIndex, int32_t i32Type,
+	int32_t i32OperStatus, bool bPropagate, bool bLocked);
 extern neIfTypeStatusHandler_t neIfStatus_change;
 
 extern neIfTypeEnableHandler_t neIfEnable_modify;
