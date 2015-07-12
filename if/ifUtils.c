@@ -476,32 +476,32 @@ neIfTypeStatusModifier_unlock:
 
 bool
 neIfTypeStackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherEntry, ifEntry_t *poLowerEntry,
 	uint8_t u8Action, bool bLocked)
 {
 	register bool bRetCode = false;
 	
-	if (poHigherIfEntry == NULL || poLowerIfEntry == NULL)
+	if (poHigherEntry == NULL || poLowerEntry == NULL)
 	{
 		return false;
 	}
 	
 	if (!bLocked)
 	{
-		ifData_wrLock (poLowerIfEntry);
-		ifData_wrLock (poHigherIfEntry);
+		ifEntry_wrLock (poLowerEntry);
+		ifEntry_wrLock (poHigherEntry);
 	}
 	
 	
 	register neIfTypeEntry_t *poHigherIfTypeEntry = NULL;
 	register neIfTypeEntry_t *poLowerIfTypeEntry = NULL;
 	
-	if ((poHigherIfTypeEntry = neIfTypeTable_getByIndex (poHigherIfEntry->oIf.i32Type)) == NULL)
+	if ((poHigherIfTypeEntry = neIfTypeTable_getByIndex (poHigherEntry->i32Type)) == NULL)
 	{
 		goto neIfTypeStackModify_cleanup;
 	}
 	poLowerIfTypeEntry =
-		poHigherIfEntry->oIf.i32Type == poHigherIfEntry->oIf.i32Type ? poHigherIfTypeEntry: neIfTypeTable_getByIndex (poLowerIfEntry->oIf.i32Type);
+		poHigherEntry->i32Type == poHigherEntry->i32Type ? poHigherIfTypeEntry: neIfTypeTable_getByIndex (poLowerEntry->i32Type);
 	if (poLowerIfTypeEntry == NULL)
 	{
 		goto neIfTypeStackModify_cleanup;
@@ -512,16 +512,16 @@ neIfTypeStackModify (
 	{
 	case neIfTypeStack_actionAdd_c:
 		u8Action |= neIfTypeStack_actionPreProcess_c;
-		if (!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherIfEntry, poLowerIfEntry, u8Action | neIfTypeStack_actionLowerIf_c, true) ||
-			!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherIfEntry, poLowerIfEntry, u8Action | neIfTypeStack_actionHigherIf_c, true))
+		if (!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionLowerIf_c, true) ||
+			!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionHigherIf_c, true))
 		{
 			goto neIfTypeStackModify_cleanup;
 		}
 		
 		u8Action ^= neIfTypeStack_actionPreProcess_c;
 		u8Action |= neIfTypeStack_actionPostProcess_c;
-		if (!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherIfEntry, poLowerIfEntry, u8Action | neIfTypeStack_actionLowerIf_c, true) ||
-			!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherIfEntry, poLowerIfEntry, u8Action | neIfTypeStack_actionHigherIf_c, true))
+		if (!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionLowerIf_c, true) ||
+			!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionHigherIf_c, true))
 		{
 			goto neIfTypeStackModify_cleanup;
 		}
@@ -531,16 +531,16 @@ neIfTypeStackModify (
 		
 	case neIfTypeStack_actionRemove_c:
 		u8Action |= neIfTypeStack_actionPreProcess_c;
-		if (!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherIfEntry, poLowerIfEntry, u8Action | neIfTypeStack_actionHigherIf_c, true) ||
-			!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherIfEntry, poLowerIfEntry, u8Action | neIfTypeStack_actionLowerIf_c, true))
+		if (!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionHigherIf_c, true) ||
+			!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionLowerIf_c, true))
 		{
 			goto neIfTypeStackModify_cleanup;
 		}
 		
 		u8Action ^= neIfTypeStack_actionPreProcess_c;
 		u8Action |= neIfTypeStack_actionPostProcess_c;
-		if (!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherIfEntry, poLowerIfEntry, u8Action | neIfTypeStack_actionHigherIf_c, true) ||
-			!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherIfEntry, poLowerIfEntry, u8Action | neIfTypeStack_actionLowerIf_c, true))
+		if (!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionHigherIf_c, true) ||
+			!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionLowerIf_c, true))
 		{
 			goto neIfTypeStackModify_cleanup;
 		}
@@ -553,8 +553,8 @@ neIfTypeStackModify_cleanup:
 	
 	if (!bLocked)
 	{
-		ifData_unLock (poLowerIfEntry);
-		ifData_unLock (poHigherIfEntry);
+		ifEntry_unLock (poLowerEntry);
+		ifEntry_unLock (poHigherEntry);
 	}
 	
 	return bRetCode;

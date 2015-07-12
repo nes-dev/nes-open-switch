@@ -40,7 +40,7 @@ extern "C" {
 typedef bool (neIfTypeEnableHandler_t) (ifEntry_t *poIfEntry, int32_t i32AdminStatus);
 typedef bool (neIfTypeStatusHandler_t) (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked);
 typedef bool (neIfTypeStatusModifier_t) (ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate);
-typedef bool (neIfTypeStackHandler_t) (ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry, uint8_t u8Action, bool bLocked);
+typedef bool (neIfTypeStackHandler_t) (ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry, uint8_t u8Action, bool bLocked);
 
 enum
 {
@@ -103,6 +103,7 @@ extern neIfTypeStatusHandler_t neIfStatus_change;
 extern neIfTypeEnableHandler_t neIfEnable_modify;
 extern neIfTypeStatusHandler_t neIfTypeStatusRx;
 extern neIfTypeStackHandler_t neIfTypeStackModify;
+
 
 
 #	ifdef __cplusplus
