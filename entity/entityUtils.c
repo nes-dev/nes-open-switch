@@ -161,15 +161,15 @@ neEntPortRowStatus_update (
 		
 		if (poEntry->oK.u32IfIndex == 0)
 		{
-			ifData_t *poIfData = NULL;
+			ifEntry_t *poIfEntry = NULL;
 			
-			if (!ifData_createReference (poEntry->u32IfIndex, poEntry->i32IfType, 0, true, true, true, &poIfData))
+			if (!ifTable_createReference (poEntry->u32IfIndex, poEntry->i32IfType, 0, true, true, true, &poIfEntry))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
-			poIfData->oIfX.i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_enabled_c;
-			poIfData->oIfX.u8ConnectorPresent = ifConnectorPresent_true_c;
-			ifData_unLock (poIfData);
+			poIfEntry->oX.i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_enabled_c;
+			poIfEntry->oX.u8ConnectorPresent = ifConnectorPresent_true_c;
+			ifEntry_unLock (poIfEntry);
 			
 			xBTree_nodeAdd (&poEntry->oIf_BTreeNode, &oNeEntPortTable_If_BTree);
 			poEntry->oK.u32IfIndex = poEntry->u32IfIndex;
@@ -206,28 +206,28 @@ neEntPortRowStatus_update (
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			
-			if (!neIfStatus_modify (poEntry->oK.u32IfIndex, xOperStatus_notPresent_c, true, false))
+			if (!neIfStatus_modify (poEntry->oK.u32IfIndex, 0, xOperStatus_notPresent_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			break;
 			
 		case xRowStatus_notInService_c:
-			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_down_c, true, false))
+			if (!neIfStatus_modify (poEntry->u32IfIndex, 0, xOperStatus_down_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			break;
 			
 		case xRowStatus_notReady_c:
-			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_lowerLayerDown_c, true, false))
+			if (!neIfStatus_modify (poEntry->u32IfIndex, 0, xOperStatus_lowerLayerDown_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			break;
 			
 		case xRowStatus_destroy_c:
-			if (!neIfStatus_modify (poEntry->u32IfIndex, xOperStatus_notPresent_c, true, false))
+			if (!neIfStatus_modify (poEntry->u32IfIndex, 0, xOperStatus_notPresent_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
@@ -255,17 +255,17 @@ neEntPortRowStatus_update (
 	case xRowStatus_destroy_c:
 		if (poEntry->oK.u32IfIndex != 0)
 		{
-			ifData_t *poIfData = NULL;
+			ifEntry_t *poIfEntry = NULL;
 			
-			if (!ifData_getByIndexExt (poEntry->oK.u32IfIndex, true, &poIfData))
+			if (!ifTable_getByIndexExt (poEntry->oK.u32IfIndex, true, &poIfEntry))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
-			poIfData->oIfX.i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_disabled_c;
-			poIfData->oIfX.u8ConnectorPresent = ifConnectorPresent_false_c;
-			ifData_unLock (poIfData);
+			poIfEntry->oX.i32LinkUpDownTrapEnable = ifLinkUpDownTrapEnable_disabled_c;
+			poIfEntry->oX.u8ConnectorPresent = ifConnectorPresent_false_c;
+			ifEntry_unLock (poIfEntry);
 			
-			if (!ifData_removeReference (poEntry->oK.u32IfIndex, true, true, true))
+			if (!ifTable_removeReference (poEntry->oK.u32IfIndex, true, true, true))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}

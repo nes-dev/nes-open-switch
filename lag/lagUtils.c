@@ -71,21 +71,21 @@ lagUtilsInit_cleanup:
 
 bool
 lag_aggEnableModify (
-	ifData_t *poIfEntry, int32_t i32AdminStatus)
+	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
 {
 	return false;
 }
 
 bool
 lag_aggStatusModify (
-	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
 {
 	return false;
 }
 
 bool
 lag_aggStackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
 	return true;
@@ -93,7 +93,7 @@ lag_aggStackModify (
 
 bool
 lag_aggPortStatusModify (
-	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
 {
 	register bool bRetCode = false;
 	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
@@ -131,7 +131,7 @@ neAggRowStatus_update (
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
-		if (!neIfStatus_modify (poDot3adAggData->u32Index, xOperStatus_notPresent_c, true, false))
+		if (!neIfStatus_modify (poDot3adAggData->u32Index, 0, xOperStatus_notPresent_c, true, false))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
@@ -145,7 +145,7 @@ neAggRowStatus_update (
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!neIfStatus_modify (poDot3adAggData->u32Index, xOperStatus_down_c, true, false))
+		if (!neIfStatus_modify (poDot3adAggData->u32Index, 0, xOperStatus_down_c, true, false))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
@@ -159,7 +159,7 @@ neAggRowStatus_update (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!neIfStatus_modify (poDot3adAggData->u32Index, xOperStatus_notPresent_c, true, false))
+		if (!neIfStatus_modify (poDot3adAggData->u32Index, 0, xOperStatus_notPresent_c, true, false))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
@@ -199,15 +199,15 @@ neAggPortRowStatus_update (
 		}
 		
 		{
-			ifData_t *poIfData = NULL;
+			ifEntry_t *poIfEntry = NULL;
 			
-			if (!ifData_getByIndexExt (poDot3adAggPortData->u32Index, true, &poIfData))
+			if (!ifTable_getByIndexExt (poDot3adAggPortData->u32Index, true, &poIfEntry))
 			{
 				goto neAggPortRowStatus_update_cleanup;
 			}
 			
-			xBitmap_setBit (poIfData->oNe.au8AdminFlags, neIfAdminFlags_lag_c, 1);
-			ifData_unLock (poIfData);
+			xBitmap_setBit (poIfEntry->oNe.au8AdminFlags, neIfAdminFlags_lag_c, 1);
+			ifEntry_unLock (poIfEntry);
 		}
 		break;
 		
@@ -216,15 +216,15 @@ neAggPortRowStatus_update (
 		/* TODO */
 		
 		{
-			ifData_t *poIfData = NULL;
+			ifEntry_t *poIfEntry = NULL;
 			
-			if (!ifData_getByIndexExt (poDot3adAggPortData->u32Index, true, &poIfData))
+			if (!ifTable_getByIndexExt (poDot3adAggPortData->u32Index, true, &poIfEntry))
 			{
 				goto neAggPortRowStatus_update_cleanup;
 			}
 			
-			xBitmap_setBit (poIfData->oNe.au8AdminFlags, neIfAdminFlags_lag_c, 0);
-			ifData_unLock (poIfData);
+			xBitmap_setBit (poIfEntry->oNe.au8AdminFlags, neIfAdminFlags_lag_c, 0);
+			ifEntry_unLock (poIfEntry);
 		}
 		
 		if (!dot3adAggPortLacpStatus_update (poDot3adAggPortData, u8RowStatus))

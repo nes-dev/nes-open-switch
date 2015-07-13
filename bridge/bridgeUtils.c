@@ -72,21 +72,21 @@ bridgeUtilsInit_cleanup:
 
 bool
 bridge_pipEnableModify (
-	ifData_t *poIfEntry, int32_t i32AdminStatus)
+	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
 {
 	return false;
 }
 
 bool
 bridge_pipStatusModify (
-	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
 {
 	return false;
 }
 
 bool
 bridge_pipStackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
 	return true;
@@ -212,7 +212,7 @@ ieee8021PbILan_createEntry (
 {
 	register bool bRetCode = false;
 	register bool bPhyLocked = false;
-	ifData_t *poPepIfData = NULL;
+	ifEntry_t *poPepIfEntry = NULL;
 	register ieee8021BridgePhyPortEntry_t *poPepPhy = NULL;
 	register ieee8021BridgePhyPortEntry_t *poCnpPhy = NULL;
 	register ieee8021BridgeILanIfEntry_t *poCnpILanEntry = NULL;
@@ -222,7 +222,7 @@ ieee8021PbILan_createEntry (
 		goto ieee8021PbILan_createEntry_cleanup;
 	}
 	
-	if (!ifData_createReference (ifIndex_zero_c, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poPepIfData))
+	if (!ifTable_createReference (ifIndex_zero_c, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poPepIfEntry))
 	{
 		goto ieee8021PbILan_createEntry_cleanup;
 	}
@@ -232,7 +232,7 @@ ieee8021PbILan_createEntry (
 		goto ieee8021PbILan_createEntry_cleanup;
 	}
 	
-	if (!ifStackTable_createRegister (poPepIfData->u32Index, poCnpILanEntry->u32Index))
+	if (!ifStackTable_createRegister (poPepIfEntry->u32Index, poCnpILanEntry->u32Index))
 	{
 		goto ieee8021PbILan_createEntry_cleanup;
 	}
@@ -240,7 +240,7 @@ ieee8021PbILan_createEntry (
 	ieee8021BridgePhyPortTable_wrLock ();
 	bPhyLocked = true;
 	
-	if ((poPepPhy = ieee8021BridgePhyPortTable_createExt (poPepIfData->u32Index, 0)) == NULL)
+	if ((poPepPhy = ieee8021BridgePhyPortTable_createExt (poPepIfEntry->u32Index, 0)) == NULL)
 	{
 		goto ieee8021PbILan_createEntry_cleanup;
 	}
@@ -264,7 +264,7 @@ ieee8021PbILan_createEntry (
 	
 ieee8021PbILan_createEntry_cleanup:
 	
-	poPepIfData != NULL ? ifData_unLock (poPepIfData): false;
+	poPepIfEntry != NULL ? ifEntry_unLock (poPepIfEntry): false;
 	
 	if (!bRetCode)
 	{
@@ -273,7 +273,7 @@ ieee8021PbILan_createEntry_cleanup:
 			ieee8021BridgePhyPortTable_detachComponent (poPepPort, poPepPhy);
 			ieee8021BridgePhyPortTable_removeExt (poPepPhy);
 		}
-		poPepIfData != NULL ? ifData_removeReference (poPepIfData->u32Index, true, false, true): false;
+		poPepIfEntry != NULL ? ifTable_removeReference (poPepIfEntry->u32Index, true, false, true): false;
 		if (poCnpPhy != NULL && poCnpPort->u32IfIndex == poCnpPhy->u32IfIndex)
 		{
 			ieee8021BridgePhyPortTable_detachComponent (poCnpPort, poCnpPhy);
@@ -338,7 +338,7 @@ ieee8021PbILan_removeEntry_phyCleanup:
 		goto ieee8021PbILan_removeEntry_cnpIf;
 	}
 	
-	if (!ifData_removeReference (poPepPort->u32IfIndex, true, false, true))
+	if (!ifTable_removeReference (poPepPort->u32IfIndex, true, false, true))
 	{
 		goto ieee8021PbILan_removeEntry_cleanup;
 	}
@@ -835,15 +835,15 @@ ieee8021PbbPipRowStatus_update (
 	ieee8021PbbPipEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
-	ifData_t *poPipIfData = NULL;
+	ifEntry_t *poPipIfEntry = NULL;
 	
 	if (u8RowStatus == xRowStatus_destroy_c && !ieee8021PbbPipTable_detachComponent (poEntry))
 	{
 		goto ieee8021PbbPipRowStatus_update_cleanup;
 	}
 	
-	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, false, false, &poPipIfData) ||
-		!ifAdminStatus_handler (&poPipIfData->oIf, u8RowStatus == xRowStatus_active_c ? ifAdminStatus_up_c: ifAdminStatus_down_c, false))
+	if (!ifTable_createReference (poEntry->u32IfIndex, 0, 0, false, false, false, &poPipIfEntry) ||
+		!ifAdminStatus_handler (poPipIfEntry, u8RowStatus == xRowStatus_active_c ? ifAdminStatus_up_c: ifAdminStatus_down_c, false))
 	{
 		goto ieee8021PbbPipRowStatus_update_cleanup;
 	}
@@ -852,7 +852,7 @@ ieee8021PbbPipRowStatus_update (
 	
 ieee8021PbbPipRowStatus_update_cleanup:
 	
-	poPipIfData != NULL ? ifData_unLock (poPipIfData): false;
+	poPipIfEntry != NULL ? ifEntry_unLock (poPipIfEntry): false;
 	return bRetCode;
 }
 

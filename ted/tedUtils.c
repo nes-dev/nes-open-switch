@@ -33,7 +33,7 @@
 
 
 static bool teLinkTable_stackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked);
 
 
@@ -61,7 +61,7 @@ tedUtilsInit_cleanup:
 
 bool
 teLinkTable_stackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
 	return true;

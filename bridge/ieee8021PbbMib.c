@@ -509,15 +509,15 @@ ieee8021PbbVipTable_createHier (
 	poIeee8021BridgeBasePortEntry->i32Type = ieee8021BridgeBasePortType_virtualInstancePort_c;
 	
 	
-	ifData_t *poVipIfData = NULL;
+	ifEntry_t *poVipIfEntry = NULL;
 	
-	if (!ifData_createReference (ifIndex_zero_c, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poVipIfData))
+	if (!ifTable_createReference (ifIndex_zero_c, ifType_bridge_c, xAdminStatus_up_c, true, false, false, &poVipIfEntry))
 	{
 		goto ieee8021PbbVipTable_createHier_cleanup;
 	}
 	
-	poIeee8021BridgeBasePortEntry->u32IfIndex = poVipIfData->u32Index;
-	ifData_unLock (poVipIfData);
+	poIeee8021BridgeBasePortEntry->u32IfIndex = poVipIfEntry->u32Index;
+	ifEntry_unLock (poVipIfEntry);
 	
 	ieee8021BridgePhyPortTable_wrLock ();
 	bPhyLocked = true;
@@ -584,7 +584,7 @@ ieee8021PbbVipTable_removeHier_phyUnlock:
 	}
 	bRetCode = false;
 	
-	if (!ifData_removeReference (poIeee8021BridgeBasePortEntry->u32IfIndex, true, false, true))
+	if (!ifTable_removeReference (poIeee8021BridgeBasePortEntry->u32IfIndex, true, false, true))
 	{
 		goto ieee8021PbbVipTable_removeHier_cleanup;
 	}
@@ -1508,17 +1508,17 @@ ieee8021PbbPipTable_createExt (
 	
 	if (!bIfReserved)
 	{
-		ifData_t *poPipIfData = NULL;
+		ifEntry_t *poPipIfEntry = NULL;
 		
-		if (!ifData_createReference (u32IfIndex, ifType_pip_c, ifAdminStatus_up_c, true, true, false, &poPipIfData))
+		if (!ifTable_createReference (u32IfIndex, ifType_pip_c, ifAdminStatus_up_c, true, true, false, &poPipIfEntry))
 		{
 			goto ieee8021PbbPipTable_createExt_cleanup;
 		}
 		
 		bIfReserved = true;
-		u32IfIndex = poPipIfData->u32Index;
+		u32IfIndex = poPipIfEntry->u32Index;
 		
-		ifData_unLock (poPipIfData);
+		ifEntry_unLock (poPipIfEntry);
 	}
 	
 	poEntry = ieee8021PbbPipTable_createEntry (
@@ -1559,7 +1559,7 @@ ieee8021PbbPipTable_createHier (
 	register bool bRetCode = false;
 	register bool bPhyLocked = false;
 	
-	if (!bIfReserved && !ifData_createReference (poEntry->u32IfIndex, 0, ifAdminStatus_up_c, true, true, false, NULL))
+	if (!bIfReserved && !ifTable_createReference (poEntry->u32IfIndex, 0, ifAdminStatus_up_c, true, true, false, NULL))
 	{
 		goto ieee8021PbbPipTable_createHier_cleanup;
 	}
@@ -1623,7 +1623,7 @@ ieee8021PbbPipTable_removeHier_phyUnlock:
 	
 ieee8021PbbPipTable_removeHier_removeIf:
 	
-	if (!ifData_removeReference (poEntry->u32IfIndex, true, true, true))
+	if (!ifTable_removeReference (poEntry->u32IfIndex, true, true, true))
 	{
 		goto ieee8021PbbPipTable_removeHier_cleanup;
 	}

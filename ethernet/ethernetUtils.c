@@ -116,7 +116,7 @@ ethernetUtilsInit_cleanup:
 
 bool
 ieee8021If_ethernetEnableModify (
-	ifData_t *poIfEntry, int32_t i32AdminStatus)
+	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
 {
 	register bool bRetCode = false;
 	
@@ -134,7 +134,7 @@ ieee8021If_ethernetEnableModify_cleanup:
 
 bool
 ieee8021If_ethernetStatusModify (
-	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
 {
 	register bool bRetCode = false;
 	
@@ -155,7 +155,7 @@ ieee8021If_ethernetStatusModify_cleanup:
 
 bool
 ieee8021If_ethernetStackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
 	return true;
@@ -163,7 +163,7 @@ ieee8021If_ethernetStackModify (
 
 bool
 ieee8021If_l2vlanStackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
 	return true;
@@ -171,21 +171,21 @@ ieee8021If_l2vlanStackModify (
 
 bool
 ieee8021If_bridgeEnableModify (
-	ifData_t *poIfEntry, int32_t i32AdminStatus)
+	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
 {
 	return false;
 }
 
 bool
 ieee8021If_bridgeStatusModify (
-	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
 {
 	return false;
 }
 
 bool
 ieee8021If_bridgeStackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
 	return true;
@@ -193,21 +193,21 @@ ieee8021If_bridgeStackModify (
 
 bool
 ieee8021If_ilanEnableModify (
-	ifData_t *poIfEntry, int32_t i32AdminStatus)
+	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
 {
 	return false;
 }
 
 bool
 ieee8021If_ilanStatusModify (
-	ifData_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
 {
 	return false;
 }
 
 bool
 ieee8021If_ilanStackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
 	return true;

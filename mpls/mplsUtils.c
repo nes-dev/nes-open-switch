@@ -70,7 +70,7 @@ mplsUtilsInit_cleanup:
 
 bool
 mplsInterfaceTable_stackHandler (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
 	return true;
@@ -79,7 +79,7 @@ mplsInterfaceTable_stackHandler (
 
 bool
 mplsTunnelTable_stackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
 	return true;

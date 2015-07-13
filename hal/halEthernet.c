@@ -91,7 +91,7 @@ halEthernet_ifNotify ()
 	
 	/* TODO */
 	
-	if (!neIfStatus_modify (u32IfIndex, i32OperStatus, false, false))
+	if (!neIfStatus_modify (u32IfIndex, 0, i32OperStatus, false, false))
 	{
 		return false;
 	}

@@ -38,7 +38,7 @@
 
 static bool
 	inetIfTable_stackModify (
-		ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+		ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 		uint8_t u8Action, bool isLocked);
 
 
@@ -74,7 +74,7 @@ inetUtilsInit_unlock:
 
 bool
 inetIfTable_stackModify (
-	ifData_t *poHigherIfEntry, ifData_t *poLowerIfEntry,
+	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
 	return true;

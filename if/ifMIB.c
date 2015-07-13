@@ -753,7 +753,7 @@ ifAdminStatus_handler (
 		break;
 		
 	case xAdminStatus_down_c:
-		if (!neIfStatus_modify (poEntry->u32Index, poEntry->i32Type, xOperStatus_down_c, false))
+		if (!neIfStatus_modify (poEntry->u32Index, poEntry->i32Type, xOperStatus_down_c, false, true))
 		{
 			goto ifAdminStatus_handler_cleanup;
 		}
@@ -767,7 +767,7 @@ ifAdminStatus_handler (
 		break;
 		
 	case xAdminStatus_testing_c:
-		if (!neIfStatus_modify (poEntry->u32Index, poEntry->i32Type, xOperStatus_testing_c, false))
+		if (!neIfStatus_modify (poEntry->u32Index, poEntry->i32Type, xOperStatus_testing_c, false, true))
 		{
 			goto ifAdminStatus_handler_cleanup;
 		}

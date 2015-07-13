@@ -1433,7 +1433,7 @@ ieee8021BridgeBasePortIfIndex_handler (
 		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
 	}
 	
-	if (!ifData_removeReference (poEntry->pOldEntry->u32IfIndex, false, true, false))
+	if (!ifTable_removeReference (poEntry->pOldEntry->u32IfIndex, false, true, false))
 	{
 		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
 	}
@@ -1467,7 +1467,7 @@ ieee8021BridgeBasePortIfIndex_handler_newIfIndex:
 		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
 	}
 	
-	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
+	if (!ifTable_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
 	{
 		goto ieee8021BridgeBasePortIfIndex_handler_cleanup;
 	}
@@ -2238,7 +2238,7 @@ ieee8021BridgePhyPortTable_createHier (
 {
 	register bool bRetCode = false;
 	
-	if (!ifData_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
+	if (!ifTable_createReference (poEntry->u32IfIndex, 0, 0, false, true, false, NULL))
 	{
 		goto ieee8021BridgePhyPortTable_createHier_cleanup;
 	}
@@ -2257,7 +2257,7 @@ ieee8021BridgePhyPortTable_removeHier (
 {
 	register bool bRetCode = false;
 	
-	if (!ifData_removeReference (poEntry->u32IfIndex, false, true, false))
+	if (!ifTable_removeReference (poEntry->u32IfIndex, false, true, false))
 	{
 		goto ieee8021BridgePhyPortTable_removeHier_cleanup;
 	}
@@ -6368,22 +6368,22 @@ ieee8021BridgeILanIfEntry_t *
 ieee8021BridgeILanIfTable_createExt (
 	uint32_t u32Index)
 {
-	bool bIfReserved = u32Index != ifIndex_zero_c;
-	ieee8021BridgeILanIfEntry_t *poEntry = NULL;
+	register bool bIfReserved = u32Index != ifIndex_zero_c;
+	register ieee8021BridgeILanIfEntry_t *poEntry = NULL;
 	
 	if (!bIfReserved)
 	{
-		ifData_t *poILanIfData = NULL;
+		ifEntry_t *poILanIfEntry = NULL;
 		
-		if (!ifData_createReference (u32Index, ifType_ilan_c, ifAdminStatus_up_c, true, true, false, &poILanIfData))
+		if (!ifTable_createReference (u32Index, ifType_ilan_c, ifAdminStatus_up_c, true, true, false, &poILanIfEntry))
 		{
 			goto ieee8021BridgeILanIfTable_createExt_cleanup;
 		}
 		
 		bIfReserved = true;
-		u32Index = poILanIfData->u32Index;
+		u32Index = poILanIfEntry->u32Index;
 		
-		ifData_unLock (poILanIfData);
+		ifEntry_unLock (poILanIfEntry);
 	}
 	
 	poEntry = ieee8021BridgeILanIfTable_createEntry (
@@ -6421,7 +6421,7 @@ bool
 ieee8021BridgeILanIfTable_createHier (
 	ieee8021BridgeILanIfEntry_t *poEntry)
 {
-	if (!ifData_createReference (poEntry->u32Index, 0, ifAdminStatus_up_c, true, true, false, NULL))
+	if (!ifTable_createReference (poEntry->u32Index, 0, ifAdminStatus_up_c, true, true, false, NULL))
 	{
 		goto ieee8021BridgeILanIfTable_createHier_cleanup;
 	}
@@ -6439,7 +6439,7 @@ bool
 ieee8021BridgeILanIfTable_removeHier (
 	ieee8021BridgeILanIfEntry_t *poEntry)
 {
-	return ifData_removeReference (poEntry->u32Index, true, true, true);
+	return ifTable_removeReference (poEntry->u32Index, true, true, true);
 }
 
 bool
@@ -6447,7 +6447,7 @@ ieee8021BridgeILanIfRowStatus_handler (
 	ieee8021BridgeILanIfEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
-	ifData_t *poILanIfData = NULL;
+	ifEntry_t *poILanIfEntry = NULL;
 	
 	if (poEntry->u8RowStatus == u8RowStatus)
 	{
@@ -6459,8 +6459,8 @@ ieee8021BridgeILanIfRowStatus_handler (
 		u8RowStatus = xRowStatus_active_c;
 	}
 	
-	if (!ifData_createReference (poEntry->u32Index, 0, 0, false, false, false, &poILanIfData) ||
-		!neIfRowStatus_handler (&poILanIfData->oNe, u8RowStatus))
+	if (!ifTable_createReference (poEntry->u32Index, 0, 0, false, false, false, &poILanIfEntry) ||
+		!neIfRowStatus_handler (&poILanIfEntry->oNe, u8RowStatus))
 	{
 		goto ieee8021BridgeILanIfRowStatus_handler_cleanup;
 	}
@@ -6471,7 +6471,7 @@ ieee8021BridgeILanIfRowStatus_handler_success:
 	
 ieee8021BridgeILanIfRowStatus_handler_cleanup:
 	
-	poILanIfData != NULL ? ifData_unLock (poILanIfData): false;
+	poILanIfEntry != NULL ? ifEntry_unLock (poILanIfEntry): false;
 	
 	return bRetCode;
 }
