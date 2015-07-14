@@ -433,6 +433,19 @@ mplsInterfaceTable_removeEntry (mplsInterfaceEntry_t *poEntry)
 	return;
 }
 
+mplsInterfaceEntry_t *
+mplsInterfaceTable_createExt (
+	uint32_t u32Index)
+{
+	return NULL;
+}
+
+bool
+mplsInterfaceTable_removeExt (mplsInterfaceEntry_t *poEntry)
+{
+	return false;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 mplsInterfaceTable_getFirst (

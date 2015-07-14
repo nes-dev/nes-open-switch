@@ -24,6 +24,7 @@
 
 
 
+#include "mplsLsrStdMIB.h"
 #include "mplsUtils.h"
 #include "if/ifUtils.h"
 #include "if/ifMIB.h"
@@ -68,6 +69,84 @@ mplsUtilsInit_cleanup:
 }
 
 
+static bool
+	mplsInterfaceRowStatus_update (
+		ifEntry_t *poIfEntry,
+		mplsInterfaceEntry_t *poEntry, uint8_t u8RowStatus);
+
+
+bool
+mplsInterfaceTable_rowHandler (
+	ifEntry_t *poIfEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register mplsInterfaceEntry_t *poEntry = NULL;
+	
+	poEntry = mplsInterfaceTable_getByIndex (poIfEntry->u32Index);
+	
+	if ((poEntry == NULL) ^ (u8RowStatus == xRowStatus_createAndWait_c))
+	{
+		goto mplsInterfaceTable_rowHandler_cleanup;
+	}
+	if (poEntry != NULL && poEntry->u8RowStatus == u8RowStatus)
+	{
+		goto mplsInterfaceTable_rowHandler_success;
+	}
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (!mplsInterfaceRowStatus_update (poIfEntry, poEntry, u8RowStatus))
+		{
+			goto mplsInterfaceTable_rowHandler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = u8RowStatus;
+		break;
+		
+	case xRowStatus_notInService_c:
+		if (!mplsInterfaceRowStatus_update (poIfEntry, poEntry, u8RowStatus))
+		{
+			goto mplsInterfaceTable_rowHandler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = u8RowStatus;
+		break;
+		
+	case xRowStatus_createAndWait_c:
+		if (poEntry != NULL || (poEntry = mplsInterfaceTable_createExt (poIfEntry->u32Index)) == NULL)
+		{
+			goto mplsInterfaceTable_rowHandler_cleanup;
+		}
+		
+	case xRowStatus_destroy_c:
+		if (!mplsInterfaceRowStatus_update (poIfEntry, poEntry, u8RowStatus))
+		{
+			goto mplsInterfaceTable_rowHandler_cleanup;
+		}
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		
+		if (u8RowStatus == xRowStatus_destroy_c)
+		{
+			if (!mplsInterfaceTable_removeExt (poEntry))
+			{
+				goto mplsInterfaceTable_rowHandler_cleanup;
+			}
+		}
+		break;
+	}
+	
+mplsInterfaceTable_rowHandler_success:
+	
+	bRetCode = true;
+	
+mplsInterfaceTable_rowHandler_cleanup:
+	
+	return bRetCode;
+}
+
+
 bool
 mplsInterfaceTable_stackHandler (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
@@ -83,6 +162,21 @@ mplsTunnelTable_stackModify (
 	uint8_t u8Action, bool isLocked)
 {
 	return true;
+}
+
+
+bool
+mplsInterfaceRowStatus_update (
+	ifEntry_t *poIfEntry,
+	mplsInterfaceEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	
+	bRetCode = true;
+	
+// mplsInterfaceRowStatus_update_cleanup:
+	
+	return bRetCode;
 }
 
 
