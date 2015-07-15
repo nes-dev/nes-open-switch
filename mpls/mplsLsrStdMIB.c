@@ -437,13 +437,76 @@ mplsInterfaceEntry_t *
 mplsInterfaceTable_createExt (
 	uint32_t u32Index)
 {
-	return NULL;
+	mplsInterfaceEntry_t *poEntry = NULL;
+	
+	poEntry = mplsInterfaceTable_createEntry (
+		u32Index);
+	if (poEntry == NULL)
+	{
+		goto mplsInterfaceTable_createExt_cleanup;
+	}
+	
+	if (!mplsInterfaceTable_createHier (poEntry))
+	{
+		mplsInterfaceTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto mplsInterfaceTable_createExt_cleanup;
+	}
+	
+mplsInterfaceTable_createExt_cleanup:
+	
+	return poEntry;
 }
 
 bool
 mplsInterfaceTable_removeExt (mplsInterfaceEntry_t *poEntry)
 {
-	return false;
+	register bool bRetCode = false;
+	
+	if (!mplsInterfaceTable_removeHier (poEntry))
+	{
+		goto mplsInterfaceTable_removeExt_cleanup;
+	}
+	mplsInterfaceTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+mplsInterfaceTable_removeExt_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+mplsInterfaceTable_createHier (
+	mplsInterfaceEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (gmplsInterfaceTable_createEntry (poEntry->u32Index) == NULL)
+	{
+		goto mplsInterfaceTable_createHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+mplsInterfaceTable_createHier_cleanup:
+	
+	!bRetCode ? mplsInterfaceTable_removeHier (poEntry): false;
+	return bRetCode;
+}
+
+bool
+mplsInterfaceTable_removeHier (
+	mplsInterfaceEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	gmplsInterfaceTable_removeEntry (&poEntry->oG);
+	
+	bRetCode = true;
+	
+// mplsInterfaceTable_removeHier_cleanup:
+	
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */

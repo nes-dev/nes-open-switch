@@ -988,6 +988,8 @@ void mplsInterfaceTable_removeEntry (mplsInterfaceEntry_t *poEntry);
 mplsInterfaceEntry_t * mplsInterfaceTable_createExt (
 	uint32_t u32Index);
 bool mplsInterfaceTable_removeExt (mplsInterfaceEntry_t *poEntry);
+bool mplsInterfaceTable_createHier (mplsInterfaceEntry_t *poEntry);
+bool mplsInterfaceTable_removeHier (mplsInterfaceEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point mplsInterfaceTable_getFirst;
 Netsnmp_Next_Data_Point mplsInterfaceTable_getNext;
