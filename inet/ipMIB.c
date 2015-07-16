@@ -2534,7 +2534,7 @@ ipAddressIfIndex_handler (
 		goto ipAddressIfIndex_handler_cleanup;
 	}
 	
-	if (!ifData_removeReference (poIpAddressData->u32IfIndex, false, true, false))
+	if (!ifTable_removeReference (poIpAddressData->u32IfIndex, false, true, false))
 	{
 		goto ipAddressIfIndex_handler_cleanup;
 	}
@@ -2548,7 +2548,7 @@ ipAddressIfIndex_handler_newIfIndex:
 		goto ipAddressIfIndex_handler_success;
 	}
 	
-	if (!ifData_createReference (poIpAddressData->oIp.u32IfIndex, 0, 0, false, true, false, NULL))
+	if (!ifTable_createReference (poIpAddressData->oIp.u32IfIndex, 0, 0, false, true, false, NULL))
 	{
 		goto ipAddressIfIndex_handler_cleanup;
 	}

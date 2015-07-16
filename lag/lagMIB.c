@@ -105,10 +105,11 @@ lagMIBObjects_t oLagMIBObjects;
 
 /** lagMIBObjects scalar mapper **/
 int
-lagMIBObjects_mapper (netsnmp_mib_handler *handler,
+lagMIBObjects_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid lagMIBObjects_oid[];
 	netsnmp_request_info *request;
@@ -120,7 +121,7 @@ lagMIBObjects_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (lagMIBObjects_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (lagMIBObjects_oid)])
 			{
 			case DOT3ADTABLESLASTCHANGED:
 				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, oLagMIBObjects.u32Dot3adTablesLastChanged);
@@ -432,8 +433,8 @@ dot3adAggTable_createExt (
 	
 	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
 	
-	
 dot3adAggTable_createExt_cleanup:
+	
 	return poEntry;
 }
 
@@ -451,8 +452,8 @@ dot3adAggTable_removeExt (dot3adAggEntry_t *poEntry)
 	
 	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
 	
-	
 dot3adAggTable_removeExt_cleanup:
+	
 	return bRetCode;
 }
 
@@ -462,7 +463,7 @@ dot3adAggTable_createHier (
 {
 	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (poEntry);
 	
-	if (!ifData_createReference (poDot3adAggData->u32Index, ifType_ieee8023adLag_c, 0, true, true, true, NULL))
+	if (!ifTable_createReference (poDot3adAggData->u32Index, ifType_ieee8023adLag_c, 0, true, true, true, NULL))
 	{
 		goto dot3adAggTable_createHier_cleanup;
 	}
@@ -474,7 +475,6 @@ dot3adAggTable_createHier (
 	}
 	
 	return true;
-	
 	
 dot3adAggTable_createHier_cleanup:
 	
@@ -495,7 +495,7 @@ dot3adAggTable_removeHier (
 		dot3adAggPortListTable_removeEntry (poDot3adAggPortListEntry);
 	}
 	
-	if (!ifData_removeReference (poDot3adAggData->u32Index, true, true, true))
+	if (!ifTable_removeReference (poDot3adAggData->u32Index, true, true, true))
 	{
 		goto dot3adAggTable_removeHier_cleanup;
 	}
@@ -503,6 +503,7 @@ dot3adAggTable_removeHier (
 	bRetCode = true;
 	
 dot3adAggTable_removeHier_cleanup:
+	
 	return bRetCode;
 }
 
@@ -673,7 +674,6 @@ dot3adAggTable_mapper (
 		{
 			table_entry = (dot3adAggEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -1266,8 +1266,8 @@ dot3adAggPortTable_createExt (
 	
 	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
 	
-	
 dot3adAggPortTable_createExt_cleanup:
+	
 	return poEntry;
 }
 
@@ -1285,8 +1285,8 @@ dot3adAggPortTable_removeExt (dot3adAggPortEntry_t *poEntry)
 	
 	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
 	
-	
 dot3adAggPortTable_removeExt_cleanup:
+	
 	return bRetCode;
 }
 
@@ -1296,7 +1296,7 @@ dot3adAggPortTable_createHier (
 {
 	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortEntry (poEntry);
 	
-	if (!ifData_createReference (poDot3adAggPortData->u32Index, 0, 0, false, true, false, NULL))
+	if (!ifTable_createReference (poDot3adAggPortData->u32Index, 0, 0, false, true, false, NULL))
 	{
 		goto dot3adAggPortTable_createHier_cleanup;
 	}
@@ -1320,7 +1320,6 @@ dot3adAggPortTable_createHier (
 	}
 	
 	return true;
-	
 	
 dot3adAggPortTable_createHier_cleanup:
 	
@@ -1362,7 +1361,7 @@ dot3adAggPortTable_removeHier (
 		}
 	}
 	
-	if (!ifData_removeReference (poDot3adAggPortData->u32Index, false, true, false))
+	if (!ifTable_removeReference (poDot3adAggPortData->u32Index, false, true, false))
 	{
 		goto dot3adAggPortTable_removeHier_cleanup;
 	}
@@ -1370,6 +1369,7 @@ dot3adAggPortTable_removeHier (
 	bRetCode = true;
 	
 dot3adAggPortTable_removeHier_cleanup:
+	
 	return bRetCode;
 }
 
@@ -1643,7 +1643,6 @@ dot3adAggPortTable_mapper (
 		{
 			table_entry = (dot3adAggPortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);

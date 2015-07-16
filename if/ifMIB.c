@@ -211,35 +211,6 @@ ifMIBObjects_mapper (
 /**
  *	table mapper(s) & helper(s)
  */
-bool
-ifData_getByIndexExt (
-	uint32_t u32Index, bool bWrLock,
-	ifData_t **ppoIfData)
-{
-	register ifData_t *poIfData = NULL;
-	
-	return poIfData != NULL;
-}
-
-bool
-ifData_createReference (
-	uint32_t u32IfIndex,
-	int32_t i32Type,
-	int32_t i32AdminStatus,
-	bool bCreate, bool bReference, bool bActivate,
-	ifData_t **ppoIfData)
-{
-	return false;
-}
-
-bool
-ifData_removeReference (
-	uint32_t u32IfIndex,
-	bool bCreate, bool bReference, bool bActivate)
-{
-	return false;
-}
-
 /** initialize ifTable table mapper **/
 void
 ifTable_init (void)
@@ -746,10 +717,10 @@ ifAdminStatus_handler (
 	case xAdminStatus_up_c:
 		poEntry->i32AdminStatus = u8RealStatus;
 		
-		/*if (!neIfEnable_modify (poEntry, u8RealStatus))
+		if (!neIfEnable_modify (poEntry, u8RealStatus))
 		{
 			goto ifAdminStatus_handler_cleanup;
-		}*/
+		}
 		break;
 		
 	case xAdminStatus_down_c:
@@ -758,10 +729,10 @@ ifAdminStatus_handler (
 			goto ifAdminStatus_handler_cleanup;
 		}
 		
-		/*if (!neIfEnable_modify (poEntry, u8RealStatus))
+		if (!neIfEnable_modify (poEntry, u8RealStatus))
 		{
 			goto ifAdminStatus_handler_cleanup;
-		}*/
+		}
 		
 		i32AdminStatus & xAdminStatus_fromParent_c ? false: (poEntry->i32AdminStatus = u8RealStatus);
 		break;
@@ -772,10 +743,10 @@ ifAdminStatus_handler (
 			goto ifAdminStatus_handler_cleanup;
 		}
 		
-		/*if (!neIfEnable_modify (poEntry, u8RealStatus))
+		if (!neIfEnable_modify (poEntry, u8RealStatus))
 		{
 			goto ifAdminStatus_handler_cleanup;
-		}*/
+		}
 		
 		poEntry->i32AdminStatus = u8RealStatus;
 		break;

@@ -1136,58 +1136,6 @@ Netsnmp_Node_Handler ifTable_mapper;
 #endif	/* SNMP_SRC */
 
 
-enum
-{
-	ifFlags_neCreated_c = 0,
-	ifFlags_ifCreated_c = 1,
-	ifFlags_ifXCreated_c = 2,
-	ifFlags_count_c,
-};
-
-typedef struct ifData_t
-{
-	uint32_t u32Index;
-	
-	neIfEntry_t oNe;
-	ifEntry_t oIf;
-	ifXEntry_t oIfX;
-	
-	uint8_t au8Flags[1];
-	uint32_t u32NumReferences;
-	
-	xBTree_Node_t oBTreeNode;
-	xRwLock_t oLock;
-} ifData_t;
-
-// extern xBTree_t oIfData_BTree;
-
-ifData_t * ifData_createEntry (
-	uint32_t u32Index);
-ifData_t * ifData_getByIndex (
-	uint32_t u32Index);
-ifData_t * ifData_getNextIndex (
-	uint32_t u32Index);
-#define ifData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oNe))
-#define ifData_getByIfEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oIf))
-#define ifData_getByIfXEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), ifData_t, oIfX))
-void ifData_removeEntry (ifData_t *poEntry);
-bool ifData_getByIndexExt (
-	uint32_t u32Index, bool bWrLock,
-	ifData_t **ppoIfData);
-bool ifData_createReference (
-	uint32_t u32IfIndex,
-	int32_t i32Type,
-	int32_t i32AdminStatus,
-	bool bCreate, bool bReference, bool bActivate,
-	ifData_t **ppoIfData);
-bool ifData_removeReference (
-	uint32_t u32IfIndex,
-	bool bCreate, bool bReference, bool bActivate);
-#define ifData_rdLock(poEntry) (xRwLock_rdLock (&(poEntry)->oLock))
-#define ifData_wrLock(poEntry) (xRwLock_wrLock (&(poEntry)->oLock))
-#define ifData_unLock(poEntry) (xRwLock_unlock (&(poEntry)->oLock))
-
-
 /**
  *	notification mapper(s)
  */
