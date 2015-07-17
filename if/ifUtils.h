@@ -37,6 +37,7 @@ extern "C" {
 #include <stdint.h>
 
 
+typedef bool (neIfTypeCreateHandler_t) (ifEntry_t *poIfEntry, uint8_t u8RowStatus);
 typedef bool (neIfTypeEnableHandler_t) (ifEntry_t *poIfEntry, int32_t i32AdminStatus);
 typedef bool (neIfTypeStatusHandler_t) (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked);
 typedef bool (neIfTypeStatusModifier_t) (ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate);
@@ -57,6 +58,7 @@ typedef struct neIfTypeEntry_t
 	/* Index values */
 	int32_t i32Type;
 	
+	neIfTypeCreateHandler_t *pfCreateHandler;
 	neIfTypeEnableHandler_t *pfEnableHandler;
 	neIfTypeStatusHandler_t *pfStatusHandler;
 	neIfTypeStatusModifier_t *pfStatusModifier;
@@ -102,6 +104,11 @@ extern neIfTypeStatusHandler_t neIfStatus_change;
 
 extern neIfTypeEnableHandler_t neIfEnable_modify;
 extern neIfTypeStatusHandler_t neIfTypeStatusRx;
+
+bool
+	neIfRowStatus_update (
+		ifEntry_t *poEntry, uint8_t u8RowStatus);
+
 extern neIfTypeStackHandler_t neIfTypeStackModify;
 
 

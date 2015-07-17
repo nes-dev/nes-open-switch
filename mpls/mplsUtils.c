@@ -33,6 +33,7 @@
 #include <stdint.h>
 
 
+static neIfTypeCreateHandler_t mplsInterfaceRowStatus_handler;
 static neIfTypeStackHandler_t mplsInterfaceTable_stackHandler;
 
 static neIfTypeStackHandler_t mplsTunnelTable_stackModify;
@@ -50,6 +51,7 @@ bool mplsUtilsInit (void)
 		goto mplsUtilsInit_cleanup;
 	}
 	
+	poNeIfTypeEntry->pfCreateHandler = mplsInterfaceRowStatus_handler;
 	poNeIfTypeEntry->pfStackHandler = mplsInterfaceTable_stackHandler;
 	
 	
@@ -76,7 +78,7 @@ static bool
 
 
 bool
-mplsInterfaceTable_rowHandler (
+mplsInterfaceRowStatus_handler (
 	ifEntry_t *poIfEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
@@ -86,11 +88,11 @@ mplsInterfaceTable_rowHandler (
 	
 	if ((poEntry == NULL) ^ (u8RowStatus == xRowStatus_createAndWait_c))
 	{
-		goto mplsInterfaceTable_rowHandler_cleanup;
+		goto mplsInterfaceRowStatus_handler_cleanup;
 	}
 	if (poEntry != NULL && poEntry->u8RowStatus == u8RowStatus)
 	{
-		goto mplsInterfaceTable_rowHandler_success;
+		goto mplsInterfaceRowStatus_handler_success;
 	}
 	
 	switch (u8RowStatus)
@@ -98,7 +100,7 @@ mplsInterfaceTable_rowHandler (
 	case xRowStatus_active_c:
 		if (!mplsInterfaceRowStatus_update (poIfEntry, poEntry, u8RowStatus))
 		{
-			goto mplsInterfaceTable_rowHandler_cleanup;
+			goto mplsInterfaceRowStatus_handler_cleanup;
 		}
 		
 		poEntry->u8RowStatus = u8RowStatus;
@@ -107,7 +109,7 @@ mplsInterfaceTable_rowHandler (
 	case xRowStatus_notInService_c:
 		if (!mplsInterfaceRowStatus_update (poIfEntry, poEntry, u8RowStatus))
 		{
-			goto mplsInterfaceTable_rowHandler_cleanup;
+			goto mplsInterfaceRowStatus_handler_cleanup;
 		}
 		
 		poEntry->u8RowStatus = u8RowStatus;
@@ -116,13 +118,13 @@ mplsInterfaceTable_rowHandler (
 	case xRowStatus_createAndWait_c:
 		if (poEntry != NULL || (poEntry = mplsInterfaceTable_createExt (poIfEntry->u32Index)) == NULL)
 		{
-			goto mplsInterfaceTable_rowHandler_cleanup;
+			goto mplsInterfaceRowStatus_handler_cleanup;
 		}
 		
 	case xRowStatus_destroy_c:
 		if (!mplsInterfaceRowStatus_update (poIfEntry, poEntry, u8RowStatus))
 		{
-			goto mplsInterfaceTable_rowHandler_cleanup;
+			goto mplsInterfaceRowStatus_handler_cleanup;
 		}
 		
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
@@ -131,17 +133,17 @@ mplsInterfaceTable_rowHandler (
 		{
 			if (!mplsInterfaceTable_removeExt (poEntry))
 			{
-				goto mplsInterfaceTable_rowHandler_cleanup;
+				goto mplsInterfaceRowStatus_handler_cleanup;
 			}
 		}
 		break;
 	}
 	
-mplsInterfaceTable_rowHandler_success:
+mplsInterfaceRowStatus_handler_success:
 	
 	bRetCode = true;
 	
-mplsInterfaceTable_rowHandler_cleanup:
+mplsInterfaceRowStatus_handler_cleanup:
 	
 	return bRetCode;
 }

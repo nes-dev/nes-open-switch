@@ -2822,6 +2822,11 @@ neIfRowStatus_handler (
 		
 		/* TODO */
 		
+		if (!neIfRowStatus_update (poIfEntry, u8RealStatus))
+		{
+			goto neIfRowStatus_handler_cleanup;
+		}
+		
 		poEntry->u8RowStatus = u8RealStatus;
 		
 		if (!ifAdminStatus_handler (poIfEntry, poIfEntry->i32AdminStatus, true))
@@ -2836,6 +2841,11 @@ neIfRowStatus_handler (
 			goto neIfRowStatus_handler_cleanup;
 		}
 		
+		if (!neIfRowStatus_update (poIfEntry, u8RealStatus))
+		{
+			goto neIfRowStatus_handler_cleanup;
+		}
+		
 		/* TODO */
 		poEntry->u8RowStatus = u8RealStatus;
 		break;
@@ -2846,6 +2856,11 @@ neIfRowStatus_handler (
 	case xRowStatus_createAndWait_c:
 	case xRowStatus_destroy_c:
 		if (!ifAdminStatus_handler (poIfEntry, xAdminStatus_down_c | xAdminStatus_fromParent_c, false))
+		{
+			goto neIfRowStatus_handler_cleanup;
+		}
+		
+		if (!neIfRowStatus_update (poIfEntry, u8RealStatus))
 		{
 			goto neIfRowStatus_handler_cleanup;
 		}

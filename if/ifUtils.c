@@ -71,6 +71,7 @@ neIfTypeTable_createExt (
 	
 	poEntry->i32Type = i32Type;
 	
+	poEntry->pfCreateHandler = NULL;
 	poEntry->pfEnableHandler = NULL;
 	poEntry->pfStatusHandler = &neIfTypeStatusRx;
 	poEntry->pfStatusModifier = NULL;
@@ -472,6 +473,25 @@ neIfTypeStatusModifier_unlock:
 // neIfTypeStatusModifier_cleanup:
 	
 	return bStatusModified || bPropagate;
+}
+
+bool
+neIfRowStatus_update (
+	ifEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register neIfTypeEntry_t *poIfTypeEntry = NULL;
+	
+	if ((poIfTypeEntry = neIfTypeTable_getByIndex (poEntry->i32Type)) == NULL)
+	{
+		goto neIfRowStatus_update_cleanup;
+	}
+	
+	bRetCode = poIfTypeEntry->pfCreateHandler == NULL ? true: poIfTypeEntry->pfCreateHandler (poEntry, u8RowStatus);
+	
+neIfRowStatus_update_cleanup:
+	
+	return bRetCode;
 }
 
 bool
