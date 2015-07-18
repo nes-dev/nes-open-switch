@@ -969,6 +969,12 @@ typedef struct mplsInterfaceEntry_t
 	
 	gmplsInterfaceEntry_t oG;
 	
+	int32_t i32Mtu;
+	uint8_t u8AdminStatus;
+	uint8_t u8OperStatus;
+	uint8_t au8AdminFlags[3];
+	uint8_t au8OperFlags[3];
+	uint8_t au8Speed[8];
 	uint8_t u8RowStatus;
 	
 	xBTree_Node_t oBTreeNode;

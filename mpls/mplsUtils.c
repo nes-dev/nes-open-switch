@@ -34,6 +34,7 @@
 
 
 static neIfTypeCreateHandler_t mplsInterfaceRowStatus_handler;
+static neIfTypeEnableHandler_t mplsInterfaceAdminStatus_handler;
 static neIfTypeStackHandler_t mplsInterfaceTable_stackHandler;
 
 static neIfTypeStackHandler_t mplsTunnelTable_stackModify;
@@ -52,6 +53,7 @@ bool mplsUtilsInit (void)
 	}
 	
 	poNeIfTypeEntry->pfCreateHandler = mplsInterfaceRowStatus_handler;
+	poNeIfTypeEntry->pfEnableHandler = mplsInterfaceAdminStatus_handler;
 	poNeIfTypeEntry->pfStackHandler = mplsInterfaceTable_stackHandler;
 	
 	
@@ -148,6 +150,30 @@ mplsInterfaceRowStatus_handler_cleanup:
 	return bRetCode;
 }
 
+bool
+mplsInterfaceAdminStatus_handler (
+	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
+{
+	register bool bRetCode = false;
+	register mplsInterfaceEntry_t *poEntry = NULL;
+	
+	if ((poEntry = mplsInterfaceTable_getByIndex (poIfEntry->u32Index)) == NULL)
+	{
+		goto mplsInterfaceAdminStatus_handler_cleanup;
+	}
+	
+	poEntry->u8AdminStatus = i32AdminStatus;
+	poEntry->i32Mtu = poIfEntry->i32Mtu;
+	memcpy (poEntry->au8AdminFlags, poIfEntry->oNe.au8AdminFlags, sizeof (poEntry->au8AdminFlags));
+	memcpy (poEntry->au8OperFlags, poIfEntry->oNe.au8OperFlags, sizeof (poEntry->au8OperFlags));
+	memcpy (poEntry->au8Speed, poIfEntry->oNe.au8Speed, sizeof (poEntry->au8Speed));
+	
+	bRetCode = true;
+	
+mplsInterfaceAdminStatus_handler_cleanup:
+	
+	return bRetCode;
+}
 
 bool
 mplsInterfaceTable_stackHandler (
