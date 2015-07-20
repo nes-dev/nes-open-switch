@@ -853,6 +853,7 @@ typedef struct mplsInterfaceEntry_t
 	uint8_t au8LabelParticipationType[1];
 	size_t u16LabelParticipationType_len;	/* # of uint8_t elements */
 	
+	mplsInterfacePerfEntry_t oPerf;
 	gmplsInterfaceEntry_t oG;
 	
 	int32_t i32Mtu;

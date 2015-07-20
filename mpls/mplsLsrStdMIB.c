@@ -595,40 +595,20 @@ mplsInterfacePerfTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-mplsInterfacePerfTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register mplsInterfacePerfEntry_t *pEntry1 = xBTree_entry (pNode1, mplsInterfacePerfEntry_t, oBTreeNode);
-	register mplsInterfacePerfEntry_t *pEntry2 = xBTree_entry (pNode2, mplsInterfacePerfEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oMplsInterfacePerfTable_BTree = xBTree_initInline (&mplsInterfacePerfTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 mplsInterfacePerfEntry_t *
 mplsInterfacePerfTable_createEntry (
 	uint32_t u32Index)
 {
 	register mplsInterfacePerfEntry_t *poEntry = NULL;
+	register mplsInterfaceEntry_t *poInterface = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poInterface = mplsInterfaceTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poInterface->oPerf;
 	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsInterfacePerfTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oMplsInterfacePerfTable_BTree);
 	return poEntry;
 }
 
@@ -636,60 +616,34 @@ mplsInterfacePerfEntry_t *
 mplsInterfacePerfTable_getByIndex (
 	uint32_t u32Index)
 {
-	register mplsInterfacePerfEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsInterfaceEntry_t *poInterface = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poInterface = mplsInterfaceTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oMplsInterfacePerfTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, mplsInterfacePerfEntry_t, oBTreeNode);
+	return &poInterface->oPerf;
 }
 
 mplsInterfacePerfEntry_t *
 mplsInterfacePerfTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register mplsInterfacePerfEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsInterfaceEntry_t *poInterface = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poInterface = mplsInterfaceTable_getNextIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oMplsInterfacePerfTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, mplsInterfacePerfEntry_t, oBTreeNode);
+	return &poInterface->oPerf;
 }
 
 /* remove a row from the table */
 void
 mplsInterfacePerfTable_removeEntry (mplsInterfacePerfEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsInterfacePerfTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oMplsInterfacePerfTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -699,7 +653,7 @@ mplsInterfacePerfTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oMplsInterfacePerfTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsInterfaceTable_BTree);
 	return mplsInterfacePerfTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -708,18 +662,18 @@ mplsInterfacePerfTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	mplsInterfacePerfEntry_t *poEntry = NULL;
+	mplsInterfaceEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, mplsInterfacePerfEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, mplsInterfaceEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsInterfacePerfTable_BTree);
+	*my_data_context = (void*) &poEntry->oPerf;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsInterfaceTable_BTree);
 	return put_index_data;
 }
 
@@ -728,17 +682,17 @@ mplsInterfacePerfTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	mplsInterfacePerfEntry_t *poEntry = NULL;
+	mplsInterfaceEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = mplsInterfacePerfTable_getByIndex (
+	poEntry = mplsInterfaceTable_getByIndex (
 		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oPerf;
 	return true;
 }
 
