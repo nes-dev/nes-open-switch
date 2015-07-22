@@ -547,10 +547,10 @@ enum
 typedef struct gmplsTunnelEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
-	uint32_t u32Instance;
-	uint32_t u32IngressLSRId;
-	uint32_t u32EgressLSRId;
+// 	uint32_t u32Index;
+// 	uint32_t u32Instance;
+// 	uint32_t u32IngressLSRId;
+// 	uint32_t u32EgressLSRId;
 	
 	/* Column values */
 	uint8_t u8UnnumIf;
@@ -581,10 +581,10 @@ typedef struct gmplsTunnelEntry_t
 	xOid_t aoExtraParamsPtr[128];
 	size_t u16ExtraParamsPtr_len;	/* # of xOid_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } gmplsTunnelEntry_t;
 
-extern xBTree_t oGmplsTunnelTable_BTree;
+// extern xBTree_t oGmplsTunnelTable_BTree;
 
 /* gmplsTunnelTable table mapper */
 void gmplsTunnelTable_init (void);
@@ -1097,6 +1097,8 @@ typedef struct mplsTunnelEntry_t
 	int32_t i32OperStatus;
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
+	
+	gmplsTunnelEntry_t oG;
 	
 	xBTree_Node_t oBTreeNode;
 } mplsTunnelEntry_t;
