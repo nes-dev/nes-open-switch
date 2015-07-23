@@ -17,58 +17,25 @@
  *  License for the specific language governing permissions and limitations
  *  under the License.
  */
-//set ts=4 sw=4
 
-#ifndef __TED_MAIN_C__
-#	define __TED_MAIN_C__
+#ifndef __NETEDMIB_AGENT_H__
+#	define __NETEDMIB_AGENT_H__
 
-
-#include "teLinkStdMIB_agent.h"
-#include "neTedMIB_agent.h"
-#include "tedUtils.h"
-
-#include "ted_ext.h"
-#include "ted_defines.h"
-#include "switch_ext.h"
-
-#include "lib/thread.h"
+#	ifdef __cplusplus
+extern "C" {
+#	endif
 
 
-static xThreadInfo_t oTedThread =
-{
-	.u32Index = XTHREAD_ID (ModuleId_ted_c, 0),
-	.u8SchedPolicy = SCHED_RR,
-	.u8Priority = 1,
-	.poStart = &ted_start,
-};
+
+/**
+ *	agent MIB function
+ */
+void neTedMIB_init (void);
 
 
-void *
-ted_main (void *pvArgv)
-{
-	tedUtilsInit ();
-	
-	teLinkStdMIB_init ();
-	neTedMIB_init ();
-	
-	if (xThread_create (&oTedThread) == NULL)
-	{
-		Ted_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
-	}
-	
-	return NULL;
+
+#	ifdef __cplusplus
 }
+#	endif
 
-void *
-ted_start (void *pvArgv)
-{
-	while (1)
-	{
-		xThread_sleep (1);
-	}
-	return NULL;
-}
-
-
-#endif	// __TED_MAIN_C__
+#endif /* __NETEDMIB_AGENT_H__ */

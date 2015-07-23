@@ -31,7 +31,7 @@ include ${MK_COMMON}
 
 CFLAGS +=
 
-SNMP_SRC := teLinkStdMIB.c
+SNMP_SRC := neTedMIB.c teLinkStdMIB.c
 MODULE_SRC := ted_main.c tedUtils.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})
