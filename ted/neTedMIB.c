@@ -54,6 +54,8 @@ static oid neTedNodeTable_oid[] = {1,3,6,1,4,1,36969,68,1,2};
 static oid neTedLinkTable_oid[] = {1,3,6,1,4,1,36969,68,1,3};
 static oid neTedAddressTable_oid[] = {1,3,6,1,4,1,36969,68,1,4};
 static oid neTedNeighborTable_oid[] = {1,3,6,1,4,1,36969,68,1,5};
+static oid neTeLinkAdjCapTable_oid[] = {1,3,6,1,4,1,36969,68,1,6};
+static oid neTeCompLinkAdjCapTable_oid[] = {1,3,6,1,4,1,36969,68,1,7};
 
 
 
@@ -115,6 +117,8 @@ neTedMIB_init (void)
 	neTedLinkTable_init ();
 	neTedAddressTable_init ();
 	neTedNeighborTable_init ();
+	neTeLinkAdjCapTable_init ();
+	neTeCompLinkAdjCapTable_init ();
 	
 	/* register neTedMIB modules */
 	sysORTable_createRegister ("mplsIdStdMIB", mplsIdStdMIB_oid, OID_LENGTH (mplsIdStdMIB_oid));
@@ -1766,6 +1770,18 @@ neTedLinkTable_mapper (
 			case NETEDLINKREMOTEASN:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32RemoteAsn);
 				break;
+			case NETEDLINKSWCAPTYPES:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8SwCapTypes, table_entry->u16SwCapTypes_len);
+				break;
+			case NETEDLINKSWCAPENCODINGS:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8SwCapEncodings, table_entry->u16SwCapEncodings_len);
+				break;
+			case NETEDLINKADJCAPTYPES:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdjCapTypes, table_entry->u16AdjCapTypes_len);
+				break;
+			case NETEDLINKADJCAPENCODINGS:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdjCapEncodings, table_entry->u16AdjCapEncodings_len);
+				break;
 			case NETEDLINKROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
@@ -1841,6 +1857,38 @@ neTedLinkTable_mapper (
 				break;
 			case NETEDLINKREMOTEASN:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETEDLINKSWCAPTYPES:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8SwCapTypes));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETEDLINKSWCAPENCODINGS:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8SwCapEncodings));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETEDLINKADJCAPTYPES:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8AdjCapTypes));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETEDLINKADJCAPENCODINGS:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8AdjCapEncodings));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -2062,6 +2110,78 @@ neTedLinkTable_mapper (
 				
 				table_entry->u32RemoteAsn = *request->requestvb->val.integer;
 				break;
+			case NETEDLINKSWCAPTYPES:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8SwCapTypes))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16SwCapTypes_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8SwCapTypes, sizeof (table_entry->au8SwCapTypes));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8SwCapTypes, 0, sizeof (table_entry->au8SwCapTypes));
+				memcpy (table_entry->au8SwCapTypes, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16SwCapTypes_len = request->requestvb->val_len;
+				break;
+			case NETEDLINKSWCAPENCODINGS:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8SwCapEncodings))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16SwCapEncodings_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8SwCapEncodings, sizeof (table_entry->au8SwCapEncodings));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8SwCapEncodings, 0, sizeof (table_entry->au8SwCapEncodings));
+				memcpy (table_entry->au8SwCapEncodings, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16SwCapEncodings_len = request->requestvb->val_len;
+				break;
+			case NETEDLINKADJCAPTYPES:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8AdjCapTypes))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16AdjCapTypes_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8AdjCapTypes, sizeof (table_entry->au8AdjCapTypes));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8AdjCapTypes, 0, sizeof (table_entry->au8AdjCapTypes));
+				memcpy (table_entry->au8AdjCapTypes, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16AdjCapTypes_len = request->requestvb->val_len;
+				break;
+			case NETEDLINKADJCAPENCODINGS:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8AdjCapEncodings))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16AdjCapEncodings_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8AdjCapEncodings, sizeof (table_entry->au8AdjCapEncodings));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8AdjCapEncodings, 0, sizeof (table_entry->au8AdjCapEncodings));
+				memcpy (table_entry->au8AdjCapEncodings, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16AdjCapEncodings_len = request->requestvb->val_len;
+				break;
 			case NETEDLINKSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
@@ -2136,6 +2256,22 @@ neTedLinkTable_mapper (
 				break;
 			case NETEDLINKREMOTEASN:
 				memcpy (&table_entry->u32RemoteAsn, pvOldDdata, sizeof (table_entry->u32RemoteAsn));
+				break;
+			case NETEDLINKSWCAPTYPES:
+				memcpy (table_entry->au8SwCapTypes, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16SwCapTypes_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETEDLINKSWCAPENCODINGS:
+				memcpy (table_entry->au8SwCapEncodings, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16SwCapEncodings_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETEDLINKADJCAPTYPES:
+				memcpy (table_entry->au8AdjCapTypes, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16AdjCapTypes_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETEDLINKADJCAPENCODINGS:
+				memcpy (table_entry->au8AdjCapEncodings, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16AdjCapEncodings_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case NETEDLINKROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -3208,6 +3344,1700 @@ neTedNeighborTable_mapper (
 					
 				case RS_DESTROY:
 					neTedNeighborTable_removeEntry (table_entry);
+					break;
+				}
+			}
+		}
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neTeLinkAdjCapTable table mapper **/
+void
+neTeLinkAdjCapTable_init (void)
+{
+	extern oid neTeLinkAdjCapTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neTeLinkAdjCapTable", &neTeLinkAdjCapTable_mapper,
+		neTeLinkAdjCapTable_oid, OID_LENGTH (neTeLinkAdjCapTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_INTEGER /* index: ifIndex */,
+		ASN_UNSIGNED /* index: neTeLinkAdjCapId */,
+		0);
+	table_info->min_column = NETELINKADJCAPLOWERTYPE;
+	table_info->max_column = NETELINKADJCAPSTORAGETYPE;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neTeLinkAdjCapTable_getFirst;
+	iinfo->get_next_data_point = &neTeLinkAdjCapTable_getNext;
+	iinfo->get_data_point = &neTeLinkAdjCapTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neTeLinkAdjCapTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neTeLinkAdjCapEntry_t *pEntry1 = xBTree_entry (pNode1, neTeLinkAdjCapEntry_t, oBTreeNode);
+	register neTeLinkAdjCapEntry_t *pEntry2 = xBTree_entry (pNode2, neTeLinkAdjCapEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32Id < pEntry2->u32Id) ? -1:
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32Id == pEntry2->u32Id) ? 0: 1;
+}
+
+xBTree_t oNeTeLinkAdjCapTable_BTree = xBTree_initInline (&neTeLinkAdjCapTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+neTeLinkAdjCapEntry_t *
+neTeLinkAdjCapTable_createEntry (
+	uint32_t u32IfIndex,
+	uint32_t u32Id)
+{
+	register neTeLinkAdjCapEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32IfIndex = u32IfIndex;
+	poEntry->u32Id = u32Id;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTeLinkAdjCapTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neTeLinkAdjCapStorageType_volatile_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeTeLinkAdjCapTable_BTree);
+	return poEntry;
+}
+
+neTeLinkAdjCapEntry_t *
+neTeLinkAdjCapTable_getByIndex (
+	uint32_t u32IfIndex,
+	uint32_t u32Id)
+{
+	register neTeLinkAdjCapEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->u32Id = u32Id;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeTeLinkAdjCapTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neTeLinkAdjCapEntry_t, oBTreeNode);
+}
+
+neTeLinkAdjCapEntry_t *
+neTeLinkAdjCapTable_getNextIndex (
+	uint32_t u32IfIndex,
+	uint32_t u32Id)
+{
+	register neTeLinkAdjCapEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->u32Id = u32Id;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeTeLinkAdjCapTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neTeLinkAdjCapEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neTeLinkAdjCapTable_removeEntry (neTeLinkAdjCapEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTeLinkAdjCapTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeTeLinkAdjCapTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neTeLinkAdjCapTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeTeLinkAdjCapTable_BTree);
+	return neTeLinkAdjCapTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neTeLinkAdjCapTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neTeLinkAdjCapEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neTeLinkAdjCapEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32IfIndex);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Id);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeTeLinkAdjCapTable_BTree);
+	return put_index_data;
+}
+
+bool
+neTeLinkAdjCapTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neTeLinkAdjCapEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	
+	poEntry = neTeLinkAdjCapTable_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neTeLinkAdjCapTable table mapper */
+int
+neTeLinkAdjCapTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neTeLinkAdjCapEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTeLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NETELINKADJCAPLOWERTYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LowerType);
+				break;
+			case NETELINKADJCAPLOWERENCODING:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LowerEncoding);
+				break;
+			case NETELINKADJCAPUPPERTYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32UpperType);
+				break;
+			case NETELINKADJCAPUPPERENCODING:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32UpperEncoding);
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO0:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio0, table_entry->u16MaxLspBandwidthPrio0_len);
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO1:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio1, table_entry->u16MaxLspBandwidthPrio1_len);
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO2:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio2, table_entry->u16MaxLspBandwidthPrio2_len);
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO3:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio3, table_entry->u16MaxLspBandwidthPrio3_len);
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO4:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio4, table_entry->u16MaxLspBandwidthPrio4_len);
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO5:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio5, table_entry->u16MaxLspBandwidthPrio5_len);
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO6:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio6, table_entry->u16MaxLspBandwidthPrio6_len);
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO7:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio7, table_entry->u16MaxLspBandwidthPrio7_len);
+				break;
+			case NETELINKADJCAPROWSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
+				break;
+			case NETELINKADJCAPSTORAGETYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTeLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETELINKADJCAPLOWERTYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPLOWERENCODING:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPUPPERTYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPUPPERENCODING:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO0:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio0));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO1:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio1));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO2:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio2));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO3:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio3));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO4:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio4));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO5:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio5));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO6:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio6));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO7:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio7));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPROWSTATUS:
+				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETELINKADJCAPSTORAGETYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTeLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			register netsnmp_variable_list *idx2 = idx1->next_variable;
+			
+			switch (table_info->colnum)
+			{
+			case NETELINKADJCAPROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = neTeLinkAdjCapTable_createEntry (
+						*idx1->val.integer,
+						*idx2->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+					
+				case RS_DESTROY:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neTeLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NETELINKADJCAPROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neTeLinkAdjCapTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neTeLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETELINKADJCAPLOWERTYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32LowerType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32LowerType, sizeof (table_entry->i32LowerType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32LowerType = *request->requestvb->val.integer;
+				break;
+			case NETELINKADJCAPLOWERENCODING:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32LowerEncoding))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32LowerEncoding, sizeof (table_entry->i32LowerEncoding));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32LowerEncoding = *request->requestvb->val.integer;
+				break;
+			case NETELINKADJCAPUPPERTYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32UpperType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32UpperType, sizeof (table_entry->i32UpperType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32UpperType = *request->requestvb->val.integer;
+				break;
+			case NETELINKADJCAPUPPERENCODING:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32UpperEncoding))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32UpperEncoding, sizeof (table_entry->i32UpperEncoding));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32UpperEncoding = *request->requestvb->val.integer;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO0:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio0))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio0_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio0, sizeof (table_entry->au8MaxLspBandwidthPrio0));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio0, 0, sizeof (table_entry->au8MaxLspBandwidthPrio0));
+				memcpy (table_entry->au8MaxLspBandwidthPrio0, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio0_len = request->requestvb->val_len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO1:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio1))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio1_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio1, sizeof (table_entry->au8MaxLspBandwidthPrio1));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio1, 0, sizeof (table_entry->au8MaxLspBandwidthPrio1));
+				memcpy (table_entry->au8MaxLspBandwidthPrio1, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio1_len = request->requestvb->val_len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO2:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio2))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio2_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio2, sizeof (table_entry->au8MaxLspBandwidthPrio2));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio2, 0, sizeof (table_entry->au8MaxLspBandwidthPrio2));
+				memcpy (table_entry->au8MaxLspBandwidthPrio2, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio2_len = request->requestvb->val_len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO3:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio3))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio3_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio3, sizeof (table_entry->au8MaxLspBandwidthPrio3));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio3, 0, sizeof (table_entry->au8MaxLspBandwidthPrio3));
+				memcpy (table_entry->au8MaxLspBandwidthPrio3, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio3_len = request->requestvb->val_len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO4:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio4))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio4_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio4, sizeof (table_entry->au8MaxLspBandwidthPrio4));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio4, 0, sizeof (table_entry->au8MaxLspBandwidthPrio4));
+				memcpy (table_entry->au8MaxLspBandwidthPrio4, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio4_len = request->requestvb->val_len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO5:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio5))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio5_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio5, sizeof (table_entry->au8MaxLspBandwidthPrio5));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio5, 0, sizeof (table_entry->au8MaxLspBandwidthPrio5));
+				memcpy (table_entry->au8MaxLspBandwidthPrio5, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio5_len = request->requestvb->val_len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO6:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio6))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio6_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio6, sizeof (table_entry->au8MaxLspBandwidthPrio6));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio6, 0, sizeof (table_entry->au8MaxLspBandwidthPrio6));
+				memcpy (table_entry->au8MaxLspBandwidthPrio6, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio6_len = request->requestvb->val_len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO7:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio7))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio7_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio7, sizeof (table_entry->au8MaxLspBandwidthPrio7));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio7, 0, sizeof (table_entry->au8MaxLspBandwidthPrio7));
+				memcpy (table_entry->au8MaxLspBandwidthPrio7, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio7_len = request->requestvb->val_len;
+				break;
+			case NETELINKADJCAPSTORAGETYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8StorageType = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		/* Check the internal consistency of an active row */
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTeLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETELINKADJCAPROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_ACTIVE:
+				case RS_CREATEANDGO:
+					if (/* TODO : int neTeLinkAdjCapTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neTeLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NETELINKADJCAPLOWERTYPE:
+				memcpy (&table_entry->i32LowerType, pvOldDdata, sizeof (table_entry->i32LowerType));
+				break;
+			case NETELINKADJCAPLOWERENCODING:
+				memcpy (&table_entry->i32LowerEncoding, pvOldDdata, sizeof (table_entry->i32LowerEncoding));
+				break;
+			case NETELINKADJCAPUPPERTYPE:
+				memcpy (&table_entry->i32UpperType, pvOldDdata, sizeof (table_entry->i32UpperType));
+				break;
+			case NETELINKADJCAPUPPERENCODING:
+				memcpy (&table_entry->i32UpperEncoding, pvOldDdata, sizeof (table_entry->i32UpperEncoding));
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO0:
+				memcpy (table_entry->au8MaxLspBandwidthPrio0, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio0_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO1:
+				memcpy (table_entry->au8MaxLspBandwidthPrio1, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio1_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO2:
+				memcpy (table_entry->au8MaxLspBandwidthPrio2, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio2_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO3:
+				memcpy (table_entry->au8MaxLspBandwidthPrio3, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio3_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO4:
+				memcpy (table_entry->au8MaxLspBandwidthPrio4, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio4_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO5:
+				memcpy (table_entry->au8MaxLspBandwidthPrio5, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio5_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO6:
+				memcpy (table_entry->au8MaxLspBandwidthPrio6, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio6_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETELINKADJCAPMAXLSPBANDWIDTHPRIO7:
+				memcpy (table_entry->au8MaxLspBandwidthPrio7, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio7_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETELINKADJCAPROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neTeLinkAdjCapTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+				break;
+			case NETELINKADJCAPSTORAGETYPE:
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTeLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETELINKADJCAPROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_ACTIVE:
+					table_entry->u8RowStatus = RS_ACTIVE;
+					break;
+					
+				case RS_CREATEANDWAIT:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_NOTINSERVICE:
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
+					break;
+					
+				case RS_DESTROY:
+					neTeLinkAdjCapTable_removeEntry (table_entry);
+					break;
+				}
+			}
+		}
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neTeCompLinkAdjCapTable table mapper **/
+void
+neTeCompLinkAdjCapTable_init (void)
+{
+	extern oid neTeCompLinkAdjCapTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neTeCompLinkAdjCapTable", &neTeCompLinkAdjCapTable_mapper,
+		neTeCompLinkAdjCapTable_oid, OID_LENGTH (neTeCompLinkAdjCapTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_INTEGER /* index: ifIndex */,
+		ASN_UNSIGNED /* index: neTeCompLinkAdjCapId */,
+		0);
+	table_info->min_column = NETECOMPLINKADJCAPLOWERTYPE;
+	table_info->max_column = NETECOMPLINKADJCAPSTORAGETYPE;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neTeCompLinkAdjCapTable_getFirst;
+	iinfo->get_next_data_point = &neTeCompLinkAdjCapTable_getNext;
+	iinfo->get_data_point = &neTeCompLinkAdjCapTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neTeCompLinkAdjCapTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neTeCompLinkAdjCapEntry_t *pEntry1 = xBTree_entry (pNode1, neTeCompLinkAdjCapEntry_t, oBTreeNode);
+	register neTeCompLinkAdjCapEntry_t *pEntry2 = xBTree_entry (pNode2, neTeCompLinkAdjCapEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32Id < pEntry2->u32Id) ? -1:
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32Id == pEntry2->u32Id) ? 0: 1;
+}
+
+xBTree_t oNeTeCompLinkAdjCapTable_BTree = xBTree_initInline (&neTeCompLinkAdjCapTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+neTeCompLinkAdjCapEntry_t *
+neTeCompLinkAdjCapTable_createEntry (
+	uint32_t u32IfIndex,
+	uint32_t u32Id)
+{
+	register neTeCompLinkAdjCapEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32IfIndex = u32IfIndex;
+	poEntry->u32Id = u32Id;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTeCompLinkAdjCapTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neTeCompLinkAdjCapStorageType_volatile_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeTeCompLinkAdjCapTable_BTree);
+	return poEntry;
+}
+
+neTeCompLinkAdjCapEntry_t *
+neTeCompLinkAdjCapTable_getByIndex (
+	uint32_t u32IfIndex,
+	uint32_t u32Id)
+{
+	register neTeCompLinkAdjCapEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->u32Id = u32Id;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeTeCompLinkAdjCapTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neTeCompLinkAdjCapEntry_t, oBTreeNode);
+}
+
+neTeCompLinkAdjCapEntry_t *
+neTeCompLinkAdjCapTable_getNextIndex (
+	uint32_t u32IfIndex,
+	uint32_t u32Id)
+{
+	register neTeCompLinkAdjCapEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->u32Id = u32Id;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeTeCompLinkAdjCapTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neTeCompLinkAdjCapEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neTeCompLinkAdjCapTable_removeEntry (neTeCompLinkAdjCapEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTeCompLinkAdjCapTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeTeCompLinkAdjCapTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neTeCompLinkAdjCapTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeTeCompLinkAdjCapTable_BTree);
+	return neTeCompLinkAdjCapTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neTeCompLinkAdjCapTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neTeCompLinkAdjCapEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neTeCompLinkAdjCapEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32IfIndex);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Id);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeTeCompLinkAdjCapTable_BTree);
+	return put_index_data;
+}
+
+bool
+neTeCompLinkAdjCapTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neTeCompLinkAdjCapEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	
+	poEntry = neTeCompLinkAdjCapTable_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neTeCompLinkAdjCapTable table mapper */
+int
+neTeCompLinkAdjCapTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neTeCompLinkAdjCapEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTeCompLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NETECOMPLINKADJCAPLOWERTYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LowerType);
+				break;
+			case NETECOMPLINKADJCAPLOWERENCODING:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LowerEncoding);
+				break;
+			case NETECOMPLINKADJCAPUPPERTYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32UpperType);
+				break;
+			case NETECOMPLINKADJCAPUPPERENCODING:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32UpperEncoding);
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO0:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio0, table_entry->u16MaxLspBandwidthPrio0_len);
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO1:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio1, table_entry->u16MaxLspBandwidthPrio1_len);
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO2:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio2, table_entry->u16MaxLspBandwidthPrio2_len);
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO3:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio3, table_entry->u16MaxLspBandwidthPrio3_len);
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO4:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio4, table_entry->u16MaxLspBandwidthPrio4_len);
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO5:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio5, table_entry->u16MaxLspBandwidthPrio5_len);
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO6:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio6, table_entry->u16MaxLspBandwidthPrio6_len);
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO7:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio7, table_entry->u16MaxLspBandwidthPrio7_len);
+				break;
+			case NETECOMPLINKADJCAPROWSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
+				break;
+			case NETECOMPLINKADJCAPSTORAGETYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTeCompLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETECOMPLINKADJCAPLOWERTYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPLOWERENCODING:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPUPPERTYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPUPPERENCODING:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO0:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio0));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO1:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio1));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO2:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio2));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO3:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio3));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO4:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio4));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO5:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio5));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO6:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio6));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO7:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio7));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPROWSTATUS:
+				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETECOMPLINKADJCAPSTORAGETYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTeCompLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			register netsnmp_variable_list *idx2 = idx1->next_variable;
+			
+			switch (table_info->colnum)
+			{
+			case NETECOMPLINKADJCAPROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = neTeCompLinkAdjCapTable_createEntry (
+						*idx1->val.integer,
+						*idx2->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+					
+				case RS_DESTROY:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neTeCompLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NETECOMPLINKADJCAPROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neTeCompLinkAdjCapTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neTeCompLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETECOMPLINKADJCAPLOWERTYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32LowerType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32LowerType, sizeof (table_entry->i32LowerType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32LowerType = *request->requestvb->val.integer;
+				break;
+			case NETECOMPLINKADJCAPLOWERENCODING:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32LowerEncoding))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32LowerEncoding, sizeof (table_entry->i32LowerEncoding));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32LowerEncoding = *request->requestvb->val.integer;
+				break;
+			case NETECOMPLINKADJCAPUPPERTYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32UpperType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32UpperType, sizeof (table_entry->i32UpperType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32UpperType = *request->requestvb->val.integer;
+				break;
+			case NETECOMPLINKADJCAPUPPERENCODING:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32UpperEncoding))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32UpperEncoding, sizeof (table_entry->i32UpperEncoding));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32UpperEncoding = *request->requestvb->val.integer;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO0:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio0))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio0_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio0, sizeof (table_entry->au8MaxLspBandwidthPrio0));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio0, 0, sizeof (table_entry->au8MaxLspBandwidthPrio0));
+				memcpy (table_entry->au8MaxLspBandwidthPrio0, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio0_len = request->requestvb->val_len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO1:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio1))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio1_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio1, sizeof (table_entry->au8MaxLspBandwidthPrio1));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio1, 0, sizeof (table_entry->au8MaxLspBandwidthPrio1));
+				memcpy (table_entry->au8MaxLspBandwidthPrio1, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio1_len = request->requestvb->val_len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO2:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio2))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio2_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio2, sizeof (table_entry->au8MaxLspBandwidthPrio2));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio2, 0, sizeof (table_entry->au8MaxLspBandwidthPrio2));
+				memcpy (table_entry->au8MaxLspBandwidthPrio2, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio2_len = request->requestvb->val_len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO3:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio3))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio3_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio3, sizeof (table_entry->au8MaxLspBandwidthPrio3));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio3, 0, sizeof (table_entry->au8MaxLspBandwidthPrio3));
+				memcpy (table_entry->au8MaxLspBandwidthPrio3, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio3_len = request->requestvb->val_len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO4:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio4))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio4_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio4, sizeof (table_entry->au8MaxLspBandwidthPrio4));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio4, 0, sizeof (table_entry->au8MaxLspBandwidthPrio4));
+				memcpy (table_entry->au8MaxLspBandwidthPrio4, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio4_len = request->requestvb->val_len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO5:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio5))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio5_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio5, sizeof (table_entry->au8MaxLspBandwidthPrio5));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio5, 0, sizeof (table_entry->au8MaxLspBandwidthPrio5));
+				memcpy (table_entry->au8MaxLspBandwidthPrio5, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio5_len = request->requestvb->val_len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO6:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio6))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio6_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio6, sizeof (table_entry->au8MaxLspBandwidthPrio6));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio6, 0, sizeof (table_entry->au8MaxLspBandwidthPrio6));
+				memcpy (table_entry->au8MaxLspBandwidthPrio6, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio6_len = request->requestvb->val_len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO7:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio7))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxLspBandwidthPrio7_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio7, sizeof (table_entry->au8MaxLspBandwidthPrio7));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8MaxLspBandwidthPrio7, 0, sizeof (table_entry->au8MaxLspBandwidthPrio7));
+				memcpy (table_entry->au8MaxLspBandwidthPrio7, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16MaxLspBandwidthPrio7_len = request->requestvb->val_len;
+				break;
+			case NETECOMPLINKADJCAPSTORAGETYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8StorageType = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		/* Check the internal consistency of an active row */
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTeCompLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETECOMPLINKADJCAPROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_ACTIVE:
+				case RS_CREATEANDGO:
+					if (/* TODO : int neTeCompLinkAdjCapTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neTeCompLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NETECOMPLINKADJCAPLOWERTYPE:
+				memcpy (&table_entry->i32LowerType, pvOldDdata, sizeof (table_entry->i32LowerType));
+				break;
+			case NETECOMPLINKADJCAPLOWERENCODING:
+				memcpy (&table_entry->i32LowerEncoding, pvOldDdata, sizeof (table_entry->i32LowerEncoding));
+				break;
+			case NETECOMPLINKADJCAPUPPERTYPE:
+				memcpy (&table_entry->i32UpperType, pvOldDdata, sizeof (table_entry->i32UpperType));
+				break;
+			case NETECOMPLINKADJCAPUPPERENCODING:
+				memcpy (&table_entry->i32UpperEncoding, pvOldDdata, sizeof (table_entry->i32UpperEncoding));
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO0:
+				memcpy (table_entry->au8MaxLspBandwidthPrio0, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio0_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO1:
+				memcpy (table_entry->au8MaxLspBandwidthPrio1, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio1_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO2:
+				memcpy (table_entry->au8MaxLspBandwidthPrio2, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio2_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO3:
+				memcpy (table_entry->au8MaxLspBandwidthPrio3, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio3_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO4:
+				memcpy (table_entry->au8MaxLspBandwidthPrio4, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio4_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO5:
+				memcpy (table_entry->au8MaxLspBandwidthPrio5, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio5_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO6:
+				memcpy (table_entry->au8MaxLspBandwidthPrio6, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio6_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETECOMPLINKADJCAPMAXLSPBANDWIDTHPRIO7:
+				memcpy (table_entry->au8MaxLspBandwidthPrio7, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16MaxLspBandwidthPrio7_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				break;
+			case NETECOMPLINKADJCAPROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neTeCompLinkAdjCapTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+				break;
+			case NETECOMPLINKADJCAPSTORAGETYPE:
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTeCompLinkAdjCapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETECOMPLINKADJCAPROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_ACTIVE:
+					table_entry->u8RowStatus = RS_ACTIVE;
+					break;
+					
+				case RS_CREATEANDWAIT:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_NOTINSERVICE:
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
+					break;
+					
+				case RS_DESTROY:
+					neTeCompLinkAdjCapTable_removeEntry (table_entry);
 					break;
 				}
 			}
