@@ -213,10 +213,10 @@ Netsnmp_Node_Handler mplsTunnelResourceTable_mapper;
 typedef struct mplsTunnelPerfEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
-	uint32_t u32Instance;
-	uint32_t u32IngressLSRId;
-	uint32_t u32EgressLSRId;
+// 	uint32_t u32Index;
+// 	uint32_t u32Instance;
+// 	uint32_t u32IngressLSRId;
+// 	uint32_t u32EgressLSRId;
 	
 	/* Column values */
 	uint32_t u32Packets;
@@ -225,10 +225,10 @@ typedef struct mplsTunnelPerfEntry_t
 	uint32_t u32Bytes;
 	uint64_t u64HCBytes;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } mplsTunnelPerfEntry_t;
 
-extern xBTree_t oMplsTunnelPerfTable_BTree;
+// extern xBTree_t oMplsTunnelPerfTable_BTree;
 
 /* mplsTunnelPerfTable table mapper */
 void mplsTunnelPerfTable_init (void);
@@ -1098,6 +1098,7 @@ typedef struct mplsTunnelEntry_t
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
+	mplsTunnelPerfEntry_t oPerf;
 	gmplsTunnelEntry_t oG;
 	
 	xBTree_Node_t oBTreeNode;
