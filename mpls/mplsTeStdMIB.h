@@ -1100,6 +1100,7 @@ typedef struct mplsTunnelEntry_t
 	
 	mplsTunnelPerfEntry_t oPerf;
 	gmplsTunnelEntry_t oG;
+	gmplsTunnelReversePerfEntry_t oReversePerf;
 	
 	xBTree_Node_t oBTreeNode;
 } mplsTunnelEntry_t;

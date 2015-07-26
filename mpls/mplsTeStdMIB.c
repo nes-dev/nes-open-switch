@@ -6474,23 +6474,6 @@ gmplsTunnelReversePerfTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-gmplsTunnelReversePerfTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register gmplsTunnelReversePerfEntry_t *pEntry1 = xBTree_entry (pNode1, gmplsTunnelReversePerfEntry_t, oBTreeNode);
-	register gmplsTunnelReversePerfEntry_t *pEntry2 = xBTree_entry (pNode2, gmplsTunnelReversePerfEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Index < pEntry2->u32Index) ||
-		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Instance < pEntry2->u32Instance) ||
-		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Instance == pEntry2->u32Instance && pEntry1->u32IngressLSRId < pEntry2->u32IngressLSRId) ||
-		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Instance == pEntry2->u32Instance && pEntry1->u32IngressLSRId == pEntry2->u32IngressLSRId && pEntry1->u32EgressLSRId < pEntry2->u32EgressLSRId) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Instance == pEntry2->u32Instance && pEntry1->u32IngressLSRId == pEntry2->u32IngressLSRId && pEntry1->u32EgressLSRId == pEntry2->u32EgressLSRId) ? 0: 1;
-}
-
-xBTree_t oGmplsTunnelReversePerfTable_BTree = xBTree_initInline (&gmplsTunnelReversePerfTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 gmplsTunnelReversePerfEntry_t *
 gmplsTunnelReversePerfTable_createEntry (
@@ -6500,23 +6483,14 @@ gmplsTunnelReversePerfTable_createEntry (
 	uint32_t u32EgressLSRId)
 {
 	register gmplsTunnelReversePerfEntry_t *poEntry = NULL;
+	register mplsTunnelEntry_t *poTunnel = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poTunnel = mplsTunnelTable_getByIndex (u32Index, u32Instance, u32IngressLSRId, u32EgressLSRId)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poTunnel->oReversePerf;
 	
-	poEntry->u32Index = u32Index;
-	poEntry->u32Instance = u32Instance;
-	poEntry->u32IngressLSRId = u32IngressLSRId;
-	poEntry->u32EgressLSRId = u32EgressLSRId;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsTunnelReversePerfTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oGmplsTunnelReversePerfTable_BTree);
 	return poEntry;
 }
 
@@ -6527,26 +6501,14 @@ gmplsTunnelReversePerfTable_getByIndex (
 	uint32_t u32IngressLSRId,
 	uint32_t u32EgressLSRId)
 {
-	register gmplsTunnelReversePerfEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsTunnelEntry_t *poTunnel = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poTunnel = mplsTunnelTable_getByIndex (u32Index, u32Instance, u32IngressLSRId, u32EgressLSRId)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	poTmpEntry->u32Instance = u32Instance;
-	poTmpEntry->u32IngressLSRId = u32IngressLSRId;
-	poTmpEntry->u32EgressLSRId = u32EgressLSRId;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oGmplsTunnelReversePerfTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, gmplsTunnelReversePerfEntry_t, oBTreeNode);
+	return &poTunnel->oReversePerf;
 }
 
 gmplsTunnelReversePerfEntry_t *
@@ -6556,40 +6518,20 @@ gmplsTunnelReversePerfTable_getNextIndex (
 	uint32_t u32IngressLSRId,
 	uint32_t u32EgressLSRId)
 {
-	register gmplsTunnelReversePerfEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsTunnelEntry_t *poTunnel = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poTunnel = mplsTunnelTable_getNextIndex (u32Index, u32Instance, u32IngressLSRId, u32EgressLSRId)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	poTmpEntry->u32Instance = u32Instance;
-	poTmpEntry->u32IngressLSRId = u32IngressLSRId;
-	poTmpEntry->u32EgressLSRId = u32EgressLSRId;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oGmplsTunnelReversePerfTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, gmplsTunnelReversePerfEntry_t, oBTreeNode);
+	return &poTunnel->oReversePerf;
 }
 
 /* remove a row from the table */
 void
 gmplsTunnelReversePerfTable_removeEntry (gmplsTunnelReversePerfEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsTunnelReversePerfTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oGmplsTunnelReversePerfTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -6599,7 +6541,7 @@ gmplsTunnelReversePerfTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oGmplsTunnelReversePerfTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsTunnelTable_BTree);
 	return gmplsTunnelReversePerfTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -6608,14 +6550,14 @@ gmplsTunnelReversePerfTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	gmplsTunnelReversePerfEntry_t *poEntry = NULL;
+	mplsTunnelEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, gmplsTunnelReversePerfEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, mplsTunnelEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
 	idx = idx->next_variable;
@@ -6624,8 +6566,8 @@ gmplsTunnelReversePerfTable_getNext (
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32IngressLSRId);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32EgressLSRId);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oGmplsTunnelReversePerfTable_BTree);
+	*my_data_context = (void*) &poEntry->oReversePerf;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsTunnelTable_BTree);
 	return put_index_data;
 }
 
@@ -6634,13 +6576,13 @@ gmplsTunnelReversePerfTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	gmplsTunnelReversePerfEntry_t *poEntry = NULL;
+	mplsTunnelEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	register netsnmp_variable_list *idx3 = idx2->next_variable;
 	register netsnmp_variable_list *idx4 = idx3->next_variable;
 	
-	poEntry = gmplsTunnelReversePerfTable_getByIndex (
+	poEntry = mplsTunnelTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer,
 		*idx3->val.integer,
@@ -6650,7 +6592,7 @@ gmplsTunnelReversePerfTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oReversePerf;
 	return true;
 }
 
