@@ -5,7 +5,7 @@
  *  All rights reserved. This source file is the sole property of NES, and
  *  contain proprietary and confidential information related to NES.
  *
- *  Licensed under the NES RED Licensee, Version 1.0 (the "License"); you may
+ *  Licensed under the NES RED License, Version 1.0 (the "License"); you may
  *  not use this file except in compliance with the License. You may obtain a
  *  copy of the License bundled along with this file. Any kind of reproduction
  *  or duplication of any part of this file which conflicts with the License

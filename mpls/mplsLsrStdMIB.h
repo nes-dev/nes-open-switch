@@ -5,7 +5,7 @@
  *  All rights reserved. This source file is the sole property of NES, and
  *  contain proprietary and confidential information related to NES.
  *
- *  Licensed under the NES RED Licensee, Version 1.0 (the "License"); you may
+ *  Licensed under the NES RED License, Version 1.0 (the "License"); you may
  *  not use this file except in compliance with the License. You may obtain a
  *  copy of the License bundled along with this file. Any kind of reproduction
  *  or duplication of any part of this file which conflicts with the License
@@ -128,136 +128,6 @@ Netsnmp_Node_Handler mplsInterfacePerfTable_mapper;
 
 
 /**
- *	table mplsInSegmentTable definitions
- */
-#define MPLSINSEGMENTINDEX 1
-#define MPLSINSEGMENTINTERFACE 2
-#define MPLSINSEGMENTLABEL 3
-#define MPLSINSEGMENTLABELPTR 4
-#define MPLSINSEGMENTNPOP 5
-#define MPLSINSEGMENTADDRFAMILY 6
-#define MPLSINSEGMENTXCINDEX 7
-#define MPLSINSEGMENTOWNER 8
-#define MPLSINSEGMENTTRAFFICPARAMPTR 9
-#define MPLSINSEGMENTROWSTATUS 10
-#define MPLSINSEGMENTSTORAGETYPE 11
-
-enum
-{
-	/* enums for column mplsInSegmentAddrFamily */
-	mplsInSegmentAddrFamily_other_c = 0,
-	mplsInSegmentAddrFamily_ipV4_c = 1,
-	mplsInSegmentAddrFamily_ipV6_c = 2,
-	mplsInSegmentAddrFamily_nsap_c = 3,
-	mplsInSegmentAddrFamily_hdlc_c = 4,
-	mplsInSegmentAddrFamily_bbn1822_c = 5,
-	mplsInSegmentAddrFamily_all802_c = 6,
-	mplsInSegmentAddrFamily_e163_c = 7,
-	mplsInSegmentAddrFamily_e164_c = 8,
-	mplsInSegmentAddrFamily_f69_c = 9,
-	mplsInSegmentAddrFamily_x121_c = 10,
-	mplsInSegmentAddrFamily_ipx_c = 11,
-	mplsInSegmentAddrFamily_appleTalk_c = 12,
-	mplsInSegmentAddrFamily_decnetIV_c = 13,
-	mplsInSegmentAddrFamily_banyanVines_c = 14,
-	mplsInSegmentAddrFamily_e164withNsap_c = 15,
-	mplsInSegmentAddrFamily_dns_c = 16,
-	mplsInSegmentAddrFamily_distinguishedName_c = 17,
-	mplsInSegmentAddrFamily_asNumber_c = 18,
-	mplsInSegmentAddrFamily_xtpOverIpv4_c = 19,
-	mplsInSegmentAddrFamily_xtpOverIpv6_c = 20,
-	mplsInSegmentAddrFamily_xtpNativeModeXTP_c = 21,
-	mplsInSegmentAddrFamily_fibreChannelWWPN_c = 22,
-	mplsInSegmentAddrFamily_fibreChannelWWNN_c = 23,
-	mplsInSegmentAddrFamily_gwid_c = 24,
-	mplsInSegmentAddrFamily_afi_c = 25,
-	mplsInSegmentAddrFamily_mplsTpSectionEndpointIdentifier_c = 26,
-	mplsInSegmentAddrFamily_mplsTpLspEndpointIdentifier_c = 27,
-	mplsInSegmentAddrFamily_mplsTpPseudowireEndpointIdentifier_c = 28,
-	mplsInSegmentAddrFamily_eigrpCommonServiceFamily_c = 16384,
-	mplsInSegmentAddrFamily_eigrpIpv4ServiceFamily_c = 16385,
-	mplsInSegmentAddrFamily_eigrpIpv6ServiceFamily_c = 16386,
-	mplsInSegmentAddrFamily_lispCanonicalAddressFormat_c = 16387,
-	mplsInSegmentAddrFamily_bgpLs_c = 16388,
-	mplsInSegmentAddrFamily_fortyeightBitMac_c = 16389,
-	mplsInSegmentAddrFamily_sixtyfourBitMac_c = 16390,
-	mplsInSegmentAddrFamily_oui_c = 16391,
-	mplsInSegmentAddrFamily_mac24_c = 16392,
-	mplsInSegmentAddrFamily_mac40_c = 16393,
-	mplsInSegmentAddrFamily_ipv664_c = 16394,
-	mplsInSegmentAddrFamily_rBridgePortID_c = 16395,
-	mplsInSegmentAddrFamily_reserved_c = 65535,
-
-	/* enums for column mplsInSegmentOwner */
-	mplsInSegmentOwner_unknown_c = 1,
-	mplsInSegmentOwner_other_c = 2,
-	mplsInSegmentOwner_snmp_c = 3,
-	mplsInSegmentOwner_ldp_c = 4,
-	mplsInSegmentOwner_crldp_c = 5,
-	mplsInSegmentOwner_rsvpTe_c = 6,
-	mplsInSegmentOwner_policyAgent_c = 7,
-
-	/* enums for column mplsInSegmentRowStatus */
-	mplsInSegmentRowStatus_active_c = 1,
-	mplsInSegmentRowStatus_notInService_c = 2,
-	mplsInSegmentRowStatus_notReady_c = 3,
-	mplsInSegmentRowStatus_createAndGo_c = 4,
-	mplsInSegmentRowStatus_createAndWait_c = 5,
-	mplsInSegmentRowStatus_destroy_c = 6,
-
-	/* enums for column mplsInSegmentStorageType */
-	mplsInSegmentStorageType_other_c = 1,
-	mplsInSegmentStorageType_volatile_c = 2,
-	mplsInSegmentStorageType_nonVolatile_c = 3,
-	mplsInSegmentStorageType_permanent_c = 4,
-	mplsInSegmentStorageType_readOnly_c = 5,
-};
-
-/* table mplsInSegmentTable row entry data structure */
-typedef struct mplsInSegmentEntry_t
-{
-	/* Index values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
-	
-	/* Column values */
-	uint32_t u32Interface;
-	uint32_t u32Label;
-	xOid_t aoLabelPtr[128];
-	size_t u16LabelPtr_len;	/* # of xOid_t elements */
-	int32_t i32NPop;
-	int32_t i32AddrFamily;
-	uint8_t au8XCIndex[24];
-	size_t u16XCIndex_len;	/* # of uint8_t elements */
-	int32_t i32Owner;
-	xOid_t aoTrafficParamPtr[128];
-	size_t u16TrafficParamPtr_len;	/* # of xOid_t elements */
-	uint8_t u8RowStatus;
-	uint8_t u8StorageType;
-	
-	xBTree_Node_t oBTreeNode;
-} mplsInSegmentEntry_t;
-
-extern xBTree_t oMplsInSegmentTable_BTree;
-
-/* mplsInSegmentTable table mapper */
-void mplsInSegmentTable_init (void);
-mplsInSegmentEntry_t * mplsInSegmentTable_createEntry (
-	uint8_t *pau8Index, size_t u16Index_len);
-mplsInSegmentEntry_t * mplsInSegmentTable_getByIndex (
-	uint8_t *pau8Index, size_t u16Index_len);
-mplsInSegmentEntry_t * mplsInSegmentTable_getNextIndex (
-	uint8_t *pau8Index, size_t u16Index_len);
-void mplsInSegmentTable_removeEntry (mplsInSegmentEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point mplsInSegmentTable_getFirst;
-Netsnmp_Next_Data_Point mplsInSegmentTable_getNext;
-Netsnmp_Get_Data_Point mplsInSegmentTable_get;
-Netsnmp_Node_Handler mplsInSegmentTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
  *	table mplsInSegmentPerfTable definitions
  */
 #define MPLSINSEGMENTPERFOCTETS 1
@@ -305,107 +175,6 @@ Netsnmp_Node_Handler mplsInSegmentPerfTable_mapper;
 
 
 /**
- *	table mplsOutSegmentTable definitions
- */
-#define MPLSOUTSEGMENTINDEX 1
-#define MPLSOUTSEGMENTINTERFACE 2
-#define MPLSOUTSEGMENTPUSHTOPLABEL 3
-#define MPLSOUTSEGMENTTOPLABEL 4
-#define MPLSOUTSEGMENTTOPLABELPTR 5
-#define MPLSOUTSEGMENTNEXTHOPADDRTYPE 6
-#define MPLSOUTSEGMENTNEXTHOPADDR 7
-#define MPLSOUTSEGMENTXCINDEX 8
-#define MPLSOUTSEGMENTOWNER 9
-#define MPLSOUTSEGMENTTRAFFICPARAMPTR 10
-#define MPLSOUTSEGMENTROWSTATUS 11
-#define MPLSOUTSEGMENTSTORAGETYPE 12
-
-enum
-{
-	/* enums for column mplsOutSegmentPushTopLabel */
-	mplsOutSegmentPushTopLabel_true_c = 1,
-	mplsOutSegmentPushTopLabel_false_c = 2,
-
-	/* enums for column mplsOutSegmentNextHopAddrType */
-	mplsOutSegmentNextHopAddrType_unknown_c = 0,
-	mplsOutSegmentNextHopAddrType_ipv4_c = 1,
-	mplsOutSegmentNextHopAddrType_ipv6_c = 2,
-	mplsOutSegmentNextHopAddrType_ipv4z_c = 3,
-	mplsOutSegmentNextHopAddrType_ipv6z_c = 4,
-	mplsOutSegmentNextHopAddrType_dns_c = 16,
-
-	/* enums for column mplsOutSegmentOwner */
-	mplsOutSegmentOwner_unknown_c = 1,
-	mplsOutSegmentOwner_other_c = 2,
-	mplsOutSegmentOwner_snmp_c = 3,
-	mplsOutSegmentOwner_ldp_c = 4,
-	mplsOutSegmentOwner_crldp_c = 5,
-	mplsOutSegmentOwner_rsvpTe_c = 6,
-	mplsOutSegmentOwner_policyAgent_c = 7,
-
-	/* enums for column mplsOutSegmentRowStatus */
-	mplsOutSegmentRowStatus_active_c = 1,
-	mplsOutSegmentRowStatus_notInService_c = 2,
-	mplsOutSegmentRowStatus_notReady_c = 3,
-	mplsOutSegmentRowStatus_createAndGo_c = 4,
-	mplsOutSegmentRowStatus_createAndWait_c = 5,
-	mplsOutSegmentRowStatus_destroy_c = 6,
-
-	/* enums for column mplsOutSegmentStorageType */
-	mplsOutSegmentStorageType_other_c = 1,
-	mplsOutSegmentStorageType_volatile_c = 2,
-	mplsOutSegmentStorageType_nonVolatile_c = 3,
-	mplsOutSegmentStorageType_permanent_c = 4,
-	mplsOutSegmentStorageType_readOnly_c = 5,
-};
-
-/* table mplsOutSegmentTable row entry data structure */
-typedef struct mplsOutSegmentEntry_t
-{
-	/* Index values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
-	
-	/* Column values */
-	uint32_t u32Interface;
-	uint8_t u8PushTopLabel;
-	uint32_t u32TopLabel;
-	xOid_t aoTopLabelPtr[128];
-	size_t u16TopLabelPtr_len;	/* # of xOid_t elements */
-	int32_t i32NextHopAddrType;
-	uint8_t au8NextHopAddr[255];
-	size_t u16NextHopAddr_len;	/* # of uint8_t elements */
-	uint8_t au8XCIndex[24];
-	size_t u16XCIndex_len;	/* # of uint8_t elements */
-	int32_t i32Owner;
-	xOid_t aoTrafficParamPtr[128];
-	size_t u16TrafficParamPtr_len;	/* # of xOid_t elements */
-	uint8_t u8RowStatus;
-	uint8_t u8StorageType;
-	
-	xBTree_Node_t oBTreeNode;
-} mplsOutSegmentEntry_t;
-
-extern xBTree_t oMplsOutSegmentTable_BTree;
-
-/* mplsOutSegmentTable table mapper */
-void mplsOutSegmentTable_init (void);
-mplsOutSegmentEntry_t * mplsOutSegmentTable_createEntry (
-	uint8_t *pau8Index, size_t u16Index_len);
-mplsOutSegmentEntry_t * mplsOutSegmentTable_getByIndex (
-	uint8_t *pau8Index, size_t u16Index_len);
-mplsOutSegmentEntry_t * mplsOutSegmentTable_getNextIndex (
-	uint8_t *pau8Index, size_t u16Index_len);
-void mplsOutSegmentTable_removeEntry (mplsOutSegmentEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point mplsOutSegmentTable_getFirst;
-Netsnmp_Next_Data_Point mplsOutSegmentTable_getNext;
-Netsnmp_Get_Data_Point mplsOutSegmentTable_get;
-Netsnmp_Node_Handler mplsOutSegmentTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
  *	table mplsOutSegmentPerfTable definitions
  */
 #define MPLSOUTSEGMENTPERFOCTETS 1
@@ -449,111 +218,6 @@ Netsnmp_First_Data_Point mplsOutSegmentPerfTable_getFirst;
 Netsnmp_Next_Data_Point mplsOutSegmentPerfTable_getNext;
 Netsnmp_Get_Data_Point mplsOutSegmentPerfTable_get;
 Netsnmp_Node_Handler mplsOutSegmentPerfTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
- *	table mplsXCTable definitions
- */
-#define MPLSXCINDEX 1
-#define MPLSXCINSEGMENTINDEX 2
-#define MPLSXCOUTSEGMENTINDEX 3
-#define MPLSXCLSPID 4
-#define MPLSXCLABELSTACKINDEX 5
-#define MPLSXCOWNER 6
-#define MPLSXCROWSTATUS 7
-#define MPLSXCSTORAGETYPE 8
-#define MPLSXCADMINSTATUS 9
-#define MPLSXCOPERSTATUS 10
-
-enum
-{
-	/* enums for column mplsXCOwner */
-	mplsXCOwner_unknown_c = 1,
-	mplsXCOwner_other_c = 2,
-	mplsXCOwner_snmp_c = 3,
-	mplsXCOwner_ldp_c = 4,
-	mplsXCOwner_crldp_c = 5,
-	mplsXCOwner_rsvpTe_c = 6,
-	mplsXCOwner_policyAgent_c = 7,
-
-	/* enums for column mplsXCRowStatus */
-	mplsXCRowStatus_active_c = 1,
-	mplsXCRowStatus_notInService_c = 2,
-	mplsXCRowStatus_notReady_c = 3,
-	mplsXCRowStatus_createAndGo_c = 4,
-	mplsXCRowStatus_createAndWait_c = 5,
-	mplsXCRowStatus_destroy_c = 6,
-
-	/* enums for column mplsXCStorageType */
-	mplsXCStorageType_other_c = 1,
-	mplsXCStorageType_volatile_c = 2,
-	mplsXCStorageType_nonVolatile_c = 3,
-	mplsXCStorageType_permanent_c = 4,
-	mplsXCStorageType_readOnly_c = 5,
-
-	/* enums for column mplsXCAdminStatus */
-	mplsXCAdminStatus_up_c = 1,
-	mplsXCAdminStatus_down_c = 2,
-	mplsXCAdminStatus_testing_c = 3,
-
-	/* enums for column mplsXCOperStatus */
-	mplsXCOperStatus_up_c = 1,
-	mplsXCOperStatus_down_c = 2,
-	mplsXCOperStatus_testing_c = 3,
-	mplsXCOperStatus_unknown_c = 4,
-	mplsXCOperStatus_dormant_c = 5,
-	mplsXCOperStatus_notPresent_c = 6,
-	mplsXCOperStatus_lowerLayerDown_c = 7,
-};
-
-/* table mplsXCTable row entry data structure */
-typedef struct mplsXCEntry_t
-{
-	/* Index values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
-	uint8_t au8InSegmentIndex[24];
-	size_t u16InSegmentIndex_len;	/* # of uint8_t elements */
-	uint8_t au8OutSegmentIndex[24];
-	size_t u16OutSegmentIndex_len;	/* # of uint8_t elements */
-	
-	/* Column values */
-	uint8_t au8LspId[6];
-	size_t u16LspId_len;	/* # of uint8_t elements */
-	uint8_t au8LabelStackIndex[24];
-	size_t u16LabelStackIndex_len;	/* # of uint8_t elements */
-	int32_t i32Owner;
-	uint8_t u8RowStatus;
-	uint8_t u8StorageType;
-	int32_t i32AdminStatus;
-	int32_t i32OperStatus;
-	
-	xBTree_Node_t oBTreeNode;
-} mplsXCEntry_t;
-
-extern xBTree_t oMplsXCTable_BTree;
-
-/* mplsXCTable table mapper */
-void mplsXCTable_init (void);
-mplsXCEntry_t * mplsXCTable_createEntry (
-	uint8_t *pau8Index, size_t u16Index_len,
-	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
-	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len);
-mplsXCEntry_t * mplsXCTable_getByIndex (
-	uint8_t *pau8Index, size_t u16Index_len,
-	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
-	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len);
-mplsXCEntry_t * mplsXCTable_getNextIndex (
-	uint8_t *pau8Index, size_t u16Index_len,
-	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
-	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len);
-void mplsXCTable_removeEntry (mplsXCEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point mplsXCTable_getFirst;
-Netsnmp_Next_Data_Point mplsXCTable_getNext;
-Netsnmp_Get_Data_Point mplsXCTable_get;
-Netsnmp_Node_Handler mplsXCTable_mapper;
 #endif	/* SNMP_SRC */
 
 
@@ -888,6 +552,344 @@ Netsnmp_First_Data_Point mplsInterfaceTable_getFirst;
 Netsnmp_Next_Data_Point mplsInterfaceTable_getNext;
 Netsnmp_Get_Data_Point mplsInterfaceTable_get;
 Netsnmp_Node_Handler mplsInterfaceTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table mplsInSegmentTable definitions
+ */
+#define MPLSINSEGMENTINDEX 1
+#define MPLSINSEGMENTINTERFACE 2
+#define MPLSINSEGMENTLABEL 3
+#define MPLSINSEGMENTLABELPTR 4
+#define MPLSINSEGMENTNPOP 5
+#define MPLSINSEGMENTADDRFAMILY 6
+#define MPLSINSEGMENTXCINDEX 7
+#define MPLSINSEGMENTOWNER 8
+#define MPLSINSEGMENTTRAFFICPARAMPTR 9
+#define MPLSINSEGMENTROWSTATUS 10
+#define MPLSINSEGMENTSTORAGETYPE 11
+
+enum
+{
+	/* enums for column mplsInSegmentAddrFamily */
+	mplsInSegmentAddrFamily_other_c = 0,
+	mplsInSegmentAddrFamily_ipV4_c = 1,
+	mplsInSegmentAddrFamily_ipV6_c = 2,
+	mplsInSegmentAddrFamily_nsap_c = 3,
+	mplsInSegmentAddrFamily_hdlc_c = 4,
+	mplsInSegmentAddrFamily_bbn1822_c = 5,
+	mplsInSegmentAddrFamily_all802_c = 6,
+	mplsInSegmentAddrFamily_e163_c = 7,
+	mplsInSegmentAddrFamily_e164_c = 8,
+	mplsInSegmentAddrFamily_f69_c = 9,
+	mplsInSegmentAddrFamily_x121_c = 10,
+	mplsInSegmentAddrFamily_ipx_c = 11,
+	mplsInSegmentAddrFamily_appleTalk_c = 12,
+	mplsInSegmentAddrFamily_decnetIV_c = 13,
+	mplsInSegmentAddrFamily_banyanVines_c = 14,
+	mplsInSegmentAddrFamily_e164withNsap_c = 15,
+	mplsInSegmentAddrFamily_dns_c = 16,
+	mplsInSegmentAddrFamily_distinguishedName_c = 17,
+	mplsInSegmentAddrFamily_asNumber_c = 18,
+	mplsInSegmentAddrFamily_xtpOverIpv4_c = 19,
+	mplsInSegmentAddrFamily_xtpOverIpv6_c = 20,
+	mplsInSegmentAddrFamily_xtpNativeModeXTP_c = 21,
+	mplsInSegmentAddrFamily_fibreChannelWWPN_c = 22,
+	mplsInSegmentAddrFamily_fibreChannelWWNN_c = 23,
+	mplsInSegmentAddrFamily_gwid_c = 24,
+	mplsInSegmentAddrFamily_afi_c = 25,
+	mplsInSegmentAddrFamily_mplsTpSectionEndpointIdentifier_c = 26,
+	mplsInSegmentAddrFamily_mplsTpLspEndpointIdentifier_c = 27,
+	mplsInSegmentAddrFamily_mplsTpPseudowireEndpointIdentifier_c = 28,
+	mplsInSegmentAddrFamily_eigrpCommonServiceFamily_c = 16384,
+	mplsInSegmentAddrFamily_eigrpIpv4ServiceFamily_c = 16385,
+	mplsInSegmentAddrFamily_eigrpIpv6ServiceFamily_c = 16386,
+	mplsInSegmentAddrFamily_lispCanonicalAddressFormat_c = 16387,
+	mplsInSegmentAddrFamily_bgpLs_c = 16388,
+	mplsInSegmentAddrFamily_fortyeightBitMac_c = 16389,
+	mplsInSegmentAddrFamily_sixtyfourBitMac_c = 16390,
+	mplsInSegmentAddrFamily_oui_c = 16391,
+	mplsInSegmentAddrFamily_mac24_c = 16392,
+	mplsInSegmentAddrFamily_mac40_c = 16393,
+	mplsInSegmentAddrFamily_ipv664_c = 16394,
+	mplsInSegmentAddrFamily_rBridgePortID_c = 16395,
+	mplsInSegmentAddrFamily_reserved_c = 65535,
+
+	/* enums for column mplsInSegmentOwner */
+	mplsInSegmentOwner_unknown_c = 1,
+	mplsInSegmentOwner_other_c = 2,
+	mplsInSegmentOwner_snmp_c = 3,
+	mplsInSegmentOwner_ldp_c = 4,
+	mplsInSegmentOwner_crldp_c = 5,
+	mplsInSegmentOwner_rsvpTe_c = 6,
+	mplsInSegmentOwner_policyAgent_c = 7,
+
+	/* enums for column mplsInSegmentRowStatus */
+	mplsInSegmentRowStatus_active_c = 1,
+	mplsInSegmentRowStatus_notInService_c = 2,
+	mplsInSegmentRowStatus_notReady_c = 3,
+	mplsInSegmentRowStatus_createAndGo_c = 4,
+	mplsInSegmentRowStatus_createAndWait_c = 5,
+	mplsInSegmentRowStatus_destroy_c = 6,
+
+	/* enums for column mplsInSegmentStorageType */
+	mplsInSegmentStorageType_other_c = 1,
+	mplsInSegmentStorageType_volatile_c = 2,
+	mplsInSegmentStorageType_nonVolatile_c = 3,
+	mplsInSegmentStorageType_permanent_c = 4,
+	mplsInSegmentStorageType_readOnly_c = 5,
+};
+
+/* table mplsInSegmentTable row entry data structure */
+typedef struct mplsInSegmentEntry_t
+{
+	/* Index values */
+	uint8_t au8Index[24];
+	size_t u16Index_len;	/* # of uint8_t elements */
+	
+	/* Column values */
+	uint32_t u32Interface;
+	uint32_t u32Label;
+	xOid_t aoLabelPtr[128];
+	size_t u16LabelPtr_len;	/* # of xOid_t elements */
+	int32_t i32NPop;
+	int32_t i32AddrFamily;
+	uint8_t au8XCIndex[24];
+	size_t u16XCIndex_len;	/* # of uint8_t elements */
+	int32_t i32Owner;
+	xOid_t aoTrafficParamPtr[128];
+	size_t u16TrafficParamPtr_len;	/* # of xOid_t elements */
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	
+	mplsInSegmentPerfEntry_t oPerf;
+	
+	xBTree_Node_t oBTreeNode;
+} mplsInSegmentEntry_t;
+
+extern xBTree_t oMplsInSegmentTable_BTree;
+
+/* mplsInSegmentTable table mapper */
+void mplsInSegmentTable_init (void);
+mplsInSegmentEntry_t * mplsInSegmentTable_createEntry (
+	uint8_t *pau8Index, size_t u16Index_len);
+mplsInSegmentEntry_t * mplsInSegmentTable_getByIndex (
+	uint8_t *pau8Index, size_t u16Index_len);
+mplsInSegmentEntry_t * mplsInSegmentTable_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len);
+void mplsInSegmentTable_removeEntry (mplsInSegmentEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point mplsInSegmentTable_getFirst;
+Netsnmp_Next_Data_Point mplsInSegmentTable_getNext;
+Netsnmp_Get_Data_Point mplsInSegmentTable_get;
+Netsnmp_Node_Handler mplsInSegmentTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table mplsOutSegmentTable definitions
+ */
+#define MPLSOUTSEGMENTINDEX 1
+#define MPLSOUTSEGMENTINTERFACE 2
+#define MPLSOUTSEGMENTPUSHTOPLABEL 3
+#define MPLSOUTSEGMENTTOPLABEL 4
+#define MPLSOUTSEGMENTTOPLABELPTR 5
+#define MPLSOUTSEGMENTNEXTHOPADDRTYPE 6
+#define MPLSOUTSEGMENTNEXTHOPADDR 7
+#define MPLSOUTSEGMENTXCINDEX 8
+#define MPLSOUTSEGMENTOWNER 9
+#define MPLSOUTSEGMENTTRAFFICPARAMPTR 10
+#define MPLSOUTSEGMENTROWSTATUS 11
+#define MPLSOUTSEGMENTSTORAGETYPE 12
+
+enum
+{
+	/* enums for column mplsOutSegmentPushTopLabel */
+	mplsOutSegmentPushTopLabel_true_c = 1,
+	mplsOutSegmentPushTopLabel_false_c = 2,
+
+	/* enums for column mplsOutSegmentNextHopAddrType */
+	mplsOutSegmentNextHopAddrType_unknown_c = 0,
+	mplsOutSegmentNextHopAddrType_ipv4_c = 1,
+	mplsOutSegmentNextHopAddrType_ipv6_c = 2,
+	mplsOutSegmentNextHopAddrType_ipv4z_c = 3,
+	mplsOutSegmentNextHopAddrType_ipv6z_c = 4,
+	mplsOutSegmentNextHopAddrType_dns_c = 16,
+
+	/* enums for column mplsOutSegmentOwner */
+	mplsOutSegmentOwner_unknown_c = 1,
+	mplsOutSegmentOwner_other_c = 2,
+	mplsOutSegmentOwner_snmp_c = 3,
+	mplsOutSegmentOwner_ldp_c = 4,
+	mplsOutSegmentOwner_crldp_c = 5,
+	mplsOutSegmentOwner_rsvpTe_c = 6,
+	mplsOutSegmentOwner_policyAgent_c = 7,
+
+	/* enums for column mplsOutSegmentRowStatus */
+	mplsOutSegmentRowStatus_active_c = 1,
+	mplsOutSegmentRowStatus_notInService_c = 2,
+	mplsOutSegmentRowStatus_notReady_c = 3,
+	mplsOutSegmentRowStatus_createAndGo_c = 4,
+	mplsOutSegmentRowStatus_createAndWait_c = 5,
+	mplsOutSegmentRowStatus_destroy_c = 6,
+
+	/* enums for column mplsOutSegmentStorageType */
+	mplsOutSegmentStorageType_other_c = 1,
+	mplsOutSegmentStorageType_volatile_c = 2,
+	mplsOutSegmentStorageType_nonVolatile_c = 3,
+	mplsOutSegmentStorageType_permanent_c = 4,
+	mplsOutSegmentStorageType_readOnly_c = 5,
+};
+
+/* table mplsOutSegmentTable row entry data structure */
+typedef struct mplsOutSegmentEntry_t
+{
+	/* Index values */
+	uint8_t au8Index[24];
+	size_t u16Index_len;	/* # of uint8_t elements */
+	
+	/* Column values */
+	uint32_t u32Interface;
+	uint8_t u8PushTopLabel;
+	uint32_t u32TopLabel;
+	xOid_t aoTopLabelPtr[128];
+	size_t u16TopLabelPtr_len;	/* # of xOid_t elements */
+	int32_t i32NextHopAddrType;
+	uint8_t au8NextHopAddr[255];
+	size_t u16NextHopAddr_len;	/* # of uint8_t elements */
+	uint8_t au8XCIndex[24];
+	size_t u16XCIndex_len;	/* # of uint8_t elements */
+	int32_t i32Owner;
+	xOid_t aoTrafficParamPtr[128];
+	size_t u16TrafficParamPtr_len;	/* # of xOid_t elements */
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	
+	xBTree_Node_t oBTreeNode;
+} mplsOutSegmentEntry_t;
+
+extern xBTree_t oMplsOutSegmentTable_BTree;
+
+/* mplsOutSegmentTable table mapper */
+void mplsOutSegmentTable_init (void);
+mplsOutSegmentEntry_t * mplsOutSegmentTable_createEntry (
+	uint8_t *pau8Index, size_t u16Index_len);
+mplsOutSegmentEntry_t * mplsOutSegmentTable_getByIndex (
+	uint8_t *pau8Index, size_t u16Index_len);
+mplsOutSegmentEntry_t * mplsOutSegmentTable_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len);
+void mplsOutSegmentTable_removeEntry (mplsOutSegmentEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point mplsOutSegmentTable_getFirst;
+Netsnmp_Next_Data_Point mplsOutSegmentTable_getNext;
+Netsnmp_Get_Data_Point mplsOutSegmentTable_get;
+Netsnmp_Node_Handler mplsOutSegmentTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table mplsXCTable definitions
+ */
+#define MPLSXCINDEX 1
+#define MPLSXCINSEGMENTINDEX 2
+#define MPLSXCOUTSEGMENTINDEX 3
+#define MPLSXCLSPID 4
+#define MPLSXCLABELSTACKINDEX 5
+#define MPLSXCOWNER 6
+#define MPLSXCROWSTATUS 7
+#define MPLSXCSTORAGETYPE 8
+#define MPLSXCADMINSTATUS 9
+#define MPLSXCOPERSTATUS 10
+
+enum
+{
+	/* enums for column mplsXCOwner */
+	mplsXCOwner_unknown_c = 1,
+	mplsXCOwner_other_c = 2,
+	mplsXCOwner_snmp_c = 3,
+	mplsXCOwner_ldp_c = 4,
+	mplsXCOwner_crldp_c = 5,
+	mplsXCOwner_rsvpTe_c = 6,
+	mplsXCOwner_policyAgent_c = 7,
+
+	/* enums for column mplsXCRowStatus */
+	mplsXCRowStatus_active_c = 1,
+	mplsXCRowStatus_notInService_c = 2,
+	mplsXCRowStatus_notReady_c = 3,
+	mplsXCRowStatus_createAndGo_c = 4,
+	mplsXCRowStatus_createAndWait_c = 5,
+	mplsXCRowStatus_destroy_c = 6,
+
+	/* enums for column mplsXCStorageType */
+	mplsXCStorageType_other_c = 1,
+	mplsXCStorageType_volatile_c = 2,
+	mplsXCStorageType_nonVolatile_c = 3,
+	mplsXCStorageType_permanent_c = 4,
+	mplsXCStorageType_readOnly_c = 5,
+
+	/* enums for column mplsXCAdminStatus */
+	mplsXCAdminStatus_up_c = 1,
+	mplsXCAdminStatus_down_c = 2,
+	mplsXCAdminStatus_testing_c = 3,
+
+	/* enums for column mplsXCOperStatus */
+	mplsXCOperStatus_up_c = 1,
+	mplsXCOperStatus_down_c = 2,
+	mplsXCOperStatus_testing_c = 3,
+	mplsXCOperStatus_unknown_c = 4,
+	mplsXCOperStatus_dormant_c = 5,
+	mplsXCOperStatus_notPresent_c = 6,
+	mplsXCOperStatus_lowerLayerDown_c = 7,
+};
+
+/* table mplsXCTable row entry data structure */
+typedef struct mplsXCEntry_t
+{
+	/* Index values */
+	uint8_t au8Index[24];
+	size_t u16Index_len;	/* # of uint8_t elements */
+	uint8_t au8InSegmentIndex[24];
+	size_t u16InSegmentIndex_len;	/* # of uint8_t elements */
+	uint8_t au8OutSegmentIndex[24];
+	size_t u16OutSegmentIndex_len;	/* # of uint8_t elements */
+	
+	/* Column values */
+	uint8_t au8LspId[6];
+	size_t u16LspId_len;	/* # of uint8_t elements */
+	uint8_t au8LabelStackIndex[24];
+	size_t u16LabelStackIndex_len;	/* # of uint8_t elements */
+	int32_t i32Owner;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	int32_t i32AdminStatus;
+	int32_t i32OperStatus;
+	
+	xBTree_Node_t oBTreeNode;
+} mplsXCEntry_t;
+
+extern xBTree_t oMplsXCTable_BTree;
+
+/* mplsXCTable table mapper */
+void mplsXCTable_init (void);
+mplsXCEntry_t * mplsXCTable_createEntry (
+	uint8_t *pau8Index, size_t u16Index_len,
+	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
+	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len);
+mplsXCEntry_t * mplsXCTable_getByIndex (
+	uint8_t *pau8Index, size_t u16Index_len,
+	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
+	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len);
+mplsXCEntry_t * mplsXCTable_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len,
+	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
+	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len);
+void mplsXCTable_removeEntry (mplsXCEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point mplsXCTable_getFirst;
+Netsnmp_Next_Data_Point mplsXCTable_getNext;
+Netsnmp_Get_Data_Point mplsXCTable_get;
+Netsnmp_Node_Handler mplsXCTable_mapper;
 #endif	/* SNMP_SRC */
 
 
