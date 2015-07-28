@@ -40,8 +40,8 @@
 
 
 static oid mplsIdStdMIB_oid[] = {1,3,6,1,2,1,10,166,18};
-static oid mplsTeNodeConfigLocalIdNext_oid[] = {1,3,6,1,2,1,10,166,20,0,1};
-static oid mplsTeNodeConfigTable_oid[] = {1,3,6,1,2,1,10,166,20,0,2};
+static oid mplsTeNodeLocalIdNext_oid[] = {1,3,6,1,2,1,10,166,20,0,1};
+static oid mplsTeNodeTable_oid[] = {1,3,6,1,2,1,10,166,20,0,2};
 static oid mplsTeNodeIpMapTable_oid[] = {1,3,6,1,2,1,10,166,20,0,3};
 static oid mplsTeNodeIccMapTable_oid[] = {1,3,6,1,2,1,10,166,20,0,4};
 static oid neTedMIB_oid[] = {1,3,6,1,4,1,36969,68};
@@ -66,8 +66,8 @@ void
 neTedMIB_init (void)
 {
 	extern oid mplsIdStdMIB_oid[];
-	extern oid mplsTeNodeConfigLocalIdNext_oid[];
-	extern oid mplsTeNodeConfigTable_oid[];
+	extern oid mplsTeNodeLocalIdNext_oid[];
+	extern oid mplsTeNodeTable_oid[];
 	extern oid mplsTeNodeIpMapTable_oid[];
 	extern oid mplsTeNodeIccMapTable_oid[];
 	extern oid neTedMIB_oid[];
@@ -95,8 +95,8 @@ neTedMIB_init (void)
 			mplsTeExtObjects_oid, OID_LENGTH (mplsTeExtObjects_oid),
 			HANDLER_CAN_RONLY
 		),
-		MPLSTENODECONFIGLOCALIDNEXT,
-		MPLSTENODECONFIGLOCALIDNEXT
+		MPLSTENODELOCALIDNEXT,
+		MPLSTENODELOCALIDNEXT
 	);
 	
 	/* register neTedScalars scalar mapper */
@@ -112,7 +112,7 @@ neTedMIB_init (void)
 	
 	
 	/* register neTedMIB group table mappers */
-	mplsTeNodeConfigTable_init ();
+	mplsTeNodeTable_init ();
 	neTedNodeTable_init ();
 	neTedLinkTable_init ();
 	neTedAddressTable_init ();
@@ -122,8 +122,8 @@ neTedMIB_init (void)
 	
 	/* register neTedMIB modules */
 	sysORTable_createRegister ("mplsIdStdMIB", mplsIdStdMIB_oid, OID_LENGTH (mplsIdStdMIB_oid));
-	sysORTable_createRegister ("mplsTeNodeConfigLocalIdNext", mplsTeNodeConfigLocalIdNext_oid, OID_LENGTH (mplsTeNodeConfigLocalIdNext_oid));
-	sysORTable_createRegister ("mplsTeNodeConfigTable", mplsTeNodeConfigTable_oid, OID_LENGTH (mplsTeNodeConfigTable_oid));
+	sysORTable_createRegister ("mplsTeNodeLocalIdNext", mplsTeNodeLocalIdNext_oid, OID_LENGTH (mplsTeNodeLocalIdNext_oid));
+	sysORTable_createRegister ("mplsTeNodeTable", mplsTeNodeTable_oid, OID_LENGTH (mplsTeNodeTable_oid));
 	sysORTable_createRegister ("mplsTeNodeIpMapTable", mplsTeNodeIpMapTable_oid, OID_LENGTH (mplsTeNodeIpMapTable_oid));
 	sysORTable_createRegister ("mplsTeNodeIccMapTable", mplsTeNodeIccMapTable_oid, OID_LENGTH (mplsTeNodeIccMapTable_oid));
 	sysORTable_createRegister ("neTedMIB", neTedMIB_oid, OID_LENGTH (neTedMIB_oid));
@@ -351,8 +351,8 @@ mplsTeExtObjects_mapper (
 		{
 			switch (request->requestvb->name[OID_LENGTH (mplsTeExtObjects_oid)])
 			{
-			case MPLSTENODECONFIGLOCALIDNEXT:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oMplsTeExtObjects.u32NodeConfigLocalIdNext);
+			case MPLSTENODELOCALIDNEXT:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oMplsTeExtObjects.u32NodeLocalIdNext);
 				break;
 				
 			default:
@@ -440,32 +440,32 @@ neTedScalars_mapper (
 /**
  *	table mapper(s) & helper(s)
  */
-/** initialize mplsTeNodeConfigTable table mapper **/
+/** initialize mplsTeNodeTable table mapper **/
 void
-mplsTeNodeConfigTable_init (void)
+mplsTeNodeTable_init (void)
 {
-	extern oid mplsTeNodeConfigTable_oid[];
+	extern oid mplsTeNodeTable_oid[];
 	netsnmp_handler_registration *reg;
 	netsnmp_iterator_info *iinfo;
 	netsnmp_table_registration_info *table_info;
 	
 	reg = netsnmp_create_handler_registration (
-		"mplsTeNodeConfigTable", &mplsTeNodeConfigTable_mapper,
-		mplsTeNodeConfigTable_oid, OID_LENGTH (mplsTeNodeConfigTable_oid),
+		"mplsTeNodeTable", &mplsTeNodeTable_mapper,
+		mplsTeNodeTable_oid, OID_LENGTH (mplsTeNodeTable_oid),
 		HANDLER_CAN_RWRITE
 		);
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
-		ASN_UNSIGNED /* index: mplsTeNodeConfigLocalId */,
+		ASN_UNSIGNED /* index: mplsTeNodeLocalId */,
 		0);
-	table_info->min_column = MPLSTENODECONFIGGLOBALID;
-	table_info->max_column = MPLSTENODECONFIGROWSTATUS;
+	table_info->min_column = MPLSTENODEGLOBALID;
+	table_info->max_column = MPLSTENODEROWSTATUS;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
-	iinfo->get_first_data_point = &mplsTeNodeConfigTable_getFirst;
-	iinfo->get_next_data_point = &mplsTeNodeConfigTable_getNext;
-	iinfo->get_data_point = &mplsTeNodeConfigTable_get;
+	iinfo->get_first_data_point = &mplsTeNodeTable_getFirst;
+	iinfo->get_next_data_point = &mplsTeNodeTable_getNext;
+	iinfo->get_data_point = &mplsTeNodeTable_get;
 	iinfo->table_reginfo = table_info;
 	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
 	
@@ -475,25 +475,25 @@ mplsTeNodeConfigTable_init (void)
 }
 
 static int8_t
-mplsTeNodeConfigTable_BTreeNodeCmp (
+mplsTeNodeTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register mplsTeNodeConfigEntry_t *pEntry1 = xBTree_entry (pNode1, mplsTeNodeConfigEntry_t, oBTreeNode);
-	register mplsTeNodeConfigEntry_t *pEntry2 = xBTree_entry (pNode2, mplsTeNodeConfigEntry_t, oBTreeNode);
+	register mplsTeNodeEntry_t *pEntry1 = xBTree_entry (pNode1, mplsTeNodeEntry_t, oBTreeNode);
+	register mplsTeNodeEntry_t *pEntry2 = xBTree_entry (pNode2, mplsTeNodeEntry_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32LocalId < pEntry2->u32LocalId) ? -1:
 		(pEntry1->u32LocalId == pEntry2->u32LocalId) ? 0: 1;
 }
 
-xBTree_t oMplsTeNodeConfigTable_BTree = xBTree_initInline (&mplsTeNodeConfigTable_BTreeNodeCmp);
+xBTree_t oMplsTeNodeTable_BTree = xBTree_initInline (&mplsTeNodeTable_BTreeNodeCmp);
 
 /* create a new row in the table */
-mplsTeNodeConfigEntry_t *
-mplsTeNodeConfigTable_createEntry (
+mplsTeNodeEntry_t *
+mplsTeNodeTable_createEntry (
 	uint32_t u32LocalId)
 {
-	register mplsTeNodeConfigEntry_t *poEntry = NULL;
+	register mplsTeNodeEntry_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
@@ -501,25 +501,25 @@ mplsTeNodeConfigTable_createEntry (
 	}
 	
 	poEntry->u32LocalId = u32LocalId;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsTeNodeConfigTable_BTree) != NULL)
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsTeNodeTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
 		return NULL;
 	}
 	
-	poEntry->u8IccValid = mplsTeNodeConfigIccValid_false_c;
-	poEntry->u8StorageType = mplsTeNodeConfigStorageType_volatile_c;
+	poEntry->u8IccValid = mplsTeNodeIccValid_false_c;
+	poEntry->u8StorageType = mplsTeNodeStorageType_volatile_c;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oMplsTeNodeConfigTable_BTree);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oMplsTeNodeTable_BTree);
 	return poEntry;
 }
 
-mplsTeNodeConfigEntry_t *
-mplsTeNodeConfigTable_getByIndex (
+mplsTeNodeEntry_t *
+mplsTeNodeTable_getByIndex (
 	uint32_t u32LocalId)
 {
-	register mplsTeNodeConfigEntry_t *poTmpEntry = NULL;
+	register mplsTeNodeEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -528,21 +528,21 @@ mplsTeNodeConfigTable_getByIndex (
 	}
 	
 	poTmpEntry->u32LocalId = u32LocalId;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oMplsTeNodeConfigTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oMplsTeNodeTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, mplsTeNodeConfigEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, mplsTeNodeEntry_t, oBTreeNode);
 }
 
-mplsTeNodeConfigEntry_t *
-mplsTeNodeConfigTable_getNextIndex (
+mplsTeNodeEntry_t *
+mplsTeNodeTable_getNextIndex (
 	uint32_t u32LocalId)
 {
-	register mplsTeNodeConfigEntry_t *poTmpEntry = NULL;
+	register mplsTeNodeEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -551,70 +551,70 @@ mplsTeNodeConfigTable_getNextIndex (
 	}
 	
 	poTmpEntry->u32LocalId = u32LocalId;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oMplsTeNodeConfigTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oMplsTeNodeTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, mplsTeNodeConfigEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, mplsTeNodeEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
-mplsTeNodeConfigTable_removeEntry (mplsTeNodeConfigEntry_t *poEntry)
+mplsTeNodeTable_removeEntry (mplsTeNodeEntry_t *poEntry)
 {
 	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsTeNodeConfigTable_BTree) == NULL)
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsTeNodeTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oMplsTeNodeConfigTable_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oMplsTeNodeTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
-mplsTeNodeConfigTable_getFirst (
+mplsTeNodeTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oMplsTeNodeConfigTable_BTree);
-	return mplsTeNodeConfigTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsTeNodeTable_BTree);
+	return mplsTeNodeTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
 netsnmp_variable_list *
-mplsTeNodeConfigTable_getNext (
+mplsTeNodeTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	mplsTeNodeConfigEntry_t *poEntry = NULL;
+	mplsTeNodeEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, mplsTeNodeConfigEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, mplsTeNodeEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32LocalId);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsTeNodeConfigTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsTeNodeTable_BTree);
 	return put_index_data;
 }
 
 bool
-mplsTeNodeConfigTable_get (
+mplsTeNodeTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	mplsTeNodeConfigEntry_t *poEntry = NULL;
+	mplsTeNodeEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = mplsTeNodeConfigTable_getByIndex (
+	poEntry = mplsTeNodeTable_getByIndex (
 		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
@@ -625,9 +625,9 @@ mplsTeNodeConfigTable_get (
 	return true;
 }
 
-/* mplsTeNodeConfigTable table mapper */
+/* mplsTeNodeTable table mapper */
 int
-mplsTeNodeConfigTable_mapper (
+mplsTeNodeTable_mapper (
 	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
 	netsnmp_agent_request_info *reqinfo,
@@ -635,7 +635,7 @@ mplsTeNodeConfigTable_mapper (
 {
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
-	mplsTeNodeConfigEntry_t *table_entry;
+	mplsTeNodeEntry_t *table_entry;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -647,7 +647,7 @@ mplsTeNodeConfigTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsTeNodeConfigEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (mplsTeNodeEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL)
 			{
@@ -657,25 +657,25 @@ mplsTeNodeConfigTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case MPLSTENODECONFIGGLOBALID:
+			case MPLSTENODEGLOBALID:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8GlobalId, table_entry->u16GlobalId_len);
 				break;
-			case MPLSTENODECONFIGCCID:
+			case MPLSTENODECCID:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8CcId, table_entry->u16CcId_len);
 				break;
-			case MPLSTENODECONFIGICCID:
+			case MPLSTENODEICCID:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8IccId, table_entry->u16IccId_len);
 				break;
-			case MPLSTENODECONFIGNODEID:
+			case MPLSTENODENODEID:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32NodeId);
 				break;
-			case MPLSTENODECONFIGICCVALID:
+			case MPLSTENODEICCVALID:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8IccValid);
 				break;
-			case MPLSTENODECONFIGSTORAGETYPE:
+			case MPLSTENODESTORAGETYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
-			case MPLSTENODECONFIGROWSTATUS:
+			case MPLSTENODEROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 				
@@ -692,12 +692,12 @@ mplsTeNodeConfigTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsTeNodeConfigEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (mplsTeNodeEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case MPLSTENODECONFIGGLOBALID:
+			case MPLSTENODEGLOBALID:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8GlobalId));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -705,7 +705,7 @@ mplsTeNodeConfigTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case MPLSTENODECONFIGCCID:
+			case MPLSTENODECCID:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8CcId));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -713,7 +713,7 @@ mplsTeNodeConfigTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case MPLSTENODECONFIGICCID:
+			case MPLSTENODEICCID:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8IccId));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -721,7 +721,7 @@ mplsTeNodeConfigTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case MPLSTENODECONFIGNODEID:
+			case MPLSTENODENODEID:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -729,7 +729,7 @@ mplsTeNodeConfigTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case MPLSTENODECONFIGICCVALID:
+			case MPLSTENODEICCVALID:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -737,7 +737,7 @@ mplsTeNodeConfigTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case MPLSTENODECONFIGSTORAGETYPE:
+			case MPLSTENODESTORAGETYPE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -745,7 +745,7 @@ mplsTeNodeConfigTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case MPLSTENODECONFIGROWSTATUS:
+			case MPLSTENODEROWSTATUS:
 				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -764,13 +764,13 @@ mplsTeNodeConfigTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsTeNodeConfigEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (mplsTeNodeEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
 			
 			switch (table_info->colnum)
 			{
-			case MPLSTENODECONFIGROWSTATUS:
+			case MPLSTENODEROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
@@ -781,7 +781,7 @@ mplsTeNodeConfigTable_mapper (
 						return SNMP_ERR_NOERROR;
 					}
 					
-					table_entry = mplsTeNodeConfigTable_createEntry (
+					table_entry = mplsTeNodeTable_createEntry (
 						*idx1->val.integer);
 					if (table_entry != NULL)
 					{
@@ -817,7 +817,7 @@ mplsTeNodeConfigTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (mplsTeNodeConfigEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (mplsTeNodeEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -826,12 +826,12 @@ mplsTeNodeConfigTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case MPLSTENODECONFIGROWSTATUS:
+			case MPLSTENODEROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					mplsTeNodeConfigTable_removeEntry (table_entry);
+					mplsTeNodeTable_removeEntry (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -843,12 +843,12 @@ mplsTeNodeConfigTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (mplsTeNodeConfigEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (mplsTeNodeEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case MPLSTENODECONFIGGLOBALID:
+			case MPLSTENODEGLOBALID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8GlobalId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -866,7 +866,7 @@ mplsTeNodeConfigTable_mapper (
 				memcpy (table_entry->au8GlobalId, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16GlobalId_len = request->requestvb->val_len;
 				break;
-			case MPLSTENODECONFIGCCID:
+			case MPLSTENODECCID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8CcId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -884,7 +884,7 @@ mplsTeNodeConfigTable_mapper (
 				memcpy (table_entry->au8CcId, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16CcId_len = request->requestvb->val_len;
 				break;
-			case MPLSTENODECONFIGICCID:
+			case MPLSTENODEICCID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8IccId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -902,7 +902,7 @@ mplsTeNodeConfigTable_mapper (
 				memcpy (table_entry->au8IccId, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16IccId_len = request->requestvb->val_len;
 				break;
-			case MPLSTENODECONFIGNODEID:
+			case MPLSTENODENODEID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32NodeId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -916,7 +916,7 @@ mplsTeNodeConfigTable_mapper (
 				
 				table_entry->u32NodeId = *request->requestvb->val.integer;
 				break;
-			case MPLSTENODECONFIGICCVALID:
+			case MPLSTENODEICCVALID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8IccValid))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -930,7 +930,7 @@ mplsTeNodeConfigTable_mapper (
 				
 				table_entry->u8IccValid = *request->requestvb->val.integer;
 				break;
-			case MPLSTENODECONFIGSTORAGETYPE:
+			case MPLSTENODESTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -949,17 +949,17 @@ mplsTeNodeConfigTable_mapper (
 		/* Check the internal consistency of an active row */
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsTeNodeConfigEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (mplsTeNodeEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case MPLSTENODECONFIGROWSTATUS:
+			case MPLSTENODEROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int mplsTeNodeConfigTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					if (/* TODO : int mplsTeNodeTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -974,7 +974,7 @@ mplsTeNodeConfigTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (mplsTeNodeConfigEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (mplsTeNodeEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -983,33 +983,33 @@ mplsTeNodeConfigTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case MPLSTENODECONFIGGLOBALID:
+			case MPLSTENODEGLOBALID:
 				memcpy (table_entry->au8GlobalId, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16GlobalId_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case MPLSTENODECONFIGCCID:
+			case MPLSTENODECCID:
 				memcpy (table_entry->au8CcId, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16CcId_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case MPLSTENODECONFIGICCID:
+			case MPLSTENODEICCID:
 				memcpy (table_entry->au8IccId, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16IccId_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case MPLSTENODECONFIGNODEID:
+			case MPLSTENODENODEID:
 				memcpy (&table_entry->u32NodeId, pvOldDdata, sizeof (table_entry->u32NodeId));
 				break;
-			case MPLSTENODECONFIGICCVALID:
+			case MPLSTENODEICCVALID:
 				memcpy (&table_entry->u8IccValid, pvOldDdata, sizeof (table_entry->u8IccValid));
 				break;
-			case MPLSTENODECONFIGSTORAGETYPE:
+			case MPLSTENODESTORAGETYPE:
 				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
-			case MPLSTENODECONFIGROWSTATUS:
+			case MPLSTENODEROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					mplsTeNodeConfigTable_removeEntry (table_entry);
+					mplsTeNodeTable_removeEntry (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -1021,12 +1021,12 @@ mplsTeNodeConfigTable_mapper (
 	case MODE_SET_COMMIT:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsTeNodeConfigEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (mplsTeNodeEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case MPLSTENODECONFIGROWSTATUS:
+			case MPLSTENODEROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
@@ -1042,7 +1042,7 @@ mplsTeNodeConfigTable_mapper (
 					break;
 					
 				case RS_DESTROY:
-					mplsTeNodeConfigTable_removeEntry (table_entry);
+					mplsTeNodeTable_removeEntry (table_entry);
 					break;
 				}
 			}

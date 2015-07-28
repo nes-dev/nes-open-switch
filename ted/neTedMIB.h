@@ -69,11 +69,11 @@ Netsnmp_Node_Handler mplsIdObjects_mapper;
 #endif	/* SNMP_SRC */
 
 /** definitions for scalar(s) of mplsTeExtObjects **/
-#define MPLSTENODECONFIGLOCALIDNEXT 1
+#define MPLSTENODELOCALIDNEXT 1
 
 typedef struct mplsTeExtObjects_t
 {
-	uint32_t u32NodeConfigLocalIdNext;
+	uint32_t u32NodeLocalIdNext;
 } mplsTeExtObjects_t;
 
 extern mplsTeExtObjects_t oMplsTeExtObjects;
@@ -115,80 +115,6 @@ Netsnmp_Node_Handler neTedScalars_mapper;
 /**
  *	table mapper(s)
  */
-/**
- *	table mplsTeNodeConfigTable definitions
- */
-#define MPLSTENODECONFIGLOCALID 1
-#define MPLSTENODECONFIGGLOBALID 2
-#define MPLSTENODECONFIGCCID 3
-#define MPLSTENODECONFIGICCID 4
-#define MPLSTENODECONFIGNODEID 5
-#define MPLSTENODECONFIGICCVALID 6
-#define MPLSTENODECONFIGSTORAGETYPE 7
-#define MPLSTENODECONFIGROWSTATUS 8
-
-enum
-{
-	/* enums for column mplsTeNodeConfigIccValid */
-	mplsTeNodeConfigIccValid_true_c = 1,
-	mplsTeNodeConfigIccValid_false_c = 2,
-
-	/* enums for column mplsTeNodeConfigStorageType */
-	mplsTeNodeConfigStorageType_other_c = 1,
-	mplsTeNodeConfigStorageType_volatile_c = 2,
-	mplsTeNodeConfigStorageType_nonVolatile_c = 3,
-	mplsTeNodeConfigStorageType_permanent_c = 4,
-	mplsTeNodeConfigStorageType_readOnly_c = 5,
-
-	/* enums for column mplsTeNodeConfigRowStatus */
-	mplsTeNodeConfigRowStatus_active_c = 1,
-	mplsTeNodeConfigRowStatus_notInService_c = 2,
-	mplsTeNodeConfigRowStatus_notReady_c = 3,
-	mplsTeNodeConfigRowStatus_createAndGo_c = 4,
-	mplsTeNodeConfigRowStatus_createAndWait_c = 5,
-	mplsTeNodeConfigRowStatus_destroy_c = 6,
-};
-
-/* table mplsTeNodeConfigTable row entry data structure */
-typedef struct mplsTeNodeConfigEntry_t
-{
-	/* Index values */
-	uint32_t u32LocalId;
-	
-	/* Column values */
-	uint8_t au8GlobalId[4];
-	size_t u16GlobalId_len;	/* # of uint8_t elements */
-	uint8_t au8CcId[2];
-	size_t u16CcId_len;	/* # of uint8_t elements */
-	uint8_t au8IccId[6];
-	size_t u16IccId_len;	/* # of uint8_t elements */
-	uint32_t u32NodeId;
-	uint8_t u8IccValid;
-	uint8_t u8StorageType;
-	uint8_t u8RowStatus;
-	
-	xBTree_Node_t oBTreeNode;
-} mplsTeNodeConfigEntry_t;
-
-extern xBTree_t oMplsTeNodeConfigTable_BTree;
-
-/* mplsTeNodeConfigTable table mapper */
-void mplsTeNodeConfigTable_init (void);
-mplsTeNodeConfigEntry_t * mplsTeNodeConfigTable_createEntry (
-	uint32_t u32LocalId);
-mplsTeNodeConfigEntry_t * mplsTeNodeConfigTable_getByIndex (
-	uint32_t u32LocalId);
-mplsTeNodeConfigEntry_t * mplsTeNodeConfigTable_getNextIndex (
-	uint32_t u32LocalId);
-void mplsTeNodeConfigTable_removeEntry (mplsTeNodeConfigEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point mplsTeNodeConfigTable_getFirst;
-Netsnmp_Next_Data_Point mplsTeNodeConfigTable_getNext;
-Netsnmp_Get_Data_Point mplsTeNodeConfigTable_get;
-Netsnmp_Node_Handler mplsTeNodeConfigTable_mapper;
-#endif	/* SNMP_SRC */
-
-
 /**
  *	table neTedNodeTable definitions
  */
@@ -849,6 +775,80 @@ Netsnmp_First_Data_Point neTeCompLinkAdjCapTable_getFirst;
 Netsnmp_Next_Data_Point neTeCompLinkAdjCapTable_getNext;
 Netsnmp_Get_Data_Point neTeCompLinkAdjCapTable_get;
 Netsnmp_Node_Handler neTeCompLinkAdjCapTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table mplsTeNodeTable definitions
+ */
+#define MPLSTENODELOCALID 1
+#define MPLSTENODEGLOBALID 2
+#define MPLSTENODECCID 3
+#define MPLSTENODEICCID 4
+#define MPLSTENODENODEID 5
+#define MPLSTENODEICCVALID 6
+#define MPLSTENODESTORAGETYPE 7
+#define MPLSTENODEROWSTATUS 8
+
+enum
+{
+	/* enums for column mplsTeNodeIccValid */
+	mplsTeNodeIccValid_true_c = 1,
+	mplsTeNodeIccValid_false_c = 2,
+
+	/* enums for column mplsTeNodeStorageType */
+	mplsTeNodeStorageType_other_c = 1,
+	mplsTeNodeStorageType_volatile_c = 2,
+	mplsTeNodeStorageType_nonVolatile_c = 3,
+	mplsTeNodeStorageType_permanent_c = 4,
+	mplsTeNodeStorageType_readOnly_c = 5,
+
+	/* enums for column mplsTeNodeRowStatus */
+	mplsTeNodeRowStatus_active_c = 1,
+	mplsTeNodeRowStatus_notInService_c = 2,
+	mplsTeNodeRowStatus_notReady_c = 3,
+	mplsTeNodeRowStatus_createAndGo_c = 4,
+	mplsTeNodeRowStatus_createAndWait_c = 5,
+	mplsTeNodeRowStatus_destroy_c = 6,
+};
+
+/* table mplsTeNodeTable row entry data structure */
+typedef struct mplsTeNodeEntry_t
+{
+	/* Index values */
+	uint32_t u32LocalId;
+	
+	/* Column values */
+	uint8_t au8GlobalId[4];
+	size_t u16GlobalId_len;	/* # of uint8_t elements */
+	uint8_t au8CcId[2];
+	size_t u16CcId_len;	/* # of uint8_t elements */
+	uint8_t au8IccId[6];
+	size_t u16IccId_len;	/* # of uint8_t elements */
+	uint32_t u32NodeId;
+	uint8_t u8IccValid;
+	uint8_t u8StorageType;
+	uint8_t u8RowStatus;
+	
+	xBTree_Node_t oBTreeNode;
+} mplsTeNodeEntry_t;
+
+extern xBTree_t oMplsTeNodeTable_BTree;
+
+/* mplsTeNodeTable table mapper */
+void mplsTeNodeTable_init (void);
+mplsTeNodeEntry_t * mplsTeNodeTable_createEntry (
+	uint32_t u32LocalId);
+mplsTeNodeEntry_t * mplsTeNodeTable_getByIndex (
+	uint32_t u32LocalId);
+mplsTeNodeEntry_t * mplsTeNodeTable_getNextIndex (
+	uint32_t u32LocalId);
+void mplsTeNodeTable_removeEntry (mplsTeNodeEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point mplsTeNodeTable_getFirst;
+Netsnmp_Next_Data_Point mplsTeNodeTable_getNext;
+Netsnmp_Get_Data_Point mplsTeNodeTable_get;
+Netsnmp_Node_Handler mplsTeNodeTable_mapper;
 #endif	/* SNMP_SRC */
 
 
