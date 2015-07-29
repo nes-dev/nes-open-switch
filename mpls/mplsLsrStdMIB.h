@@ -27,6 +27,8 @@ extern "C" {
 
 
 
+#include "neMplsLsrMIB.h"
+
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
@@ -263,6 +265,8 @@ typedef struct mplsLabelStackEntry_t
 	size_t u16LabelPtr_len;	/* # of xOid_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
+	
+	neMplsLabelStackEntry_t oNe;
 	
 	xBTree_Node_t oBTreeNode;
 } mplsLabelStackEntry_t;

@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "mplsLsrStdMIB.h"
 #include "neMplsLsrMIB.h"
 
 #include "system_ext.h"
@@ -2408,21 +2409,6 @@ neMplsLabelStackTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-neMplsLabelStackTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register neMplsLabelStackEntry_t *pEntry1 = xBTree_entry (pNode1, neMplsLabelStackEntry_t, oBTreeNode);
-	register neMplsLabelStackEntry_t *pEntry2 = xBTree_entry (pNode2, neMplsLabelStackEntry_t, oBTreeNode);
-	
-	return
-		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == -1) ||
-		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0 && pEntry1->u32LabelIndex < pEntry2->u32LabelIndex) ? -1:
-		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0 && pEntry1->u32LabelIndex == pEntry2->u32LabelIndex) ? 0: 1;
-}
-
-xBTree_t oNeMplsLabelStackTable_BTree = xBTree_initInline (&neMplsLabelStackTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 neMplsLabelStackEntry_t *
 neMplsLabelStackTable_createEntry (
@@ -2430,22 +2416,14 @@ neMplsLabelStackTable_createEntry (
 	uint32_t u32LabelIndex)
 {
 	register neMplsLabelStackEntry_t *poEntry = NULL;
+	register mplsLabelStackEntry_t *poLabelStack = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poLabelStack = mplsLabelStackTable_getByIndex (pau8Index, u16Index_len, u32LabelIndex)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poLabelStack->oNe;
 	
-	memcpy (poEntry->au8Index, pau8Index, u16Index_len);
-	poEntry->u16Index_len = u16Index_len;
-	poEntry->u32LabelIndex = u32LabelIndex;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeMplsLabelStackTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeMplsLabelStackTable_BTree);
 	return poEntry;
 }
 
@@ -2454,25 +2432,14 @@ neMplsLabelStackTable_getByIndex (
 	uint8_t *pau8Index, size_t u16Index_len,
 	uint32_t u32LabelIndex)
 {
-	register neMplsLabelStackEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsLabelStackEntry_t *poLabelStack = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poLabelStack = mplsLabelStackTable_getByIndex (pau8Index, u16Index_len, u32LabelIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
-	poTmpEntry->u16Index_len = u16Index_len;
-	poTmpEntry->u32LabelIndex = u32LabelIndex;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeMplsLabelStackTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neMplsLabelStackEntry_t, oBTreeNode);
+	return &poLabelStack->oNe;
 }
 
 neMplsLabelStackEntry_t *
@@ -2480,39 +2447,20 @@ neMplsLabelStackTable_getNextIndex (
 	uint8_t *pau8Index, size_t u16Index_len,
 	uint32_t u32LabelIndex)
 {
-	register neMplsLabelStackEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsLabelStackEntry_t *poLabelStack = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poLabelStack = mplsLabelStackTable_getNextIndex (pau8Index, u16Index_len, u32LabelIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
-	poTmpEntry->u16Index_len = u16Index_len;
-	poTmpEntry->u32LabelIndex = u32LabelIndex;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeMplsLabelStackTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neMplsLabelStackEntry_t, oBTreeNode);
+	return &poLabelStack->oNe;
 }
 
 /* remove a row from the table */
 void
 neMplsLabelStackTable_removeEntry (neMplsLabelStackEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeMplsLabelStackTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeMplsLabelStackTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -2522,7 +2470,7 @@ neMplsLabelStackTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oNeMplsLabelStackTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsLabelStackTable_BTree);
 	return neMplsLabelStackTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2531,20 +2479,20 @@ neMplsLabelStackTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neMplsLabelStackEntry_t *poEntry = NULL;
+	mplsLabelStackEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, neMplsLabelStackEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, mplsLabelStackEntry_t, oBTreeNode);
 	
 	snmp_set_var_value (idx, poEntry->au8Index, poEntry->u16Index_len);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32LabelIndex);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeMplsLabelStackTable_BTree);
+	*my_data_context = (void*) &poEntry->oNe;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsLabelStackTable_BTree);
 	return put_index_data;
 }
 
@@ -2553,11 +2501,11 @@ neMplsLabelStackTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neMplsLabelStackEntry_t *poEntry = NULL;
+	mplsLabelStackEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	
-	poEntry = neMplsLabelStackTable_getByIndex (
+	poEntry = mplsLabelStackTable_getByIndex (
 		(void*) idx1->val.string, idx1->val_len,
 		*idx2->val.integer);
 	if (poEntry == NULL)
@@ -2565,7 +2513,7 @@ neMplsLabelStackTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oNe;
 	return true;
 }
 
