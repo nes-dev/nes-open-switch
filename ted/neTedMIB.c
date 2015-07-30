@@ -56,6 +56,7 @@ static oid neTedAddressTable_oid[] = {1,3,6,1,4,1,36969,68,1,4};
 static oid neTedNeighborTable_oid[] = {1,3,6,1,4,1,36969,68,1,5};
 static oid neTeLinkAdjCapTable_oid[] = {1,3,6,1,4,1,36969,68,1,6};
 static oid neTeCompLinkAdjCapTable_oid[] = {1,3,6,1,4,1,36969,68,1,7};
+static oid neTedLinkXCTable_oid[] = {1,3,6,1,4,1,36969,68,1,9};
 
 
 
@@ -119,6 +120,7 @@ neTedMIB_init (void)
 	neTedNeighborTable_init ();
 	neTeLinkAdjCapTable_init ();
 	neTeCompLinkAdjCapTable_init ();
+	neTedLinkXCTable_init ();
 	
 	/* register neTedMIB modules */
 	sysORTable_createRegister ("mplsIdStdMIB", mplsIdStdMIB_oid, OID_LENGTH (mplsIdStdMIB_oid));
@@ -5038,6 +5040,578 @@ neTeCompLinkAdjCapTable_mapper (
 					
 				case RS_DESTROY:
 					neTeCompLinkAdjCapTable_removeEntry (table_entry);
+					break;
+				}
+			}
+		}
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neTedLinkXCTable table mapper **/
+void
+neTedLinkXCTable_init (void)
+{
+	extern oid neTedLinkXCTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neTedLinkXCTable", &neTedLinkXCTable_mapper,
+		neTedLinkXCTable_oid, OID_LENGTH (neTedLinkXCTable_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_UNSIGNED /* index: neTedNodeIndex */,
+		ASN_UNSIGNED /* index: neTedLinkXCInIf */,
+		ASN_UNSIGNED /* index: neTedLinkXCOutIf */,
+		0);
+	table_info->min_column = NETEDLINKXCDIR;
+	table_info->max_column = NETEDLINKXCSTORAGETYPE;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neTedLinkXCTable_getFirst;
+	iinfo->get_next_data_point = &neTedLinkXCTable_getNext;
+	iinfo->get_data_point = &neTedLinkXCTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neTedLinkXCTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neTedLinkXCEntry_t *pEntry1 = xBTree_entry (pNode1, neTedLinkXCEntry_t, oBTreeNode);
+	register neTedLinkXCEntry_t *pEntry2 = xBTree_entry (pNode2, neTedLinkXCEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32NodeIndex < pEntry2->u32NodeIndex) ||
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32InIf < pEntry2->u32InIf) ||
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32InIf == pEntry2->u32InIf && pEntry1->u32OutIf < pEntry2->u32OutIf) ? -1:
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32InIf == pEntry2->u32InIf && pEntry1->u32OutIf == pEntry2->u32OutIf) ? 0: 1;
+}
+
+xBTree_t oNeTedLinkXCTable_BTree = xBTree_initInline (&neTedLinkXCTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+neTedLinkXCEntry_t *
+neTedLinkXCTable_createEntry (
+	uint32_t u32NodeIndex,
+	uint32_t u32InIf,
+	uint32_t u32OutIf)
+{
+	register neTedLinkXCEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32NodeIndex = u32NodeIndex;
+	poEntry->u32InIf = u32InIf;
+	poEntry->u32OutIf = u32OutIf;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTedLinkXCTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->i32Dir = neTedLinkXCDir_duplex_c;
+	poEntry->u32InMax = 0;
+	poEntry->u32OutMax = 0;
+	poEntry->u8RowStatus = xRowStatus_notInService_c;
+	poEntry->u8StorageType = neTedLinkXCStorageType_volatile_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeTedLinkXCTable_BTree);
+	return poEntry;
+}
+
+neTedLinkXCEntry_t *
+neTedLinkXCTable_getByIndex (
+	uint32_t u32NodeIndex,
+	uint32_t u32InIf,
+	uint32_t u32OutIf)
+{
+	register neTedLinkXCEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32NodeIndex = u32NodeIndex;
+	poTmpEntry->u32InIf = u32InIf;
+	poTmpEntry->u32OutIf = u32OutIf;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeTedLinkXCTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neTedLinkXCEntry_t, oBTreeNode);
+}
+
+neTedLinkXCEntry_t *
+neTedLinkXCTable_getNextIndex (
+	uint32_t u32NodeIndex,
+	uint32_t u32InIf,
+	uint32_t u32OutIf)
+{
+	register neTedLinkXCEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32NodeIndex = u32NodeIndex;
+	poTmpEntry->u32InIf = u32InIf;
+	poTmpEntry->u32OutIf = u32OutIf;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeTedLinkXCTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neTedLinkXCEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neTedLinkXCTable_removeEntry (neTedLinkXCEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTedLinkXCTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeTedLinkXCTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neTedLinkXCTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeTedLinkXCTable_BTree);
+	return neTedLinkXCTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neTedLinkXCTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neTedLinkXCEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neTedLinkXCEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32NodeIndex);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32InIf);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32OutIf);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeTedLinkXCTable_BTree);
+	return put_index_data;
+}
+
+bool
+neTedLinkXCTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neTedLinkXCEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	register netsnmp_variable_list *idx3 = idx2->next_variable;
+	
+	poEntry = neTedLinkXCTable_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer,
+		*idx3->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neTedLinkXCTable table mapper */
+int
+neTedLinkXCTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neTedLinkXCEntry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTedLinkXCEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NETEDLINKXCDIR:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Dir);
+				break;
+			case NETEDLINKXCINMAX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32InMax);
+				break;
+			case NETEDLINKXCOUTMAX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32OutMax);
+				break;
+			case NETEDLINKXCROWSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
+				break;
+			case NETEDLINKXCSTORAGETYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTedLinkXCEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETEDLINKXCDIR:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETEDLINKXCINMAX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETEDLINKXCOUTMAX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETEDLINKXCROWSTATUS:
+				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETEDLINKXCSTORAGETYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTedLinkXCEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			register netsnmp_variable_list *idx2 = idx1->next_variable;
+			register netsnmp_variable_list *idx3 = idx2->next_variable;
+			
+			switch (table_info->colnum)
+			{
+			case NETEDLINKXCROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = neTedLinkXCTable_createEntry (
+						*idx1->val.integer,
+						*idx2->val.integer,
+						*idx3->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+					
+				case RS_DESTROY:
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neTedLinkXCEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NETEDLINKXCROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neTedLinkXCTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neTedLinkXCEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETEDLINKXCDIR:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Dir))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32Dir, sizeof (table_entry->i32Dir));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32Dir = *request->requestvb->val.integer;
+				break;
+			case NETEDLINKXCINMAX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32InMax))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32InMax, sizeof (table_entry->u32InMax));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32InMax = *request->requestvb->val.integer;
+				break;
+			case NETEDLINKXCOUTMAX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32OutMax))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32OutMax, sizeof (table_entry->u32OutMax));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32OutMax = *request->requestvb->val.integer;
+				break;
+			case NETEDLINKXCSTORAGETYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8StorageType, sizeof (table_entry->u8StorageType));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8StorageType = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		/* Check the internal consistency of an active row */
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTedLinkXCEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETEDLINKXCROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_ACTIVE:
+				case RS_CREATEANDGO:
+					if (/* TODO : int neTedLinkXCTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					break;
+				}
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neTedLinkXCEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NETEDLINKXCDIR:
+				memcpy (&table_entry->i32Dir, pvOldDdata, sizeof (table_entry->i32Dir));
+				break;
+			case NETEDLINKXCINMAX:
+				memcpy (&table_entry->u32InMax, pvOldDdata, sizeof (table_entry->u32InMax));
+				break;
+			case NETEDLINKXCOUTMAX:
+				memcpy (&table_entry->u32OutMax, pvOldDdata, sizeof (table_entry->u32OutMax));
+				break;
+			case NETEDLINKXCROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+				case RS_CREATEANDWAIT:
+					neTedLinkXCTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+					break;
+				}
+				break;
+			case NETEDLINKXCSTORAGETYPE:
+				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTedLinkXCEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NETEDLINKXCROWSTATUS:
+				switch (*request->requestvb->val.integer)
+				{
+				case RS_CREATEANDGO:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_ACTIVE:
+					table_entry->u8RowStatus = RS_ACTIVE;
+					break;
+					
+				case RS_CREATEANDWAIT:
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				case RS_NOTINSERVICE:
+					table_entry->u8RowStatus = RS_NOTINSERVICE;
+					break;
+					
+				case RS_DESTROY:
+					neTedLinkXCTable_removeEntry (table_entry);
 					break;
 				}
 			}

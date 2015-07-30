@@ -779,6 +779,89 @@ Netsnmp_Node_Handler neTeCompLinkAdjCapTable_mapper;
 
 
 /**
+ *	table neTedLinkXCTable definitions
+ */
+#define NETEDLINKXCINIF 1
+#define NETEDLINKXCOUTIF 2
+#define NETEDLINKXCDIR 3
+#define NETEDLINKXCINMAX 4
+#define NETEDLINKXCOUTMAX 5
+#define NETEDLINKXCROWSTATUS 6
+#define NETEDLINKXCSTORAGETYPE 7
+
+enum
+{
+	/* enums for column neTedLinkXCDir */
+	neTedLinkXCDir_simplex_c = 1,
+	neTedLinkXCDir_duplex_c = 2,
+
+	/* enums for column neTedLinkXCRowStatus */
+	neTedLinkXCRowStatus_active_c = 1,
+	neTedLinkXCRowStatus_notInService_c = 2,
+	neTedLinkXCRowStatus_notReady_c = 3,
+	neTedLinkXCRowStatus_createAndGo_c = 4,
+	neTedLinkXCRowStatus_createAndWait_c = 5,
+	neTedLinkXCRowStatus_destroy_c = 6,
+
+	/* enums for column neTedLinkXCStorageType */
+	neTedLinkXCStorageType_other_c = 1,
+	neTedLinkXCStorageType_volatile_c = 2,
+	neTedLinkXCStorageType_nonVolatile_c = 3,
+	neTedLinkXCStorageType_permanent_c = 4,
+	neTedLinkXCStorageType_readOnly_c = 5,
+};
+
+#define neTedLinkXCInIf_isInRange(_pVal, _pEntry) ((_pEntry)->u32InIf <= (_pVal)->u32InIf && (_pVal)->u32InIf <= (_pEntry)->u32InMax)
+#define neTedLinkXCOutIf_isInRange(_pVal, _pEntry) ((_pVal)->u32OutIf == 0 || ((_pEntry)->u32OutIf <= (_pVal)->u32OutIf && (_pVal)->u32OutIf <= (_pEntry)->u32OutMax))
+
+/* table neTedLinkXCTable row entry data structure */
+typedef struct neTedLinkXCEntry_t
+{
+	/* Index values */
+	uint32_t u32NodeIndex;
+	uint32_t u32InIf;
+	uint32_t u32OutIf;
+	
+	/* Column values */
+	int32_t i32Dir;
+	uint32_t u32InMax;
+	uint32_t u32OutMax;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	
+	xBTree_Node_t oBTreeNode;
+} neTedLinkXCEntry_t;
+
+extern xBTree_t oNeTedLinkXCTable_BTree;
+
+/* neTedLinkXCTable table mapper */
+void neTedLinkXCTable_init (void);
+neTedLinkXCEntry_t * neTedLinkXCTable_createEntry (
+	uint32_t u32NodeIndex,
+	uint32_t u32InIf,
+	uint32_t u32OutIf);
+neTedLinkXCEntry_t * neTedLinkXCTable_getByIndex (
+	uint32_t u32NodeIndex,
+	uint32_t u32InIf,
+	uint32_t u32OutIf);
+neTedLinkXCEntry_t * neTedLinkXCTable_Range_getByIndex (
+	uint32_t u32NodeIndex,
+	uint32_t u32InIf,
+	uint32_t u32OutIf);
+neTedLinkXCEntry_t * neTedLinkXCTable_getNextIndex (
+	uint32_t u32NodeIndex,
+	uint32_t u32InIf,
+	uint32_t u32OutIf);
+void neTedLinkXCTable_removeEntry (neTedLinkXCEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neTedLinkXCTable_getFirst;
+Netsnmp_Next_Data_Point neTedLinkXCTable_getNext;
+Netsnmp_Get_Data_Point neTedLinkXCTable_get;
+Netsnmp_Node_Handler neTedLinkXCTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
  *	table mplsTeNodeTable definitions
  */
 #define MPLSTENODELOCALID 1
