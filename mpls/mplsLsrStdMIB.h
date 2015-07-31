@@ -99,7 +99,7 @@ Netsnmp_Node_Handler mplsLsrObjects_mapper;
 typedef struct mplsInterfacePerfEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint32_t u32InLabelsInUse;
@@ -107,10 +107,10 @@ typedef struct mplsInterfacePerfEntry_t
 	uint32_t u32OutLabelsInUse;
 	uint32_t u32OutFragmentedPkts;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } mplsInterfacePerfEntry_t;
 
-extern xBTree_t oMplsInterfacePerfTable_BTree;
+// extern xBTree_t oMplsInterfacePerfTable_BTree;
 
 /* mplsInterfacePerfTable table mapper */
 void mplsInterfacePerfTable_init (void);
@@ -290,55 +290,6 @@ Netsnmp_First_Data_Point mplsLabelStackTable_getFirst;
 Netsnmp_Next_Data_Point mplsLabelStackTable_getNext;
 Netsnmp_Get_Data_Point mplsLabelStackTable_get;
 Netsnmp_Node_Handler mplsLabelStackTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
- *	table mplsInSegmentMapTable definitions
- */
-#define MPLSINSEGMENTMAPINTERFACE 1
-#define MPLSINSEGMENTMAPLABEL 2
-#define MPLSINSEGMENTMAPLABELPTRINDEX 3
-#define MPLSINSEGMENTMAPINDEX 4
-
-/* table mplsInSegmentMapTable row entry data structure */
-typedef struct mplsInSegmentMapEntry_t
-{
-	/* Index values */
-	uint32_t u32Interface;
-	uint32_t u32Label;
-	xOid_t aoLabelPtrIndex[128];
-	size_t u16LabelPtrIndex_len;	/* # of xOid_t elements */
-	
-	/* Column values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
-	
-	xBTree_Node_t oBTreeNode;
-} mplsInSegmentMapEntry_t;
-
-extern xBTree_t oMplsInSegmentMapTable_BTree;
-
-/* mplsInSegmentMapTable table mapper */
-void mplsInSegmentMapTable_init (void);
-mplsInSegmentMapEntry_t * mplsInSegmentMapTable_createEntry (
-	uint32_t u32Interface,
-	uint32_t u32Label,
-	xOid_t *paoLabelPtrIndex, size_t u16LabelPtrIndex_len);
-mplsInSegmentMapEntry_t * mplsInSegmentMapTable_getByIndex (
-	uint32_t u32Interface,
-	uint32_t u32Label,
-	xOid_t *paoLabelPtrIndex, size_t u16LabelPtrIndex_len);
-mplsInSegmentMapEntry_t * mplsInSegmentMapTable_getNextIndex (
-	uint32_t u32Interface,
-	uint32_t u32Label,
-	xOid_t *paoLabelPtrIndex, size_t u16LabelPtrIndex_len);
-void mplsInSegmentMapTable_removeEntry (mplsInSegmentMapEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point mplsInSegmentMapTable_getFirst;
-Netsnmp_Next_Data_Point mplsInSegmentMapTable_getNext;
-Netsnmp_Get_Data_Point mplsInSegmentMapTable_get;
-Netsnmp_Node_Handler mplsInSegmentMapTable_mapper;
 #endif	/* SNMP_SRC */
 
 

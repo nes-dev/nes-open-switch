@@ -420,6 +420,11 @@ mplsInterfaceTable_createHier (
 {
 	register bool bRetCode = false;
 	
+	if (mplsInterfacePerfTable_createEntry (poEntry->u32Index) == NULL)
+	{
+		goto mplsInterfaceTable_createHier_cleanup;
+	}
+	
 	if (gmplsInterfaceTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto mplsInterfaceTable_createHier_cleanup;
@@ -439,6 +444,7 @@ mplsInterfaceTable_removeHier (
 {
 	register bool bRetCode = false;
 	
+	mplsInterfacePerfTable_removeEntry (&poEntry->oPerf);
 	gmplsInterfaceTable_removeEntry (&poEntry->oG);
 	
 	bRetCode = true;
@@ -672,7 +678,7 @@ mplsInterfacePerfTable_getNext (
 	poEntry = xBTree_entry (*my_loop_context, mplsInterfaceEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) &poEntry->oPerf;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsInterfaceTable_BTree);
 	return put_index_data;
 }
@@ -692,7 +698,7 @@ mplsInterfacePerfTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oPerf;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -707,6 +713,7 @@ mplsInterfacePerfTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	mplsInterfacePerfEntry_t *table_entry;
+	register mplsInterfaceEntry_t *poEntry = NULL;
 	
 	switch (reqinfo->mode)
 	{
@@ -716,13 +723,14 @@ mplsInterfacePerfTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsInterfacePerfEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInterfaceEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oPerf;
 			
 			switch (table_info->colnum)
 			{
