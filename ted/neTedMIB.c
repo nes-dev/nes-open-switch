@@ -54,6 +54,7 @@ static oid neTedNodeTable_oid[] = {1,3,6,1,4,1,36969,68,1,2};
 static oid neTedLinkTable_oid[] = {1,3,6,1,4,1,36969,68,1,3};
 static oid neTedAddressTable_oid[] = {1,3,6,1,4,1,36969,68,1,4};
 static oid neTedNeighborTable_oid[] = {1,3,6,1,4,1,36969,68,1,5};
+static oid neTedLinkResvTable_oid[] = {1,3,6,1,4,1,36969,68,1,6};
 static oid neTeLinkAdjCapTable_oid[] = {1,3,6,1,4,1,36969,68,1,6};
 static oid neTeCompLinkAdjCapTable_oid[] = {1,3,6,1,4,1,36969,68,1,7};
 static oid neTedLinkXCTable_oid[] = {1,3,6,1,4,1,36969,68,1,9};
@@ -118,6 +119,7 @@ neTedMIB_init (void)
 	neTedLinkTable_init ();
 	neTedAddressTable_init ();
 	neTedNeighborTable_init ();
+	neTedLinkResvTable_init ();
 	neTeLinkAdjCapTable_init ();
 	neTeCompLinkAdjCapTable_init ();
 	neTedLinkXCTable_init ();
@@ -3351,6 +3353,293 @@ neTedNeighborTable_mapper (
 			}
 		}
 		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neTedLinkResvTable table mapper **/
+void
+neTedLinkResvTable_init (void)
+{
+	extern oid neTedLinkResvTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neTedLinkResvTable", &neTedLinkResvTable_mapper,
+		neTedLinkResvTable_oid, OID_LENGTH (neTedLinkResvTable_oid),
+		HANDLER_CAN_RONLY
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_UNSIGNED /* index: neTedNodeIndex */,
+		ASN_UNSIGNED /* index: neTedLinkIndex */,
+		ASN_UNSIGNED /* index: mplsTunnelIndex */,
+		ASN_UNSIGNED /* index: mplsTunnelInstance */,
+		ASN_UNSIGNED /* index: mplsTunnelIngressLSRId */,
+		ASN_UNSIGNED /* index: mplsTunnelEgressLSRId */,
+		0);
+	table_info->min_column = NETEDLINKRESVBANDWIDTH;
+	table_info->max_column = NETEDLINKRESVBANDWIDTH;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neTedLinkResvTable_getFirst;
+	iinfo->get_next_data_point = &neTedLinkResvTable_getNext;
+	iinfo->get_data_point = &neTedLinkResvTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neTedLinkResvTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neTedLinkResvEntry_t *pEntry1 = xBTree_entry (pNode1, neTedLinkResvEntry_t, oBTreeNode);
+	register neTedLinkResvEntry_t *pEntry2 = xBTree_entry (pNode2, neTedLinkResvEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32NodeIndex < pEntry2->u32NodeIndex) ||
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex < pEntry2->u32LinkIndex) ||
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->u32MplsTunnelIndex < pEntry2->u32MplsTunnelIndex) ||
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->u32MplsTunnelIndex == pEntry2->u32MplsTunnelIndex && pEntry1->u32MplsTunnelInstance < pEntry2->u32MplsTunnelInstance) ||
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->u32MplsTunnelIndex == pEntry2->u32MplsTunnelIndex && pEntry1->u32MplsTunnelInstance == pEntry2->u32MplsTunnelInstance && pEntry1->u32MplsTunnelIngressLSRId < pEntry2->u32MplsTunnelIngressLSRId) ||
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->u32MplsTunnelIndex == pEntry2->u32MplsTunnelIndex && pEntry1->u32MplsTunnelInstance == pEntry2->u32MplsTunnelInstance && pEntry1->u32MplsTunnelIngressLSRId == pEntry2->u32MplsTunnelIngressLSRId && pEntry1->u32MplsTunnelEgressLSRId < pEntry2->u32MplsTunnelEgressLSRId) ? -1:
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->u32MplsTunnelIndex == pEntry2->u32MplsTunnelIndex && pEntry1->u32MplsTunnelInstance == pEntry2->u32MplsTunnelInstance && pEntry1->u32MplsTunnelIngressLSRId == pEntry2->u32MplsTunnelIngressLSRId && pEntry1->u32MplsTunnelEgressLSRId == pEntry2->u32MplsTunnelEgressLSRId) ? 0: 1;
+}
+
+xBTree_t oNeTedLinkResvTable_BTree = xBTree_initInline (&neTedLinkResvTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+neTedLinkResvEntry_t *
+neTedLinkResvTable_createEntry (
+	uint32_t u32NodeIndex,
+	uint32_t u32LinkIndex,
+	uint32_t u32MplsTunnelIndex,
+	uint32_t u32MplsTunnelInstance,
+	uint32_t u32MplsTunnelIngressLSRId,
+	uint32_t u32MplsTunnelEgressLSRId)
+{
+	register neTedLinkResvEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32NodeIndex = u32NodeIndex;
+	poEntry->u32LinkIndex = u32LinkIndex;
+	poEntry->u32MplsTunnelIndex = u32MplsTunnelIndex;
+	poEntry->u32MplsTunnelInstance = u32MplsTunnelInstance;
+	poEntry->u32MplsTunnelIngressLSRId = u32MplsTunnelIngressLSRId;
+	poEntry->u32MplsTunnelEgressLSRId = u32MplsTunnelEgressLSRId;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTedLinkResvTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeTedLinkResvTable_BTree);
+	return poEntry;
+}
+
+neTedLinkResvEntry_t *
+neTedLinkResvTable_getByIndex (
+	uint32_t u32NodeIndex,
+	uint32_t u32LinkIndex,
+	uint32_t u32MplsTunnelIndex,
+	uint32_t u32MplsTunnelInstance,
+	uint32_t u32MplsTunnelIngressLSRId,
+	uint32_t u32MplsTunnelEgressLSRId)
+{
+	register neTedLinkResvEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32NodeIndex = u32NodeIndex;
+	poTmpEntry->u32LinkIndex = u32LinkIndex;
+	poTmpEntry->u32MplsTunnelIndex = u32MplsTunnelIndex;
+	poTmpEntry->u32MplsTunnelInstance = u32MplsTunnelInstance;
+	poTmpEntry->u32MplsTunnelIngressLSRId = u32MplsTunnelIngressLSRId;
+	poTmpEntry->u32MplsTunnelEgressLSRId = u32MplsTunnelEgressLSRId;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeTedLinkResvTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neTedLinkResvEntry_t, oBTreeNode);
+}
+
+neTedLinkResvEntry_t *
+neTedLinkResvTable_getNextIndex (
+	uint32_t u32NodeIndex,
+	uint32_t u32LinkIndex,
+	uint32_t u32MplsTunnelIndex,
+	uint32_t u32MplsTunnelInstance,
+	uint32_t u32MplsTunnelIngressLSRId,
+	uint32_t u32MplsTunnelEgressLSRId)
+{
+	register neTedLinkResvEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32NodeIndex = u32NodeIndex;
+	poTmpEntry->u32LinkIndex = u32LinkIndex;
+	poTmpEntry->u32MplsTunnelIndex = u32MplsTunnelIndex;
+	poTmpEntry->u32MplsTunnelInstance = u32MplsTunnelInstance;
+	poTmpEntry->u32MplsTunnelIngressLSRId = u32MplsTunnelIngressLSRId;
+	poTmpEntry->u32MplsTunnelEgressLSRId = u32MplsTunnelEgressLSRId;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeTedLinkResvTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neTedLinkResvEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neTedLinkResvTable_removeEntry (neTedLinkResvEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTedLinkResvTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeTedLinkResvTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neTedLinkResvTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeTedLinkResvTable_BTree);
+	return neTedLinkResvTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neTedLinkResvTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neTedLinkResvEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neTedLinkResvEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32NodeIndex);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32LinkIndex);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32MplsTunnelIndex);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32MplsTunnelInstance);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32MplsTunnelIngressLSRId);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32MplsTunnelEgressLSRId);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeTedLinkResvTable_BTree);
+	return put_index_data;
+}
+
+bool
+neTedLinkResvTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neTedLinkResvEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	register netsnmp_variable_list *idx3 = idx2->next_variable;
+	register netsnmp_variable_list *idx4 = idx3->next_variable;
+	register netsnmp_variable_list *idx5 = idx4->next_variable;
+	register netsnmp_variable_list *idx6 = idx5->next_variable;
+	
+	poEntry = neTedLinkResvTable_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer,
+		*idx3->val.integer,
+		*idx4->val.integer,
+		*idx5->val.integer,
+		*idx6->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neTedLinkResvTable table mapper */
+int
+neTedLinkResvTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neTedLinkResvEntry_t *table_entry;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neTedLinkResvEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NETEDLINKRESVBANDWIDTH:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Bandwidth, table_entry->u16Bandwidth_len);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
 	}
 	
 	return SNMP_ERR_NOERROR;
