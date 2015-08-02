@@ -619,6 +619,7 @@ typedef struct mplsInSegmentEntry_t
 	uint8_t u8StorageType;
 	
 	mplsInSegmentPerfEntry_t oPerf;
+	gmplsInSegmentEntry_t oG;
 	
 	xBTree_Node_t oBTreeNode;
 } mplsInSegmentEntry_t;
