@@ -25,6 +25,7 @@
 
 #include "neMplsLsrMIB_agent.h"
 #include "mplsLsrStdMIB_agent.h"
+#include "mplsLsrExtStdMIB_agent.h"
 #include "neMplsTeMIB_agent.h"
 #include "mplsTeStdMIB_agent.h"
 #include "mplsUtils.h"
@@ -52,6 +53,7 @@ mpls_main (void *pvArgv)
 	
 	neMplsLsrMIB_init ();
 	mplsLsrStdMIB_init ();
+	mplsLsrExtStdMIB_init ();
 	neMplsTeMIB_init ();
 	mplsTeStdMIB_init ();
 	
