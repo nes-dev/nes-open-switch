@@ -27,6 +27,8 @@ extern "C" {
 
 
 
+#include "neMplsTeMIB.h"
+
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
@@ -1030,6 +1032,7 @@ typedef struct mplsTunnelEntry_t
 	mplsTunnelPerfEntry_t oPerf;
 	gmplsTunnelEntry_t oG;
 	gmplsTunnelReversePerfEntry_t oReversePerf;
+	neMplsTunnelEntry_t oNe;
 	
 	xBTree_Node_t oBTreeNode;
 } mplsTunnelEntry_t;
