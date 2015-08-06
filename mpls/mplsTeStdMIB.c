@@ -4833,22 +4833,6 @@ gmplsTunnelHopTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-gmplsTunnelHopTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register gmplsTunnelHopEntry_t *pEntry1 = xBTree_entry (pNode1, gmplsTunnelHopEntry_t, oBTreeNode);
-	register gmplsTunnelHopEntry_t *pEntry2 = xBTree_entry (pNode2, gmplsTunnelHopEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32ListIndex < pEntry2->u32ListIndex) ||
-		(pEntry1->u32ListIndex == pEntry2->u32ListIndex && pEntry1->u32PathOptionIndex < pEntry2->u32PathOptionIndex) ||
-		(pEntry1->u32ListIndex == pEntry2->u32ListIndex && pEntry1->u32PathOptionIndex == pEntry2->u32PathOptionIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32ListIndex == pEntry2->u32ListIndex && pEntry1->u32PathOptionIndex == pEntry2->u32PathOptionIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oGmplsTunnelHopTable_BTree = xBTree_initInline (&gmplsTunnelHopTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 gmplsTunnelHopEntry_t *
 gmplsTunnelHopTable_createEntry (
@@ -4857,25 +4841,17 @@ gmplsTunnelHopTable_createEntry (
 	uint32_t u32Index)
 {
 	register gmplsTunnelHopEntry_t *poEntry = NULL;
+	register mplsTunnelHopEntry_t *poTunnelHop = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poTunnelHop = mplsTunnelHopTable_getByIndex (u32ListIndex, u32PathOptionIndex, u32Index)) == NULL)
 	{
 		return NULL;
 	}
-	
-	poEntry->u32ListIndex = u32ListIndex;
-	poEntry->u32PathOptionIndex = u32PathOptionIndex;
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsTunnelHopTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poTunnelHop->oG;
 	
 	/*poEntry->aoExplicitForwardLabelPtr = zeroDotZero*/;
 	/*poEntry->aoExplicitReverseLabelPtr = zeroDotZero*/;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oGmplsTunnelHopTable_BTree);
 	return poEntry;
 }
 
@@ -4885,25 +4861,14 @@ gmplsTunnelHopTable_getByIndex (
 	uint32_t u32PathOptionIndex,
 	uint32_t u32Index)
 {
-	register gmplsTunnelHopEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsTunnelHopEntry_t *poTunnelHop = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poTunnelHop = mplsTunnelHopTable_getByIndex (u32ListIndex, u32PathOptionIndex, u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ListIndex = u32ListIndex;
-	poTmpEntry->u32PathOptionIndex = u32PathOptionIndex;
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oGmplsTunnelHopTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, gmplsTunnelHopEntry_t, oBTreeNode);
+	return &poTunnelHop->oG;
 }
 
 gmplsTunnelHopEntry_t *
@@ -4912,39 +4877,20 @@ gmplsTunnelHopTable_getNextIndex (
 	uint32_t u32PathOptionIndex,
 	uint32_t u32Index)
 {
-	register gmplsTunnelHopEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsTunnelHopEntry_t *poTunnelHop = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poTunnelHop = mplsTunnelHopTable_getNextIndex (u32ListIndex, u32PathOptionIndex, u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ListIndex = u32ListIndex;
-	poTmpEntry->u32PathOptionIndex = u32PathOptionIndex;
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oGmplsTunnelHopTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, gmplsTunnelHopEntry_t, oBTreeNode);
+	return &poTunnelHop->oG;
 }
 
 /* remove a row from the table */
 void
 gmplsTunnelHopTable_removeEntry (gmplsTunnelHopEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsTunnelHopTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oGmplsTunnelHopTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -4954,7 +4900,7 @@ gmplsTunnelHopTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oGmplsTunnelHopTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsTunnelHopTable_BTree);
 	return gmplsTunnelHopTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -4963,22 +4909,22 @@ gmplsTunnelHopTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	gmplsTunnelHopEntry_t *poEntry = NULL;
+	mplsTunnelHopEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, gmplsTunnelHopEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, mplsTunnelHopEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ListIndex);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PathOptionIndex);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oGmplsTunnelHopTable_BTree);
+	*my_data_context = (void*) &poEntry->oG;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsTunnelHopTable_BTree);
 	return put_index_data;
 }
 
@@ -4987,12 +4933,12 @@ gmplsTunnelHopTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	gmplsTunnelHopEntry_t *poEntry = NULL;
+	mplsTunnelHopEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	register netsnmp_variable_list *idx3 = idx2->next_variable;
 	
-	poEntry = gmplsTunnelHopTable_getByIndex (
+	poEntry = mplsTunnelHopTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer,
 		*idx3->val.integer);
@@ -5001,7 +4947,7 @@ gmplsTunnelHopTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oG;
 	return true;
 }
 

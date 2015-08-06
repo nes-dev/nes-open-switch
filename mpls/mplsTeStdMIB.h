@@ -1149,6 +1149,8 @@ typedef struct mplsTunnelHopEntry_t
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
+	gmplsTunnelHopEntry_t oG;
+	
 	xBTree_Node_t oBTreeNode;
 } mplsTunnelHopEntry_t;
 
