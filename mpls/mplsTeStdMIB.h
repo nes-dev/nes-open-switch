@@ -989,6 +989,11 @@ typedef struct mplsTunnelEntry_t
 	uint32_t u32IngressLSRId;
 	uint32_t u32EgressLSRId;
 	
+	struct {
+		uint8_t au8XCIndex[24];
+		size_t u16XCIndex_len;
+	} oK;
+	
 	/* Column values */
 	uint8_t au8Name[255];
 	size_t u16Name_len;	/* # of uint8_t elements */
@@ -1035,9 +1040,11 @@ typedef struct mplsTunnelEntry_t
 	neMplsTunnelEntry_t oNe;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oXC_BTreeNode;
 } mplsTunnelEntry_t;
 
 extern xBTree_t oMplsTunnelTable_BTree;
+extern xBTree_t oMplsTunnelTable_XC_BTree;
 
 /* mplsTunnelTable table mapper */
 void mplsTunnelTable_init (void);
@@ -1051,6 +1058,8 @@ mplsTunnelEntry_t * mplsTunnelTable_getByIndex (
 	uint32_t u32Instance,
 	uint32_t u32IngressLSRId,
 	uint32_t u32EgressLSRId);
+mplsTunnelEntry_t * mplsTunnelTable_XC_getByIndex (
+	uint8_t *pau8XCIndex, size_t u16XCIndex_len);
 mplsTunnelEntry_t * mplsTunnelTable_getNextIndex (
 	uint32_t u32Index,
 	uint32_t u32Instance,

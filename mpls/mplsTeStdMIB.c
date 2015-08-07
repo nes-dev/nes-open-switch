@@ -487,7 +487,20 @@ mplsTunnelTable_BTreeNodeCmp (
 		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Instance == pEntry2->u32Instance && pEntry1->u32IngressLSRId == pEntry2->u32IngressLSRId && pEntry1->u32EgressLSRId == pEntry2->u32EgressLSRId) ? 0: 1;
 }
 
+static int8_t
+mplsTunnelTable_XC_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register mplsTunnelEntry_t *pEntry1 = xBTree_entry (pNode1, mplsTunnelEntry_t, oXC_BTreeNode);
+	register mplsTunnelEntry_t *pEntry2 = xBTree_entry (pNode2, mplsTunnelEntry_t, oXC_BTreeNode);
+	
+	return
+		(xBinCmp (pEntry1->oK.au8XCIndex, pEntry2->oK.au8XCIndex, pEntry1->oK.u16XCIndex_len, pEntry2->oK.u16XCIndex_len) == -1) ? -1:
+		(xBinCmp (pEntry1->oK.au8XCIndex, pEntry2->oK.au8XCIndex, pEntry1->oK.u16XCIndex_len, pEntry2->oK.u16XCIndex_len) == 0) ? 0: 1;
+}
+
 xBTree_t oMplsTunnelTable_BTree = xBTree_initInline (&mplsTunnelTable_BTreeNodeCmp);
+xBTree_t oMplsTunnelTable_XC_BTree = xBTree_initInline (&mplsTunnelTable_XC_BTreeNodeCmp);
 
 /* create a new row in the table */
 mplsTunnelEntry_t *
@@ -566,6 +579,30 @@ mplsTunnelTable_getByIndex (
 	
 	xBuffer_free (poTmpEntry);
 	return xBTree_entry (poNode, mplsTunnelEntry_t, oBTreeNode);
+}
+
+mplsTunnelEntry_t *
+mplsTunnelTable_XC_getByIndex (
+	uint8_t *pau8XCIndex, size_t u16XCIndex_len)
+{
+	register mplsTunnelEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->oK.au8XCIndex, pau8XCIndex, u16XCIndex_len);
+	poTmpEntry->oK.u16XCIndex_len = u16XCIndex_len;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oXC_BTreeNode, &oMplsTunnelTable_XC_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, mplsTunnelEntry_t, oXC_BTreeNode);
 }
 
 mplsTunnelEntry_t *
