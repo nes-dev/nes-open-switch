@@ -620,6 +620,7 @@ typedef struct mplsInSegmentEntry_t
 	
 	mplsInSegmentPerfEntry_t oPerf;
 	gmplsInSegmentEntry_t oG;
+	neMplsInSegmentEntry_t oNe;
 	
 	xBTree_Node_t oBTreeNode;
 } mplsInSegmentEntry_t;
