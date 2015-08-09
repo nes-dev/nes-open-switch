@@ -56,8 +56,8 @@ void teLinkStdMIB_init (void);
 #define TELINKPROTECTIONTYPE 6
 #define TELINKWORKINGPRIORITY 7
 #define TELINKRESOURCECLASS 8
-#define TELINKINCOMINGIFID 9
-#define TELINKOUTGOINGIFID 10
+#define TELINKREMOTEID 9
+#define TELINKLOCALID 10
 #define TELINKROWSTATUS 11
 #define TELINKSTORAGETYPE 12
 
@@ -113,8 +113,8 @@ typedef struct teLinkEntry_t
 	int32_t i32ProtectionType;
 	uint32_t u32WorkingPriority;
 	uint32_t u32ResourceClass;
-	int32_t i32IncomingIfId;
-	uint32_t u32OutgoingIfId;
+	uint32_t u32RemoteId;
+	uint32_t u32LocalId;
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	

@@ -321,11 +321,11 @@ teLinkTable_mapper (
 			case TELINKRESOURCECLASS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ResourceClass);
 				break;
-			case TELINKINCOMINGIFID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32IncomingIfId);
+			case TELINKREMOTEID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32RemoteId);
 				break;
-			case TELINKOUTGOINGIFID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32OutgoingIfId);
+			case TELINKLOCALID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32LocalId);
 				break;
 			case TELINKROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -408,15 +408,15 @@ teLinkTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKINCOMINGIFID:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+			case TELINKREMOTEID:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKOUTGOINGIFID:
+			case TELINKLOCALID:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -641,33 +641,33 @@ teLinkTable_mapper (
 				
 				table_entry->u32ResourceClass = *request->requestvb->val.integer;
 				break;
-			case TELINKINCOMINGIFID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32IncomingIfId))) == NULL)
+			case TELINKREMOTEID:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32RemoteId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32IncomingIfId, sizeof (table_entry->i32IncomingIfId));
+					memcpy (pvOldDdata, &table_entry->u32RemoteId, sizeof (table_entry->u32RemoteId));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32IncomingIfId = *request->requestvb->val.integer;
+				table_entry->u32RemoteId = *request->requestvb->val.integer;
 				break;
-			case TELINKOUTGOINGIFID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32OutgoingIfId))) == NULL)
+			case TELINKLOCALID:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32LocalId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->u32OutgoingIfId, sizeof (table_entry->u32OutgoingIfId));
+					memcpy (pvOldDdata, &table_entry->u32LocalId, sizeof (table_entry->u32LocalId));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->u32OutgoingIfId = *request->requestvb->val.integer;
+				table_entry->u32LocalId = *request->requestvb->val.integer;
 				break;
 			case TELINKSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
@@ -745,11 +745,11 @@ teLinkTable_mapper (
 			case TELINKRESOURCECLASS:
 				memcpy (&table_entry->u32ResourceClass, pvOldDdata, sizeof (table_entry->u32ResourceClass));
 				break;
-			case TELINKINCOMINGIFID:
-				memcpy (&table_entry->i32IncomingIfId, pvOldDdata, sizeof (table_entry->i32IncomingIfId));
+			case TELINKREMOTEID:
+				memcpy (&table_entry->u32RemoteId, pvOldDdata, sizeof (table_entry->u32RemoteId));
 				break;
-			case TELINKOUTGOINGIFID:
-				memcpy (&table_entry->u32OutgoingIfId, pvOldDdata, sizeof (table_entry->u32OutgoingIfId));
+			case TELINKLOCALID:
+				memcpy (&table_entry->u32LocalId, pvOldDdata, sizeof (table_entry->u32LocalId));
 				break;
 			case TELINKROWSTATUS:
 				switch (*request->requestvb->val.integer)
