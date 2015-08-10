@@ -101,6 +101,16 @@ typedef struct teLinkEntry_t
 	/* Index values */
 	uint32_t u32IfIndex;
 	
+	struct {
+		int32_t i32AddrType;
+		uint8_t au8LocalAddr[20];
+		size_t u16LocalAddr_len;
+		uint32_t u32LocalId;
+		uint8_t au8RemoteAddr[20];
+		size_t u16RemoteAddr_len;
+		uint32_t u32RemoteId;
+	} oK;
+	
 	/* Column values */
 	int32_t i32AddressType;
 	uint8_t au8LocalIpAddr[20];
@@ -119,9 +129,13 @@ typedef struct teLinkEntry_t
 	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oAddrLocal_BTreeNode;
+	xBTree_Node_t oAddrRemote_BTreeNode;
 } teLinkEntry_t;
 
 extern xBTree_t oTeLinkTable_BTree;
+extern xBTree_t oTeLinkTable_AddrLocal_BTree;
+extern xBTree_t oTeLinkTable_AddrRemote_BTree;
 
 /* teLinkTable table mapper */
 void teLinkTable_init (void);
@@ -131,6 +145,14 @@ teLinkEntry_t * teLinkTable_getByIndex (
 	uint32_t u32IfIndex);
 teLinkEntry_t * teLinkTable_getNextIndex (
 	uint32_t u32IfIndex);
+teLinkEntry_t * teLinkTable_AddrLocal_getNextIndex (
+	int32_t i32AddressType,
+	uint8_t *pau8LocalIpAddr, size_t u16LocalIpAddr_len,
+	uint32_t u32LocalId);
+teLinkEntry_t * teLinkTable_AddrRemote_getNextIndex (
+	int32_t i32AddressType,
+	uint8_t *pau8RemoteIpAddr, size_t u16RemoteIpAddr_len,
+	uint32_t u32RemoteId);
 void teLinkTable_removeEntry (teLinkEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point teLinkTable_getFirst;
