@@ -52,7 +52,7 @@ void teLinkStdMIB_init (void);
 #define TELINKLOCALIPADDR 2
 #define TELINKREMOTEIPADDR 3
 #define TELINKMETRIC 4
-#define TELINKMAXIMUMRESERVABLEBANDWIDTH 5
+#define TELINKMAXRESBANDWIDTH 5
 #define TELINKPROTECTIONTYPE 6
 #define TELINKWORKINGPRIORITY 7
 #define TELINKRESOURCECLASS 8
@@ -118,8 +118,8 @@ typedef struct teLinkEntry_t
 	uint8_t au8RemoteIpAddr[20];
 	size_t u16RemoteIpAddr_len;	/* # of uint8_t elements */
 	uint32_t u32Metric;
-	uint8_t au8MaximumReservableBandwidth[8];
-	size_t u16MaximumReservableBandwidth_len;	/* # of uint8_t elements */
+	uint8_t au8MaxResBandwidth[8];
+	size_t u16MaxResBandwidth_len;	/* # of uint8_t elements */
 	int32_t i32ProtectionType;
 	uint32_t u32WorkingPriority;
 	uint32_t u32ResourceClass;
@@ -163,86 +163,86 @@ Netsnmp_Node_Handler teLinkTable_mapper;
 
 
 /**
- *	table teLinkDescriptorTable definitions
+ *	table teLinkSwCapTable definitions
  */
-#define TELINKDESCRIPTORID 1
-#define TELINKDESCRSWITCHINGCAPABILITY 2
-#define TELINKDESCRENCODINGTYPE 3
-#define TELINKDESCRMINLSPBANDWIDTH 4
-#define TELINKDESCRMAXLSPBANDWIDTHPRIO0 5
-#define TELINKDESCRMAXLSPBANDWIDTHPRIO1 6
-#define TELINKDESCRMAXLSPBANDWIDTHPRIO2 7
-#define TELINKDESCRMAXLSPBANDWIDTHPRIO3 8
-#define TELINKDESCRMAXLSPBANDWIDTHPRIO4 9
-#define TELINKDESCRMAXLSPBANDWIDTHPRIO5 10
-#define TELINKDESCRMAXLSPBANDWIDTHPRIO6 11
-#define TELINKDESCRMAXLSPBANDWIDTHPRIO7 12
-#define TELINKDESCRINTERFACEMTU 13
-#define TELINKDESCRINDICATION 14
-#define TELINKDESCRROWSTATUS 15
-#define TELINKDESCRSTORAGETYPE 16
+#define TELINKSWCAPID 1
+#define TELINKSWCAPTYPE 2
+#define TELINKSWCAPENCODING 3
+#define TELINKSWCAPMINLSPBANDWIDTH 4
+#define TELINKSWCAPMAXLSPBANDWIDTHPRIO0 5
+#define TELINKSWCAPMAXLSPBANDWIDTHPRIO1 6
+#define TELINKSWCAPMAXLSPBANDWIDTHPRIO2 7
+#define TELINKSWCAPMAXLSPBANDWIDTHPRIO3 8
+#define TELINKSWCAPMAXLSPBANDWIDTHPRIO4 9
+#define TELINKSWCAPMAXLSPBANDWIDTHPRIO5 10
+#define TELINKSWCAPMAXLSPBANDWIDTHPRIO6 11
+#define TELINKSWCAPMAXLSPBANDWIDTHPRIO7 12
+#define TELINKSWCAPINTERFACEMTU 13
+#define TELINKSWCAPINDICATION 14
+#define TELINKSWCAPROWSTATUS 15
+#define TELINKSWCAPSTORAGETYPE 16
 
 enum
 {
-	/* enums for column teLinkDescrSwitchingCapability */
-	teLinkDescrSwitchingCapability_unknown_c = 0,
-	teLinkDescrSwitchingCapability_psc1_c = 1,
-	teLinkDescrSwitchingCapability_psc2_c = 2,
-	teLinkDescrSwitchingCapability_psc3_c = 3,
-	teLinkDescrSwitchingCapability_psc4_c = 4,
-	teLinkDescrSwitchingCapability_evpl_c = 30,
-	teLinkDescrSwitchingCapability_pbb_c = 40,
-	teLinkDescrSwitchingCapability_l2sc_c = 51,
-	teLinkDescrSwitchingCapability_tdm_c = 100,
-	teLinkDescrSwitchingCapability_otntdm_c = 110,
-	teLinkDescrSwitchingCapability_dcsc_c = 125,
-	teLinkDescrSwitchingCapability_lsc_c = 150,
-	teLinkDescrSwitchingCapability_fsc_c = 200,
+	/* enums for column teLinkSwCapType */
+	teLinkSwCapType_unknown_c = 0,
+	teLinkSwCapType_psc1_c = 1,
+	teLinkSwCapType_psc2_c = 2,
+	teLinkSwCapType_psc3_c = 3,
+	teLinkSwCapType_psc4_c = 4,
+	teLinkSwCapType_evpl_c = 30,
+	teLinkSwCapType_pbb_c = 40,
+	teLinkSwCapType_l2sc_c = 51,
+	teLinkSwCapType_tdm_c = 100,
+	teLinkSwCapType_otntdm_c = 110,
+	teLinkSwCapType_dcsc_c = 125,
+	teLinkSwCapType_lsc_c = 150,
+	teLinkSwCapType_fsc_c = 200,
 
-	/* enums for column teLinkDescrEncodingType */
-	teLinkDescrEncodingType_tunnelLspNotGmpls_c = 0,
-	teLinkDescrEncodingType_tunnelLspPacket_c = 1,
-	teLinkDescrEncodingType_tunnelLspEthernet_c = 2,
-	teLinkDescrEncodingType_tunnelLspAnsiEtsiPdh_c = 3,
-	teLinkDescrEncodingType_tunnelLspSdhSonet_c = 5,
-	teLinkDescrEncodingType_tunnelLspDigitalWrapper_c = 7,
-	teLinkDescrEncodingType_tunnelLspLambda_c = 8,
-	teLinkDescrEncodingType_tunnelLspFiber_c = 9,
-	teLinkDescrEncodingType_tunnelLspFiberChannel_c = 11,
-	teLinkDescrEncodingType_tunnelDigitalPath_c = 12,
-	teLinkDescrEncodingType_tunnelOpticalChannel_c = 13,
-	teLinkDescrEncodingType_tunnelLine_c = 14,
+	/* enums for column teLinkSwCapEncoding */
+	teLinkSwCapEncoding_notGmpls_c = 0,
+	teLinkSwCapEncoding_packet_c = 1,
+	teLinkSwCapEncoding_ethernet_c = 2,
+	teLinkSwCapEncoding_ansiEtsiPdh_c = 3,
+	teLinkSwCapEncoding_sdhSonet_c = 5,
+	teLinkSwCapEncoding_digitalWrapper_c = 7,
+	teLinkSwCapEncoding_lambda_c = 8,
+	teLinkSwCapEncoding_fiber_c = 9,
+	teLinkSwCapEncoding_fiberChannel_c = 11,
+	teLinkSwCapEncoding_digitalPath_c = 12,
+	teLinkSwCapEncoding_opticalChannel_c = 13,
+	teLinkSwCapEncoding_line_c = 14,
 
-	/* enums for column teLinkDescrIndication */
-	teLinkDescrIndication_standard_c = 0,
-	teLinkDescrIndication_arbitrary_c = 1,
+	/* enums for column teLinkSwCapIndication */
+	teLinkSwCapIndication_standard_c = 0,
+	teLinkSwCapIndication_arbitrary_c = 1,
 
-	/* enums for column teLinkDescrRowStatus */
-	teLinkDescrRowStatus_active_c = 1,
-	teLinkDescrRowStatus_notInService_c = 2,
-	teLinkDescrRowStatus_notReady_c = 3,
-	teLinkDescrRowStatus_createAndGo_c = 4,
-	teLinkDescrRowStatus_createAndWait_c = 5,
-	teLinkDescrRowStatus_destroy_c = 6,
+	/* enums for column teLinkSwCapRowStatus */
+	teLinkSwCapRowStatus_active_c = 1,
+	teLinkSwCapRowStatus_notInService_c = 2,
+	teLinkSwCapRowStatus_notReady_c = 3,
+	teLinkSwCapRowStatus_createAndGo_c = 4,
+	teLinkSwCapRowStatus_createAndWait_c = 5,
+	teLinkSwCapRowStatus_destroy_c = 6,
 
-	/* enums for column teLinkDescrStorageType */
-	teLinkDescrStorageType_other_c = 1,
-	teLinkDescrStorageType_volatile_c = 2,
-	teLinkDescrStorageType_nonVolatile_c = 3,
-	teLinkDescrStorageType_permanent_c = 4,
-	teLinkDescrStorageType_readOnly_c = 5,
+	/* enums for column teLinkSwCapStorageType */
+	teLinkSwCapStorageType_other_c = 1,
+	teLinkSwCapStorageType_volatile_c = 2,
+	teLinkSwCapStorageType_nonVolatile_c = 3,
+	teLinkSwCapStorageType_permanent_c = 4,
+	teLinkSwCapStorageType_readOnly_c = 5,
 };
 
-/* table teLinkDescriptorTable row entry data structure */
-typedef struct teLinkDescriptorEntry_t
+/* table teLinkSwCapTable row entry data structure */
+typedef struct teLinkSwCapEntry_t
 {
 	/* Index values */
 	uint32_t u32IfIndex;
 	uint32_t u32Id;
 	
 	/* Column values */
-	int32_t i32SwitchingCapability;
-	int32_t i32EncodingType;
+	int32_t i32Type;
+	int32_t i32Encoding;
 	uint8_t au8MinLspBandwidth[8];
 	size_t u16MinLspBandwidth_len;	/* # of uint8_t elements */
 	uint8_t au8MaxLspBandwidthPrio0[8];
@@ -267,27 +267,27 @@ typedef struct teLinkDescriptorEntry_t
 	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
-} teLinkDescriptorEntry_t;
+} teLinkSwCapEntry_t;
 
-extern xBTree_t oTeLinkDescriptorTable_BTree;
+extern xBTree_t oTeLinkSwCapTable_BTree;
 
-/* teLinkDescriptorTable table mapper */
-void teLinkDescriptorTable_init (void);
-teLinkDescriptorEntry_t * teLinkDescriptorTable_createEntry (
+/* teLinkSwCapTable table mapper */
+void teLinkSwCapTable_init (void);
+teLinkSwCapEntry_t * teLinkSwCapTable_createEntry (
 	uint32_t u32IfIndex,
 	uint32_t u32Id);
-teLinkDescriptorEntry_t * teLinkDescriptorTable_getByIndex (
+teLinkSwCapEntry_t * teLinkSwCapTable_getByIndex (
 	uint32_t u32IfIndex,
 	uint32_t u32Id);
-teLinkDescriptorEntry_t * teLinkDescriptorTable_getNextIndex (
+teLinkSwCapEntry_t * teLinkSwCapTable_getNextIndex (
 	uint32_t u32IfIndex,
 	uint32_t u32Id);
-void teLinkDescriptorTable_removeEntry (teLinkDescriptorEntry_t *poEntry);
+void teLinkSwCapTable_removeEntry (teLinkSwCapEntry_t *poEntry);
 #ifdef SNMP_SRC
-Netsnmp_First_Data_Point teLinkDescriptorTable_getFirst;
-Netsnmp_Next_Data_Point teLinkDescriptorTable_getNext;
-Netsnmp_Get_Data_Point teLinkDescriptorTable_get;
-Netsnmp_Node_Handler teLinkDescriptorTable_mapper;
+Netsnmp_First_Data_Point teLinkSwCapTable_getFirst;
+Netsnmp_Next_Data_Point teLinkSwCapTable_getNext;
+Netsnmp_Get_Data_Point teLinkSwCapTable_get;
+Netsnmp_Node_Handler teLinkSwCapTable_mapper;
 #endif	/* SNMP_SRC */
 
 
@@ -488,86 +488,86 @@ Netsnmp_Node_Handler componentLinkTable_mapper;
 
 
 /**
- *	table componentLinkDescriptorTable definitions
+ *	table componentLinkSwCapTable definitions
  */
-#define COMPONENTLINKDESCRID 1
-#define COMPONENTLINKDESCRSWITCHINGCAPABILITY 2
-#define COMPONENTLINKDESCRENCODINGTYPE 3
-#define COMPONENTLINKDESCRMINLSPBANDWIDTH 4
-#define COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO0 5
-#define COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO1 6
-#define COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO2 7
-#define COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO3 8
-#define COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO4 9
-#define COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO5 10
-#define COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO6 11
-#define COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO7 12
-#define COMPONENTLINKDESCRINTERFACEMTU 13
-#define COMPONENTLINKDESCRINDICATION 14
-#define COMPONENTLINKDESCRROWSTATUS 15
-#define COMPONENTLINKDESCRSTORAGETYPE 16
+#define COMPONENTLINKSWCAPID 1
+#define COMPONENTLINKSWCAPTYPE 2
+#define COMPONENTLINKSWCAPENCODING 3
+#define COMPONENTLINKSWCAPMINLSPBANDWIDTH 4
+#define COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO0 5
+#define COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO1 6
+#define COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO2 7
+#define COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO3 8
+#define COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO4 9
+#define COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO5 10
+#define COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO6 11
+#define COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO7 12
+#define COMPONENTLINKSWCAPINTERFACEMTU 13
+#define COMPONENTLINKSWCAPINDICATION 14
+#define COMPONENTLINKSWCAPROWSTATUS 15
+#define COMPONENTLINKSWCAPSTORAGETYPE 16
 
 enum
 {
-	/* enums for column componentLinkDescrSwitchingCapability */
-	componentLinkDescrSwitchingCapability_unknown_c = 0,
-	componentLinkDescrSwitchingCapability_psc1_c = 1,
-	componentLinkDescrSwitchingCapability_psc2_c = 2,
-	componentLinkDescrSwitchingCapability_psc3_c = 3,
-	componentLinkDescrSwitchingCapability_psc4_c = 4,
-	componentLinkDescrSwitchingCapability_evpl_c = 30,
-	componentLinkDescrSwitchingCapability_pbb_c = 40,
-	componentLinkDescrSwitchingCapability_l2sc_c = 51,
-	componentLinkDescrSwitchingCapability_tdm_c = 100,
-	componentLinkDescrSwitchingCapability_otntdm_c = 110,
-	componentLinkDescrSwitchingCapability_dcsc_c = 125,
-	componentLinkDescrSwitchingCapability_lsc_c = 150,
-	componentLinkDescrSwitchingCapability_fsc_c = 200,
+	/* enums for column componentLinkSwCapType */
+	componentLinkSwCapType_unknown_c = 0,
+	componentLinkSwCapType_psc1_c = 1,
+	componentLinkSwCapType_psc2_c = 2,
+	componentLinkSwCapType_psc3_c = 3,
+	componentLinkSwCapType_psc4_c = 4,
+	componentLinkSwCapType_evpl_c = 30,
+	componentLinkSwCapType_pbb_c = 40,
+	componentLinkSwCapType_l2sc_c = 51,
+	componentLinkSwCapType_tdm_c = 100,
+	componentLinkSwCapType_otntdm_c = 110,
+	componentLinkSwCapType_dcsc_c = 125,
+	componentLinkSwCapType_lsc_c = 150,
+	componentLinkSwCapType_fsc_c = 200,
 
-	/* enums for column componentLinkDescrEncodingType */
-	componentLinkDescrEncodingType_tunnelLspNotGmpls_c = 0,
-	componentLinkDescrEncodingType_tunnelLspPacket_c = 1,
-	componentLinkDescrEncodingType_tunnelLspEthernet_c = 2,
-	componentLinkDescrEncodingType_tunnelLspAnsiEtsiPdh_c = 3,
-	componentLinkDescrEncodingType_tunnelLspSdhSonet_c = 5,
-	componentLinkDescrEncodingType_tunnelLspDigitalWrapper_c = 7,
-	componentLinkDescrEncodingType_tunnelLspLambda_c = 8,
-	componentLinkDescrEncodingType_tunnelLspFiber_c = 9,
-	componentLinkDescrEncodingType_tunnelLspFiberChannel_c = 11,
-	componentLinkDescrEncodingType_tunnelDigitalPath_c = 12,
-	componentLinkDescrEncodingType_tunnelOpticalChannel_c = 13,
-	componentLinkDescrEncodingType_tunnelLine_c = 14,
+	/* enums for column componentLinkSwCapEncoding */
+	componentLinkSwCapEncoding_notGmpls_c = 0,
+	componentLinkSwCapEncoding_packet_c = 1,
+	componentLinkSwCapEncoding_ethernet_c = 2,
+	componentLinkSwCapEncoding_ansiEtsiPdh_c = 3,
+	componentLinkSwCapEncoding_sdhSonet_c = 5,
+	componentLinkSwCapEncoding_digitalWrapper_c = 7,
+	componentLinkSwCapEncoding_lambda_c = 8,
+	componentLinkSwCapEncoding_fiber_c = 9,
+	componentLinkSwCapEncoding_fiberChannel_c = 11,
+	componentLinkSwCapEncoding_digitalPath_c = 12,
+	componentLinkSwCapEncoding_opticalChannel_c = 13,
+	componentLinkSwCapEncoding_line_c = 14,
 
-	/* enums for column componentLinkDescrIndication */
-	componentLinkDescrIndication_standard_c = 0,
-	componentLinkDescrIndication_arbitrary_c = 1,
+	/* enums for column componentLinkSwCapIndication */
+	componentLinkSwCapIndication_standard_c = 0,
+	componentLinkSwCapIndication_arbitrary_c = 1,
 
-	/* enums for column componentLinkDescrRowStatus */
-	componentLinkDescrRowStatus_active_c = 1,
-	componentLinkDescrRowStatus_notInService_c = 2,
-	componentLinkDescrRowStatus_notReady_c = 3,
-	componentLinkDescrRowStatus_createAndGo_c = 4,
-	componentLinkDescrRowStatus_createAndWait_c = 5,
-	componentLinkDescrRowStatus_destroy_c = 6,
+	/* enums for column componentLinkSwCapRowStatus */
+	componentLinkSwCapRowStatus_active_c = 1,
+	componentLinkSwCapRowStatus_notInService_c = 2,
+	componentLinkSwCapRowStatus_notReady_c = 3,
+	componentLinkSwCapRowStatus_createAndGo_c = 4,
+	componentLinkSwCapRowStatus_createAndWait_c = 5,
+	componentLinkSwCapRowStatus_destroy_c = 6,
 
-	/* enums for column componentLinkDescrStorageType */
-	componentLinkDescrStorageType_other_c = 1,
-	componentLinkDescrStorageType_volatile_c = 2,
-	componentLinkDescrStorageType_nonVolatile_c = 3,
-	componentLinkDescrStorageType_permanent_c = 4,
-	componentLinkDescrStorageType_readOnly_c = 5,
+	/* enums for column componentLinkSwCapStorageType */
+	componentLinkSwCapStorageType_other_c = 1,
+	componentLinkSwCapStorageType_volatile_c = 2,
+	componentLinkSwCapStorageType_nonVolatile_c = 3,
+	componentLinkSwCapStorageType_permanent_c = 4,
+	componentLinkSwCapStorageType_readOnly_c = 5,
 };
 
-/* table componentLinkDescriptorTable row entry data structure */
-typedef struct componentLinkDescriptorEntry_t
+/* table componentLinkSwCapTable row entry data structure */
+typedef struct componentLinkSwCapEntry_t
 {
 	/* Index values */
 	uint32_t u32IfIndex;
 	uint32_t u32Id;
 	
 	/* Column values */
-	int32_t i32SwitchingCapability;
-	int32_t i32EncodingType;
+	int32_t i32Type;
+	int32_t i32Encoding;
 	uint8_t au8MinLspBandwidth[8];
 	size_t u16MinLspBandwidth_len;	/* # of uint8_t elements */
 	uint8_t au8MaxLspBandwidthPrio0[8];
@@ -592,27 +592,27 @@ typedef struct componentLinkDescriptorEntry_t
 	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
-} componentLinkDescriptorEntry_t;
+} componentLinkSwCapEntry_t;
 
-extern xBTree_t oComponentLinkDescriptorTable_BTree;
+extern xBTree_t oComponentLinkSwCapTable_BTree;
 
-/* componentLinkDescriptorTable table mapper */
-void componentLinkDescriptorTable_init (void);
-componentLinkDescriptorEntry_t * componentLinkDescriptorTable_createEntry (
+/* componentLinkSwCapTable table mapper */
+void componentLinkSwCapTable_init (void);
+componentLinkSwCapEntry_t * componentLinkSwCapTable_createEntry (
 	uint32_t u32IfIndex,
 	uint32_t u32Id);
-componentLinkDescriptorEntry_t * componentLinkDescriptorTable_getByIndex (
+componentLinkSwCapEntry_t * componentLinkSwCapTable_getByIndex (
 	uint32_t u32IfIndex,
 	uint32_t u32Id);
-componentLinkDescriptorEntry_t * componentLinkDescriptorTable_getNextIndex (
+componentLinkSwCapEntry_t * componentLinkSwCapTable_getNextIndex (
 	uint32_t u32IfIndex,
 	uint32_t u32Id);
-void componentLinkDescriptorTable_removeEntry (componentLinkDescriptorEntry_t *poEntry);
+void componentLinkSwCapTable_removeEntry (componentLinkSwCapEntry_t *poEntry);
 #ifdef SNMP_SRC
-Netsnmp_First_Data_Point componentLinkDescriptorTable_getFirst;
-Netsnmp_Next_Data_Point componentLinkDescriptorTable_getNext;
-Netsnmp_Get_Data_Point componentLinkDescriptorTable_get;
-Netsnmp_Node_Handler componentLinkDescriptorTable_mapper;
+Netsnmp_First_Data_Point componentLinkSwCapTable_getFirst;
+Netsnmp_Next_Data_Point componentLinkSwCapTable_getNext;
+Netsnmp_Get_Data_Point componentLinkSwCapTable_get;
+Netsnmp_Node_Handler componentLinkSwCapTable_mapper;
 #endif	/* SNMP_SRC */
 
 

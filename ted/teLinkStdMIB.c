@@ -42,11 +42,11 @@ static oid teLinkStdMIB_oid[] = {1,3,6,1,2,1,10,200};
 static oid teAdminGroupTable_oid[] = {1,3,6,1,2,1,122,1,1,9};
 
 static oid teLinkTable_oid[] = {1,3,6,1,2,1,10,200,1,1};
-static oid teLinkDescriptorTable_oid[] = {1,3,6,1,2,1,10,200,1,2};
+static oid teLinkSwCapTable_oid[] = {1,3,6,1,2,1,10,200,1,2};
 static oid teLinkSrlgTable_oid[] = {1,3,6,1,2,1,10,200,1,3};
 static oid teLinkBandwidthTable_oid[] = {1,3,6,1,2,1,10,200,1,4};
 static oid componentLinkTable_oid[] = {1,3,6,1,2,1,10,200,1,5};
-static oid componentLinkDescriptorTable_oid[] = {1,3,6,1,2,1,10,200,1,6};
+static oid componentLinkSwCapTable_oid[] = {1,3,6,1,2,1,10,200,1,6};
 static oid componentLinkBandwidthTable_oid[] = {1,3,6,1,2,1,10,200,1,7};
 
 
@@ -65,11 +65,11 @@ teLinkStdMIB_init (void)
 	
 	/* register teLinkStdMIB group table mappers */
 	teLinkTable_init ();
-	teLinkDescriptorTable_init ();
+	teLinkSwCapTable_init ();
 	teLinkSrlgTable_init ();
 	teLinkBandwidthTable_init ();
 	componentLinkTable_init ();
-	componentLinkDescriptorTable_init ();
+	componentLinkSwCapTable_init ();
 	componentLinkBandwidthTable_init ();
 	teAdminGroupTable_init ();
 	
@@ -397,8 +397,8 @@ teLinkTable_mapper (
 			case TELINKMETRIC:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Metric);
 				break;
-			case TELINKMAXIMUMRESERVABLEBANDWIDTH:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaximumReservableBandwidth, table_entry->u16MaximumReservableBandwidth_len);
+			case TELINKMAXRESBANDWIDTH:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxResBandwidth, table_entry->u16MaxResBandwidth_len);
 				break;
 			case TELINKPROTECTIONTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ProtectionType);
@@ -891,33 +891,33 @@ teLinkTable_mapper (
 	return SNMP_ERR_NOERROR;
 }
 
-/** initialize teLinkDescriptorTable table mapper **/
+/** initialize teLinkSwCapTable table mapper **/
 void
-teLinkDescriptorTable_init (void)
+teLinkSwCapTable_init (void)
 {
-	extern oid teLinkDescriptorTable_oid[];
+	extern oid teLinkSwCapTable_oid[];
 	netsnmp_handler_registration *reg;
 	netsnmp_iterator_info *iinfo;
 	netsnmp_table_registration_info *table_info;
 	
 	reg = netsnmp_create_handler_registration (
-		"teLinkDescriptorTable", &teLinkDescriptorTable_mapper,
-		teLinkDescriptorTable_oid, OID_LENGTH (teLinkDescriptorTable_oid),
+		"teLinkSwCapTable", &teLinkSwCapTable_mapper,
+		teLinkSwCapTable_oid, OID_LENGTH (teLinkSwCapTable_oid),
 		HANDLER_CAN_RWRITE
 		);
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
 		ASN_INTEGER /* index: ifIndex */,
-		ASN_UNSIGNED /* index: teLinkDescriptorId */,
+		ASN_UNSIGNED /* index: teLinkSwCapId */,
 		0);
-	table_info->min_column = TELINKDESCRSWITCHINGCAPABILITY;
-	table_info->max_column = TELINKDESCRSTORAGETYPE;
+	table_info->min_column = TELINKSWCAPTYPE;
+	table_info->max_column = TELINKSWCAPSTORAGETYPE;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
-	iinfo->get_first_data_point = &teLinkDescriptorTable_getFirst;
-	iinfo->get_next_data_point = &teLinkDescriptorTable_getNext;
-	iinfo->get_data_point = &teLinkDescriptorTable_get;
+	iinfo->get_first_data_point = &teLinkSwCapTable_getFirst;
+	iinfo->get_next_data_point = &teLinkSwCapTable_getNext;
+	iinfo->get_data_point = &teLinkSwCapTable_get;
 	iinfo->table_reginfo = table_info;
 	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
 	
@@ -927,11 +927,11 @@ teLinkDescriptorTable_init (void)
 }
 
 static int8_t
-teLinkDescriptorTable_BTreeNodeCmp (
+teLinkSwCapTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register teLinkDescriptorEntry_t *pEntry1 = xBTree_entry (pNode1, teLinkDescriptorEntry_t, oBTreeNode);
-	register teLinkDescriptorEntry_t *pEntry2 = xBTree_entry (pNode2, teLinkDescriptorEntry_t, oBTreeNode);
+	register teLinkSwCapEntry_t *pEntry1 = xBTree_entry (pNode1, teLinkSwCapEntry_t, oBTreeNode);
+	register teLinkSwCapEntry_t *pEntry2 = xBTree_entry (pNode2, teLinkSwCapEntry_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ||
@@ -939,15 +939,15 @@ teLinkDescriptorTable_BTreeNodeCmp (
 		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32Id == pEntry2->u32Id) ? 0: 1;
 }
 
-xBTree_t oTeLinkDescriptorTable_BTree = xBTree_initInline (&teLinkDescriptorTable_BTreeNodeCmp);
+xBTree_t oTeLinkSwCapTable_BTree = xBTree_initInline (&teLinkSwCapTable_BTreeNodeCmp);
 
 /* create a new row in the table */
-teLinkDescriptorEntry_t *
-teLinkDescriptorTable_createEntry (
+teLinkSwCapEntry_t *
+teLinkSwCapTable_createEntry (
 	uint32_t u32IfIndex,
 	uint32_t u32Id)
 {
-	register teLinkDescriptorEntry_t *poEntry = NULL;
+	register teLinkSwCapEntry_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
@@ -956,7 +956,7 @@ teLinkDescriptorTable_createEntry (
 	
 	poEntry->u32IfIndex = u32IfIndex;
 	poEntry->u32Id = u32Id;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oTeLinkDescriptorTable_BTree) != NULL)
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oTeLinkSwCapTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
 		return NULL;
@@ -964,16 +964,16 @@ teLinkDescriptorTable_createEntry (
 	
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oTeLinkDescriptorTable_BTree);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oTeLinkSwCapTable_BTree);
 	return poEntry;
 }
 
-teLinkDescriptorEntry_t *
-teLinkDescriptorTable_getByIndex (
+teLinkSwCapEntry_t *
+teLinkSwCapTable_getByIndex (
 	uint32_t u32IfIndex,
 	uint32_t u32Id)
 {
-	register teLinkDescriptorEntry_t *poTmpEntry = NULL;
+	register teLinkSwCapEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -983,22 +983,22 @@ teLinkDescriptorTable_getByIndex (
 	
 	poTmpEntry->u32IfIndex = u32IfIndex;
 	poTmpEntry->u32Id = u32Id;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oTeLinkDescriptorTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oTeLinkSwCapTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, teLinkDescriptorEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, teLinkSwCapEntry_t, oBTreeNode);
 }
 
-teLinkDescriptorEntry_t *
-teLinkDescriptorTable_getNextIndex (
+teLinkSwCapEntry_t *
+teLinkSwCapTable_getNextIndex (
 	uint32_t u32IfIndex,
 	uint32_t u32Id)
 {
-	register teLinkDescriptorEntry_t *poTmpEntry = NULL;
+	register teLinkSwCapEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -1008,73 +1008,73 @@ teLinkDescriptorTable_getNextIndex (
 	
 	poTmpEntry->u32IfIndex = u32IfIndex;
 	poTmpEntry->u32Id = u32Id;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oTeLinkDescriptorTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oTeLinkSwCapTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, teLinkDescriptorEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, teLinkSwCapEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
-teLinkDescriptorTable_removeEntry (teLinkDescriptorEntry_t *poEntry)
+teLinkSwCapTable_removeEntry (teLinkSwCapEntry_t *poEntry)
 {
 	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oTeLinkDescriptorTable_BTree) == NULL)
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oTeLinkSwCapTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oTeLinkDescriptorTable_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oTeLinkSwCapTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
-teLinkDescriptorTable_getFirst (
+teLinkSwCapTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oTeLinkDescriptorTable_BTree);
-	return teLinkDescriptorTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+	*my_loop_context = xBTree_nodeGetFirst (&oTeLinkSwCapTable_BTree);
+	return teLinkSwCapTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
 netsnmp_variable_list *
-teLinkDescriptorTable_getNext (
+teLinkSwCapTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	teLinkDescriptorEntry_t *poEntry = NULL;
+	teLinkSwCapEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, teLinkDescriptorEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, teLinkSwCapEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32IfIndex);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Id);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oTeLinkDescriptorTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oTeLinkSwCapTable_BTree);
 	return put_index_data;
 }
 
 bool
-teLinkDescriptorTable_get (
+teLinkSwCapTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	teLinkDescriptorEntry_t *poEntry = NULL;
+	teLinkSwCapEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	
-	poEntry = teLinkDescriptorTable_getByIndex (
+	poEntry = teLinkSwCapTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer);
 	if (poEntry == NULL)
@@ -1086,9 +1086,9 @@ teLinkDescriptorTable_get (
 	return true;
 }
 
-/* teLinkDescriptorTable table mapper */
+/* teLinkSwCapTable table mapper */
 int
-teLinkDescriptorTable_mapper (
+teLinkSwCapTable_mapper (
 	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
 	netsnmp_agent_request_info *reqinfo,
@@ -1096,7 +1096,7 @@ teLinkDescriptorTable_mapper (
 {
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
-	teLinkDescriptorEntry_t *table_entry;
+	teLinkSwCapEntry_t *table_entry;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -1108,7 +1108,7 @@ teLinkDescriptorTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (teLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (teLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL)
 			{
@@ -1118,49 +1118,49 @@ teLinkDescriptorTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case TELINKDESCRSWITCHINGCAPABILITY:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SwitchingCapability);
+			case TELINKSWCAPTYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
 				break;
-			case TELINKDESCRENCODINGTYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32EncodingType);
+			case TELINKSWCAPENCODING:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Encoding);
 				break;
-			case TELINKDESCRMINLSPBANDWIDTH:
+			case TELINKSWCAPMINLSPBANDWIDTH:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MinLspBandwidth, table_entry->u16MinLspBandwidth_len);
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO0:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO0:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio0, table_entry->u16MaxLspBandwidthPrio0_len);
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO1:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO1:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio1, table_entry->u16MaxLspBandwidthPrio1_len);
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO2:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO2:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio2, table_entry->u16MaxLspBandwidthPrio2_len);
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO3:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO3:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio3, table_entry->u16MaxLspBandwidthPrio3_len);
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO4:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO4:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio4, table_entry->u16MaxLspBandwidthPrio4_len);
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO5:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO5:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio5, table_entry->u16MaxLspBandwidthPrio5_len);
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO6:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO6:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio6, table_entry->u16MaxLspBandwidthPrio6_len);
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO7:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO7:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio7, table_entry->u16MaxLspBandwidthPrio7_len);
 				break;
-			case TELINKDESCRINTERFACEMTU:
+			case TELINKSWCAPINTERFACEMTU:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32InterfaceMtu);
 				break;
-			case TELINKDESCRINDICATION:
+			case TELINKSWCAPINDICATION:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Indication);
 				break;
-			case TELINKDESCRROWSTATUS:
+			case TELINKSWCAPROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
-			case TELINKDESCRSTORAGETYPE:
+			case TELINKSWCAPSTORAGETYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 				
@@ -1177,12 +1177,12 @@ teLinkDescriptorTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (teLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (teLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case TELINKDESCRSWITCHINGCAPABILITY:
+			case TELINKSWCAPTYPE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1190,7 +1190,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRENCODINGTYPE:
+			case TELINKSWCAPENCODING:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1198,7 +1198,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRMINLSPBANDWIDTH:
+			case TELINKSWCAPMINLSPBANDWIDTH:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MinLspBandwidth));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1206,7 +1206,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO0:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO0:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio0));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1214,7 +1214,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO1:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO1:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio1));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1222,7 +1222,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO2:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO2:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio2));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1230,7 +1230,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO3:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO3:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio3));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1238,7 +1238,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO4:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO4:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio4));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1246,7 +1246,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO5:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO5:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio5));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1254,7 +1254,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO6:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO6:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio6));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1262,7 +1262,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO7:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO7:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio7));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1270,7 +1270,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRINTERFACEMTU:
+			case TELINKSWCAPINTERFACEMTU:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1278,7 +1278,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRINDICATION:
+			case TELINKSWCAPINDICATION:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1286,7 +1286,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRROWSTATUS:
+			case TELINKSWCAPROWSTATUS:
 				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1294,7 +1294,7 @@ teLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case TELINKDESCRSTORAGETYPE:
+			case TELINKSWCAPSTORAGETYPE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -1313,14 +1313,14 @@ teLinkDescriptorTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (teLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (teLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
 			register netsnmp_variable_list *idx2 = idx1->next_variable;
 			
 			switch (table_info->colnum)
 			{
-			case TELINKDESCRROWSTATUS:
+			case TELINKSWCAPROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
@@ -1331,7 +1331,7 @@ teLinkDescriptorTable_mapper (
 						return SNMP_ERR_NOERROR;
 					}
 					
-					table_entry = teLinkDescriptorTable_createEntry (
+					table_entry = teLinkSwCapTable_createEntry (
 						*idx1->val.integer,
 						*idx2->val.integer);
 					if (table_entry != NULL)
@@ -1368,7 +1368,7 @@ teLinkDescriptorTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (teLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (teLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -1377,12 +1377,12 @@ teLinkDescriptorTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case TELINKDESCRROWSTATUS:
+			case TELINKSWCAPROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					teLinkDescriptorTable_removeEntry (table_entry);
+					teLinkSwCapTable_removeEntry (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -1394,40 +1394,40 @@ teLinkDescriptorTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (teLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (teLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case TELINKDESCRSWITCHINGCAPABILITY:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SwitchingCapability))) == NULL)
+			case TELINKSWCAPTYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Type))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32SwitchingCapability, sizeof (table_entry->i32SwitchingCapability));
+					memcpy (pvOldDdata, &table_entry->i32Type, sizeof (table_entry->i32Type));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32SwitchingCapability = *request->requestvb->val.integer;
+				table_entry->i32Type = *request->requestvb->val.integer;
 				break;
-			case TELINKDESCRENCODINGTYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32EncodingType))) == NULL)
+			case TELINKSWCAPENCODING:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Encoding))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32EncodingType, sizeof (table_entry->i32EncodingType));
+					memcpy (pvOldDdata, &table_entry->i32Encoding, sizeof (table_entry->i32Encoding));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32EncodingType = *request->requestvb->val.integer;
+				table_entry->i32Encoding = *request->requestvb->val.integer;
 				break;
-			case TELINKDESCRMINLSPBANDWIDTH:
+			case TELINKSWCAPMINLSPBANDWIDTH:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MinLspBandwidth))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1445,7 +1445,7 @@ teLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MinLspBandwidth, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MinLspBandwidth_len = request->requestvb->val_len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO0:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO0:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio0))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1463,7 +1463,7 @@ teLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio0, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio0_len = request->requestvb->val_len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO1:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO1:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio1))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1481,7 +1481,7 @@ teLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio1, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio1_len = request->requestvb->val_len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO2:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO2:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio2))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1499,7 +1499,7 @@ teLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio2, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio2_len = request->requestvb->val_len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO3:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO3:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio3))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1517,7 +1517,7 @@ teLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio3, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio3_len = request->requestvb->val_len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO4:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO4:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio4))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1535,7 +1535,7 @@ teLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio4, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio4_len = request->requestvb->val_len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO5:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO5:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio5))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1553,7 +1553,7 @@ teLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio5, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio5_len = request->requestvb->val_len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO6:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO6:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio6))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1571,7 +1571,7 @@ teLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio6, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio6_len = request->requestvb->val_len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO7:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO7:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio7))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1589,7 +1589,7 @@ teLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio7, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio7_len = request->requestvb->val_len;
 				break;
-			case TELINKDESCRINTERFACEMTU:
+			case TELINKSWCAPINTERFACEMTU:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32InterfaceMtu))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1603,7 +1603,7 @@ teLinkDescriptorTable_mapper (
 				
 				table_entry->u32InterfaceMtu = *request->requestvb->val.integer;
 				break;
-			case TELINKDESCRINDICATION:
+			case TELINKSWCAPINDICATION:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Indication))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1617,7 +1617,7 @@ teLinkDescriptorTable_mapper (
 				
 				table_entry->i32Indication = *request->requestvb->val.integer;
 				break;
-			case TELINKDESCRSTORAGETYPE:
+			case TELINKSWCAPSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -1636,17 +1636,17 @@ teLinkDescriptorTable_mapper (
 		/* Check the internal consistency of an active row */
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (teLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (teLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case TELINKDESCRROWSTATUS:
+			case TELINKSWCAPROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int teLinkDescriptorTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					if (/* TODO : int teLinkSwCapTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -1661,7 +1661,7 @@ teLinkDescriptorTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (teLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (teLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -1670,65 +1670,65 @@ teLinkDescriptorTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case TELINKDESCRSWITCHINGCAPABILITY:
-				memcpy (&table_entry->i32SwitchingCapability, pvOldDdata, sizeof (table_entry->i32SwitchingCapability));
+			case TELINKSWCAPTYPE:
+				memcpy (&table_entry->i32Type, pvOldDdata, sizeof (table_entry->i32Type));
 				break;
-			case TELINKDESCRENCODINGTYPE:
-				memcpy (&table_entry->i32EncodingType, pvOldDdata, sizeof (table_entry->i32EncodingType));
+			case TELINKSWCAPENCODING:
+				memcpy (&table_entry->i32Encoding, pvOldDdata, sizeof (table_entry->i32Encoding));
 				break;
-			case TELINKDESCRMINLSPBANDWIDTH:
+			case TELINKSWCAPMINLSPBANDWIDTH:
 				memcpy (table_entry->au8MinLspBandwidth, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MinLspBandwidth_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO0:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO0:
 				memcpy (table_entry->au8MaxLspBandwidthPrio0, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio0_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO1:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO1:
 				memcpy (table_entry->au8MaxLspBandwidthPrio1, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio1_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO2:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO2:
 				memcpy (table_entry->au8MaxLspBandwidthPrio2, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio2_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO3:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO3:
 				memcpy (table_entry->au8MaxLspBandwidthPrio3, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio3_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO4:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO4:
 				memcpy (table_entry->au8MaxLspBandwidthPrio4, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio4_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO5:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO5:
 				memcpy (table_entry->au8MaxLspBandwidthPrio5, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio5_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO6:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO6:
 				memcpy (table_entry->au8MaxLspBandwidthPrio6, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio6_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case TELINKDESCRMAXLSPBANDWIDTHPRIO7:
+			case TELINKSWCAPMAXLSPBANDWIDTHPRIO7:
 				memcpy (table_entry->au8MaxLspBandwidthPrio7, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio7_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case TELINKDESCRINTERFACEMTU:
+			case TELINKSWCAPINTERFACEMTU:
 				memcpy (&table_entry->u32InterfaceMtu, pvOldDdata, sizeof (table_entry->u32InterfaceMtu));
 				break;
-			case TELINKDESCRINDICATION:
+			case TELINKSWCAPINDICATION:
 				memcpy (&table_entry->i32Indication, pvOldDdata, sizeof (table_entry->i32Indication));
 				break;
-			case TELINKDESCRROWSTATUS:
+			case TELINKSWCAPROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					teLinkDescriptorTable_removeEntry (table_entry);
+					teLinkSwCapTable_removeEntry (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
 				break;
-			case TELINKDESCRSTORAGETYPE:
+			case TELINKSWCAPSTORAGETYPE:
 				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			}
@@ -1738,12 +1738,12 @@ teLinkDescriptorTable_mapper (
 	case MODE_SET_COMMIT:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (teLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (teLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case TELINKDESCRROWSTATUS:
+			case TELINKSWCAPROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
@@ -1759,7 +1759,7 @@ teLinkDescriptorTable_mapper (
 					break;
 					
 				case RS_DESTROY:
-					teLinkDescriptorTable_removeEntry (table_entry);
+					teLinkSwCapTable_removeEntry (table_entry);
 					break;
 				}
 			}
@@ -3233,33 +3233,33 @@ componentLinkTable_mapper (
 	return SNMP_ERR_NOERROR;
 }
 
-/** initialize componentLinkDescriptorTable table mapper **/
+/** initialize componentLinkSwCapTable table mapper **/
 void
-componentLinkDescriptorTable_init (void)
+componentLinkSwCapTable_init (void)
 {
-	extern oid componentLinkDescriptorTable_oid[];
+	extern oid componentLinkSwCapTable_oid[];
 	netsnmp_handler_registration *reg;
 	netsnmp_iterator_info *iinfo;
 	netsnmp_table_registration_info *table_info;
 	
 	reg = netsnmp_create_handler_registration (
-		"componentLinkDescriptorTable", &componentLinkDescriptorTable_mapper,
-		componentLinkDescriptorTable_oid, OID_LENGTH (componentLinkDescriptorTable_oid),
+		"componentLinkSwCapTable", &componentLinkSwCapTable_mapper,
+		componentLinkSwCapTable_oid, OID_LENGTH (componentLinkSwCapTable_oid),
 		HANDLER_CAN_RWRITE
 		);
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
 	netsnmp_table_helper_add_indexes (table_info,
 		ASN_INTEGER /* index: ifIndex */,
-		ASN_UNSIGNED /* index: componentLinkDescrId */,
+		ASN_UNSIGNED /* index: componentLinkSwCapId */,
 		0);
-	table_info->min_column = COMPONENTLINKDESCRSWITCHINGCAPABILITY;
-	table_info->max_column = COMPONENTLINKDESCRSTORAGETYPE;
+	table_info->min_column = COMPONENTLINKSWCAPTYPE;
+	table_info->max_column = COMPONENTLINKSWCAPSTORAGETYPE;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
-	iinfo->get_first_data_point = &componentLinkDescriptorTable_getFirst;
-	iinfo->get_next_data_point = &componentLinkDescriptorTable_getNext;
-	iinfo->get_data_point = &componentLinkDescriptorTable_get;
+	iinfo->get_first_data_point = &componentLinkSwCapTable_getFirst;
+	iinfo->get_next_data_point = &componentLinkSwCapTable_getNext;
+	iinfo->get_data_point = &componentLinkSwCapTable_get;
 	iinfo->table_reginfo = table_info;
 	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
 	
@@ -3269,11 +3269,11 @@ componentLinkDescriptorTable_init (void)
 }
 
 static int8_t
-componentLinkDescriptorTable_BTreeNodeCmp (
+componentLinkSwCapTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register componentLinkDescriptorEntry_t *pEntry1 = xBTree_entry (pNode1, componentLinkDescriptorEntry_t, oBTreeNode);
-	register componentLinkDescriptorEntry_t *pEntry2 = xBTree_entry (pNode2, componentLinkDescriptorEntry_t, oBTreeNode);
+	register componentLinkSwCapEntry_t *pEntry1 = xBTree_entry (pNode1, componentLinkSwCapEntry_t, oBTreeNode);
+	register componentLinkSwCapEntry_t *pEntry2 = xBTree_entry (pNode2, componentLinkSwCapEntry_t, oBTreeNode);
 	
 	return
 		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ||
@@ -3281,15 +3281,15 @@ componentLinkDescriptorTable_BTreeNodeCmp (
 		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32Id == pEntry2->u32Id) ? 0: 1;
 }
 
-xBTree_t oComponentLinkDescriptorTable_BTree = xBTree_initInline (&componentLinkDescriptorTable_BTreeNodeCmp);
+xBTree_t oComponentLinkSwCapTable_BTree = xBTree_initInline (&componentLinkSwCapTable_BTreeNodeCmp);
 
 /* create a new row in the table */
-componentLinkDescriptorEntry_t *
-componentLinkDescriptorTable_createEntry (
+componentLinkSwCapEntry_t *
+componentLinkSwCapTable_createEntry (
 	uint32_t u32IfIndex,
 	uint32_t u32Id)
 {
-	register componentLinkDescriptorEntry_t *poEntry = NULL;
+	register componentLinkSwCapEntry_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
@@ -3298,7 +3298,7 @@ componentLinkDescriptorTable_createEntry (
 	
 	poEntry->u32IfIndex = u32IfIndex;
 	poEntry->u32Id = u32Id;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oComponentLinkDescriptorTable_BTree) != NULL)
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oComponentLinkSwCapTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
 		return NULL;
@@ -3306,16 +3306,16 @@ componentLinkDescriptorTable_createEntry (
 	
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oComponentLinkDescriptorTable_BTree);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oComponentLinkSwCapTable_BTree);
 	return poEntry;
 }
 
-componentLinkDescriptorEntry_t *
-componentLinkDescriptorTable_getByIndex (
+componentLinkSwCapEntry_t *
+componentLinkSwCapTable_getByIndex (
 	uint32_t u32IfIndex,
 	uint32_t u32Id)
 {
-	register componentLinkDescriptorEntry_t *poTmpEntry = NULL;
+	register componentLinkSwCapEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -3325,22 +3325,22 @@ componentLinkDescriptorTable_getByIndex (
 	
 	poTmpEntry->u32IfIndex = u32IfIndex;
 	poTmpEntry->u32Id = u32Id;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oComponentLinkDescriptorTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oComponentLinkSwCapTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, componentLinkDescriptorEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, componentLinkSwCapEntry_t, oBTreeNode);
 }
 
-componentLinkDescriptorEntry_t *
-componentLinkDescriptorTable_getNextIndex (
+componentLinkSwCapEntry_t *
+componentLinkSwCapTable_getNextIndex (
 	uint32_t u32IfIndex,
 	uint32_t u32Id)
 {
-	register componentLinkDescriptorEntry_t *poTmpEntry = NULL;
+	register componentLinkSwCapEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -3350,73 +3350,73 @@ componentLinkDescriptorTable_getNextIndex (
 	
 	poTmpEntry->u32IfIndex = u32IfIndex;
 	poTmpEntry->u32Id = u32Id;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oComponentLinkDescriptorTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oComponentLinkSwCapTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, componentLinkDescriptorEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, componentLinkSwCapEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
-componentLinkDescriptorTable_removeEntry (componentLinkDescriptorEntry_t *poEntry)
+componentLinkSwCapTable_removeEntry (componentLinkSwCapEntry_t *poEntry)
 {
 	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oComponentLinkDescriptorTable_BTree) == NULL)
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oComponentLinkSwCapTable_BTree) == NULL)
 	{
 		return;    /* Nothing to remove */
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oComponentLinkDescriptorTable_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oComponentLinkSwCapTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
-componentLinkDescriptorTable_getFirst (
+componentLinkSwCapTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oComponentLinkDescriptorTable_BTree);
-	return componentLinkDescriptorTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+	*my_loop_context = xBTree_nodeGetFirst (&oComponentLinkSwCapTable_BTree);
+	return componentLinkSwCapTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
 netsnmp_variable_list *
-componentLinkDescriptorTable_getNext (
+componentLinkSwCapTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	componentLinkDescriptorEntry_t *poEntry = NULL;
+	componentLinkSwCapEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, componentLinkDescriptorEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, componentLinkSwCapEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32IfIndex);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Id);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oComponentLinkDescriptorTable_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oComponentLinkSwCapTable_BTree);
 	return put_index_data;
 }
 
 bool
-componentLinkDescriptorTable_get (
+componentLinkSwCapTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	componentLinkDescriptorEntry_t *poEntry = NULL;
+	componentLinkSwCapEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	
-	poEntry = componentLinkDescriptorTable_getByIndex (
+	poEntry = componentLinkSwCapTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer);
 	if (poEntry == NULL)
@@ -3428,9 +3428,9 @@ componentLinkDescriptorTable_get (
 	return true;
 }
 
-/* componentLinkDescriptorTable table mapper */
+/* componentLinkSwCapTable table mapper */
 int
-componentLinkDescriptorTable_mapper (
+componentLinkSwCapTable_mapper (
 	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
 	netsnmp_agent_request_info *reqinfo,
@@ -3438,7 +3438,7 @@ componentLinkDescriptorTable_mapper (
 {
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
-	componentLinkDescriptorEntry_t *table_entry;
+	componentLinkSwCapEntry_t *table_entry;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -3450,7 +3450,7 @@ componentLinkDescriptorTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (componentLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (componentLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL)
 			{
@@ -3460,49 +3460,49 @@ componentLinkDescriptorTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case COMPONENTLINKDESCRSWITCHINGCAPABILITY:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SwitchingCapability);
+			case COMPONENTLINKSWCAPTYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
 				break;
-			case COMPONENTLINKDESCRENCODINGTYPE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32EncodingType);
+			case COMPONENTLINKSWCAPENCODING:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Encoding);
 				break;
-			case COMPONENTLINKDESCRMINLSPBANDWIDTH:
+			case COMPONENTLINKSWCAPMINLSPBANDWIDTH:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MinLspBandwidth, table_entry->u16MinLspBandwidth_len);
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO0:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO0:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio0, table_entry->u16MaxLspBandwidthPrio0_len);
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO1:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO1:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio1, table_entry->u16MaxLspBandwidthPrio1_len);
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO2:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO2:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio2, table_entry->u16MaxLspBandwidthPrio2_len);
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO3:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO3:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio3, table_entry->u16MaxLspBandwidthPrio3_len);
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO4:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO4:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio4, table_entry->u16MaxLspBandwidthPrio4_len);
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO5:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO5:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio5, table_entry->u16MaxLspBandwidthPrio5_len);
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO6:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO6:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio6, table_entry->u16MaxLspBandwidthPrio6_len);
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO7:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO7:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio7, table_entry->u16MaxLspBandwidthPrio7_len);
 				break;
-			case COMPONENTLINKDESCRINTERFACEMTU:
+			case COMPONENTLINKSWCAPINTERFACEMTU:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32InterfaceMtu);
 				break;
-			case COMPONENTLINKDESCRINDICATION:
+			case COMPONENTLINKSWCAPINDICATION:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Indication);
 				break;
-			case COMPONENTLINKDESCRROWSTATUS:
+			case COMPONENTLINKSWCAPROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
-			case COMPONENTLINKDESCRSTORAGETYPE:
+			case COMPONENTLINKSWCAPSTORAGETYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8StorageType);
 				break;
 				
@@ -3519,12 +3519,12 @@ componentLinkDescriptorTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (componentLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (componentLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case COMPONENTLINKDESCRSWITCHINGCAPABILITY:
+			case COMPONENTLINKSWCAPTYPE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3532,7 +3532,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRENCODINGTYPE:
+			case COMPONENTLINKSWCAPENCODING:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3540,7 +3540,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRMINLSPBANDWIDTH:
+			case COMPONENTLINKSWCAPMINLSPBANDWIDTH:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MinLspBandwidth));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3548,7 +3548,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO0:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO0:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio0));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3556,7 +3556,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO1:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO1:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio1));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3564,7 +3564,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO2:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO2:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio2));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3572,7 +3572,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO3:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO3:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio3));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3580,7 +3580,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO4:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO4:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio4));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3588,7 +3588,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO5:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO5:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio5));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3596,7 +3596,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO6:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO6:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio6));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3604,7 +3604,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO7:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO7:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio7));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3612,7 +3612,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRINTERFACEMTU:
+			case COMPONENTLINKSWCAPINTERFACEMTU:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3620,7 +3620,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRINDICATION:
+			case COMPONENTLINKSWCAPINDICATION:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3628,7 +3628,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRROWSTATUS:
+			case COMPONENTLINKSWCAPROWSTATUS:
 				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3636,7 +3636,7 @@ componentLinkDescriptorTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case COMPONENTLINKDESCRSTORAGETYPE:
+			case COMPONENTLINKSWCAPSTORAGETYPE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -3655,14 +3655,14 @@ componentLinkDescriptorTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (componentLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (componentLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
 			register netsnmp_variable_list *idx2 = idx1->next_variable;
 			
 			switch (table_info->colnum)
 			{
-			case COMPONENTLINKDESCRROWSTATUS:
+			case COMPONENTLINKSWCAPROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
@@ -3673,7 +3673,7 @@ componentLinkDescriptorTable_mapper (
 						return SNMP_ERR_NOERROR;
 					}
 					
-					table_entry = componentLinkDescriptorTable_createEntry (
+					table_entry = componentLinkSwCapTable_createEntry (
 						*idx1->val.integer,
 						*idx2->val.integer);
 					if (table_entry != NULL)
@@ -3710,7 +3710,7 @@ componentLinkDescriptorTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (componentLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (componentLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -3719,12 +3719,12 @@ componentLinkDescriptorTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case COMPONENTLINKDESCRROWSTATUS:
+			case COMPONENTLINKSWCAPROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					componentLinkDescriptorTable_removeEntry (table_entry);
+					componentLinkSwCapTable_removeEntry (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
@@ -3736,40 +3736,40 @@ componentLinkDescriptorTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (componentLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (componentLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case COMPONENTLINKDESCRSWITCHINGCAPABILITY:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SwitchingCapability))) == NULL)
+			case COMPONENTLINKSWCAPTYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Type))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32SwitchingCapability, sizeof (table_entry->i32SwitchingCapability));
+					memcpy (pvOldDdata, &table_entry->i32Type, sizeof (table_entry->i32Type));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32SwitchingCapability = *request->requestvb->val.integer;
+				table_entry->i32Type = *request->requestvb->val.integer;
 				break;
-			case COMPONENTLINKDESCRENCODINGTYPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32EncodingType))) == NULL)
+			case COMPONENTLINKSWCAPENCODING:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Encoding))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32EncodingType, sizeof (table_entry->i32EncodingType));
+					memcpy (pvOldDdata, &table_entry->i32Encoding, sizeof (table_entry->i32Encoding));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32EncodingType = *request->requestvb->val.integer;
+				table_entry->i32Encoding = *request->requestvb->val.integer;
 				break;
-			case COMPONENTLINKDESCRMINLSPBANDWIDTH:
+			case COMPONENTLINKSWCAPMINLSPBANDWIDTH:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MinLspBandwidth))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3787,7 +3787,7 @@ componentLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MinLspBandwidth, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MinLspBandwidth_len = request->requestvb->val_len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO0:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO0:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio0))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3805,7 +3805,7 @@ componentLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio0, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio0_len = request->requestvb->val_len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO1:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO1:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio1))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3823,7 +3823,7 @@ componentLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio1, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio1_len = request->requestvb->val_len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO2:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO2:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio2))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3841,7 +3841,7 @@ componentLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio2, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio2_len = request->requestvb->val_len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO3:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO3:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio3))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3859,7 +3859,7 @@ componentLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio3, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio3_len = request->requestvb->val_len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO4:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO4:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio4))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3877,7 +3877,7 @@ componentLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio4, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio4_len = request->requestvb->val_len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO5:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO5:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio5))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3895,7 +3895,7 @@ componentLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio5, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio5_len = request->requestvb->val_len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO6:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO6:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio6))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3913,7 +3913,7 @@ componentLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio6, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio6_len = request->requestvb->val_len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO7:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO7:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio7))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3931,7 +3931,7 @@ componentLinkDescriptorTable_mapper (
 				memcpy (table_entry->au8MaxLspBandwidthPrio7, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16MaxLspBandwidthPrio7_len = request->requestvb->val_len;
 				break;
-			case COMPONENTLINKDESCRINTERFACEMTU:
+			case COMPONENTLINKSWCAPINTERFACEMTU:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32InterfaceMtu))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3945,7 +3945,7 @@ componentLinkDescriptorTable_mapper (
 				
 				table_entry->u32InterfaceMtu = *request->requestvb->val.integer;
 				break;
-			case COMPONENTLINKDESCRINDICATION:
+			case COMPONENTLINKSWCAPINDICATION:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Indication))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3959,7 +3959,7 @@ componentLinkDescriptorTable_mapper (
 				
 				table_entry->i32Indication = *request->requestvb->val.integer;
 				break;
-			case COMPONENTLINKDESCRSTORAGETYPE:
+			case COMPONENTLINKSWCAPSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
@@ -3978,17 +3978,17 @@ componentLinkDescriptorTable_mapper (
 		/* Check the internal consistency of an active row */
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (componentLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (componentLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case COMPONENTLINKDESCRROWSTATUS:
+			case COMPONENTLINKSWCAPROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_ACTIVE:
 				case RS_CREATEANDGO:
-					if (/* TODO : int componentLinkDescriptorTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
+					if (/* TODO : int componentLinkSwCapTable_dep (...) */ TOBE_REPLACED != TOBE_REPLACED)
 					{
 						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
 						return SNMP_ERR_NOERROR;
@@ -4003,7 +4003,7 @@ componentLinkDescriptorTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (componentLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (componentLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			if (table_entry == NULL || pvOldDdata == NULL)
 			{
@@ -4012,65 +4012,65 @@ componentLinkDescriptorTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case COMPONENTLINKDESCRSWITCHINGCAPABILITY:
-				memcpy (&table_entry->i32SwitchingCapability, pvOldDdata, sizeof (table_entry->i32SwitchingCapability));
+			case COMPONENTLINKSWCAPTYPE:
+				memcpy (&table_entry->i32Type, pvOldDdata, sizeof (table_entry->i32Type));
 				break;
-			case COMPONENTLINKDESCRENCODINGTYPE:
-				memcpy (&table_entry->i32EncodingType, pvOldDdata, sizeof (table_entry->i32EncodingType));
+			case COMPONENTLINKSWCAPENCODING:
+				memcpy (&table_entry->i32Encoding, pvOldDdata, sizeof (table_entry->i32Encoding));
 				break;
-			case COMPONENTLINKDESCRMINLSPBANDWIDTH:
+			case COMPONENTLINKSWCAPMINLSPBANDWIDTH:
 				memcpy (table_entry->au8MinLspBandwidth, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MinLspBandwidth_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO0:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO0:
 				memcpy (table_entry->au8MaxLspBandwidthPrio0, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio0_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO1:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO1:
 				memcpy (table_entry->au8MaxLspBandwidthPrio1, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio1_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO2:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO2:
 				memcpy (table_entry->au8MaxLspBandwidthPrio2, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio2_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO3:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO3:
 				memcpy (table_entry->au8MaxLspBandwidthPrio3, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio3_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO4:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO4:
 				memcpy (table_entry->au8MaxLspBandwidthPrio4, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio4_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO5:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO5:
 				memcpy (table_entry->au8MaxLspBandwidthPrio5, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio5_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO6:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO6:
 				memcpy (table_entry->au8MaxLspBandwidthPrio6, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio6_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case COMPONENTLINKDESCRMAXLSPBANDWIDTHPRIO7:
+			case COMPONENTLINKSWCAPMAXLSPBANDWIDTHPRIO7:
 				memcpy (table_entry->au8MaxLspBandwidthPrio7, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16MaxLspBandwidthPrio7_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
-			case COMPONENTLINKDESCRINTERFACEMTU:
+			case COMPONENTLINKSWCAPINTERFACEMTU:
 				memcpy (&table_entry->u32InterfaceMtu, pvOldDdata, sizeof (table_entry->u32InterfaceMtu));
 				break;
-			case COMPONENTLINKDESCRINDICATION:
+			case COMPONENTLINKSWCAPINDICATION:
 				memcpy (&table_entry->i32Indication, pvOldDdata, sizeof (table_entry->i32Indication));
 				break;
-			case COMPONENTLINKDESCRROWSTATUS:
+			case COMPONENTLINKSWCAPROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
 				case RS_CREATEANDWAIT:
-					componentLinkDescriptorTable_removeEntry (table_entry);
+					componentLinkSwCapTable_removeEntry (table_entry);
 					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 					break;
 				}
 				break;
-			case COMPONENTLINKDESCRSTORAGETYPE:
+			case COMPONENTLINKSWCAPSTORAGETYPE:
 				memcpy (&table_entry->u8StorageType, pvOldDdata, sizeof (table_entry->u8StorageType));
 				break;
 			}
@@ -4080,12 +4080,12 @@ componentLinkDescriptorTable_mapper (
 	case MODE_SET_COMMIT:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (componentLinkDescriptorEntry_t*) netsnmp_extract_iterator_context (request);
+			table_entry = (componentLinkSwCapEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			
 			switch (table_info->colnum)
 			{
-			case COMPONENTLINKDESCRROWSTATUS:
+			case COMPONENTLINKSWCAPROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
 				case RS_CREATEANDGO:
@@ -4101,7 +4101,7 @@ componentLinkDescriptorTable_mapper (
 					break;
 					
 				case RS_DESTROY:
-					componentLinkDescriptorTable_removeEntry (table_entry);
+					componentLinkSwCapTable_removeEntry (table_entry);
 					break;
 				}
 			}
