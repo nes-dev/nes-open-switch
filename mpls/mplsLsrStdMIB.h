@@ -358,18 +358,18 @@ enum
 typedef struct gmplsInSegmentEntry_t
 {
 	/* Index values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
+// 	uint8_t au8Index[24];
+// 	size_t u16Index_len;	/* # of uint8_t elements */
 	
 	/* Column values */
 	int32_t i32Direction;
 	xOid_t aoExtraParamsPtr[128];
 	size_t u16ExtraParamsPtr_len;	/* # of xOid_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } gmplsInSegmentEntry_t;
 
-extern xBTree_t oGmplsInSegmentTable_BTree;
+// extern xBTree_t oGmplsInSegmentTable_BTree;
 
 /* gmplsInSegmentTable table mapper */
 void gmplsInSegmentTable_init (void);
