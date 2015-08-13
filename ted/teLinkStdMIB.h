@@ -245,22 +245,7 @@ typedef struct teLinkSwCapEntry_t
 	int32_t i32Encoding;
 	uint8_t au8MinLspBandwidth[8];
 	size_t u16MinLspBandwidth_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio0[8];
-	size_t u16MaxLspBandwidthPrio0_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio1[8];
-	size_t u16MaxLspBandwidthPrio1_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio2[8];
-	size_t u16MaxLspBandwidthPrio2_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio3[8];
-	size_t u16MaxLspBandwidthPrio3_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio4[8];
-	size_t u16MaxLspBandwidthPrio4_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio5[8];
-	size_t u16MaxLspBandwidthPrio5_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio6[8];
-	size_t u16MaxLspBandwidthPrio6_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio7[8];
-	size_t u16MaxLspBandwidthPrio7_len;	/* # of uint8_t elements */
+	uint8_t au8MaxLspBandwidthPrio[8][8];
 	uint32_t u32InterfaceMtu;
 	int32_t i32Indication;
 	uint8_t u8RowStatus;
@@ -570,22 +555,7 @@ typedef struct componentLinkSwCapEntry_t
 	int32_t i32Encoding;
 	uint8_t au8MinLspBandwidth[8];
 	size_t u16MinLspBandwidth_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio0[8];
-	size_t u16MaxLspBandwidthPrio0_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio1[8];
-	size_t u16MaxLspBandwidthPrio1_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio2[8];
-	size_t u16MaxLspBandwidthPrio2_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio3[8];
-	size_t u16MaxLspBandwidthPrio3_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio4[8];
-	size_t u16MaxLspBandwidthPrio4_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio5[8];
-	size_t u16MaxLspBandwidthPrio5_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio6[8];
-	size_t u16MaxLspBandwidthPrio6_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio7[8];
-	size_t u16MaxLspBandwidthPrio7_len;	/* # of uint8_t elements */
+	uint8_t au8MaxLspBandwidthPrio[8][8];
 	uint32_t u32InterfaceMtu;
 	int32_t i32Indication;
 	uint8_t u8RowStatus;

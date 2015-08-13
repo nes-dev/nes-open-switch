@@ -640,22 +640,7 @@ typedef struct neTeLinkAdjCapEntry_t
 	int32_t i32LowerEncoding;
 	int32_t i32UpperType;
 	int32_t i32UpperEncoding;
-	uint8_t au8MaxLspBandwidthPrio0[8];
-	size_t u16MaxLspBandwidthPrio0_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio1[8];
-	size_t u16MaxLspBandwidthPrio1_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio2[8];
-	size_t u16MaxLspBandwidthPrio2_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio3[8];
-	size_t u16MaxLspBandwidthPrio3_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio4[8];
-	size_t u16MaxLspBandwidthPrio4_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio5[8];
-	size_t u16MaxLspBandwidthPrio5_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio6[8];
-	size_t u16MaxLspBandwidthPrio6_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio7[8];
-	size_t u16MaxLspBandwidthPrio7_len;	/* # of uint8_t elements */
+	uint8_t au8MaxLspBandwidthPrio[8][8];
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
@@ -791,22 +776,7 @@ typedef struct neTeCompLinkAdjCapEntry_t
 	int32_t i32LowerEncoding;
 	int32_t i32UpperType;
 	int32_t i32UpperEncoding;
-	uint8_t au8MaxLspBandwidthPrio0[8];
-	size_t u16MaxLspBandwidthPrio0_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio1[8];
-	size_t u16MaxLspBandwidthPrio1_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio2[8];
-	size_t u16MaxLspBandwidthPrio2_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio3[8];
-	size_t u16MaxLspBandwidthPrio3_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio4[8];
-	size_t u16MaxLspBandwidthPrio4_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio5[8];
-	size_t u16MaxLspBandwidthPrio5_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio6[8];
-	size_t u16MaxLspBandwidthPrio6_len;	/* # of uint8_t elements */
-	uint8_t au8MaxLspBandwidthPrio7[8];
-	size_t u16MaxLspBandwidthPrio7_len;	/* # of uint8_t elements */
+	uint8_t au8MaxLspBandwidthPrio[8][8];
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
