@@ -479,7 +479,9 @@ Netsnmp_Node_Handler neTedNeighborTable_mapper;
 /**
  *	table neTedLinkResvTable definitions
  */
-#define NETEDLINKRESVBANDWIDTH 1
+#define NETEDLINKRESVINDEX 1
+#define NETEDLINKRESVPRIORITY 2
+#define NETEDLINKRESVBANDWIDTH 3
 
 /* table neTedLinkResvTable row entry data structure */
 typedef struct neTedLinkResvEntry_t
@@ -487,12 +489,11 @@ typedef struct neTedLinkResvEntry_t
 	/* Index values */
 	uint32_t u32NodeIndex;
 	uint32_t u32LinkIndex;
-	uint32_t u32MplsTunnelIndex;
-	uint32_t u32MplsTunnelInstance;
-	uint32_t u32MplsTunnelIngressLSRId;
-	uint32_t u32MplsTunnelEgressLSRId;
+	uint8_t au8Index[16];
+	size_t u16Index_len;	/* # of uint8_t elements */
 	
 	/* Column values */
+	uint32_t u32Priority;
 	uint8_t au8Bandwidth[8];
 	size_t u16Bandwidth_len;	/* # of uint8_t elements */
 	
@@ -506,24 +507,15 @@ void neTedLinkResvTable_init (void);
 neTedLinkResvEntry_t * neTedLinkResvTable_createEntry (
 	uint32_t u32NodeIndex,
 	uint32_t u32LinkIndex,
-	uint32_t u32MplsTunnelIndex,
-	uint32_t u32MplsTunnelInstance,
-	uint32_t u32MplsTunnelIngressLSRId,
-	uint32_t u32MplsTunnelEgressLSRId);
+	uint8_t *pau8Index, size_t u16Index_len);
 neTedLinkResvEntry_t * neTedLinkResvTable_getByIndex (
 	uint32_t u32NodeIndex,
 	uint32_t u32LinkIndex,
-	uint32_t u32MplsTunnelIndex,
-	uint32_t u32MplsTunnelInstance,
-	uint32_t u32MplsTunnelIngressLSRId,
-	uint32_t u32MplsTunnelEgressLSRId);
+	uint8_t *pau8Index, size_t u16Index_len);
 neTedLinkResvEntry_t * neTedLinkResvTable_getNextIndex (
 	uint32_t u32NodeIndex,
 	uint32_t u32LinkIndex,
-	uint32_t u32MplsTunnelIndex,
-	uint32_t u32MplsTunnelInstance,
-	uint32_t u32MplsTunnelIngressLSRId,
-	uint32_t u32MplsTunnelEgressLSRId);
+	uint8_t *pau8Index, size_t u16Index_len);
 void neTedLinkResvTable_removeEntry (neTedLinkResvEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neTedLinkResvTable_getFirst;
