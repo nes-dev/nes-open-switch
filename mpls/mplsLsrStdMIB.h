@@ -27,6 +27,7 @@ extern "C" {
 
 
 
+#include "mplsLsrExtStdMIB.h"
 #include "neMplsLsrMIB.h"
 
 #include "lib/binaryTree.h"
@@ -821,6 +822,8 @@ typedef struct mplsXCEntry_t
 	uint8_t u8StorageType;
 	int32_t i32AdminStatus;
 	int32_t i32OperStatus;
+	
+	mplsXCExtEntry_t oX;
 	
 	xBTree_Node_t oBTreeNode;
 } mplsXCEntry_t;

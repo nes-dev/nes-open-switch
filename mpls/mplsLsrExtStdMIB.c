@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "mplsLsrStdMIB.h"
 #include "mplsLsrExtStdMIB.h"
 
 #include "system_ext.h"
@@ -102,22 +103,6 @@ mplsXCExtTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-mplsXCExtTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register mplsXCExtEntry_t *pEntry1 = xBTree_entry (pNode1, mplsXCExtEntry_t, oBTreeNode);
-	register mplsXCExtEntry_t *pEntry2 = xBTree_entry (pNode2, mplsXCExtEntry_t, oBTreeNode);
-	
-	return
-		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == -1) ||
-		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0 && xBinCmp (pEntry1->au8InSegmentIndex, pEntry2->au8InSegmentIndex, pEntry1->u16InSegmentIndex_len, pEntry2->u16InSegmentIndex_len) == -1) ||
-		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0 && xBinCmp (pEntry1->au8InSegmentIndex, pEntry2->au8InSegmentIndex, pEntry1->u16InSegmentIndex_len, pEntry2->u16InSegmentIndex_len) == 0 && xBinCmp (pEntry1->au8OutSegmentIndex, pEntry2->au8OutSegmentIndex, pEntry1->u16OutSegmentIndex_len, pEntry2->u16OutSegmentIndex_len) == -1) ? -1:
-		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0 && xBinCmp (pEntry1->au8InSegmentIndex, pEntry2->au8InSegmentIndex, pEntry1->u16InSegmentIndex_len, pEntry2->u16InSegmentIndex_len) == 0 && xBinCmp (pEntry1->au8OutSegmentIndex, pEntry2->au8OutSegmentIndex, pEntry1->u16OutSegmentIndex_len, pEntry2->u16OutSegmentIndex_len) == 0) ? 0: 1;
-}
-
-xBTree_t oMplsXCExtTable_BTree = xBTree_initInline (&mplsXCExtTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 mplsXCExtEntry_t *
 mplsXCExtTable_createEntry (
@@ -126,25 +111,14 @@ mplsXCExtTable_createEntry (
 	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len)
 {
 	register mplsXCExtEntry_t *poEntry = NULL;
+	register mplsXCEntry_t *poXC = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poXC = mplsXCTable_getByIndex (pau8Index, u16Index_len, pau8InSegmentIndex, u16InSegmentIndex_len, pau8OutSegmentIndex, u16OutSegmentIndex_len)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poXC->oX;
 	
-	memcpy (poEntry->au8Index, pau8Index, u16Index_len);
-	poEntry->u16Index_len = u16Index_len;
-	memcpy (poEntry->au8InSegmentIndex, pau8InSegmentIndex, u16InSegmentIndex_len);
-	poEntry->u16InSegmentIndex_len = u16InSegmentIndex_len;
-	memcpy (poEntry->au8OutSegmentIndex, pau8OutSegmentIndex, u16OutSegmentIndex_len);
-	poEntry->u16OutSegmentIndex_len = u16OutSegmentIndex_len;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsXCExtTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oMplsXCExtTable_BTree);
 	return poEntry;
 }
 
@@ -154,28 +128,14 @@ mplsXCExtTable_getByIndex (
 	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
 	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len)
 {
-	register mplsXCExtEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsXCEntry_t *poXC = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poXC = mplsXCTable_getByIndex (pau8Index, u16Index_len, pau8InSegmentIndex, u16InSegmentIndex_len, pau8OutSegmentIndex, u16OutSegmentIndex_len)) == NULL)
 	{
 		return NULL;
 	}
 	
-	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
-	poTmpEntry->u16Index_len = u16Index_len;
-	memcpy (poTmpEntry->au8InSegmentIndex, pau8InSegmentIndex, u16InSegmentIndex_len);
-	poTmpEntry->u16InSegmentIndex_len = u16InSegmentIndex_len;
-	memcpy (poTmpEntry->au8OutSegmentIndex, pau8OutSegmentIndex, u16OutSegmentIndex_len);
-	poTmpEntry->u16OutSegmentIndex_len = u16OutSegmentIndex_len;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oMplsXCExtTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, mplsXCExtEntry_t, oBTreeNode);
+	return &poXC->oX;
 }
 
 mplsXCExtEntry_t *
@@ -184,42 +144,20 @@ mplsXCExtTable_getNextIndex (
 	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
 	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len)
 {
-	register mplsXCExtEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsXCEntry_t *poXC = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poXC = mplsXCTable_getNextIndex (pau8Index, u16Index_len, pau8InSegmentIndex, u16InSegmentIndex_len, pau8OutSegmentIndex, u16OutSegmentIndex_len)) == NULL)
 	{
 		return NULL;
 	}
 	
-	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
-	poTmpEntry->u16Index_len = u16Index_len;
-	memcpy (poTmpEntry->au8InSegmentIndex, pau8InSegmentIndex, u16InSegmentIndex_len);
-	poTmpEntry->u16InSegmentIndex_len = u16InSegmentIndex_len;
-	memcpy (poTmpEntry->au8OutSegmentIndex, pau8OutSegmentIndex, u16OutSegmentIndex_len);
-	poTmpEntry->u16OutSegmentIndex_len = u16OutSegmentIndex_len;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oMplsXCExtTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, mplsXCExtEntry_t, oBTreeNode);
+	return &poXC->oX;
 }
 
 /* remove a row from the table */
 void
 mplsXCExtTable_removeEntry (mplsXCExtEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsXCExtTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oMplsXCExtTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -229,7 +167,7 @@ mplsXCExtTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oMplsXCExtTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsXCTable_BTree);
 	return mplsXCExtTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -238,22 +176,22 @@ mplsXCExtTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	mplsXCExtEntry_t *poEntry = NULL;
+	mplsXCEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, mplsXCExtEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, mplsXCEntry_t, oBTreeNode);
 	
 	snmp_set_var_value (idx, poEntry->au8Index, poEntry->u16Index_len);
 	idx = idx->next_variable;
 	snmp_set_var_value (idx, poEntry->au8InSegmentIndex, poEntry->u16InSegmentIndex_len);
 	idx = idx->next_variable;
 	snmp_set_var_value (idx, poEntry->au8OutSegmentIndex, poEntry->u16OutSegmentIndex_len);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsXCExtTable_BTree);
+	*my_data_context = (void*) &poEntry->oX;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsXCTable_BTree);
 	return put_index_data;
 }
 
@@ -262,12 +200,12 @@ mplsXCExtTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	mplsXCExtEntry_t *poEntry = NULL;
+	mplsXCEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	register netsnmp_variable_list *idx3 = idx2->next_variable;
 	
-	poEntry = mplsXCExtTable_getByIndex (
+	poEntry = mplsXCTable_getByIndex (
 		(void*) idx1->val.string, idx1->val_len,
 		(void*) idx2->val.string, idx2->val_len,
 		(void*) idx3->val.string, idx3->val_len);
@@ -276,7 +214,7 @@ mplsXCExtTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oX;
 	return true;
 }
 
