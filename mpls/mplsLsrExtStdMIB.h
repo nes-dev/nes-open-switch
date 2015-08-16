@@ -55,12 +55,12 @@ void mplsLsrExtStdMIB_init (void);
 typedef struct mplsXCExtEntry_t
 {
 	/* Index values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
-	uint8_t au8InSegmentIndex[24];
-	size_t u16InSegmentIndex_len;	/* # of uint8_t elements */
-	uint8_t au8OutSegmentIndex[24];
-	size_t u16OutSegmentIndex_len;	/* # of uint8_t elements */
+// 	uint8_t au8Index[24];
+// 	size_t u16Index_len;	/* # of uint8_t elements */
+// 	uint8_t au8InSegmentIndex[24];
+// 	size_t u16InSegmentIndex_len;	/* # of uint8_t elements */
+// 	uint8_t au8OutSegmentIndex[24];
+// 	size_t u16OutSegmentIndex_len;	/* # of uint8_t elements */
 	
 	/* Column values */
 	xOid_t aoTunnelPointer[128];
@@ -68,10 +68,10 @@ typedef struct mplsXCExtEntry_t
 	xOid_t aoOppositeDirXCPtr[128];
 	size_t u16OppositeDirXCPtr_len;	/* # of xOid_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } mplsXCExtEntry_t;
 
-extern xBTree_t oMplsXCExtTable_BTree;
+// extern xBTree_t oMplsXCExtTable_BTree;
 
 /* mplsXCExtTable table mapper */
 void mplsXCExtTable_init (void);

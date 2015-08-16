@@ -190,7 +190,7 @@ mplsXCExtTable_getNext (
 	snmp_set_var_value (idx, poEntry->au8InSegmentIndex, poEntry->u16InSegmentIndex_len);
 	idx = idx->next_variable;
 	snmp_set_var_value (idx, poEntry->au8OutSegmentIndex, poEntry->u16OutSegmentIndex_len);
-	*my_data_context = (void*) &poEntry->oX;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsXCTable_BTree);
 	return put_index_data;
 }
@@ -214,7 +214,7 @@ mplsXCExtTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oX;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -229,6 +229,7 @@ mplsXCExtTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	mplsXCExtEntry_t *table_entry;
+	register mplsXCEntry_t *poEntry = NULL;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -240,13 +241,14 @@ mplsXCExtTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsXCExtEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsXCEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
@@ -270,8 +272,9 @@ mplsXCExtTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsXCExtEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsXCEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
@@ -294,43 +297,22 @@ mplsXCExtTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsXCExtEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsXCEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			register netsnmp_variable_list *idx1 = table_info->indexes;
-			register netsnmp_variable_list *idx2 = idx1->next_variable;
-			register netsnmp_variable_list *idx3 = idx2->next_variable;
+			if (poEntry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
 			case MPLSXCEXTOPPOSITEDIRXCPTR:
-				if (table_entry == NULL)
+				if (poEntry->u8RowStatus == xRowStatus_active_c || poEntry->u8RowStatus == xRowStatus_notReady_c)
 				{
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-						return SNMP_ERR_NOERROR;
-					}
-					
-					table_entry = mplsXCExtTable_createEntry (
-						(void*) idx1->val.string, idx1->val_len,
-						(void*) idx2->val.string, idx2->val_len,
-						(void*) idx3->val.string, idx3->val_len);
-					if (table_entry != NULL)
-					{
-						netsnmp_insert_iterator_context (request, table_entry);
-						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
-					}
-					else
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-						return SNMP_ERR_NOERROR;
-					}
-				}
-				break;
-			default:
-				if (table_entry == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
 				}
 				break;
 			}
@@ -338,32 +320,15 @@ mplsXCExtTable_mapper (
 		break;
 		
 	case MODE_SET_FREE:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (mplsXCExtEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
-			{
-				continue;
-			}
-			
-			switch (table_info->colnum)
-			{
-			case MPLSXCEXTOPPOSITEDIRXCPTR:
-				mplsXCExtTable_removeEntry (table_entry);
-				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				break;
-			}
-		}
 		break;
 		
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (mplsXCExtEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsXCEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
@@ -393,12 +358,13 @@ mplsXCExtTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (mplsXCExtEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsXCEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
