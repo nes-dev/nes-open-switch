@@ -28,6 +28,7 @@
 #include "mplsLsrExtStdMIB_agent.h"
 #include "neMplsTeMIB_agent.h"
 #include "mplsTeStdMIB_agent.h"
+#include "mplsTeExtStdMIB_agent.h"
 #include "mplsUtils.h"
 
 #include "mpls_ext.h"
@@ -56,6 +57,7 @@ mpls_main (void *pvArgv)
 	mplsLsrExtStdMIB_init ();
 	neMplsTeMIB_init ();
 	mplsTeStdMIB_init ();
+	mplsTeExtStdMIB_init ();
 	
 	if (xThread_create (&oMplsThread) == NULL)
 	{
