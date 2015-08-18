@@ -743,10 +743,10 @@ Netsnmp_Node_Handler gmplsTunnelCHopTable_mapper;
 typedef struct gmplsTunnelReversePerfEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
-	uint32_t u32Instance;
-	uint32_t u32IngressLSRId;
-	uint32_t u32EgressLSRId;
+// 	uint32_t u32Index;
+// 	uint32_t u32Instance;
+// 	uint32_t u32IngressLSRId;
+// 	uint32_t u32EgressLSRId;
 	
 	/* Column values */
 	uint32_t u32Packets;
@@ -755,10 +755,10 @@ typedef struct gmplsTunnelReversePerfEntry_t
 	uint32_t u32Bytes;
 	uint64_t u64HCBytes;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } gmplsTunnelReversePerfEntry_t;
 
-extern xBTree_t oGmplsTunnelReversePerfTable_BTree;
+// extern xBTree_t oGmplsTunnelReversePerfTable_BTree;
 
 /* gmplsTunnelReversePerfTable table mapper */
 void gmplsTunnelReversePerfTable_init (void);
