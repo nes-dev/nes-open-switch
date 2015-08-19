@@ -180,10 +180,10 @@ enum
 typedef struct neMplsTunnelEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
-	uint32_t u32Instance;
-	uint32_t u32IngressLSRId;
-	uint32_t u32EgressLSRId;
+// 	uint32_t u32Index;
+// 	uint32_t u32Instance;
+// 	uint32_t u32IngressLSRId;
+// 	uint32_t u32EgressLSRId;
 	
 	/* Column values */
 	uint32_t u32CallId;
@@ -205,10 +205,10 @@ typedef struct neMplsTunnelEntry_t
 	size_t u16ProtectionStatus_len;	/* # of uint8_t elements */
 	int32_t i32DiffServType;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neMplsTunnelEntry_t;
 
-extern xBTree_t oNeMplsTunnelTable_BTree;
+// extern xBTree_t oNeMplsTunnelTable_BTree;
 
 /* neMplsTunnelTable table mapper */
 void neMplsTunnelTable_init (void);
