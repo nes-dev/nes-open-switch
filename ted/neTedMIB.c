@@ -55,8 +55,8 @@ static oid neTedLinkTable_oid[] = {1,3,6,1,4,1,36969,68,1,3};
 static oid neTedAddressTable_oid[] = {1,3,6,1,4,1,36969,68,1,4};
 static oid neTedNeighborTable_oid[] = {1,3,6,1,4,1,36969,68,1,5};
 static oid neTedLinkResvTable_oid[] = {1,3,6,1,4,1,36969,68,1,6};
-static oid neTeLinkAdjCapTable_oid[] = {1,3,6,1,4,1,36969,68,1,6};
-static oid neTeCompLinkAdjCapTable_oid[] = {1,3,6,1,4,1,36969,68,1,7};
+static oid neTeLinkAdjCapTable_oid[] = {1,3,6,1,4,1,36969,68,1,7};
+static oid neTeCompLinkAdjCapTable_oid[] = {1,3,6,1,4,1,36969,68,1,8};
 static oid neTedLinkXCTable_oid[] = {1,3,6,1,4,1,36969,68,1,9};
 
 
@@ -106,15 +106,17 @@ neTedMIB_init (void)
 		netsnmp_create_handler_registration (
 			"neTedScalars_mapper", &neTedScalars_mapper,
 			neTedScalars_oid, OID_LENGTH (neTedScalars_oid),
-			HANDLER_CAN_RONLY
+			HANDLER_CAN_RWRITE
 		),
-		NETEDNODECONFIGURED,
+		NETEDNODELOCALID,
 		NETEDNEIGHBORACTIVE
 	);
 	
 	
 	/* register neTedMIB group table mappers */
 	mplsTeNodeTable_init ();
+	mplsTeNodeIpMapTable_init ();
+	mplsTeNodeIccMapTable_init ();
 	neTedNodeTable_init ();
 	neTedLinkTable_init ();
 	neTedAddressTable_init ();
@@ -388,6 +390,7 @@ neTedScalars_mapper (
 {
 	extern oid neTedScalars_oid[];
 	netsnmp_request_info *request;
+	int ret;
 	/* We are never called for a GETNEXT if it's registered as a
 	   "group instance", as it's "magically" handled for us. */
 	
@@ -398,6 +401,9 @@ neTedScalars_mapper (
 		{
 			switch (request->requestvb->name[OID_LENGTH (neTedScalars_oid)])
 			{
+			case NETEDNODELOCALID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oNeTedScalars.u32NodeLocalId);
+				break;
 			case NETEDNODECONFIGURED:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oNeTedScalars.u32NodeConfigured);
 				break;
@@ -430,6 +436,74 @@ neTedScalars_mapper (
 		}
 		break;
 		
+	/*
+	 * SET REQUEST
+	 *
+	 * multiple states in the transaction.  See:
+	 * http://www.net-snmp.org/tutorial-5/toolkit/mib_module/set-actions.jpg
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			switch (request->requestvb->name[OID_LENGTH (neTedScalars_oid)])
+			{
+			case NETEDNODELOCALID:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, requests, ret);
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				continue;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		break;
+		
+	case MODE_SET_FREE:
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			switch (request->requestvb->name[OID_LENGTH (neTedScalars_oid)])
+			{
+			case NETEDNODELOCALID:
+				/* XXX: perform the value change here */
+				oNeTedScalars.u32NodeLocalId = *request->requestvb->val.integer;
+				if (/* TODO: error? */ TOBE_REPLACED != TOBE_REPLACED)
+				{
+					netsnmp_set_request_error (reqinfo, requests, /* some error */ TOBE_REPLACED);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			switch (request->requestvb->name[OID_LENGTH (neTedScalars_oid)])
+			{
+			case NETEDNODELOCALID:
+				/* XXX: UNDO and return to previous value for the object */
+				if (/* XXX: error? */ TOBE_REPLACED != TOBE_REPLACED)
+				{
+					/* try _really_really_ hard to never get to this point */
+					netsnmp_set_request_error (reqinfo, requests, SNMP_ERR_UNDOFAILED);
+				}
+				break;
+			}
+		}
+		break;
 		
 	default:
 		/* we should never get here, so this is a really bad error */
@@ -1052,6 +1126,505 @@ mplsTeNodeTable_mapper (
 			}
 		}
 		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize mplsTeNodeIpMapTable table mapper **/
+void
+mplsTeNodeIpMapTable_init (void)
+{
+	extern oid mplsTeNodeIpMapTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"mplsTeNodeIpMapTable", &mplsTeNodeIpMapTable_mapper,
+		mplsTeNodeIpMapTable_oid, OID_LENGTH (mplsTeNodeIpMapTable_oid),
+		HANDLER_CAN_RONLY
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_OCTET_STR /* index: mplsTeNodeIpMapGlobalId */,
+		ASN_UNSIGNED /* index: mplsTeNodeIpMapNodeId */,
+		0);
+	table_info->min_column = MPLSTENODEIPMAPLOCALID;
+	table_info->max_column = MPLSTENODEIPMAPLOCALID;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &mplsTeNodeIpMapTable_getFirst;
+	iinfo->get_next_data_point = &mplsTeNodeIpMapTable_getNext;
+	iinfo->get_data_point = &mplsTeNodeIpMapTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+mplsTeNodeIpMapTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register mplsTeNodeIpMapEntry_t *pEntry1 = xBTree_entry (pNode1, mplsTeNodeIpMapEntry_t, oBTreeNode);
+	register mplsTeNodeIpMapEntry_t *pEntry2 = xBTree_entry (pNode2, mplsTeNodeIpMapEntry_t, oBTreeNode);
+	
+	return
+		(xBinCmp (pEntry1->au8GlobalId, pEntry2->au8GlobalId, pEntry1->u16GlobalId_len, pEntry2->u16GlobalId_len) == -1) ||
+		(xBinCmp (pEntry1->au8GlobalId, pEntry2->au8GlobalId, pEntry1->u16GlobalId_len, pEntry2->u16GlobalId_len) == 0 && pEntry1->u32NodeId < pEntry2->u32NodeId) ? -1:
+		(xBinCmp (pEntry1->au8GlobalId, pEntry2->au8GlobalId, pEntry1->u16GlobalId_len, pEntry2->u16GlobalId_len) == 0 && pEntry1->u32NodeId == pEntry2->u32NodeId) ? 0: 1;
+}
+
+xBTree_t oMplsTeNodeIpMapTable_BTree = xBTree_initInline (&mplsTeNodeIpMapTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+mplsTeNodeIpMapEntry_t *
+mplsTeNodeIpMapTable_createEntry (
+	uint8_t *pau8GlobalId, size_t u16GlobalId_len,
+	uint32_t u32NodeId)
+{
+	register mplsTeNodeIpMapEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poEntry->au8GlobalId, pau8GlobalId, u16GlobalId_len);
+	poEntry->u16GlobalId_len = u16GlobalId_len;
+	poEntry->u32NodeId = u32NodeId;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsTeNodeIpMapTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oMplsTeNodeIpMapTable_BTree);
+	return poEntry;
+}
+
+mplsTeNodeIpMapEntry_t *
+mplsTeNodeIpMapTable_getByIndex (
+	uint8_t *pau8GlobalId, size_t u16GlobalId_len,
+	uint32_t u32NodeId)
+{
+	register mplsTeNodeIpMapEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->au8GlobalId, pau8GlobalId, u16GlobalId_len);
+	poTmpEntry->u16GlobalId_len = u16GlobalId_len;
+	poTmpEntry->u32NodeId = u32NodeId;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oMplsTeNodeIpMapTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, mplsTeNodeIpMapEntry_t, oBTreeNode);
+}
+
+mplsTeNodeIpMapEntry_t *
+mplsTeNodeIpMapTable_getNextIndex (
+	uint8_t *pau8GlobalId, size_t u16GlobalId_len,
+	uint32_t u32NodeId)
+{
+	register mplsTeNodeIpMapEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->au8GlobalId, pau8GlobalId, u16GlobalId_len);
+	poTmpEntry->u16GlobalId_len = u16GlobalId_len;
+	poTmpEntry->u32NodeId = u32NodeId;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oMplsTeNodeIpMapTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, mplsTeNodeIpMapEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+mplsTeNodeIpMapTable_removeEntry (mplsTeNodeIpMapEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsTeNodeIpMapTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oMplsTeNodeIpMapTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+mplsTeNodeIpMapTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsTeNodeIpMapTable_BTree);
+	return mplsTeNodeIpMapTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+mplsTeNodeIpMapTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	mplsTeNodeIpMapEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, mplsTeNodeIpMapEntry_t, oBTreeNode);
+	
+	snmp_set_var_value (idx, poEntry->au8GlobalId, poEntry->u16GlobalId_len);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32NodeId);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsTeNodeIpMapTable_BTree);
+	return put_index_data;
+}
+
+bool
+mplsTeNodeIpMapTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	mplsTeNodeIpMapEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	
+	poEntry = mplsTeNodeIpMapTable_getByIndex (
+		(void*) idx1->val.string, idx1->val_len,
+		*idx2->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* mplsTeNodeIpMapTable table mapper */
+int
+mplsTeNodeIpMapTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	mplsTeNodeIpMapEntry_t *table_entry;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (mplsTeNodeIpMapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case MPLSTENODEIPMAPLOCALID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32LocalId);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize mplsTeNodeIccMapTable table mapper **/
+void
+mplsTeNodeIccMapTable_init (void)
+{
+	extern oid mplsTeNodeIccMapTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"mplsTeNodeIccMapTable", &mplsTeNodeIccMapTable_mapper,
+		mplsTeNodeIccMapTable_oid, OID_LENGTH (mplsTeNodeIccMapTable_oid),
+		HANDLER_CAN_RONLY
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_OCTET_STR /* index: mplsTeNodeIccMapCcId */,
+		ASN_OCTET_STR /* index: mplsTeNodeIccMapIccId */,
+		ASN_UNSIGNED /* index: mplsTeNodeIccMapNodeId */,
+		0);
+	table_info->min_column = MPLSTENODEICCMAPLOCALID;
+	table_info->max_column = MPLSTENODEICCMAPLOCALID;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &mplsTeNodeIccMapTable_getFirst;
+	iinfo->get_next_data_point = &mplsTeNodeIccMapTable_getNext;
+	iinfo->get_data_point = &mplsTeNodeIccMapTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+mplsTeNodeIccMapTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register mplsTeNodeIccMapEntry_t *pEntry1 = xBTree_entry (pNode1, mplsTeNodeIccMapEntry_t, oBTreeNode);
+	register mplsTeNodeIccMapEntry_t *pEntry2 = xBTree_entry (pNode2, mplsTeNodeIccMapEntry_t, oBTreeNode);
+	
+	return
+		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, pEntry1->u16CcId_len, pEntry2->u16CcId_len) == -1) ||
+		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, pEntry1->u16CcId_len, pEntry2->u16CcId_len) == 0 && xBinCmp (pEntry1->au8IccId, pEntry2->au8IccId, pEntry1->u16IccId_len, pEntry2->u16IccId_len) == -1) ||
+		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, pEntry1->u16CcId_len, pEntry2->u16CcId_len) == 0 && xBinCmp (pEntry1->au8IccId, pEntry2->au8IccId, pEntry1->u16IccId_len, pEntry2->u16IccId_len) == 0 && pEntry1->u32NodeId < pEntry2->u32NodeId) ? -1:
+		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, pEntry1->u16CcId_len, pEntry2->u16CcId_len) == 0 && xBinCmp (pEntry1->au8IccId, pEntry2->au8IccId, pEntry1->u16IccId_len, pEntry2->u16IccId_len) == 0 && pEntry1->u32NodeId == pEntry2->u32NodeId) ? 0: 1;
+}
+
+xBTree_t oMplsTeNodeIccMapTable_BTree = xBTree_initInline (&mplsTeNodeIccMapTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+mplsTeNodeIccMapEntry_t *
+mplsTeNodeIccMapTable_createEntry (
+	uint8_t *pau8CcId, size_t u16CcId_len,
+	uint8_t *pau8IccId, size_t u16IccId_len,
+	uint32_t u32NodeId)
+{
+	register mplsTeNodeIccMapEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poEntry->au8CcId, pau8CcId, u16CcId_len);
+	poEntry->u16CcId_len = u16CcId_len;
+	memcpy (poEntry->au8IccId, pau8IccId, u16IccId_len);
+	poEntry->u16IccId_len = u16IccId_len;
+	poEntry->u32NodeId = u32NodeId;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsTeNodeIccMapTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oMplsTeNodeIccMapTable_BTree);
+	return poEntry;
+}
+
+mplsTeNodeIccMapEntry_t *
+mplsTeNodeIccMapTable_getByIndex (
+	uint8_t *pau8CcId, size_t u16CcId_len,
+	uint8_t *pau8IccId, size_t u16IccId_len,
+	uint32_t u32NodeId)
+{
+	register mplsTeNodeIccMapEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->au8CcId, pau8CcId, u16CcId_len);
+	poTmpEntry->u16CcId_len = u16CcId_len;
+	memcpy (poTmpEntry->au8IccId, pau8IccId, u16IccId_len);
+	poTmpEntry->u16IccId_len = u16IccId_len;
+	poTmpEntry->u32NodeId = u32NodeId;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oMplsTeNodeIccMapTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, mplsTeNodeIccMapEntry_t, oBTreeNode);
+}
+
+mplsTeNodeIccMapEntry_t *
+mplsTeNodeIccMapTable_getNextIndex (
+	uint8_t *pau8CcId, size_t u16CcId_len,
+	uint8_t *pau8IccId, size_t u16IccId_len,
+	uint32_t u32NodeId)
+{
+	register mplsTeNodeIccMapEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->au8CcId, pau8CcId, u16CcId_len);
+	poTmpEntry->u16CcId_len = u16CcId_len;
+	memcpy (poTmpEntry->au8IccId, pau8IccId, u16IccId_len);
+	poTmpEntry->u16IccId_len = u16IccId_len;
+	poTmpEntry->u32NodeId = u32NodeId;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oMplsTeNodeIccMapTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, mplsTeNodeIccMapEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+mplsTeNodeIccMapTable_removeEntry (mplsTeNodeIccMapEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsTeNodeIccMapTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oMplsTeNodeIccMapTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+mplsTeNodeIccMapTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsTeNodeIccMapTable_BTree);
+	return mplsTeNodeIccMapTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+mplsTeNodeIccMapTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	mplsTeNodeIccMapEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, mplsTeNodeIccMapEntry_t, oBTreeNode);
+	
+	snmp_set_var_value (idx, poEntry->au8CcId, poEntry->u16CcId_len);
+	idx = idx->next_variable;
+	snmp_set_var_value (idx, poEntry->au8IccId, poEntry->u16IccId_len);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32NodeId);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsTeNodeIccMapTable_BTree);
+	return put_index_data;
+}
+
+bool
+mplsTeNodeIccMapTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	mplsTeNodeIccMapEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	register netsnmp_variable_list *idx3 = idx2->next_variable;
+	
+	poEntry = mplsTeNodeIccMapTable_getByIndex (
+		(void*) idx1->val.string, idx1->val_len,
+		(void*) idx2->val.string, idx2->val_len,
+		*idx3->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* mplsTeNodeIccMapTable table mapper */
+int
+mplsTeNodeIccMapTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	mplsTeNodeIccMapEntry_t *table_entry;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (mplsTeNodeIccMapEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case MPLSTENODEICCMAPLOCALID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32LocalId);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
 	}
 	
 	return SNMP_ERR_NOERROR;

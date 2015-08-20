@@ -83,17 +83,19 @@ Netsnmp_Node_Handler mplsTeExtObjects_mapper;
 #endif	/* SNMP_SRC */
 
 /** definitions for scalar(s) of neTedScalars **/
-#define NETEDNODECONFIGURED 1
-#define NETEDNODEACTIVE 2
-#define NETEDLINKCONFIGURED 3
-#define NETEDLINKACTIVE 4
-#define NETEDADDRESSCONFIGURED 5
-#define NETEDADDRESSACTIVE 6
-#define NETEDNEIGHBORCONFIGURED 7
-#define NETEDNEIGHBORACTIVE 8
+#define NETEDNODELOCALID 1
+#define NETEDNODECONFIGURED 2
+#define NETEDNODEACTIVE 3
+#define NETEDLINKCONFIGURED 4
+#define NETEDLINKACTIVE 5
+#define NETEDADDRESSCONFIGURED 6
+#define NETEDADDRESSACTIVE 7
+#define NETEDNEIGHBORCONFIGURED 8
+#define NETEDNEIGHBORACTIVE 9
 
 typedef struct neTedScalars_t
 {
+	uint32_t u32NodeLocalId;
 	uint32_t u32NodeConfigured;
 	uint32_t u32NodeActive;
 	uint32_t u32LinkConfigured;
@@ -115,6 +117,98 @@ Netsnmp_Node_Handler neTedScalars_mapper;
 /**
  *	table mapper(s)
  */
+/**
+ *	table mplsTeNodeIpMapTable definitions
+ */
+#define MPLSTENODEIPMAPGLOBALID 1
+#define MPLSTENODEIPMAPNODEID 2
+#define MPLSTENODEIPMAPLOCALID 3
+
+/* table mplsTeNodeIpMapTable row entry data structure */
+typedef struct mplsTeNodeIpMapEntry_t
+{
+	/* Index values */
+	uint8_t au8GlobalId[4];
+	size_t u16GlobalId_len;	/* # of uint8_t elements */
+	uint32_t u32NodeId;
+	
+	/* Column values */
+	uint32_t u32LocalId;
+	
+	xBTree_Node_t oBTreeNode;
+} mplsTeNodeIpMapEntry_t;
+
+extern xBTree_t oMplsTeNodeIpMapTable_BTree;
+
+/* mplsTeNodeIpMapTable table mapper */
+void mplsTeNodeIpMapTable_init (void);
+mplsTeNodeIpMapEntry_t * mplsTeNodeIpMapTable_createEntry (
+	uint8_t *pau8GlobalId, size_t u16GlobalId_len,
+	uint32_t u32NodeId);
+mplsTeNodeIpMapEntry_t * mplsTeNodeIpMapTable_getByIndex (
+	uint8_t *pau8GlobalId, size_t u16GlobalId_len,
+	uint32_t u32NodeId);
+mplsTeNodeIpMapEntry_t * mplsTeNodeIpMapTable_getNextIndex (
+	uint8_t *pau8GlobalId, size_t u16GlobalId_len,
+	uint32_t u32NodeId);
+void mplsTeNodeIpMapTable_removeEntry (mplsTeNodeIpMapEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point mplsTeNodeIpMapTable_getFirst;
+Netsnmp_Next_Data_Point mplsTeNodeIpMapTable_getNext;
+Netsnmp_Get_Data_Point mplsTeNodeIpMapTable_get;
+Netsnmp_Node_Handler mplsTeNodeIpMapTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table mplsTeNodeIccMapTable definitions
+ */
+#define MPLSTENODEICCMAPCCID 1
+#define MPLSTENODEICCMAPICCID 2
+#define MPLSTENODEICCMAPNODEID 3
+#define MPLSTENODEICCMAPLOCALID 4
+
+/* table mplsTeNodeIccMapTable row entry data structure */
+typedef struct mplsTeNodeIccMapEntry_t
+{
+	/* Index values */
+	uint8_t au8CcId[2];
+	size_t u16CcId_len;	/* # of uint8_t elements */
+	uint8_t au8IccId[6];
+	size_t u16IccId_len;	/* # of uint8_t elements */
+	uint32_t u32NodeId;
+	
+	/* Column values */
+	uint32_t u32LocalId;
+	
+	xBTree_Node_t oBTreeNode;
+} mplsTeNodeIccMapEntry_t;
+
+extern xBTree_t oMplsTeNodeIccMapTable_BTree;
+
+/* mplsTeNodeIccMapTable table mapper */
+void mplsTeNodeIccMapTable_init (void);
+mplsTeNodeIccMapEntry_t * mplsTeNodeIccMapTable_createEntry (
+	uint8_t *pau8CcId, size_t u16CcId_len,
+	uint8_t *pau8IccId, size_t u16IccId_len,
+	uint32_t u32NodeId);
+mplsTeNodeIccMapEntry_t * mplsTeNodeIccMapTable_getByIndex (
+	uint8_t *pau8CcId, size_t u16CcId_len,
+	uint8_t *pau8IccId, size_t u16IccId_len,
+	uint32_t u32NodeId);
+mplsTeNodeIccMapEntry_t * mplsTeNodeIccMapTable_getNextIndex (
+	uint8_t *pau8CcId, size_t u16CcId_len,
+	uint8_t *pau8IccId, size_t u16IccId_len,
+	uint32_t u32NodeId);
+void mplsTeNodeIccMapTable_removeEntry (mplsTeNodeIccMapEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point mplsTeNodeIccMapTable_getFirst;
+Netsnmp_Next_Data_Point mplsTeNodeIccMapTable_getNext;
+Netsnmp_Get_Data_Point mplsTeNodeIccMapTable_get;
+Netsnmp_Node_Handler mplsTeNodeIccMapTable_mapper;
+#endif	/* SNMP_SRC */
+
+
 /**
  *	table neTedNodeTable definitions
  */
