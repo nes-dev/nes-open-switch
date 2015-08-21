@@ -1649,8 +1649,8 @@ neTedNodeTable_init (void)
 	netsnmp_table_helper_add_indexes (table_info,
 		ASN_UNSIGNED /* index: neTedNodeIndex */,
 		0);
-	table_info->min_column = NETEDNODEADDRTYPE;
-	table_info->max_column = NETEDNODEDATAPATHID;
+	table_info->min_column = NETEDNODETYPE;
+	table_info->max_column = NETEDNODEAREA;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &neTedNodeTable_getFirst;
@@ -1696,6 +1696,9 @@ neTedNodeTable_createEntry (
 		xBuffer_free (poEntry);
 		return NULL;
 	}
+	
+	poEntry->i32Type = neTedNodeType_node_c;
+	poEntry->u32Area = 0;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeTedNodeTable_BTree);
 	return poEntry;
@@ -1843,6 +1846,9 @@ neTedNodeTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NETEDNODETYPE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
+				break;
 			case NETEDNODEADDRTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32AddrType);
 				break;
@@ -1851,6 +1857,15 @@ neTedNodeTable_mapper (
 				break;
 			case NETEDNODEDATAPATHID:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8DataPathId, table_entry->u16DataPathId_len);
+				break;
+			case NETEDNODEADMINFLAGS:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdminFlags, table_entry->u16AdminFlags_len);
+				break;
+			case NETEDNODEOPERFLAGS:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8OperFlags, table_entry->u16OperFlags_len);
+				break;
+			case NETEDNODEAREA:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Area);
 				break;
 				
 			default:
@@ -1871,6 +1886,14 @@ neTedNodeTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NETEDNODETYPE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
 			case NETEDNODEADDRTYPE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
@@ -1895,6 +1918,22 @@ neTedNodeTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
+			case NETEDNODEADMINFLAGS:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8AdminFlags));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NETEDNODEAREA:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
 				
 			default:
 				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
@@ -1912,9 +1951,12 @@ neTedNodeTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NETEDNODETYPE:
 			case NETEDNODEADDRTYPE:
 			case NETEDNODEADDRESS:
 			case NETEDNODEDATAPATHID:
+			case NETEDNODEADMINFLAGS:
+			case NETEDNODEAREA:
 				if (table_entry == NULL)
 				{
 					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
@@ -1960,9 +2002,12 @@ neTedNodeTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NETEDNODETYPE:
 			case NETEDNODEADDRTYPE:
 			case NETEDNODEADDRESS:
 			case NETEDNODEDATAPATHID:
+			case NETEDNODEADMINFLAGS:
+			case NETEDNODEAREA:
 				neTedNodeTable_removeEntry (table_entry);
 				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				break;
@@ -1979,6 +2024,20 @@ neTedNodeTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NETEDNODETYPE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Type))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32Type, sizeof (table_entry->i32Type));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32Type = *request->requestvb->val.integer;
+				break;
 			case NETEDNODEADDRTYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32AddrType))) == NULL)
 				{
@@ -2029,6 +2088,38 @@ neTedNodeTable_mapper (
 				memcpy (table_entry->au8DataPathId, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16DataPathId_len = request->requestvb->val_len;
 				break;
+			case NETEDNODEADMINFLAGS:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8AdminFlags))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16AdminFlags_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8AdminFlags, sizeof (table_entry->au8AdminFlags));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8AdminFlags, 0, sizeof (table_entry->au8AdminFlags));
+				memcpy (table_entry->au8AdminFlags, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16AdminFlags_len = request->requestvb->val_len;
+				break;
+			case NETEDNODEAREA:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32Area))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32Area, sizeof (table_entry->u32Area));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32Area = *request->requestvb->val.integer;
+				break;
 			}
 		}
 		break;
@@ -2046,6 +2137,17 @@ neTedNodeTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NETEDNODETYPE:
+				if (pvOldDdata == table_entry)
+				{
+					neTedNodeTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->i32Type, pvOldDdata, sizeof (table_entry->i32Type));
+				}
+				break;
 			case NETEDNODEADDRTYPE:
 				if (pvOldDdata == table_entry)
 				{
@@ -2079,6 +2181,29 @@ neTedNodeTable_mapper (
 				{
 					memcpy (table_entry->au8DataPathId, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 					table_entry->u16DataPathId_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				}
+				break;
+			case NETEDNODEADMINFLAGS:
+				if (pvOldDdata == table_entry)
+				{
+					neTedNodeTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (table_entry->au8AdminFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+					table_entry->u16AdminFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				}
+				break;
+			case NETEDNODEAREA:
+				if (pvOldDdata == table_entry)
+				{
+					neTedNodeTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u32Area, pvOldDdata, sizeof (table_entry->u32Area));
 				}
 				break;
 			}

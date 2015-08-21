@@ -213,17 +213,39 @@ Netsnmp_Node_Handler mplsTeNodeIccMapTable_mapper;
  *	table neTedNodeTable definitions
  */
 #define NETEDNODEINDEX 1
-#define NETEDNODEADDRTYPE 2
-#define NETEDNODEADDRESS 3
-#define NETEDNODEDATAPATHID 4
+#define NETEDNODETYPE 2
+#define NETEDNODEADDRTYPE 3
+#define NETEDNODEADDRESS 4
+#define NETEDNODEDATAPATHID 5
+#define NETEDNODEADMINFLAGS 6
+#define NETEDNODEOPERFLAGS 7
+#define NETEDNODEAREA 8
 
 enum
 {
+	/* enums for column neTedNodeType */
+	neTedNodeType_as_c = 1,
+	neTedNodeType_area_c = 2,
+	neTedNodeType_node_c = 3,
+
+	/* enums for column neTedNodeBrType */
+	neTedNodeBrType_none_c = 0,
+	neTedNodeBrType_as_c = 1,
+	neTedNodeBrType_area_c = 2,
+
 	/* enums for column neTedNodeAddrType */
 	neTedNodeAddrType_ipv4_c = 1,
 	neTedNodeAddrType_ipv6_c = 2,
 	neTedNodeAddrType_ipv4z_c = 3,
 	neTedNodeAddrType_ipv6z_c = 4,
+
+	/* enums for column neTedNodeAdminFlags */
+	neTedNodeAdminFlags_bXCFixed_c = 0,
+	neTedNodeAdminFlags_bDistributeLabels_c = 1,
+
+	/* enums for column neTedNodeOperFlags */
+	neTedNodeOperFlags_bAsBr_c = 0,
+	neTedNodeOperFlags_bAreaBr_c = 1,
 };
 
 /* table neTedNodeTable row entry data structure */
@@ -233,11 +255,17 @@ typedef struct neTedNodeEntry_t
 	uint32_t u32Index;
 	
 	/* Column values */
+	int32_t i32Type;
 	int32_t i32AddrType;
 	uint8_t au8Address[20];
 	size_t u16Address_len;	/* # of uint8_t elements */
 	uint8_t au8DataPathId[8];
 	size_t u16DataPathId_len;	/* # of uint8_t elements */
+	uint8_t au8AdminFlags[1];
+	size_t u16AdminFlags_len;	/* # of uint8_t elements */
+	uint8_t au8OperFlags[1];
+	size_t u16OperFlags_len;	/* # of uint8_t elements */
+	uint32_t u32Area;
 	
 	xBTree_Node_t oBTreeNode;
 } neTedNodeEntry_t;
