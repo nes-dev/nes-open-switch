@@ -453,9 +453,10 @@ Netsnmp_Node_Handler neTedLinkTable_mapper;
  */
 #define NETEDADDRESSTYPE 1
 #define NETEDADDRESS 2
-#define NETEDADDRESSLENGTH 3
-#define NETEDADDRESSROWSTATUS 4
-#define NETEDADDRESSSTORAGETYPE 5
+#define NETEDADDRESSPREFIX 3
+#define NETEDADDRESSUNNUM 4
+#define NETEDADDRESSROWSTATUS 5
+#define NETEDADDRESSSTORAGETYPE 6
 
 enum
 {
@@ -491,7 +492,8 @@ typedef struct neTedAddressEntry_t
 	int32_t i32Type;
 	uint8_t au8Address[20];
 	size_t u16Address_len;	/* # of uint8_t elements */
-	uint32_t u32Length;
+	uint32_t u32Prefix;
+	uint32_t u32Unnum;
 	
 	/* Column values */
 	uint8_t u8RowStatus;
@@ -509,19 +511,22 @@ neTedAddressEntry_t * neTedAddressTable_createEntry (
 	uint32_t u32LinkIndex,
 	int32_t i32Type,
 	uint8_t *pau8Address, size_t u16Address_len,
-	uint32_t u32Length);
+	uint32_t u32Prefix,
+	uint32_t u32Unnum);
 neTedAddressEntry_t * neTedAddressTable_getByIndex (
 	uint32_t u32NodeIndex,
 	uint32_t u32LinkIndex,
 	int32_t i32Type,
 	uint8_t *pau8Address, size_t u16Address_len,
-	uint32_t u32Length);
+	uint32_t u32Prefix,
+	uint32_t u32Unnum);
 neTedAddressEntry_t * neTedAddressTable_getNextIndex (
 	uint32_t u32NodeIndex,
 	uint32_t u32LinkIndex,
 	int32_t i32Type,
 	uint8_t *pau8Address, size_t u16Address_len,
-	uint32_t u32Length);
+	uint32_t u32Prefix,
+	uint32_t u32Unnum);
 void neTedAddressTable_removeEntry (neTedAddressEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point neTedAddressTable_getFirst;

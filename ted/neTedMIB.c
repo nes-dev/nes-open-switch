@@ -3048,7 +3048,8 @@ neTedAddressTable_init (void)
 		ASN_UNSIGNED /* index: neTedLinkIndex */,
 		ASN_INTEGER /* index: neTedAddressType */,
 		ASN_OCTET_STR /* index: neTedAddress */,
-		ASN_UNSIGNED /* index: neTedAddressLength */,
+		ASN_UNSIGNED /* index: neTedAddressPrefix */,
+		ASN_UNSIGNED /* index: neTedAddressUnnum */,
 		0);
 	table_info->min_column = NETEDADDRESSROWSTATUS;
 	table_info->max_column = NETEDADDRESSSTORAGETYPE;
@@ -3077,8 +3078,9 @@ neTedAddressTable_BTreeNodeCmp (
 		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex < pEntry2->u32LinkIndex) ||
 		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->i32Type < pEntry2->i32Type) ||
 		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == -1) ||
-		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == 0 && pEntry1->u32Length < pEntry2->u32Length) ? -1:
-		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == 0 && pEntry1->u32Length == pEntry2->u32Length) ? 0: 1;
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == 0 && pEntry1->u32Prefix < pEntry2->u32Prefix) ||
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == 0 && pEntry1->u32Prefix == pEntry2->u32Prefix && pEntry1->u32Unnum < pEntry2->u32Unnum) ? -1:
+		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == 0 && pEntry1->u32Prefix == pEntry2->u32Prefix && pEntry1->u32Unnum == pEntry2->u32Unnum) ? 0: 1;
 }
 
 xBTree_t oNeTedAddressTable_BTree = xBTree_initInline (&neTedAddressTable_BTreeNodeCmp);
@@ -3090,7 +3092,8 @@ neTedAddressTable_createEntry (
 	uint32_t u32LinkIndex,
 	int32_t i32Type,
 	uint8_t *pau8Address, size_t u16Address_len,
-	uint32_t u32Length)
+	uint32_t u32Prefix,
+	uint32_t u32Unnum)
 {
 	register neTedAddressEntry_t *poEntry = NULL;
 	
@@ -3104,7 +3107,8 @@ neTedAddressTable_createEntry (
 	poEntry->i32Type = i32Type;
 	memcpy (poEntry->au8Address, pau8Address, u16Address_len);
 	poEntry->u16Address_len = u16Address_len;
-	poEntry->u32Length = u32Length;
+	poEntry->u32Prefix = u32Prefix;
+	poEntry->u32Unnum = u32Unnum;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTedAddressTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -3124,7 +3128,8 @@ neTedAddressTable_getByIndex (
 	uint32_t u32LinkIndex,
 	int32_t i32Type,
 	uint8_t *pau8Address, size_t u16Address_len,
-	uint32_t u32Length)
+	uint32_t u32Prefix,
+	uint32_t u32Unnum)
 {
 	register neTedAddressEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -3139,7 +3144,8 @@ neTedAddressTable_getByIndex (
 	poTmpEntry->i32Type = i32Type;
 	memcpy (poTmpEntry->au8Address, pau8Address, u16Address_len);
 	poTmpEntry->u16Address_len = u16Address_len;
-	poTmpEntry->u32Length = u32Length;
+	poTmpEntry->u32Prefix = u32Prefix;
+	poTmpEntry->u32Unnum = u32Unnum;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeTedAddressTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -3156,7 +3162,8 @@ neTedAddressTable_getNextIndex (
 	uint32_t u32LinkIndex,
 	int32_t i32Type,
 	uint8_t *pau8Address, size_t u16Address_len,
-	uint32_t u32Length)
+	uint32_t u32Prefix,
+	uint32_t u32Unnum)
 {
 	register neTedAddressEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -3171,7 +3178,8 @@ neTedAddressTable_getNextIndex (
 	poTmpEntry->i32Type = i32Type;
 	memcpy (poTmpEntry->au8Address, pau8Address, u16Address_len);
 	poTmpEntry->u16Address_len = u16Address_len;
-	poTmpEntry->u32Length = u32Length;
+	poTmpEntry->u32Prefix = u32Prefix;
+	poTmpEntry->u32Unnum = u32Unnum;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeTedAddressTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -3229,7 +3237,9 @@ neTedAddressTable_getNext (
 	idx = idx->next_variable;
 	snmp_set_var_value (idx, poEntry->au8Address, poEntry->u16Address_len);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Length);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Prefix);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Unnum);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeTedAddressTable_BTree);
 	return put_index_data;
@@ -3246,13 +3256,15 @@ neTedAddressTable_get (
 	register netsnmp_variable_list *idx3 = idx2->next_variable;
 	register netsnmp_variable_list *idx4 = idx3->next_variable;
 	register netsnmp_variable_list *idx5 = idx4->next_variable;
+	register netsnmp_variable_list *idx6 = idx5->next_variable;
 	
 	poEntry = neTedAddressTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer,
 		*idx3->val.integer,
 		(void*) idx4->val.string, idx4->val_len,
-		*idx5->val.integer);
+		*idx5->val.integer,
+		*idx6->val.integer);
 	if (poEntry == NULL)
 	{
 		return false;
@@ -3353,6 +3365,7 @@ neTedAddressTable_mapper (
 			register netsnmp_variable_list *idx3 = idx2->next_variable;
 			register netsnmp_variable_list *idx4 = idx3->next_variable;
 			register netsnmp_variable_list *idx5 = idx4->next_variable;
+			register netsnmp_variable_list *idx6 = idx5->next_variable;
 			
 			switch (table_info->colnum)
 			{
@@ -3372,7 +3385,8 @@ neTedAddressTable_mapper (
 						*idx2->val.integer,
 						*idx3->val.integer,
 						(void*) idx4->val.string, idx4->val_len,
-						*idx5->val.integer);
+						*idx5->val.integer,
+						*idx6->val.integer);
 					if (table_entry != NULL)
 					{
 						netsnmp_insert_iterator_context (request, table_entry);
