@@ -144,8 +144,8 @@ Netsnmp_Node_Handler mplsInterfacePerfTable_mapper;
 typedef struct mplsInSegmentPerfEntry_t
 {
 	/* Index values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
+// 	uint8_t au8Index[24];
+// 	size_t u16Index_len;	/* # of uint8_t elements */
 	
 	/* Column values */
 	uint32_t u32Octets;
@@ -155,10 +155,10 @@ typedef struct mplsInSegmentPerfEntry_t
 	uint64_t u64HCOctets;
 	uint32_t u32DiscontinuityTime;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } mplsInSegmentPerfEntry_t;
 
-extern xBTree_t oMplsInSegmentPerfTable_BTree;
+// extern xBTree_t oMplsInSegmentPerfTable_BTree;
 
 /* mplsInSegmentPerfTable table mapper */
 void mplsInSegmentPerfTable_init (void);
