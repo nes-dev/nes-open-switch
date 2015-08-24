@@ -901,6 +901,99 @@ mplsInSegmentTable_removeEntry (mplsInSegmentEntry_t *poEntry)
 	return;
 }
 
+mplsInSegmentEntry_t *
+mplsInSegmentTable_createExt (
+	uint8_t *pau8Index, size_t u16Index_len)
+{
+	mplsInSegmentEntry_t *poEntry = NULL;
+	
+	if (u16Index_len == 0)
+	{
+		goto mplsInSegmentTable_createExt_cleanup;
+	}
+	
+	poEntry = mplsInSegmentTable_createEntry (
+		pau8Index, u16Index_len);
+	if (poEntry == NULL)
+	{
+		goto mplsInSegmentTable_createExt_cleanup;
+	}
+	
+	if (!mplsInSegmentTable_createHier (poEntry))
+	{
+		mplsInSegmentTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto mplsInSegmentTable_createExt_cleanup;
+	}
+	
+mplsInSegmentTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+mplsInSegmentTable_removeExt (mplsInSegmentEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!mplsInSegmentTable_removeHier (poEntry))
+	{
+		goto mplsInSegmentTable_removeExt_cleanup;
+	}
+	mplsInSegmentTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+mplsInSegmentTable_removeExt_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+mplsInSegmentTable_createHier (
+	mplsInSegmentEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (mplsInSegmentPerfTable_createEntry (poEntry->au8Index, poEntry->u16Index_len) == NULL)
+	{
+		goto mplsInSegmentTable_createHier_cleanup;
+	}
+	
+	if (gmplsInSegmentTable_createEntry (poEntry->au8Index, poEntry->u16Index_len) == NULL)
+	{
+		goto mplsInSegmentTable_createHier_cleanup;
+	}
+	
+	if (neMplsInSegmentTable_createEntry (poEntry->au8Index, poEntry->u16Index_len) == NULL)
+	{
+		goto mplsInSegmentTable_createHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+mplsInSegmentTable_createHier_cleanup:
+	
+	!bRetCode ? mplsInSegmentTable_removeHier (poEntry): false;
+	return bRetCode;
+}
+
+bool
+mplsInSegmentTable_removeHier (
+	mplsInSegmentEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	neMplsInSegmentTable_removeEntry (&poEntry->oNe);
+	gmplsInSegmentTable_removeEntry (&poEntry->oG);
+	mplsInSegmentPerfTable_removeEntry (&poEntry->oPerf);
+	
+	bRetCode = true;
+	
+// mplsInSegmentTable_removeHier_cleanup:
+	
+	return bRetCode;
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 mplsInSegmentTable_getFirst (

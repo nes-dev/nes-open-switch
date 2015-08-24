@@ -637,6 +637,11 @@ mplsInSegmentEntry_t * mplsInSegmentTable_getByIndex (
 mplsInSegmentEntry_t * mplsInSegmentTable_getNextIndex (
 	uint8_t *pau8Index, size_t u16Index_len);
 void mplsInSegmentTable_removeEntry (mplsInSegmentEntry_t *poEntry);
+mplsInSegmentEntry_t * mplsInSegmentTable_createExt (
+	uint8_t *pau8Index, size_t u16Index_len);
+bool mplsInSegmentTable_removeExt (mplsInSegmentEntry_t *poEntry);
+bool mplsInSegmentTable_createHier (mplsInSegmentEntry_t *poEntry);
+bool mplsInSegmentTable_removeHier (mplsInSegmentEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point mplsInSegmentTable_getFirst;
 Netsnmp_Next_Data_Point mplsInSegmentTable_getNext;
