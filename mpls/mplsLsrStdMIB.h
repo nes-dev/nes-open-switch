@@ -604,6 +604,10 @@ typedef struct mplsInSegmentEntry_t
 	uint8_t au8Index[24];
 	size_t u16Index_len;	/* # of uint8_t elements */
 	
+	struct {
+		uint32_t u32Interface;
+	} oK;
+	
 	/* Column values */
 	uint32_t u32Interface;
 	uint32_t u32Label;
@@ -624,9 +628,11 @@ typedef struct mplsInSegmentEntry_t
 	neMplsInSegmentEntry_t oNe;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oIf_BTreeNode;
 } mplsInSegmentEntry_t;
 
 extern xBTree_t oMplsInSegmentTable_BTree;
+extern xBTree_t oMplsInSegmentTable_If_BTree;
 
 /* mplsInSegmentTable table mapper */
 void mplsInSegmentTable_init (void);
@@ -635,6 +641,9 @@ mplsInSegmentEntry_t * mplsInSegmentTable_createEntry (
 mplsInSegmentEntry_t * mplsInSegmentTable_getByIndex (
 	uint8_t *pau8Index, size_t u16Index_len);
 mplsInSegmentEntry_t * mplsInSegmentTable_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len);
+mplsInSegmentEntry_t * mplsInSegmentTable_If_getNextIndex (
+	uint32_t u32Interface,
 	uint8_t *pau8Index, size_t u16Index_len);
 void mplsInSegmentTable_removeEntry (mplsInSegmentEntry_t *poEntry);
 mplsInSegmentEntry_t * mplsInSegmentTable_createExt (
