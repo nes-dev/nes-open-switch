@@ -2289,9 +2289,7 @@ neTedLinkTable_createEntry (
 	}
 	
 	poEntry->u8DistributeEnable = neTedLinkDistributeEnable_true_c;
-	poEntry->u8AdjacencyEnable = neTedLinkAdjacencyEnable_false_c;
-	xBitmap_setBitsRev (poEntry->au8DistributionScope, 1, 1, neTedLinkDistributionScope_as_c);
-	poEntry->u32LocalAsn = 0;
+	xBitmap_setBitsRev (poEntry->au8AdminFlags, 1, 1, neTedLinkAdminFlags_bDistrbScopeArea_c);
 	poEntry->u32IgpInstance = 0;
 	poEntry->u32RemoteAsn = 0;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
@@ -2454,20 +2452,11 @@ neTedLinkTable_mapper (
 			case NETEDLINKDISTRIBUTEENABLE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8DistributeEnable);
 				break;
-			case NETEDLINKADJACENCYENABLE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8AdjacencyEnable);
-				break;
-			case NETEDLINKDISTRIBUTIONSCOPE:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8DistributionScope, table_entry->u16DistributionScope_len);
-				break;
-			case NETEDLINKLOCALASN:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32LocalAsn);
+			case NETEDLINKADMINFLAGS:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdminFlags, table_entry->u16AdminFlags_len);
 				break;
 			case NETEDLINKIGPINSTANCE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32IgpInstance);
-				break;
-			case NETEDLINKAREA:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Area);
 				break;
 			case NETEDLINKREMOTEASN:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32RemoteAsn);
@@ -2517,24 +2506,8 @@ neTedLinkTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case NETEDLINKADJACENCYENABLE:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case NETEDLINKDISTRIBUTIONSCOPE:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8DistributionScope));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case NETEDLINKLOCALASN:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+			case NETEDLINKADMINFLAGS:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8AdminFlags));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -2542,14 +2515,6 @@ neTedLinkTable_mapper (
 				}
 				break;
 			case NETEDLINKIGPINSTANCE:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case NETEDLINKAREA:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
@@ -2672,6 +2637,25 @@ neTedLinkTable_mapper (
 				}
 				break;
 			}
+			
+			switch (table_info->colnum)
+			{
+			case NETEDLINKDISTRIBUTEENABLE:
+			case NETEDLINKADMINFLAGS:
+			case NETEDLINKIGPINSTANCE:
+			case NETEDLINKREMOTEASN:
+			case NETEDLINKSWCAPTYPES:
+			case NETEDLINKSWCAPENCODINGS:
+			case NETEDLINKADJCAPTYPES:
+			case NETEDLINKADJCAPENCODINGS:
+			case NETEDLINKSTORAGETYPE:
+				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			}
 		}
 		break;
 		
@@ -2724,22 +2708,8 @@ neTedLinkTable_mapper (
 				
 				table_entry->u8DistributeEnable = *request->requestvb->val.integer;
 				break;
-			case NETEDLINKADJACENCYENABLE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8AdjacencyEnable))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u8AdjacencyEnable, sizeof (table_entry->u8AdjacencyEnable));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u8AdjacencyEnable = *request->requestvb->val.integer;
-				break;
-			case NETEDLINKDISTRIBUTIONSCOPE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8DistributionScope))) == NULL)
+			case NETEDLINKADMINFLAGS:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8AdminFlags))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
@@ -2747,28 +2717,14 @@ neTedLinkTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16DistributionScope_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8DistributionScope, sizeof (table_entry->au8DistributionScope));
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16AdminFlags_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8AdminFlags, sizeof (table_entry->au8AdminFlags));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8DistributionScope, 0, sizeof (table_entry->au8DistributionScope));
-				memcpy (table_entry->au8DistributionScope, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16DistributionScope_len = request->requestvb->val_len;
-				break;
-			case NETEDLINKLOCALASN:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32LocalAsn))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u32LocalAsn, sizeof (table_entry->u32LocalAsn));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u32LocalAsn = *request->requestvb->val.integer;
+				memset (table_entry->au8AdminFlags, 0, sizeof (table_entry->au8AdminFlags));
+				memcpy (table_entry->au8AdminFlags, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16AdminFlags_len = request->requestvb->val_len;
 				break;
 			case NETEDLINKIGPINSTANCE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32IgpInstance))) == NULL)
@@ -2783,20 +2739,6 @@ neTedLinkTable_mapper (
 				}
 				
 				table_entry->u32IgpInstance = *request->requestvb->val.integer;
-				break;
-			case NETEDLINKAREA:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32Area))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u32Area, sizeof (table_entry->u32Area));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u32Area = *request->requestvb->val.integer;
 				break;
 			case NETEDLINKREMOTEASN:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32RemoteAsn))) == NULL)
@@ -2940,21 +2882,12 @@ neTedLinkTable_mapper (
 			case NETEDLINKDISTRIBUTEENABLE:
 				memcpy (&table_entry->u8DistributeEnable, pvOldDdata, sizeof (table_entry->u8DistributeEnable));
 				break;
-			case NETEDLINKADJACENCYENABLE:
-				memcpy (&table_entry->u8AdjacencyEnable, pvOldDdata, sizeof (table_entry->u8AdjacencyEnable));
-				break;
-			case NETEDLINKDISTRIBUTIONSCOPE:
-				memcpy (table_entry->au8DistributionScope, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16DistributionScope_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				break;
-			case NETEDLINKLOCALASN:
-				memcpy (&table_entry->u32LocalAsn, pvOldDdata, sizeof (table_entry->u32LocalAsn));
+			case NETEDLINKADMINFLAGS:
+				memcpy (table_entry->au8AdminFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16AdminFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case NETEDLINKIGPINSTANCE:
 				memcpy (&table_entry->u32IgpInstance, pvOldDdata, sizeof (table_entry->u32IgpInstance));
-				break;
-			case NETEDLINKAREA:
-				memcpy (&table_entry->u32Area, pvOldDdata, sizeof (table_entry->u32Area));
 				break;
 			case NETEDLINKREMOTEASN:
 				memcpy (&table_entry->u32RemoteAsn, pvOldDdata, sizeof (table_entry->u32RemoteAsn));

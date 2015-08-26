@@ -294,18 +294,15 @@ Netsnmp_Node_Handler neTedNodeTable_mapper;
  */
 #define NETEDLINKINDEX 1
 #define NETEDLINKDISTRIBUTEENABLE 2
-#define NETEDLINKADJACENCYENABLE 3
-#define NETEDLINKDISTRIBUTIONSCOPE 4
-#define NETEDLINKLOCALASN 5
-#define NETEDLINKIGPINSTANCE 6
-#define NETEDLINKAREA 7
-#define NETEDLINKREMOTEASN 8
-#define NETEDLINKSWCAPTYPES 9
-#define NETEDLINKSWCAPENCODINGS 10
-#define NETEDLINKADJCAPTYPES 11
-#define NETEDLINKADJCAPENCODINGS 12
-#define NETEDLINKROWSTATUS 13
-#define NETEDLINKSTORAGETYPE 14
+#define NETEDLINKADMINFLAGS 3
+#define NETEDLINKIGPINSTANCE 4
+#define NETEDLINKREMOTEASN 5
+#define NETEDLINKSWCAPTYPES 6
+#define NETEDLINKSWCAPENCODINGS 7
+#define NETEDLINKADJCAPTYPES 8
+#define NETEDLINKADJCAPENCODINGS 9
+#define NETEDLINKROWSTATUS 10
+#define NETEDLINKSTORAGETYPE 11
 
 enum
 {
@@ -313,14 +310,13 @@ enum
 	neTedLinkDistributeEnable_true_c = 1,
 	neTedLinkDistributeEnable_false_c = 2,
 
-	/* enums for column neTedLinkAdjacencyEnable */
-	neTedLinkAdjacencyEnable_true_c = 1,
-	neTedLinkAdjacencyEnable_false_c = 2,
-
-	/* enums for column neTedLinkDistributionScope */
-	neTedLinkDistributionScope_area_c = 0,
-	neTedLinkDistributionScope_as_c = 1,
-	neTedLinkDistributionScope_interAs_c = 2,
+	/* enums for column neTedLinkAdminFlags */
+	neTedLinkAdminFlags_bInterAsLink_c = 0,
+	neTedLinkAdminFlags_bInterAreaLink_c = 1,
+	neTedLinkAdminFlags_bDistrbScopeArea_c = 2,
+	neTedLinkAdminFlags_bDistrbScopeAs_c = 3,
+	neTedLinkAdminFlags_bDistrbScopeInterAs_c = 4,
+	neTedLinkAdminFlags_bDistrbAdjacency_c = 5,
 
 	/* enums for column neTedLinkSwCapTypes */
 	neTedLinkSwCapTypes_bUnknown_c = 0,
@@ -405,12 +401,9 @@ typedef struct neTedLinkEntry_t
 	
 	/* Column values */
 	uint8_t u8DistributeEnable;
-	uint8_t u8AdjacencyEnable;
-	uint8_t au8DistributionScope[1];
-	size_t u16DistributionScope_len;	/* # of uint8_t elements */
-	uint32_t u32LocalAsn;
+	uint8_t au8AdminFlags[1];
+	size_t u16AdminFlags_len;	/* # of uint8_t elements */
 	uint32_t u32IgpInstance;
-	uint32_t u32Area;
 	uint32_t u32RemoteAsn;
 	uint8_t au8SwCapTypes[4];
 	size_t u16SwCapTypes_len;	/* # of uint8_t elements */
