@@ -721,6 +721,10 @@ typedef struct mplsOutSegmentEntry_t
 	uint8_t au8Index[24];
 	size_t u16Index_len;	/* # of uint8_t elements */
 	
+	struct {
+		uint32_t u32Interface;
+	} oK;
+	
 	/* Column values */
 	uint32_t u32Interface;
 	uint8_t u8PushTopLabel;
@@ -739,9 +743,11 @@ typedef struct mplsOutSegmentEntry_t
 	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oIf_BTreeNode;
 } mplsOutSegmentEntry_t;
 
 extern xBTree_t oMplsOutSegmentTable_BTree;
+extern xBTree_t oMplsOutSegmentTable_If_BTree;
 
 /* mplsOutSegmentTable table mapper */
 void mplsOutSegmentTable_init (void);
@@ -750,6 +756,9 @@ mplsOutSegmentEntry_t * mplsOutSegmentTable_createEntry (
 mplsOutSegmentEntry_t * mplsOutSegmentTable_getByIndex (
 	uint8_t *pau8Index, size_t u16Index_len);
 mplsOutSegmentEntry_t * mplsOutSegmentTable_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len);
+mplsOutSegmentEntry_t * mplsOutSegmentTable_If_getNextIndex (
+	uint32_t u32Interface,
 	uint8_t *pau8Index, size_t u16Index_len);
 void mplsOutSegmentTable_removeEntry (mplsOutSegmentEntry_t *poEntry);
 #ifdef SNMP_SRC

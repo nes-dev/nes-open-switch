@@ -1784,7 +1784,21 @@ mplsOutSegmentTable_BTreeNodeCmp (
 		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0) ? 0: 1;
 }
 
+static int8_t
+mplsOutSegmentTable_If_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register mplsOutSegmentEntry_t *pEntry1 = xBTree_entry (pNode1, mplsOutSegmentEntry_t, oIf_BTreeNode);
+	register mplsOutSegmentEntry_t *pEntry2 = xBTree_entry (pNode2, mplsOutSegmentEntry_t, oIf_BTreeNode);
+	
+	return
+		(pEntry1->oK.u32Interface < pEntry2->oK.u32Interface) ||
+		(pEntry1->oK.u32Interface == pEntry2->oK.u32Interface && xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == -1) ? -1:
+		(pEntry1->oK.u32Interface == pEntry2->oK.u32Interface && xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0) ? 0: 1;
+}
+
 xBTree_t oMplsOutSegmentTable_BTree = xBTree_initInline (&mplsOutSegmentTable_BTreeNodeCmp);
+xBTree_t oMplsOutSegmentTable_If_BTree = xBTree_initInline (&mplsOutSegmentTable_If_BTreeNodeCmp);
 
 /* create a new row in the table */
 mplsOutSegmentEntry_t *
@@ -1863,6 +1877,32 @@ mplsOutSegmentTable_getNextIndex (
 	
 	xBuffer_free (poTmpEntry);
 	return xBTree_entry (poNode, mplsOutSegmentEntry_t, oBTreeNode);
+}
+
+mplsOutSegmentEntry_t *
+mplsOutSegmentTable_If_getNextIndex (
+	uint32_t u32Interface,
+	uint8_t *pau8Index, size_t u16Index_len)
+{
+	register mplsOutSegmentEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->oK.u32Interface = u32Interface;
+	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
+	poTmpEntry->u16Index_len = u16Index_len;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oIf_BTreeNode, &oMplsOutSegmentTable_If_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, mplsOutSegmentEntry_t, oIf_BTreeNode);
 }
 
 /* remove a row from the table */
