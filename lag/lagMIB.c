@@ -35,13 +35,14 @@
 #include "lib/snmp.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
 
 static oid lagMIB_oid[] = {1,2,840,10006,300,43};
-static oid neLagMIB_oid[] = {1,3,6,1,4,1,36969,71};
+static oid neLagMIB_oid[] = {1,3,6,1,4,1,36969,73};
 
 static oid lagMIBObjects_oid[] = {1,2,840,10006,300,43,1};
 
@@ -2697,7 +2698,7 @@ neAggTable_createEntry (
 	
 	poEntry->i32GroupType = neAggGroupType_none_c;
 	poEntry->u32GroupIndex = 0;
-	/*poEntry->au8SpeedMax = 0*/;
+	/*poEntry->au8BandwidthMax = 0*/;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neAggStorageType_nonVolatile_c;
 	
@@ -3037,8 +3038,8 @@ neAggTable_mapper (
 			case NEAGGGROUPINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32GroupIndex);
 				break;
-			case NEAGGSPEEDMAX:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8SpeedMax, table_entry->u16SpeedMax_len);
+			case NEAGGBANDWIDTHMAX:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8BandwidthMax, table_entry->u16BandwidthMax_len);
 				break;
 			case NEAGGROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -3081,8 +3082,8 @@ neAggTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case NEAGGSPEEDMAX:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8SpeedMax));
+			case NEAGGBANDWIDTHMAX:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8BandwidthMax));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -3228,8 +3229,8 @@ neAggTable_mapper (
 				
 				table_entry->u32GroupIndex = *request->requestvb->val.integer;
 				break;
-			case NEAGGSPEEDMAX:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8SpeedMax))) == NULL)
+			case NEAGGBANDWIDTHMAX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8BandwidthMax))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
@@ -3237,14 +3238,14 @@ neAggTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16SpeedMax_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8SpeedMax, sizeof (table_entry->au8SpeedMax));
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16BandwidthMax_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8BandwidthMax, sizeof (table_entry->au8BandwidthMax));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8SpeedMax, 0, sizeof (table_entry->au8SpeedMax));
-				memcpy (table_entry->au8SpeedMax, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16SpeedMax_len = request->requestvb->val_len;
+				memset (table_entry->au8BandwidthMax, 0, sizeof (table_entry->au8BandwidthMax));
+				memcpy (table_entry->au8BandwidthMax, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16BandwidthMax_len = request->requestvb->val_len;
 				break;
 			case NEAGGSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
@@ -3308,9 +3309,9 @@ neAggTable_mapper (
 			case NEAGGGROUPINDEX:
 				memcpy (&table_entry->u32GroupIndex, pvOldDdata, sizeof (table_entry->u32GroupIndex));
 				break;
-			case NEAGGSPEEDMAX:
-				memcpy (table_entry->au8SpeedMax, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16SpeedMax_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+			case NEAGGBANDWIDTHMAX:
+				memcpy (table_entry->au8BandwidthMax, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				table_entry->u16BandwidthMax_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case NEAGGROWSTATUS:
 				switch (*request->requestvb->val.integer)

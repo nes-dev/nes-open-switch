@@ -32,6 +32,7 @@ extern "C" {
 #include "lib/snmp.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define TOBE_REPLACED 1
 
@@ -51,6 +52,7 @@ void lagMIB_init (void);
 typedef struct lagMIBObjects_t
 {
 	uint32_t u32Dot3adTablesLastChanged;
+	
 	xRwLock_t oLock;
 } lagMIBObjects_t;
 
@@ -496,7 +498,7 @@ Netsnmp_Node_Handler dot3adAggPortXTable_mapper;
  */
 #define NEAGGGROUPTYPE 1
 #define NEAGGGROUPINDEX 2
-#define NEAGGSPEEDMAX 3
+#define NEAGGBANDWIDTHMAX 3
 #define NEAGGROWSTATUS 4
 #define NEAGGSTORAGETYPE 5
 
@@ -535,8 +537,8 @@ typedef struct neAggEntry_t
 	/* Column values */
 	int32_t i32GroupType;
 	uint32_t u32GroupIndex;
-	uint8_t au8SpeedMax[8];
-	size_t u16SpeedMax_len;	/* # of uint8_t elements */
+	uint8_t au8BandwidthMax[8];
+	size_t u16BandwidthMax_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
@@ -826,6 +828,7 @@ dot3adAggPortData_t * dot3adAggPortData_Group_getNextIndex (
 #define dot3adAggPortData_getByDebugEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oDebug))
 #define dot3adAggPortData_getByPortXEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oPortX))
 void dot3adAggPortData_removeEntry (dot3adAggPortData_t *poEntry);
+
 
 inline void
 	dot3adAggPortData_zeroOperState (dot3adAggPortData_t *poEntry)
