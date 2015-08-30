@@ -72,76 +72,6 @@ Netsnmp_Node_Handler lagMIBObjects_mapper;
  *	table mapper(s)
  */
 /**
- *	table dot3adAggTable definitions
- */
-#define DOT3ADAGGINDEX 1
-#define DOT3ADAGGMACADDRESS 2
-#define DOT3ADAGGACTORSYSTEMPRIORITY 3
-#define DOT3ADAGGACTORSYSTEMID 4
-#define DOT3ADAGGAGGREGATEORINDIVIDUAL 5
-#define DOT3ADAGGACTORADMINKEY 6
-#define DOT3ADAGGACTOROPERKEY 7
-#define DOT3ADAGGPARTNERSYSTEMID 8
-#define DOT3ADAGGPARTNERSYSTEMPRIORITY 9
-#define DOT3ADAGGPARTNEROPERKEY 10
-#define DOT3ADAGGCOLLECTORMAXDELAY 11
-
-enum
-{
-	/* enums for column dot3adAggAggregateOrIndividual */
-	dot3adAggAggregateOrIndividual_true_c = 1,
-	dot3adAggAggregateOrIndividual_false_c = 2,
-};
-
-/* table dot3adAggTable row entry data structure */
-typedef struct dot3adAggEntry_t
-{
-	/* Index values */
-// 	uint32_t u32Index;
-	
-	/* Column values */
-	uint8_t au8MACAddress[6];
-	size_t u16MACAddress_len;	/* # of uint8_t elements */
-	int32_t i32ActorSystemPriority;
-	uint8_t au8ActorSystemID[6];
-	size_t u16ActorSystemID_len;	/* # of uint8_t elements */
-	int32_t i32AggregateOrIndividual;
-	int32_t i32ActorAdminKey;
-	int32_t i32ActorOperKey;
-	uint8_t au8PartnerSystemID[6];
-	size_t u16PartnerSystemID_len;	/* # of uint8_t elements */
-	int32_t i32PartnerSystemPriority;
-	int32_t i32PartnerOperKey;
-	int32_t i32CollectorMaxDelay;
-	
-// 	xBTree_Node_t oBTreeNode;
-} dot3adAggEntry_t;
-
-// extern xBTree_t oDot3adAggTable_BTree;
-
-/* dot3adAggTable table mapper */
-void dot3adAggTable_init (void);
-dot3adAggEntry_t * dot3adAggTable_createEntry (
-	uint32_t u32Index);
-dot3adAggEntry_t * dot3adAggTable_getByIndex (
-	uint32_t u32Index);
-dot3adAggEntry_t * dot3adAggTable_getNextIndex (
-	uint32_t u32Index);
-void dot3adAggTable_removeEntry (dot3adAggEntry_t *poEntry);
-dot3adAggEntry_t * dot3adAggTable_createExt (
-	uint32_t u32Index);
-bool dot3adAggTable_removeExt (dot3adAggEntry_t *poEntry);
-bool dot3adAggTable_createHier (dot3adAggEntry_t *poEntry);
-bool dot3adAggTable_removeHier (dot3adAggEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point dot3adAggTable_getFirst;
-Netsnmp_Next_Data_Point dot3adAggTable_getNext;
-Netsnmp_Get_Data_Point dot3adAggTable_get;
-Netsnmp_Node_Handler dot3adAggTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
  *	table dot3adAggPortListTable definitions
  */
 #define DOT3ADAGGPORTLISTPORTS 1
@@ -175,146 +105,6 @@ Netsnmp_First_Data_Point dot3adAggPortListTable_getFirst;
 Netsnmp_Next_Data_Point dot3adAggPortListTable_getNext;
 Netsnmp_Get_Data_Point dot3adAggPortListTable_get;
 Netsnmp_Node_Handler dot3adAggPortListTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
- *	table dot3adAggPortTable definitions
- */
-#define DOT3ADAGGPORTINDEX 1
-#define DOT3ADAGGPORTACTORSYSTEMPRIORITY 2
-#define DOT3ADAGGPORTACTORSYSTEMID 3
-#define DOT3ADAGGPORTACTORADMINKEY 4
-#define DOT3ADAGGPORTACTOROPERKEY 5
-#define DOT3ADAGGPORTPARTNERADMINSYSTEMPRIORITY 6
-#define DOT3ADAGGPORTPARTNEROPERSYSTEMPRIORITY 7
-#define DOT3ADAGGPORTPARTNERADMINSYSTEMID 8
-#define DOT3ADAGGPORTPARTNEROPERSYSTEMID 9
-#define DOT3ADAGGPORTPARTNERADMINKEY 10
-#define DOT3ADAGGPORTPARTNEROPERKEY 11
-#define DOT3ADAGGPORTSELECTEDAGGID 12
-#define DOT3ADAGGPORTATTACHEDAGGID 13
-#define DOT3ADAGGPORTACTORPORT 14
-#define DOT3ADAGGPORTACTORPORTPRIORITY 15
-#define DOT3ADAGGPORTPARTNERADMINPORT 16
-#define DOT3ADAGGPORTPARTNEROPERPORT 17
-#define DOT3ADAGGPORTPARTNERADMINPORTPRIORITY 18
-#define DOT3ADAGGPORTPARTNEROPERPORTPRIORITY 19
-#define DOT3ADAGGPORTACTORADMINSTATE 20
-#define DOT3ADAGGPORTACTOROPERSTATE 21
-#define DOT3ADAGGPORTPARTNERADMINSTATE 22
-#define DOT3ADAGGPORTPARTNEROPERSTATE 23
-#define DOT3ADAGGPORTAGGREGATEORINDIVIDUAL 24
-
-enum
-{
-	/* enums for column dot3adAggPortActorAdminState */
-	dot3adAggPortActorAdminState_lacpActivity_c = 0,
-	dot3adAggPortActorAdminState_lacpTimeout_c = 1,
-	dot3adAggPortActorAdminState_aggregation_c = 2,
-	dot3adAggPortActorAdminState_synchronization_c = 3,
-	dot3adAggPortActorAdminState_collecting_c = 4,
-	dot3adAggPortActorAdminState_distributing_c = 5,
-	dot3adAggPortActorAdminState_defaulted_c = 6,
-	dot3adAggPortActorAdminState_expired_c = 7,
-
-	/* enums for column dot3adAggPortActorOperState */
-	dot3adAggPortActorOperState_lacpActivity_c = 0,
-	dot3adAggPortActorOperState_lacpTimeout_c = 1,
-	dot3adAggPortActorOperState_aggregation_c = 2,
-	dot3adAggPortActorOperState_synchronization_c = 3,
-	dot3adAggPortActorOperState_collecting_c = 4,
-	dot3adAggPortActorOperState_distributing_c = 5,
-	dot3adAggPortActorOperState_defaulted_c = 6,
-	dot3adAggPortActorOperState_expired_c = 7,
-
-	/* enums for column dot3adAggPortPartnerAdminState */
-	dot3adAggPortPartnerAdminState_lacpActivity_c = 0,
-	dot3adAggPortPartnerAdminState_lacpTimeout_c = 1,
-	dot3adAggPortPartnerAdminState_aggregation_c = 2,
-	dot3adAggPortPartnerAdminState_synchronization_c = 3,
-	dot3adAggPortPartnerAdminState_collecting_c = 4,
-	dot3adAggPortPartnerAdminState_distributing_c = 5,
-	dot3adAggPortPartnerAdminState_defaulted_c = 6,
-	dot3adAggPortPartnerAdminState_expired_c = 7,
-
-	/* enums for column dot3adAggPortPartnerOperState */
-	dot3adAggPortPartnerOperState_lacpActivity_c = 0,
-	dot3adAggPortPartnerOperState_lacpTimeout_c = 1,
-	dot3adAggPortPartnerOperState_aggregation_c = 2,
-	dot3adAggPortPartnerOperState_synchronization_c = 3,
-	dot3adAggPortPartnerOperState_collecting_c = 4,
-	dot3adAggPortPartnerOperState_distributing_c = 5,
-	dot3adAggPortPartnerOperState_defaulted_c = 6,
-	dot3adAggPortPartnerOperState_expired_c = 7,
-
-	/* enums for column dot3adAggPortAggregateOrIndividual */
-	dot3adAggPortAggregateOrIndividual_true_c = 1,
-	dot3adAggPortAggregateOrIndividual_false_c = 2,
-};
-
-/* table dot3adAggPortTable row entry data structure */
-typedef struct dot3adAggPortEntry_t
-{
-	/* Index values */
-// 	uint32_t u32Index;
-	
-	/* Column values */
-	int32_t i32ActorSystemPriority;
-	uint8_t au8ActorSystemID[6];
-	size_t u16ActorSystemID_len;	/* # of uint8_t elements */
-	int32_t i32ActorAdminKey;
-	int32_t i32ActorOperKey;
-	int32_t i32PartnerAdminSystemPriority;
-	int32_t i32PartnerOperSystemPriority;
-	uint8_t au8PartnerAdminSystemID[6];
-	size_t u16PartnerAdminSystemID_len;	/* # of uint8_t elements */
-	uint8_t au8PartnerOperSystemID[6];
-	size_t u16PartnerOperSystemID_len;	/* # of uint8_t elements */
-	int32_t i32PartnerAdminKey;
-	int32_t i32PartnerOperKey;
-	uint32_t u32SelectedAggID;
-	uint32_t u32AttachedAggID;
-	int32_t i32ActorPort;
-	int32_t i32ActorPortPriority;
-	int32_t i32PartnerAdminPort;
-	int32_t i32PartnerOperPort;
-	int32_t i32PartnerAdminPortPriority;
-	int32_t i32PartnerOperPortPriority;
-	uint8_t au8ActorAdminState[1];
-	size_t u16ActorAdminState_len;	/* # of uint8_t elements */
-	uint8_t au8ActorOperState[1];
-	size_t u16ActorOperState_len;	/* # of uint8_t elements */
-	uint8_t au8PartnerAdminState[1];
-	size_t u16PartnerAdminState_len;	/* # of uint8_t elements */
-	uint8_t au8PartnerOperState[1];
-	size_t u16PartnerOperState_len;	/* # of uint8_t elements */
-	int32_t i32AggregateOrIndividual;
-	
-// 	xBTree_Node_t oBTreeNode;
-} dot3adAggPortEntry_t;
-
-// extern xBTree_t oDot3adAggPortTable_BTree;
-
-/* dot3adAggPortTable table mapper */
-void dot3adAggPortTable_init (void);
-dot3adAggPortEntry_t * dot3adAggPortTable_createEntry (
-	uint32_t u32Index);
-dot3adAggPortEntry_t * dot3adAggPortTable_getByIndex (
-	uint32_t u32Index);
-dot3adAggPortEntry_t * dot3adAggPortTable_getNextIndex (
-	uint32_t u32Index);
-void dot3adAggPortTable_removeEntry (dot3adAggPortEntry_t *poEntry);
-dot3adAggPortEntry_t * dot3adAggPortTable_createExt (
-	uint32_t u32Index);
-bool dot3adAggPortTable_removeExt (dot3adAggPortEntry_t *poEntry);
-bool dot3adAggPortTable_createHier (dot3adAggPortEntry_t *poEntry);
-bool dot3adAggPortTable_removeHier (dot3adAggPortEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point dot3adAggPortTable_getFirst;
-Netsnmp_Next_Data_Point dot3adAggPortTable_getNext;
-Netsnmp_Get_Data_Point dot3adAggPortTable_get;
-Netsnmp_Node_Handler dot3adAggPortTable_mapper;
 #endif	/* SNMP_SRC */
 
 
@@ -830,7 +620,6 @@ dot3adAggPortData_t * dot3adAggPortData_Group_getNextIndex (
 void dot3adAggPortData_removeEntry (dot3adAggPortData_t *poEntry);
 
 
-#if 0
 /**
  *	table dot3adAggTable definitions
  */
@@ -1039,7 +828,6 @@ Netsnmp_Next_Data_Point dot3adAggPortTable_getNext;
 Netsnmp_Get_Data_Point dot3adAggPortTable_get;
 Netsnmp_Node_Handler dot3adAggPortTable_mapper;
 #endif	/* SNMP_SRC */
-#endif
 
 
 inline void

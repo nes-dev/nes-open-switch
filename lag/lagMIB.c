@@ -33,6 +33,7 @@
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/snmp.h"
+#include "lib/time.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -125,7 +126,7 @@ lagMIBObjects_mapper (
 			switch (request->requestvb->name[OID_LENGTH (lagMIBObjects_oid)])
 			{
 			case DOT3ADTABLESLASTCHANGED:
-				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, oLagMIBObjects.u32Dot3adTablesLastChanged);
+				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, (uint32_t) (xTime_centiTime (xTime_typeMono_c) - oLagMIBObjects.u32Dot3adTablesLastChanged));
 				break;
 				
 			default:
@@ -183,6 +184,7 @@ dot3adAggTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
+#if 0
 static int8_t
 dot3adAggData_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
@@ -349,66 +351,190 @@ dot3adAggData_removeEntry (dot3adAggData_t *poEntry)
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
+#endif
+
+static int8_t
+dot3adAggTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register dot3adAggEntry_t *pEntry1 = xBTree_entry (pNode1, dot3adAggEntry_t, oBTreeNode);
+	register dot3adAggEntry_t *pEntry2 = xBTree_entry (pNode2, dot3adAggEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+static int8_t
+dot3adAggTable_Group_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register dot3adAggEntry_t *pEntry1 = xBTree_entry (pNode1, dot3adAggEntry_t, oBTreeNode);
+	register dot3adAggEntry_t *pEntry2 = xBTree_entry (pNode2, dot3adAggEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->oK.i32GroupType < pEntry2->oK.i32GroupType) ||
+		(pEntry1->oK.i32GroupType == pEntry2->oK.i32GroupType && pEntry1->oK.u32GroupIndex < pEntry2->oK.u32GroupIndex) ||
+		(pEntry1->oK.i32GroupType == pEntry2->oK.i32GroupType && pEntry1->oK.u32GroupIndex == pEntry2->oK.u32GroupIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->oK.i32GroupType == pEntry2->oK.i32GroupType && pEntry1->oK.u32GroupIndex == pEntry2->oK.u32GroupIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+static int8_t
+dot3adAggTable_Key_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register dot3adAggEntry_t *pEntry1 = xBTree_entry (pNode1, dot3adAggEntry_t, oBTreeNode);
+	register dot3adAggEntry_t *pEntry2 = xBTree_entry (pNode2, dot3adAggEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->oK.i32GroupType < pEntry2->oK.i32GroupType) ||
+		(pEntry1->oK.i32GroupType == pEntry2->oK.i32GroupType && pEntry1->oK.u32GroupIndex < pEntry2->oK.u32GroupIndex) ||
+		(pEntry1->oK.i32GroupType == pEntry2->oK.i32GroupType && pEntry1->oK.u32GroupIndex == pEntry2->oK.u32GroupIndex && pEntry1->oK.i32ActorAdminKey < pEntry2->oK.i32ActorAdminKey) ||
+		(pEntry1->oK.i32GroupType == pEntry2->oK.i32GroupType && pEntry1->oK.u32GroupIndex == pEntry2->oK.u32GroupIndex && pEntry1->oK.i32ActorAdminKey == pEntry2->oK.i32ActorAdminKey && pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->oK.i32GroupType == pEntry2->oK.i32GroupType && pEntry1->oK.u32GroupIndex == pEntry2->oK.u32GroupIndex && pEntry1->oK.i32ActorAdminKey == pEntry2->oK.i32ActorAdminKey && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
+}
+
+xBTree_t oDot3adAggTable_BTree = xBTree_initInline (&dot3adAggTable_BTreeNodeCmp);
+xBTree_t oDot3adAggTable_Group_BTree = xBTree_initInline (&dot3adAggTable_Group_BTreeNodeCmp);
+xBTree_t oDot3adAggTable_Key_BTree = xBTree_initInline (&dot3adAggTable_Key_BTreeNodeCmp);
 
 /* create a new row in the table */
 dot3adAggEntry_t *
 dot3adAggTable_createEntry (
 	uint32_t u32Index)
 {
-	register dot3adAggData_t *poDot3adAggData = NULL;
+	register dot3adAggEntry_t *poEntry = NULL;
 	
-	if ((poDot3adAggData = dot3adAggData_getByIndex (u32Index)) == NULL ||
-		xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c))
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c, 1);
-	return &poDot3adAggData->oAgg;
+	poEntry->u32Index = u32Index;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot3adAggTable_BTree);
+	return poEntry;
 }
 
 dot3adAggEntry_t *
 dot3adAggTable_getByIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggData_t *poDot3adAggData = NULL;
+	register dot3adAggEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poDot3adAggData = dot3adAggData_getByIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggData->oAgg;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot3adAggTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggEntry_t, oBTreeNode);
+}
+
+dot3adAggEntry_t *
+dot3adAggTable_Group_getByIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index)
+{
+	register dot3adAggEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->oK.i32GroupType = i32GroupType;
+	poTmpEntry->oK.u32GroupIndex = u32GroupIndex;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oGroup_BTreeNode, &oDot3adAggTable_Group_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggEntry_t, oBTreeNode);
 }
 
 dot3adAggEntry_t *
 dot3adAggTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggData_t *poDot3adAggData = NULL;
+	register dot3adAggEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poDot3adAggData = dot3adAggData_getNextIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c))
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggData->oAgg;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot3adAggTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggEntry_t, oBTreeNode);
+}
+
+dot3adAggEntry_t *
+dot3adAggTable_Group_getNextIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index)
+{
+	register dot3adAggEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->oK.i32GroupType = i32GroupType;
+	poTmpEntry->oK.u32GroupIndex = u32GroupIndex;
+	poTmpEntry->u32Index = u32Index;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oGroup_BTreeNode, &oDot3adAggTable_Group_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, dot3adAggEntry_t, oBTreeNode);
 }
 
 /* remove a row from the table */
 void
 dot3adAggTable_removeEntry (dot3adAggEntry_t *poEntry)
 {
-	if (poEntry == NULL)
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oDot3adAggTable_BTree) == NULL)
 	{
-		return;
+		return;    /* Nothing to remove */
 	}
 	
-	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (poEntry);
-	
-	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_aggCreated_c, 0);
+	xBTree_nodeRemove (&poEntry->oGroup_BTreeNode, &oDot3adAggTable_Group_BTree);
+	xBTree_nodeRemove (&poEntry->oKey_BTreeNode, &oDot3adAggTable_Key_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oDot3adAggTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -432,7 +558,7 @@ dot3adAggTable_createExt (
 		goto dot3adAggTable_createExt_cleanup;
 	}
 	
-	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
+	oLagMIBObjects.u32Dot3adTablesLastChanged = xTime_centiTime (xTime_typeMono_c);
 	
 dot3adAggTable_createExt_cleanup:
 	
@@ -451,7 +577,7 @@ dot3adAggTable_removeExt (dot3adAggEntry_t *poEntry)
 	dot3adAggTable_removeEntry (poEntry);
 	bRetCode = true;
 	
-	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
+	oLagMIBObjects.u32Dot3adTablesLastChanged = xTime_centiTime (xTime_typeMono_c);
 	
 dot3adAggTable_removeExt_cleanup:
 	
@@ -1265,7 +1391,7 @@ dot3adAggPortTable_createExt (
 		goto dot3adAggPortTable_createExt_cleanup;
 	}
 	
-	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
+	oLagMIBObjects.u32Dot3adTablesLastChanged = xTime_centiTime (xTime_typeMono_c);
 	
 dot3adAggPortTable_createExt_cleanup:
 	
@@ -1284,7 +1410,7 @@ dot3adAggPortTable_removeExt (dot3adAggPortEntry_t *poEntry)
 	dot3adAggPortTable_removeEntry (poEntry);
 	bRetCode = true;
 	
-	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
+	oLagMIBObjects.u32Dot3adTablesLastChanged = xTime_centiTime (xTime_typeMono_c);
 	
 dot3adAggPortTable_removeExt_cleanup:
 	
