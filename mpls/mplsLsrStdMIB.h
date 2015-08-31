@@ -651,6 +651,8 @@ mplsInSegmentEntry_t * mplsInSegmentTable_createExt (
 bool mplsInSegmentTable_removeExt (mplsInSegmentEntry_t *poEntry);
 bool mplsInSegmentTable_createHier (mplsInSegmentEntry_t *poEntry);
 bool mplsInSegmentTable_removeHier (mplsInSegmentEntry_t *poEntry);
+bool mplsInSegmentRowStatus_handler (
+	mplsInSegmentEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point mplsInSegmentTable_getFirst;
 Netsnmp_Next_Data_Point mplsInSegmentTable_getNext;
