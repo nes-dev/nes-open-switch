@@ -744,6 +744,8 @@ typedef struct mplsOutSegmentEntry_t
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
+	mplsOutSegmentPerfEntry_t oPerf;
+	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oIf_BTreeNode;
 } mplsOutSegmentEntry_t;
