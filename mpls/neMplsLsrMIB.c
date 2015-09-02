@@ -1295,7 +1295,7 @@ neMplsInSegmentTable_getNext (
 	poEntry = xBTree_entry (*my_loop_context, mplsInSegmentEntry_t, oBTreeNode);
 	
 	snmp_set_var_value (idx, poEntry->au8Index, poEntry->u16Index_len);
-	*my_data_context = (void*) &poEntry->oNe;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsInSegmentTable_BTree);
 	return put_index_data;
 }
@@ -1315,7 +1315,7 @@ neMplsInSegmentTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oNe;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -1330,6 +1330,7 @@ neMplsInSegmentTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	neMplsInSegmentEntry_t *table_entry;
+	register mplsInSegmentEntry_t *poEntry = NULL;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -1341,13 +1342,14 @@ neMplsInSegmentTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neMplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -1371,8 +1373,9 @@ neMplsInSegmentTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neMplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -1403,40 +1406,23 @@ neMplsInSegmentTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neMplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			register netsnmp_variable_list *idx1 = table_info->indexes;
+			if (poEntry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
 			case NEMPLSINSEGMENTLABELTYPE:
 			case NEMPLSINSEGMENTLABEL:
-				if (table_entry == NULL)
+				if (poEntry->u8RowStatus == xRowStatus_active_c || poEntry->u8RowStatus == xRowStatus_notReady_c)
 				{
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-						return SNMP_ERR_NOERROR;
-					}
-					
-					table_entry = neMplsInSegmentTable_createEntry (
-						(void*) idx1->val.string, idx1->val_len);
-					if (table_entry != NULL)
-					{
-						netsnmp_insert_iterator_context (request, table_entry);
-						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
-					}
-					else
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-						return SNMP_ERR_NOERROR;
-					}
-				}
-				break;
-			default:
-				if (table_entry == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
 				}
 				break;
 			}
@@ -1444,33 +1430,15 @@ neMplsInSegmentTable_mapper (
 		break;
 		
 	case MODE_SET_FREE:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neMplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
-			{
-				continue;
-			}
-			
-			switch (table_info->colnum)
-			{
-			case NEMPLSINSEGMENTLABELTYPE:
-			case NEMPLSINSEGMENTLABEL:
-				neMplsInSegmentTable_removeEntry (table_entry);
-				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				break;
-			}
-		}
 		break;
 		
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neMplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -1514,12 +1482,13 @@ neMplsInSegmentTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neMplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsInSegmentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{

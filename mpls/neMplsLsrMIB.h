@@ -242,18 +242,18 @@ enum
 typedef struct neMplsInSegmentEntry_t
 {
 	/* Index values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
+// 	uint8_t au8Index[24];
+// 	size_t u16Index_len;	/* # of uint8_t elements */
 	
 	/* Column values */
 	int32_t i32LabelType;
 	uint8_t au8Label[64];
 	size_t u16Label_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neMplsInSegmentEntry_t;
 
-extern xBTree_t oNeMplsInSegmentTable_BTree;
+// extern xBTree_t oNeMplsInSegmentTable_BTree;
 
 /* neMplsInSegmentTable table mapper */
 void neMplsInSegmentTable_init (void);
