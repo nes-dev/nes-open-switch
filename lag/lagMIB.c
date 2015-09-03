@@ -588,25 +588,25 @@ bool
 dot3adAggTable_createHier (
 	dot3adAggEntry_t *poEntry)
 {
-	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (poEntry);
+	register bool bRetCode = false;
 	
-	if (!ifTable_createReference (poDot3adAggData->u32Index, ifType_ieee8023adLag_c, 0, true, true, true, NULL))
+	if (!ifTable_createReference (poEntry->u32Index, ifType_ieee8023adLag_c, 0, true, true, true, NULL))
 	{
 		goto dot3adAggTable_createHier_cleanup;
 	}
 	
-	if (dot3adAggPortListTable_getByIndex (poDot3adAggData->u32Index) == NULL &&
-		dot3adAggPortListTable_createEntry (poDot3adAggData->u32Index) == NULL)
+	if (dot3adAggPortListTable_getByIndex (poEntry->u32Index) == NULL &&
+		dot3adAggPortListTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto dot3adAggTable_createHier_cleanup;
 	}
 	
-	return true;
+	bRetCode = true;
 	
 dot3adAggTable_createHier_cleanup:
 	
-	dot3adAggTable_removeHier (poEntry);
-	return false;
+	!bRetCode ? dot3adAggTable_removeHier (poEntry): false;
+	return bRetCode;
 }
 
 bool
@@ -615,14 +615,13 @@ dot3adAggTable_removeHier (
 {
 	register bool bRetCode = false;
 	register dot3adAggPortListEntry_t *poDot3adAggPortListEntry = NULL;
-	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (poEntry);
 	
-	if ((poDot3adAggPortListEntry = dot3adAggPortListTable_getByIndex (poDot3adAggData->u32Index)) != NULL)
+	if ((poDot3adAggPortListEntry = dot3adAggPortListTable_getByIndex (poEntry->u32Index)) != NULL)
 	{
 		dot3adAggPortListTable_removeEntry (poDot3adAggPortListEntry);
 	}
 	
-	if (!ifTable_removeReference (poDot3adAggData->u32Index, true, true, true))
+	if (!ifTable_removeReference (poEntry->u32Index, true, true, true))
 	{
 		goto dot3adAggTable_removeHier_cleanup;
 	}
@@ -640,7 +639,7 @@ dot3adAggTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggData_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggTable_BTree);
 	return dot3adAggTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -649,18 +648,18 @@ dot3adAggTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggData_t *poEntry = NULL;
+	dot3adAggEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggData_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggData_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggTable_BTree);
 	return put_index_data;
 }
 
@@ -725,7 +724,7 @@ dot3adAggTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ActorSystemID, table_entry->u16ActorSystemID_len);
 				break;
 			case DOT3ADAGGAGGREGATEORINDIVIDUAL:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32AggregateOrIndividual);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8AggregateOrIndividual);
 				break;
 			case DOT3ADAGGACTORADMINKEY:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ActorAdminKey);
@@ -807,13 +806,12 @@ dot3adAggTable_mapper (
 				continue;
 			}
 			
-			register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (table_entry);
-			
 			switch (table_info->colnum)
 			{
 			case DOT3ADAGGACTORSYSTEMPRIORITY:
+			case DOT3ADAGGACTORADMINKEY:
 			case DOT3ADAGGCOLLECTORMAXDELAY:
-				if (poDot3adAggData->oNe.u8RowStatus == xRowStatus_active_c || poDot3adAggData->oNe.u8RowStatus == xRowStatus_notReady_c)
+				if (table_entry->oNe.u8RowStatus == xRowStatus_active_c || table_entry->oNe.u8RowStatus == xRowStatus_notReady_c)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
