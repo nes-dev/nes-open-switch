@@ -1530,37 +1530,37 @@ bool
 dot3adAggPortTable_createHier (
 	dot3adAggPortEntry_t *poEntry)
 {
-	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortEntry (poEntry);
+	register bool bRetCode = false;
 	
-	if (!ifTable_createReference (poDot3adAggPortData->u32Index, 0, 0, false, true, false, NULL))
+	if (!ifTable_createReference (poEntry->u32Index, 0, 0, false, true, false, NULL))
 	{
 		goto dot3adAggPortTable_createHier_cleanup;
 	}
 	
-	if (dot3adAggPortStatsTable_getByIndex (poDot3adAggPortData->u32Index) == NULL &&
-		dot3adAggPortStatsTable_createEntry (poDot3adAggPortData->u32Index) == NULL)
+	if (dot3adAggPortStatsTable_getByIndex (poEntry->u32Index) == NULL &&
+		dot3adAggPortStatsTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto dot3adAggPortTable_createHier_cleanup;
 	}
 	
-	if (dot3adAggPortDebugTable_getByIndex (poDot3adAggPortData->u32Index) == NULL &&
-		dot3adAggPortDebugTable_createEntry (poDot3adAggPortData->u32Index) == NULL)
+	if (dot3adAggPortDebugTable_getByIndex (poEntry->u32Index) == NULL &&
+		dot3adAggPortDebugTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto dot3adAggPortTable_createHier_cleanup;
 	}
 	
-	if (dot3adAggPortXTable_getByIndex (poDot3adAggPortData->u32Index) == NULL &&
-		dot3adAggPortXTable_createEntry (poDot3adAggPortData->u32Index) == NULL)
+	if (dot3adAggPortXTable_getByIndex (poEntry->u32Index) == NULL &&
+		dot3adAggPortXTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto dot3adAggPortTable_createHier_cleanup;
 	}
 	
-	return true;
+	bRetCode = true;
 	
 dot3adAggPortTable_createHier_cleanup:
 	
-	dot3adAggPortTable_removeHier (poEntry);
-	return false;
+	!bRetCode ? dot3adAggPortTable_removeHier (poEntry): false;
+	return bRetCode;
 }
 
 bool
@@ -1568,12 +1568,11 @@ dot3adAggPortTable_removeHier (
 	dot3adAggPortEntry_t *poEntry)
 {
 	register bool bRetCode = false;
-	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortEntry (poEntry);
 	
 	{
 		register dot3adAggPortXEntry_t *poDot3adAggPortXEntry = NULL;
 		
-		if ((poDot3adAggPortXEntry = dot3adAggPortXTable_getByIndex (poDot3adAggPortData->u32Index)) != NULL)
+		if ((poDot3adAggPortXEntry = dot3adAggPortXTable_getByIndex (poEntry->u32Index)) != NULL)
 		{
 			dot3adAggPortXTable_removeEntry (poDot3adAggPortXEntry);
 		}
@@ -1582,7 +1581,7 @@ dot3adAggPortTable_removeHier (
 	{
 		register dot3adAggPortDebugEntry_t *poDot3adAggPortDebugEntry = NULL;
 		
-		if ((poDot3adAggPortDebugEntry = dot3adAggPortDebugTable_getByIndex (poDot3adAggPortData->u32Index)) != NULL)
+		if ((poDot3adAggPortDebugEntry = dot3adAggPortDebugTable_getByIndex (poEntry->u32Index)) != NULL)
 		{
 			dot3adAggPortDebugTable_removeEntry (poDot3adAggPortDebugEntry);
 		}
@@ -1591,13 +1590,13 @@ dot3adAggPortTable_removeHier (
 	{
 		register dot3adAggPortStatsEntry_t *poDot3adAggPortStatsEntry = NULL;
 		
-		if ((poDot3adAggPortStatsEntry = dot3adAggPortStatsTable_getByIndex (poDot3adAggPortData->u32Index)) != NULL)
+		if ((poDot3adAggPortStatsEntry = dot3adAggPortStatsTable_getByIndex (poEntry->u32Index)) != NULL)
 		{
 			dot3adAggPortStatsTable_removeEntry (poDot3adAggPortStatsEntry);
 		}
 	}
 	
-	if (!ifTable_removeReference (poDot3adAggPortData->u32Index, false, true, false))
+	if (!ifTable_removeReference (poEntry->u32Index, false, true, false))
 	{
 		goto dot3adAggPortTable_removeHier_cleanup;
 	}
