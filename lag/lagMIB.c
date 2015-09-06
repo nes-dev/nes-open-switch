@@ -951,60 +951,48 @@ dot3adAggPortListEntry_t *
 dot3adAggPortListTable_createEntry (
 	uint32_t u32Index)
 {
-	register dot3adAggData_t *poDot3adAggData = NULL;
+	register dot3adAggEntry_t *poAgg = NULL;
 	
-	if ((poDot3adAggData = dot3adAggData_getByIndex (u32Index)) == NULL ||
-		xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_portListCreated_c))
+	if ((poAgg = dot3adAggTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_portListCreated_c, 1);
-	return &poDot3adAggData->oPortList;
+	return &poAgg->oPortList;
 }
 
 dot3adAggPortListEntry_t *
 dot3adAggPortListTable_getByIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggData_t *poDot3adAggData = NULL;
+	register dot3adAggEntry_t *poAgg = NULL;
 	
-	if ((poDot3adAggData = dot3adAggData_getByIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_portListCreated_c))
+	if ((poAgg = dot3adAggTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggData->oPortList;
+	return &poAgg->oPortList;
 }
 
 dot3adAggPortListEntry_t *
 dot3adAggPortListTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggData_t *poDot3adAggData = NULL;
+	register dot3adAggEntry_t *poAgg = NULL;
 	
-	if ((poDot3adAggData = dot3adAggData_getNextIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_portListCreated_c))
+	if ((poAgg = dot3adAggTable_getNextIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggData->oPortList;
+	return &poAgg->oPortList;
 }
 
 /* remove a row from the table */
 void
 dot3adAggPortListTable_removeEntry (dot3adAggPortListEntry_t *poEntry)
 {
-	if (poEntry == NULL)
-	{
-		return;
-	}
-	
-	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByPortListEntry (poEntry);
-	
-	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_portListCreated_c, 0);
 	return;
 }
 
