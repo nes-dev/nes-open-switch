@@ -1066,6 +1066,14 @@ mplsTunnelEntry_t * mplsTunnelTable_getNextIndex (
 	uint32_t u32IngressLSRId,
 	uint32_t u32EgressLSRId);
 void mplsTunnelTable_removeEntry (mplsTunnelEntry_t *poEntry);
+mplsTunnelEntry_t * mplsTunnelTable_createExt (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+bool mplsTunnelTable_removeExt (mplsTunnelEntry_t *poEntry);
+bool mplsTunnelTable_createHier (mplsTunnelEntry_t *poEntry);
+bool mplsTunnelTable_removeHier (mplsTunnelEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point mplsTunnelTable_getFirst;
 Netsnmp_Next_Data_Point mplsTunnelTable_getNext;

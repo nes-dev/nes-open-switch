@@ -24,6 +24,8 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "mplsTeStdMIB.h"
+#include "neMplsTeMIB.h"
+#include "ted/neTedMIB.h"
 
 #include "system_ext.h"
 
@@ -647,6 +649,118 @@ mplsTunnelTable_removeEntry (mplsTunnelEntry_t *poEntry)
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oMplsTunnelTable_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
+}
+
+mplsTunnelEntry_t *
+mplsTunnelTable_createExt (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId)
+{
+	mplsTunnelEntry_t *poEntry = NULL;
+	
+	if (u32Index == 0 || u32IngressLSRId == 0 || u32EgressLSRId == 0)
+	{
+		goto mplsTunnelTable_createExt_cleanup;
+	}
+	
+	poEntry = mplsTunnelTable_createEntry (
+		u32Index, u32Instance, u32IngressLSRId, u32EgressLSRId);
+	if (poEntry == NULL)
+	{
+		goto mplsTunnelTable_createExt_cleanup;
+	}
+	
+	if (!mplsTunnelTable_createHier (poEntry))
+	{
+		mplsTunnelTable_removeEntry (poEntry);
+		poEntry = NULL;
+		goto mplsTunnelTable_createExt_cleanup;
+	}
+	
+mplsTunnelTable_createExt_cleanup:
+	
+	return poEntry;
+}
+
+bool
+mplsTunnelTable_removeExt (mplsTunnelEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	if (!mplsTunnelTable_removeHier (poEntry))
+	{
+		goto mplsTunnelTable_removeExt_cleanup;
+	}
+	mplsTunnelTable_removeEntry (poEntry);
+	bRetCode = true;
+	
+mplsTunnelTable_removeExt_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+mplsTunnelTable_createHier (
+	mplsTunnelEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	{
+		register mplsTeNodeEntry_t *poNodeHead, *poNodeTail;
+		
+		if ((poNodeHead = mplsTeNodeTable_getByIndex (poEntry->u32IngressLSRId)) == NULL ||
+			(poNodeTail = mplsTeNodeTable_getByIndex (poEntry->u32EgressLSRId)) == NULL)
+		{
+			goto mplsTunnelTable_createHier_cleanup;
+		}
+	}
+	
+	if (mplsTunnelPerfTable_createEntry (poEntry->u32Index, poEntry->u32Instance, poEntry->u32IngressLSRId, poEntry->u32EgressLSRId) == NULL)
+	{
+		goto mplsTunnelTable_createHier_cleanup;
+	}
+	
+	if (gmplsTunnelTable_createEntry (poEntry->u32Index, poEntry->u32Instance, poEntry->u32IngressLSRId, poEntry->u32EgressLSRId) == NULL)
+	{
+		goto mplsTunnelTable_createHier_cleanup;
+	}
+	
+	if (gmplsTunnelReversePerfTable_createEntry (poEntry->u32Index, poEntry->u32Instance, poEntry->u32IngressLSRId, poEntry->u32EgressLSRId) == NULL)
+	{
+		goto mplsTunnelTable_createHier_cleanup;
+	}
+	
+	if (neMplsTunnelTable_createEntry (poEntry->u32Index, poEntry->u32Instance, poEntry->u32IngressLSRId, poEntry->u32EgressLSRId) == NULL)
+	{
+		goto mplsTunnelTable_createHier_cleanup;
+	}
+	
+	bRetCode = true;
+	
+mplsTunnelTable_createHier_cleanup:
+	
+	!bRetCode ? mplsTunnelTable_removeHier (poEntry): false;
+	return bRetCode;
+}
+
+bool
+mplsTunnelTable_removeHier (
+	mplsTunnelEntry_t *poEntry)
+{
+	register bool bRetCode = false;
+	
+	neMplsTunnelTable_removeEntry (&poEntry->oNe);
+	gmplsTunnelReversePerfTable_removeEntry (&poEntry->oReversePerf);
+	gmplsTunnelTable_removeEntry (&poEntry->oG);
+	mplsTunnelPerfTable_removeEntry (&poEntry->oPerf);
+	
+	bRetCode = true;
+	
+// mplsTunnelTable_removeHier_cleanup:
+	
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
