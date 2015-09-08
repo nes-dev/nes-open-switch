@@ -27,6 +27,7 @@ extern "C" {
 
 
 
+#include "mplsTeExtStdMIB.h"
 #include "neMplsTeMIB.h"
 
 #include "lib/binaryTree.h"
@@ -1035,6 +1036,7 @@ typedef struct mplsTunnelEntry_t
 	uint8_t u8StorageType;
 	
 	mplsTunnelPerfEntry_t oPerf;
+	mplsTunnelExtEntry_t oX;
 	gmplsTunnelEntry_t oG;
 	gmplsTunnelReversePerfEntry_t oReversePerf;
 	neMplsTunnelEntry_t oNe;
