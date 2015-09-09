@@ -663,6 +663,8 @@ typedef struct dot3adAggEntry_t
 	int32_t i32PartnerOperKey;
 	int32_t i32CollectorMaxDelay;
 	
+	dot3adAggPortListEntry_t oPortList;
+	
 // 	xBTree_Node_t oBTreeNode;
 } dot3adAggEntry_t;
 
