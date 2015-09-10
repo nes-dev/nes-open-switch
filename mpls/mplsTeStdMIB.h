@@ -885,13 +885,11 @@ Netsnmp_Node_Handler gmplsTunnelErrorTable_mapper;
 #define MPLSTUNNELIFINDEX 8
 #define MPLSTUNNELOWNER 9
 #define MPLSTUNNELROLE 10
-#define MPLSTUNNELXCPOINTER 11
 #define MPLSTUNNELSIGNALLINGPROTO 12
 #define MPLSTUNNELSETUPPRIO 13
 #define MPLSTUNNELHOLDINGPRIO 14
 #define MPLSTUNNELSESSIONATTRIBUTES 15
 #define MPLSTUNNELLOCALPROTECTINUSE 16
-#define MPLSTUNNELRESOURCEPOINTER 17
 #define MPLSTUNNELPRIMARYINSTANCE 18
 #define MPLSTUNNELINSTANCEPRIORITY 19
 #define MPLSTUNNELHOPTABLEINDEX 20
@@ -996,24 +994,20 @@ typedef struct mplsTunnelEntry_t
 	} oK;
 	
 	/* Column values */
-	uint8_t au8Name[255];
+	uint8_t au8Name[32];
 	size_t u16Name_len;	/* # of uint8_t elements */
-	uint8_t au8Descr[255];
+	uint8_t au8Descr[64];
 	size_t u16Descr_len;	/* # of uint8_t elements */
 	uint8_t u8IsIf;
 	uint32_t u32IfIndex;
 	int32_t i32Owner;
 	int32_t i32Role;
-	xOid_t aoXCPointer[128];
-	size_t u16XCPointer_len;	/* # of xOid_t elements */
 	int32_t i32SignallingProto;
 	int32_t i32SetupPrio;
 	int32_t i32HoldingPrio;
 	uint8_t au8SessionAttributes[1];
 	size_t u16SessionAttributes_len;	/* # of uint8_t elements */
 	uint8_t u8LocalProtectInUse;
-	xOid_t aoResourcePointer[128];
-	size_t u16ResourcePointer_len;	/* # of xOid_t elements */
 	uint32_t u32PrimaryInstance;
 	uint32_t u32InstancePriority;
 	uint32_t u32HopTableIndex;

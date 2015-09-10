@@ -534,12 +534,10 @@ mplsTunnelTable_createEntry (
 	poEntry->u8IsIf = mplsTunnelIsIf_false_c;
 	poEntry->u32IfIndex = 0;
 	poEntry->i32Role = mplsTunnelRole_head_c;
-	/*poEntry->aoXCPointer = zeroDotZero*/;
 	poEntry->i32SignallingProto = mplsTunnelSignallingProto_none_c;
 	poEntry->i32SetupPrio = 0;
 	poEntry->i32HoldingPrio = 0;
 	poEntry->u8LocalProtectInUse = mplsTunnelLocalProtectInUse_false_c;
-	/*poEntry->aoResourcePointer = zeroDotZero*/;
 	poEntry->u32PrimaryInstance = 0;
 	poEntry->u32InstancePriority = 0;
 	poEntry->u32HopTableIndex = 0;
@@ -874,9 +872,6 @@ mplsTunnelTable_mapper (
 			case MPLSTUNNELROLE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Role);
 				break;
-			case MPLSTUNNELXCPOINTER:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoXCPointer, table_entry->u16XCPointer_len);
-				break;
 			case MPLSTUNNELSIGNALLINGPROTO:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SignallingProto);
 				break;
@@ -891,9 +886,6 @@ mplsTunnelTable_mapper (
 				break;
 			case MPLSTUNNELLOCALPROTECTINUSE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8LocalProtectInUse);
-				break;
-			case MPLSTUNNELRESOURCEPOINTER:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoResourcePointer, table_entry->u16ResourcePointer_len);
 				break;
 			case MPLSTUNNELPRIMARYINSTANCE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PrimaryInstance);
@@ -1006,14 +998,6 @@ mplsTunnelTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case MPLSTUNNELXCPOINTER:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoXCPointer));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
 			case MPLSTUNNELSIGNALLINGPROTO:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
@@ -1048,14 +1032,6 @@ mplsTunnelTable_mapper (
 				break;
 			case MPLSTUNNELLOCALPROTECTINUSE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case MPLSTUNNELRESOURCEPOINTER:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoResourcePointer));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1299,24 +1275,6 @@ mplsTunnelTable_mapper (
 				
 				table_entry->i32Role = *request->requestvb->val.integer;
 				break;
-			case MPLSTUNNELXCPOINTER:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoXCPointer))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16XCPointer_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoXCPointer, sizeof (table_entry->aoXCPointer));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoXCPointer, 0, sizeof (table_entry->aoXCPointer));
-				memcpy (table_entry->aoXCPointer, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16XCPointer_len = request->requestvb->val_len;
-				break;
 			case MPLSTUNNELSIGNALLINGPROTO:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SignallingProto))) == NULL)
 				{
@@ -1390,24 +1348,6 @@ mplsTunnelTable_mapper (
 				}
 				
 				table_entry->u8LocalProtectInUse = *request->requestvb->val.integer;
-				break;
-			case MPLSTUNNELRESOURCEPOINTER:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoResourcePointer))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ResourcePointer_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoResourcePointer, sizeof (table_entry->aoResourcePointer));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoResourcePointer, 0, sizeof (table_entry->aoResourcePointer));
-				memcpy (table_entry->aoResourcePointer, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16ResourcePointer_len = request->requestvb->val_len;
 				break;
 			case MPLSTUNNELINSTANCEPRIORITY:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32InstancePriority))) == NULL)
@@ -1574,10 +1514,6 @@ mplsTunnelTable_mapper (
 			case MPLSTUNNELROLE:
 				memcpy (&table_entry->i32Role, pvOldDdata, sizeof (table_entry->i32Role));
 				break;
-			case MPLSTUNNELXCPOINTER:
-				memcpy (table_entry->aoXCPointer, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16XCPointer_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				break;
 			case MPLSTUNNELSIGNALLINGPROTO:
 				memcpy (&table_entry->i32SignallingProto, pvOldDdata, sizeof (table_entry->i32SignallingProto));
 				break;
@@ -1593,10 +1529,6 @@ mplsTunnelTable_mapper (
 				break;
 			case MPLSTUNNELLOCALPROTECTINUSE:
 				memcpy (&table_entry->u8LocalProtectInUse, pvOldDdata, sizeof (table_entry->u8LocalProtectInUse));
-				break;
-			case MPLSTUNNELRESOURCEPOINTER:
-				memcpy (table_entry->aoResourcePointer, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16ResourcePointer_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case MPLSTUNNELINSTANCEPRIORITY:
 				memcpy (&table_entry->u32InstancePriority, pvOldDdata, sizeof (table_entry->u32InstancePriority));
