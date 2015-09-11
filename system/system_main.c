@@ -49,44 +49,52 @@ static xThreadInfo_t oSystemThread =
 
 
 void *
-system_init (
-	void *pvArgv)
+system_main (void *pvArgv)
 {
-	xFreeRange_createRange (&oSysORIndex_FreeRange, sysORIndex_start_c, sysORIndex_end_c);
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	oSystem.pcDescr = (void *) pcSwitchDescr;
-	oSystem.u16Descr_len = strlen (pcSwitchDescr);
-	oSystem.u32UpTime = xTime_centiTime (xTime_typeMono_c);
-	oSystem.u16Contact_len = strlen (pcSwitchContact);
-	memcpy (oSystem.au8Contact, pcSwitchContact, oSystem.u16Contact_len);
-	oSystem.u16Name_len = strlen (pcSwitchName);
-	memcpy (oSystem.au8Name, pcSwitchName, oSystem.u16Name_len);
-	oSystem.u16Location_len = 0;
-	memset (oSystem.au8Location, 0, sizeof (oSystem.au8Location));
-	oSystem.i32Services = xBitmask_bitMask (sysServices_physical_c) | xBitmask_bitMask (sysServices_datalink_c) | xBitmask_bitMask (sysServices_network_c);
-	oSystem.u32ORLastChange = oSystem.u32UpTime;
-	
-	return NULL;
-}
-
-void *
-system_main (
-	void *pvArgv)
-{
-	systemMIB_init ();
-	
-	if (xThread_create (&oSystemThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		System_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_init_c:
+		xFreeRange_createRange (&oSysORIndex_FreeRange, sysORIndex_start_c, sysORIndex_end_c);
+		
+		oSystem.pcDescr = (void *) pcSwitchDescr;
+		oSystem.u16Descr_len = strlen (pcSwitchDescr);
+		oSystem.u32UpTime = xTime_centiTime (xTime_typeMono_c);
+		oSystem.u16Contact_len = strlen (pcSwitchContact);
+		memcpy (oSystem.au8Contact, pcSwitchContact, oSystem.u16Contact_len);
+		oSystem.u16Name_len = strlen (pcSwitchName);
+		memcpy (oSystem.au8Name, pcSwitchName, oSystem.u16Name_len);
+		oSystem.u16Location_len = 0;
+		memset (oSystem.au8Location, 0, sizeof (oSystem.au8Location));
+		oSystem.i32Services = xBitmask_bitMask (sysServices_physical_c) | xBitmask_bitMask (sysServices_datalink_c) | xBitmask_bitMask (sysServices_network_c);
+		oSystem.u32ORLastChange = oSystem.u32UpTime;
+		break;
+		
+	case ModuleOp_start_c:
+		systemMIB_init ();
+		
+		if (xThread_create (&oSystemThread) == NULL)
+		{
+			System_log (xLog_err_c, "xThread_create() failed\n");
+			goto system_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+system_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-system_start (
-	void *pvArgv)
+system_start (void *pvArgv)
 {
 	while (1)
 	{

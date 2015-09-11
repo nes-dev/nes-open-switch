@@ -45,23 +45,36 @@ static xThreadInfo_t oEntityThread =
 
 
 void *
-entity_main (
-	void *pvArgv)
+entity_main (void *pvArgv)
 {
-	entityMIB_init ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	if (xThread_create (&oEntityThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		Entity_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		entityMIB_init ();
+		
+		if (xThread_create (&oEntityThread) == NULL)
+		{
+			Entity_log (xLog_err_c, "xThread_create() failed\n");
+			goto entity_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+entity_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-entity_start (
-	void *pvArgv)
+entity_start (void *pvArgv)
 {
 	while (1)
 	{

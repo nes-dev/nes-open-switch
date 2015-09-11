@@ -56,45 +56,58 @@ static bool bSnmpAgentMaster = true;
 
 
 void *
-snmp_main (
-	void *pvArgv)
+snmp_main (void *pvArgv)
 {
-	xMLock_init (&oSnmpLock, NULL);
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	xMLock_lock (&oSnmpLock);
-	oSnmpState = SnmpState_stopped_c;
-	xMLock_unlock (&oSnmpLock);
-	
-	setenv ("SNMPCONFPATH", ".", 1);
-	snmp_enable_stderrlog ();
-	if (bSnmpAgentMaster == false)
+	switch (u32ModuleOp)
 	{
-		netsnmp_ds_set_boolean (NETSNMP_DS_APPLICATION_ID, NETSNMP_DS_AGENT_ROLE, 1);
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		xMLock_init (&oSnmpLock, NULL);
+		
+		xMLock_lock (&oSnmpLock);
+		oSnmpState = SnmpState_stopped_c;
+		xMLock_unlock (&oSnmpLock);
+		
+		setenv ("SNMPCONFPATH", ".", 1);
+		snmp_enable_stderrlog ();
+		if (bSnmpAgentMaster == false)
+		{
+			netsnmp_ds_set_boolean (NETSNMP_DS_APPLICATION_ID, NETSNMP_DS_AGENT_ROLE, 1);
+		}
+		
+		init_agent (pcSwitchName);
+		
+		snmpMIB_init ();
+		
+		init_snmp (pcSwitchName);
+		if (bSnmpAgentMaster == true)
+		{
+			init_master_agent ();
+		}
+		
+		oSnmpThread.pvData = &bSnmpAgentMaster;
+		if (xThread_create (&oSnmpThread) == NULL)
+		{
+			Snmp_log (xLog_err_c, "xThread_create() failed\n");
+			goto snmp_main_cleanup;
+		}
+		break;
 	}
 	
-	init_agent (pcSwitchName);
+	pvRetCode = (void*) true;
 	
-	snmpMIB_init ();
+snmp_main_cleanup:
 	
-	init_snmp (pcSwitchName);
-	if (bSnmpAgentMaster == true)
-	{
-		init_master_agent ();
-	}
-	
-	oSnmpThread.pvData = &bSnmpAgentMaster;
-	if (xThread_create (&oSnmpThread) == NULL)
-	{
-		Snmp_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
-	}
-	
-	return NULL;
+	return pvRetCode;
 }
 
 void *
-snmp_start (
-	void *pvArgv)
+snmp_start (void *pvArgv)
 {
 	xMLock_lock (&oSnmpLock);
 	oSnmpState = SnmpState_running_c;
@@ -114,8 +127,7 @@ snmp_start (
 }
 
 void *
-snmp_stop (
-	void *pvArgv)
+snmp_stop (void *pvArgv)
 {
 	xMLock_lock (&oSnmpLock);
 	oSnmpState = SnmpState_shutdown_c;

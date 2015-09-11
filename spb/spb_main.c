@@ -42,23 +42,36 @@ static xThreadInfo_t oSpbThread =
 
 
 void *
-spb_main (
-	void *pvArgv)
+spb_main (void *pvArgv)
 {
-	ieee8021SpbMib_init ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	if (xThread_create (&oSpbThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		Spb_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		ieee8021SpbMib_init ();
+		
+		if (xThread_create (&oSpbThread) == NULL)
+		{
+			Spb_log (xLog_err_c, "xThread_create() failed\n");
+			goto spb_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+spb_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-spb_start (
-	void *pvArgv)
+spb_start (void *pvArgv)
 {
 	while (1)
 	{

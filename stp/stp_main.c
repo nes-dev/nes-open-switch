@@ -48,29 +48,42 @@ static xMessageQueue_t *poStpMessageQueue = NULL;
 
 
 void *
-stp_main (
-	void *pvArgv)
+stp_main (void *pvArgv)
 {
-	ieee8021SpanningTreeMib_init ();
-	ieee8021MstpMib_init ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	if ((poStpMessageQueue = xMessageQueue_create (oStpThread.u32Index)) == NULL)
+	switch (u32ModuleOp)
 	{
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		ieee8021SpanningTreeMib_init ();
+		ieee8021MstpMib_init ();
+		
+		if ((poStpMessageQueue = xMessageQueue_create (oStpThread.u32Index)) == NULL)
+		{
+			return NULL;
+		}
+		
+		if (xThread_create (&oStpThread) == NULL)
+		{
+			Stp_log (xLog_err_c, "xThread_create() failed\n");
+			goto stp_main_cleanup;
+		}
+		break;
 	}
 	
-	if (xThread_create (&oStpThread) == NULL)
-	{
-		Stp_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
-	}
+	pvRetCode = (void*) true;
 	
-	return NULL;
+stp_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-stp_start (
-	void *pvArgv)
+stp_start (void *pvArgv)
 {
 	xThread_waitPrepare (&oStpThread);
 	

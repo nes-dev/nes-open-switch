@@ -50,29 +50,42 @@ static xThreadInfo_t oEthernetThread =
 
 
 void *
-ethernet_main (
-	void *pvArgv)
+ethernet_main (void *pvArgv)
 {
-	ethernetUtilsInit ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	ieee8021BridgeMib_init ();
-	ieee8021QBridgeMib_init ();
-	neIeee8021BridgeMIB_init ();
-	mefUniEvcMib_init ();
-	mefEnniOvcMib_init ();
-	
-	if (xThread_create (&oEthernetThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		Ethernet_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		ethernetUtilsInit ();
+		
+		ieee8021BridgeMib_init ();
+		ieee8021QBridgeMib_init ();
+		neIeee8021BridgeMIB_init ();
+		mefUniEvcMib_init ();
+		mefEnniOvcMib_init ();
+		
+		if (xThread_create (&oEthernetThread) == NULL)
+		{
+			Ethernet_log (xLog_err_c, "xThread_create() failed\n");
+			goto ethernet_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+ethernet_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-ethernet_start (
-	void *pvArgv)
+ethernet_start (void *pvArgv)
 {
 	while (1)
 	{

@@ -40,21 +40,34 @@ static xThreadInfo_t oHalThread =
 
 
 void *
-hal_main (
-	void *pvArgv)
+hal_main (void *pvArgv)
 {
-	if (xThread_create (&oHalThread) == NULL)
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
+	
+	switch (u32ModuleOp)
 	{
-		Hal_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		if (xThread_create (&oHalThread) == NULL)
+		{
+			Hal_log (xLog_err_c, "xThread_create() failed\n");
+			goto hal_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+hal_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-hal_start (
-	void *pvArgv)
+hal_start (void *pvArgv)
 {
 	while (1)
 	{

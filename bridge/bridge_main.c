@@ -48,27 +48,40 @@ static xThreadInfo_t oBridgeThread =
 
 
 void *
-bridge_main (
-	void *pvArgv)
+bridge_main (void *pvArgv)
 {
-	bridgeUtilsInit ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	ieee8021PbMib_init ();
-	ieee8021PbbMib_init ();
-	ieee8021PbbTeMib_init ();
-	
-	if (xThread_create (&oBridgeThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		Bridge_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		bridgeUtilsInit ();
+		
+		ieee8021PbMib_init ();
+		ieee8021PbbMib_init ();
+		ieee8021PbbTeMib_init ();
+		
+		if (xThread_create (&oBridgeThread) == NULL)
+		{
+			Bridge_log (xLog_err_c, "xThread_create() failed\n");
+			goto bridge_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+bridge_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-bridge_start (
-	void *pvArgv)
+bridge_start (void *pvArgv)
 {
 	while (1)
 	{

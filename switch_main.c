@@ -49,12 +49,18 @@ main (
 void
 switch_start (void)
 {
-	register uint16_t u16NumModules = sizeof (aoModuleList) / sizeof (aoModuleList[0]);
+	register const uint16_t u16NumModules = sizeof (aoModuleList) / sizeof (aoModuleList[0]);
 	
-	for (uint16_t u16ModuleIndex = 0; u16ModuleIndex < u16NumModules; u16ModuleIndex++)
+	for (uint16_t u16Index = 0; u16Index < u16NumModules; u16Index++)
 	{
-		aoModuleList[u16ModuleIndex].poStart (&aoModuleList[u16ModuleIndex]);
+		aoModuleList[u16Index].poControl ((void *) ModuleOp_init_c);
 	}
+	
+	for (uint16_t u16Index = 0; u16Index < u16NumModules; u16Index++)
+	{
+		aoModuleList[u16Index].poControl ((void *) ModuleOp_start_c);
+	}
+	
 	return;
 }
 

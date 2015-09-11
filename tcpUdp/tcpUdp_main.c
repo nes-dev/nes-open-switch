@@ -43,24 +43,37 @@ static xThreadInfo_t oPppThread =
 
 
 void *
-tcpUdp_main (
-	void *pvArgv)
+tcpUdp_main (void *pvArgv)
 {
-	tcpMIB_init ();
-	udpMIB_init ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	if (xThread_create (&oPppThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		TcpUdp_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		tcpMIB_init ();
+		udpMIB_init ();
+		
+		if (xThread_create (&oPppThread) == NULL)
+		{
+			TcpUdp_log (xLog_err_c, "xThread_create() failed\n");
+			goto tcpUdp_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+tcpUdp_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-tcpUdp_start (
-	void *pvArgv)
+tcpUdp_start (void *pvArgv)
 {
 	while (1)
 	{

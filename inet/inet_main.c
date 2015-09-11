@@ -52,27 +52,40 @@ static xThreadInfo_t oInetThread =
 
 
 void *
-inet_main (
-	void *pvArgv)
+inet_main (void *pvArgv)
 {
-	neInetMIB_init ();
-	clnsMIB_init ();
-	ipMIB_init ();
-	icmpMIB_init ();
-	ipForward_init ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	if (xThread_create (&oInetThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		Inet_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		neInetMIB_init ();
+		clnsMIB_init ();
+		ipMIB_init ();
+		icmpMIB_init ();
+		ipForward_init ();
+		
+		if (xThread_create (&oInetThread) == NULL)
+		{
+			Inet_log (xLog_err_c, "xThread_create() failed\n");
+			goto inet_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+inet_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-inet_start (
-	void *pvArgv)
+inet_start (void *pvArgv)
 {
 	while (1)
 	{

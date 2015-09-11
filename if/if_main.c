@@ -42,23 +42,36 @@ static xThreadInfo_t oIfThread =
 
 
 void *
-if_main (
-	void *pvArgv)
+if_main (void *pvArgv)
 {
-	ifMIB_init ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	if (xThread_create (&oIfThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		If_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		ifMIB_init ();
+		
+		if (xThread_create (&oIfThread) == NULL)
+		{
+			If_log (xLog_err_c, "xThread_create() failed\n");
+			goto if_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+if_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-if_start (
-	void *pvArgv)
+if_start (void *pvArgv)
 {
 	while (1)
 	{

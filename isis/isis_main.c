@@ -40,21 +40,34 @@ static xThreadInfo_t oIsisThread =
 
 
 void *
-isis_main (
-	void *pvArgv)
+isis_main (void *pvArgv)
 {
-	if (xThread_create (&oIsisThread) == NULL)
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
+	
+	switch (u32ModuleOp)
 	{
-		Isis_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		if (xThread_create (&oIsisThread) == NULL)
+		{
+			Isis_log (xLog_err_c, "xThread_create() failed\n");
+			goto isis_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+isis_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-isis_start (
-	void *pvArgv)
+isis_start (void *pvArgv)
 {
 	while (1)
 	{

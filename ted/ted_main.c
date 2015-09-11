@@ -46,18 +46,33 @@ static xThreadInfo_t oTedThread =
 void *
 ted_main (void *pvArgv)
 {
-	tedUtilsInit ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	teLinkStdMIB_init ();
-	neTedMIB_init ();
-	
-	if (xThread_create (&oTedThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		Ted_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		tedUtilsInit ();
+		
+		teLinkStdMIB_init ();
+		neTedMIB_init ();
+		
+		if (xThread_create (&oTedThread) == NULL)
+		{
+			Ted_log (xLog_err_c, "xThread_create() failed\n");
+			goto ted_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+ted_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *

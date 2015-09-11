@@ -47,26 +47,39 @@ static xMessageQueue_t *poLacpMessageQueue = NULL;
 
 
 void *
-lacp_main (
-	void *pvArgv)
+lacp_main (void *pvArgv)
 {
-	if ((poLacpMessageQueue = xMessageQueue_create (oLacpThread.u32Index)) == NULL)
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
+	
+	switch (u32ModuleOp)
 	{
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		if ((poLacpMessageQueue = xMessageQueue_create (oLacpThread.u32Index)) == NULL)
+		{
+			return NULL;
+		}
+		
+		if (xThread_create (&oLacpThread) == NULL)
+		{
+			Lacp_log (xLog_err_c, "xThread_create() failed\n");
+			goto lacp_main_cleanup;
+		}
+		break;
 	}
 	
-	if (xThread_create (&oLacpThread) == NULL)
-	{
-		Lacp_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
-	}
+	pvRetCode = (void*) true;
 	
-	return NULL;
+lacp_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-lacp_start (
-	void *pvArgv)
+lacp_start (void *pvArgv)
 {
 	xThread_waitPrepare (&oLacpThread);
 	

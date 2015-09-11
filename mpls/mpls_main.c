@@ -50,22 +50,37 @@ static xThreadInfo_t oMplsThread =
 void *
 mpls_main (void *pvArgv)
 {
-	mplsUtilsInit ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	neMplsLsrMIB_init ();
-	mplsLsrStdMIB_init ();
-	mplsLsrExtStdMIB_init ();
-	neMplsTeMIB_init ();
-	mplsTeStdMIB_init ();
-	mplsTeExtStdMIB_init ();
-	
-	if (xThread_create (&oMplsThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		Mpls_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		mplsUtilsInit ();
+		
+		neMplsLsrMIB_init ();
+		mplsLsrStdMIB_init ();
+		mplsLsrExtStdMIB_init ();
+		neMplsTeMIB_init ();
+		mplsTeStdMIB_init ();
+		mplsTeExtStdMIB_init ();
+		
+		if (xThread_create (&oMplsThread) == NULL)
+		{
+			Mpls_log (xLog_err_c, "xThread_create() failed\n");
+			goto mpls_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+mpls_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *

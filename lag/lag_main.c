@@ -43,25 +43,38 @@ static xThreadInfo_t oLagThread =
 
 
 void *
-lag_main (
-	void *pvArgv)
+lag_main (void *pvArgv)
 {
-	lagMIB_init ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	if (xThread_create (&oLagThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		Lag_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		lagMIB_init ();
+		
+		if (xThread_create (&oLagThread) == NULL)
+		{
+			Lag_log (xLog_err_c, "xThread_create() failed\n");
+			goto lag_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+lag_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-lag_start (
-	void *pvArgv)
+lag_start (void *pvArgv)
 {
-	lacp_main (NULL);
+	lacp_main ((void *) ModuleOp_start_c);
 	
 	while (1)
 	{

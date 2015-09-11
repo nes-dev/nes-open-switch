@@ -43,24 +43,37 @@ static xThreadInfo_t oCfmThread =
 
 
 void *
-cfm_main (
-	void *pvArgv)
+cfm_main (void *pvArgv)
 {
-	ieee8021CfmMib_init ();
-	ieee8021CfmV2Mib_init ();
+	register void *pvRetCode = NULL;
+	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
 	
-	if (xThread_create (&oCfmThread) == NULL)
+	switch (u32ModuleOp)
 	{
-		Cfm_log (xLog_err_c, "xThread_create() failed\n");
-		return NULL;
+	default:
+		break;
+		
+	case ModuleOp_start_c:
+		ieee8021CfmMib_init ();
+		ieee8021CfmV2Mib_init ();
+		
+		if (xThread_create (&oCfmThread) == NULL)
+		{
+			Cfm_log (xLog_err_c, "xThread_create() failed\n");
+			goto cfm_main_cleanup;
+		}
+		break;
 	}
 	
-	return NULL;
+	pvRetCode = (void*) true;
+	
+cfm_main_cleanup:
+	
+	return pvRetCode;
 }
 
 void *
-cfm_start (
-	void *pvArgv)
+cfm_start (void *pvArgv)
 {
 	while (1)
 	{

@@ -60,17 +60,28 @@ enum
 	ModuleId_ted_c,
 	ModuleId_mpls_c,
 	ModuleId_tcpUdp_c,
+	ModuleId_count_c,
+	
+	ModuleOp_init_c				= 1,
+	ModuleOp_start_c,
+	ModuleOp_reset_c,
 };
 
 typedef void *(ModuleRoutine_t) (void *);
 
 typedef struct ModuleInfo_t
 {
-	uint32_t			u32ModuleId;
-	ModuleRoutine_t	   *poInit;
-	ModuleRoutine_t	   *poStart;
-	ModuleRoutine_t	   *poReset;
+	uint32_t			u32Id;
+	ModuleRoutine_t	   *poControl;
 } ModuleInfo_t;
+
+
+#ifdef __SYSTEM_MAIN_C__
+
+#include "lib/snmp.h"
+
+#endif	// __SYSTEM_MAIN_C__
+
 
 #ifdef __SWITCH_MAIN_C__
 
@@ -98,22 +109,22 @@ const char *pcSwitchContact = SWITCH_CONTACT;
 
 static ModuleInfo_t aoModuleList[] =
 {
-	{ModuleId_snmp_c,			NULL,				&snmp_main,				NULL},
-	{ModuleId_system_c,			&system_init,		&system_main,			NULL},
-	{ModuleId_if_c,				NULL,				&if_main,				NULL},
-	{ModuleId_entity_c,			NULL,				&entity_main,			NULL},
-	{ModuleId_hal_c,			NULL,				&hal_main,				NULL},
-	{ModuleId_ethernet_c,		NULL,				&ethernet_main,			NULL},
-	{ModuleId_lag_c,			NULL,				&lag_main,				NULL},
-	{ModuleId_bridge_c,			NULL,				&bridge_main,			NULL},
-	{ModuleId_cfm_c,			NULL,				&cfm_main,				NULL},
-	{ModuleId_isis_c,			NULL,				&isis_main,				NULL},
-	{ModuleId_stp_c,			NULL,				&stp_main,				NULL},
-	{ModuleId_spb_c,			NULL,				&spb_main,				NULL},
-	{ModuleId_inet_c,			NULL,				&inet_main,				NULL},
-	{ModuleId_ted_c,			NULL,				&ted_main,				NULL},
-	{ModuleId_mpls_c,			NULL,				&mpls_main,				NULL},
-	{ModuleId_tcpUdp_c,			NULL,				&tcpUdp_main,			NULL},
+	{ModuleId_snmp_c,			&snmp_main},
+	{ModuleId_system_c,			&system_main},
+	{ModuleId_if_c,				&if_main},
+	{ModuleId_entity_c,			&entity_main},
+	{ModuleId_hal_c,			&hal_main},
+	{ModuleId_ethernet_c,		&ethernet_main},
+	{ModuleId_lag_c,			&lag_main},
+	{ModuleId_bridge_c,			&bridge_main},
+	{ModuleId_cfm_c,			&cfm_main},
+	{ModuleId_isis_c,			&isis_main},
+	{ModuleId_stp_c,			&stp_main},
+	{ModuleId_spb_c,			&spb_main},
+	{ModuleId_inet_c,			&inet_main},
+	{ModuleId_ted_c,			&ted_main},
+	{ModuleId_mpls_c,			&mpls_main},
+	{ModuleId_tcpUdp_c,			&tcpUdp_main},
 };
 
 #endif	// __SWITCH_MAIN_C__
