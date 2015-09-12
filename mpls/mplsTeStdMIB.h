@@ -1229,6 +1229,8 @@ typedef struct mplsTunnelARHopEntry_t
 	uint8_t au8LspId[6];
 	size_t u16LspId_len;	/* # of uint8_t elements */
 	
+	gmplsTunnelARHopEntry_t oG;
+	
 	xBTree_Node_t oBTreeNode;
 } mplsTunnelARHopEntry_t;
 
