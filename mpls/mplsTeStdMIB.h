@@ -1033,6 +1033,7 @@ typedef struct mplsTunnelEntry_t
 	mplsTunnelExtEntry_t oX;
 	gmplsTunnelEntry_t oG;
 	gmplsTunnelReversePerfEntry_t oReversePerf;
+	gmplsTunnelErrorEntry_t oError;
 	neMplsTunnelEntry_t oNe;
 	
 	xBTree_Node_t oBTreeNode;
