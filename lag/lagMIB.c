@@ -1021,7 +1021,7 @@ dot3adAggPortListTable_getNext (
 	poEntry = xBTree_entry (*my_loop_context, dot3adAggEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) &poEntry->oPortList;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggData_BTree);
 	return put_index_data;
 }
@@ -1041,7 +1041,7 @@ dot3adAggPortListTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oPortList;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -2179,60 +2179,48 @@ dot3adAggPortStatsEntry_t *
 dot3adAggPortStatsTable_createEntry (
 	uint32_t u32Index)
 {
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
-		xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_statsCreated_c))
+	if ((poAggPort = dot3adAggPortTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_statsCreated_c, 1);
-	return &poDot3adAggPortData->oStats;
+	return &poAggPort->oStats;
 }
 
 dot3adAggPortStatsEntry_t *
 dot3adAggPortStatsTable_getByIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_statsCreated_c))
+	if ((poAggPort = dot3adAggPortTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggPortData->oStats;
+	return &poAggPort->oStats;
 }
 
 dot3adAggPortStatsEntry_t *
 dot3adAggPortStatsTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_getNextIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_statsCreated_c))
+	if ((poAggPort = dot3adAggPortTable_getNextIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggPortData->oStats;
+	return &poAggPort->oStats;
 }
 
 /* remove a row from the table */
 void
 dot3adAggPortStatsTable_removeEntry (dot3adAggPortStatsEntry_t *poEntry)
 {
-	if (poEntry == NULL)
-	{
-		return;
-	}
-	
-	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByStatsEntry (poEntry);
-	
-	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_statsCreated_c, 0);
 	return;
 }
 
@@ -2242,7 +2230,7 @@ dot3adAggPortStatsTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortData_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortTable_BTree);
 	return dot3adAggPortStatsTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2251,17 +2239,17 @@ dot3adAggPortStatsTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggPortData_t *poEntry = NULL;
+	dot3adAggPortEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortData_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oStats;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
 	return put_index_data;
 }
@@ -2271,7 +2259,7 @@ dot3adAggPortStatsTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggPortStatsEntry_t *poEntry = NULL;
+	dot3adAggPortEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
 	poEntry = dot3adAggPortStatsTable_getByIndex (
@@ -2281,7 +2269,7 @@ dot3adAggPortStatsTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oStats;
 	return true;
 }
 

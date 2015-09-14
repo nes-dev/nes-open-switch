@@ -805,10 +805,14 @@ typedef struct dot3adAggPortEntry_t
 	size_t u16PartnerOperState_len;	/* # of uint8_t elements */
 	int32_t i32AggregateOrIndividual;
 	
-// 	xBTree_Node_t oBTreeNode;
+	dot3adAggPortStatsEntry_t oStats;
+	
+ 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oGroup_BTreeNode;
 } dot3adAggPortEntry_t;
 
-// extern xBTree_t oDot3adAggPortTable_BTree;
+extern xBTree_t oDot3adAggPortTable_BTree;
+extern xBTree_t oDot3adAggPortTable_Group_BTree;
 
 /* dot3adAggPortTable table mapper */
 void dot3adAggPortTable_init (void);
@@ -818,6 +822,18 @@ dot3adAggPortEntry_t * dot3adAggPortTable_getByIndex (
 	uint32_t u32Index);
 dot3adAggPortEntry_t * dot3adAggPortTable_getNextIndex (
 	uint32_t u32Index);
+dot3adAggPortEntry_t * dot3adAggPortTable_Group_getByIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index);
+dot3adAggPortEntry_t * dot3adAggPortTable_Group_getNextIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index);
+#define dot3adAggPortTable_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortEntry_t, oNe))
+#define dot3adAggPortTable_getByStatsEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortEntry_t, oStats))
+#define dot3adAggPortTable_getByDebugEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortEntry_t, oDebug))
+#define dot3adAggPortTable_getByPortXEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortEntry_t, oX))
 void dot3adAggPortTable_removeEntry (dot3adAggPortEntry_t *poEntry);
 dot3adAggPortEntry_t * dot3adAggPortTable_createExt (
 	uint32_t u32Index);
