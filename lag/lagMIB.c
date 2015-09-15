@@ -1604,7 +1604,7 @@ dot3adAggPortTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortData_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortTable_BTree);
 	return dot3adAggPortTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -1613,18 +1613,18 @@ dot3adAggPortTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggPortData_t *poEntry = NULL;
+	dot3adAggPortEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortData_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortTable_BTree);
 	return put_index_data;
 }
 
@@ -1746,7 +1746,7 @@ dot3adAggPortTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerOperState, table_entry->u16PartnerOperState_len);
 				break;
 			case DOT3ADAGGPORTAGGREGATEORINDIVIDUAL:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32AggregateOrIndividual);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8AggregateOrIndividual);
 				break;
 				
 			default:
@@ -1874,10 +1874,9 @@ dot3adAggPortTable_mapper (
 				continue;
 			}
 			
-			register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortEntry (table_entry);
-			
 			switch (table_info->colnum)
 			{
+			case DOT3ADAGGPORTACTORSYSTEMPRIORITY:
 			case DOT3ADAGGPORTACTORADMINKEY:
 			case DOT3ADAGGPORTACTOROPERKEY:
 			case DOT3ADAGGPORTPARTNERADMINSYSTEMPRIORITY:
@@ -1888,7 +1887,7 @@ dot3adAggPortTable_mapper (
 			case DOT3ADAGGPORTPARTNERADMINPORTPRIORITY:
 			case DOT3ADAGGPORTACTORADMINSTATE:
 			case DOT3ADAGGPORTPARTNERADMINSTATE:
-				if (poDot3adAggPortData->oNe.u8RowStatus == xRowStatus_active_c || poDot3adAggPortData->oNe.u8RowStatus == xRowStatus_notReady_c)
+				if (table_entry->oNe.u8RowStatus == xRowStatus_active_c || table_entry->oNe.u8RowStatus == xRowStatus_notReady_c)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
