@@ -3016,7 +3016,23 @@ neTedAddressTable_BTreeNodeCmp (
 		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == 0 && pEntry1->u32Prefix == pEntry2->u32Prefix && pEntry1->u32Unnum == pEntry2->u32Unnum) ? 0: 1;
 }
 
+static int8_t
+neTedAddressTable_Addr_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neTedAddressEntry_t *pEntry1 = xBTree_entry (pNode1, neTedAddressEntry_t, oBTreeNode);
+	register neTedAddressEntry_t *pEntry2 = xBTree_entry (pNode2, neTedAddressEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->i32Type < pEntry2->i32Type) ||
+		(pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == -1) ||
+		(pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == 0 && pEntry1->u32Prefix < pEntry2->u32Prefix) ||
+		(pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == 0 && pEntry1->u32Prefix == pEntry2->u32Prefix && pEntry1->u32Unnum < pEntry2->u32Unnum) ? -1:
+		(pEntry1->i32Type == pEntry2->i32Type && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == 0 && pEntry1->u32Prefix == pEntry2->u32Prefix && pEntry1->u32Unnum == pEntry2->u32Unnum) ? 0: 1;
+}
+
 xBTree_t oNeTedAddressTable_BTree = xBTree_initInline (&neTedAddressTable_BTreeNodeCmp);
+xBTree_t oNeTedAddressTable_Addr_BTree = xBTree_initInline (&neTedAddressTable_Addr_BTreeNodeCmp);
 
 /* create a new row in the table */
 neTedAddressEntry_t *
@@ -3123,6 +3139,36 @@ neTedAddressTable_getNextIndex (
 	return xBTree_entry (poNode, neTedAddressEntry_t, oBTreeNode);
 }
 
+neTedAddressEntry_t *
+neTedAddressTable_Addr_getNextIndex (
+	int32_t i32Type,
+	uint8_t *pau8Address, size_t u16Address_len,
+	uint32_t u32Prefix,
+	uint32_t u32Unnum)
+{
+	register neTedAddressEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->i32Type = i32Type;
+	memcpy (poTmpEntry->au8Address, pau8Address, u16Address_len);
+	poTmpEntry->u16Address_len = u16Address_len;
+	poTmpEntry->u32Prefix = u32Prefix;
+	poTmpEntry->u32Unnum = u32Unnum;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oAddr_BTreeNode, &oNeTedAddressTable_Addr_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neTedAddressEntry_t, oAddr_BTreeNode);
+}
+
 /* remove a row from the table */
 void
 neTedAddressTable_removeEntry (neTedAddressEntry_t *poEntry)
@@ -3134,6 +3180,7 @@ neTedAddressTable_removeEntry (neTedAddressEntry_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeTedAddressTable_BTree);
+	xBTree_nodeRemove (&poEntry->oAddr_BTreeNode, &oNeTedAddressTable_Addr_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }

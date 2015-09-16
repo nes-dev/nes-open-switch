@@ -493,9 +493,11 @@ typedef struct neTedAddressEntry_t
 	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oAddr_BTreeNode;
 } neTedAddressEntry_t;
 
 extern xBTree_t oNeTedAddressTable_BTree;
+extern xBTree_t oNeTedAddressTable_Addr_BTree;
 
 /* neTedAddressTable table mapper */
 void neTedAddressTable_init (void);
@@ -516,6 +518,11 @@ neTedAddressEntry_t * neTedAddressTable_getByIndex (
 neTedAddressEntry_t * neTedAddressTable_getNextIndex (
 	uint32_t u32NodeIndex,
 	uint32_t u32LinkIndex,
+	int32_t i32Type,
+	uint8_t *pau8Address, size_t u16Address_len,
+	uint32_t u32Prefix,
+	uint32_t u32Unnum);
+neTedAddressEntry_t * neTedAddressTable_Addr_getNextIndex (
 	int32_t i32Type,
 	uint8_t *pau8Address, size_t u16Address_len,
 	uint32_t u32Prefix,
