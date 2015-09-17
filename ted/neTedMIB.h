@@ -625,9 +625,11 @@ typedef struct neTedLinkResvEntry_t
 	size_t u16Bandwidth_len;	/* # of uint8_t elements */
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oPriority_BTreeNode;
 } neTedLinkResvEntry_t;
 
 extern xBTree_t oNeTedLinkResvTable_BTree;
+extern xBTree_t oNeTedLinkResvTable_Priority_BTree;
 
 /* neTedLinkResvTable table mapper */
 void neTedLinkResvTable_init (void);
@@ -642,6 +644,10 @@ neTedLinkResvEntry_t * neTedLinkResvTable_getByIndex (
 neTedLinkResvEntry_t * neTedLinkResvTable_getNextIndex (
 	uint32_t u32NodeIndex,
 	uint32_t u32LinkIndex,
+	uint8_t *pau8Index, size_t u16Index_len);
+neTedLinkResvEntry_t * neTedLinkResvTable_Priority_getNextIndex (
+	uint32_t u32LinkIndex,
+	uint32_t u32Priority,
 	uint8_t *pau8Index, size_t u16Index_len);
 void neTedLinkResvTable_removeEntry (neTedLinkResvEntry_t *poEntry);
 #ifdef SNMP_SRC

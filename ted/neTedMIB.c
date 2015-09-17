@@ -4100,7 +4100,22 @@ neTedLinkResvTable_BTreeNodeCmp (
 		(pEntry1->u32NodeIndex == pEntry2->u32NodeIndex && pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0) ? 0: 1;
 }
 
+static int8_t
+neTedLinkResvTable_Priority_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neTedLinkResvEntry_t *pEntry1 = xBTree_entry (pNode1, neTedLinkResvEntry_t, oPriority_BTreeNode);
+	register neTedLinkResvEntry_t *pEntry2 = xBTree_entry (pNode2, neTedLinkResvEntry_t, oPriority_BTreeNode);
+	
+	return
+		(pEntry1->u32LinkIndex < pEntry2->u32LinkIndex) ||
+		(pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->u32Priority < pEntry2->u32Priority) ||
+		(pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->u32Priority == pEntry2->u32Priority && xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == -1) ? -1:
+		(pEntry1->u32LinkIndex == pEntry2->u32LinkIndex && pEntry1->u32Priority == pEntry2->u32Priority && xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0) ? 0: 1;
+}
+
 xBTree_t oNeTedLinkResvTable_BTree = xBTree_initInline (&neTedLinkResvTable_BTreeNodeCmp);
+xBTree_t oNeTedLinkResvTable_Priority_BTree = xBTree_initInline (&neTedLinkResvTable_Priority_BTreeNodeCmp);
 
 /* create a new row in the table */
 neTedLinkResvEntry_t *
@@ -4186,6 +4201,34 @@ neTedLinkResvTable_getNextIndex (
 	return xBTree_entry (poNode, neTedLinkResvEntry_t, oBTreeNode);
 }
 
+neTedLinkResvEntry_t *
+neTedLinkResvTable_Priority_getNextIndex (
+	uint32_t u32LinkIndex,
+	uint32_t u32Priority,
+	uint8_t *pau8Index, size_t u16Index_len)
+{
+	register neTedLinkResvEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32LinkIndex = u32LinkIndex;
+	poTmpEntry->u32Priority = u32Priority;
+	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
+	poTmpEntry->u16Index_len = u16Index_len;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oPriority_BTreeNode, &oNeTedLinkResvTable_Priority_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neTedLinkResvEntry_t, oPriority_BTreeNode);
+}
+
 /* remove a row from the table */
 void
 neTedLinkResvTable_removeEntry (neTedLinkResvEntry_t *poEntry)
@@ -4197,6 +4240,7 @@ neTedLinkResvTable_removeEntry (neTedLinkResvEntry_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeTedLinkResvTable_BTree);
+	xBTree_nodeRemove (&poEntry->oPriority_BTreeNode, &oNeTedLinkResvTable_Priority_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
