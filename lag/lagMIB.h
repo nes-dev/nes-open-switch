@@ -646,7 +646,13 @@ enum
 typedef struct dot3adAggEntry_t
 {
 	/* Index values */
-// 	uint32_t u32Index;
+	uint32_t u32Index;
+	
+	struct {
+		int32_t i32GroupType;
+		uint32_t u32GroupIndex;
+		int32_t i32ActorAdminKey;
+	} oK;
 	
 	/* Column values */
 	uint8_t au8MACAddress[6];
@@ -654,7 +660,7 @@ typedef struct dot3adAggEntry_t
 	int32_t i32ActorSystemPriority;
 	uint8_t au8ActorSystemID[6];
 	size_t u16ActorSystemID_len;	/* # of uint8_t elements */
-	int32_t i32AggregateOrIndividual;
+	uint8_t u8AggregateOrIndividual;
 	int32_t i32ActorAdminKey;
 	int32_t i32ActorOperKey;
 	uint8_t au8PartnerSystemID[6];
@@ -665,10 +671,14 @@ typedef struct dot3adAggEntry_t
 	
 	dot3adAggPortListEntry_t oPortList;
 	
-// 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oGroup_BTreeNode;
+	xBTree_Node_t oKey_BTreeNode;
 } dot3adAggEntry_t;
 
-// extern xBTree_t oDot3adAggTable_BTree;
+extern xBTree_t oDot3adAggTable_BTree;
+extern xBTree_t oDot3adAggTable_Group_BTree;
+extern xBTree_t oDot3adAggTable_Key_BTree;
 
 /* dot3adAggTable table mapper */
 void dot3adAggTable_init (void);
@@ -771,7 +781,12 @@ enum
 typedef struct dot3adAggPortEntry_t
 {
 	/* Index values */
-// 	uint32_t u32Index;
+	uint32_t u32Index;
+	
+	struct {
+		int32_t i32GroupType;
+		uint32_t u32GroupIndex;
+	} oK;
 	
 	/* Column values */
 	int32_t i32ActorSystemPriority;
@@ -803,9 +818,10 @@ typedef struct dot3adAggPortEntry_t
 	size_t u16PartnerAdminState_len;	/* # of uint8_t elements */
 	uint8_t au8PartnerOperState[1];
 	size_t u16PartnerOperState_len;	/* # of uint8_t elements */
-	int32_t i32AggregateOrIndividual;
+	uint8_t u8AggregateOrIndividual;
 	
 	dot3adAggPortStatsEntry_t oStats;
+	dot3adAggPortDebugEntry_t oDebug;
 	
  	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oGroup_BTreeNode;
