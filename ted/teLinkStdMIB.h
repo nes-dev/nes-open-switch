@@ -240,6 +240,11 @@ typedef struct teLinkSwCapEntry_t
 	uint32_t u32IfIndex;
 	uint32_t u32Id;
 	
+	struct {
+		int32_t i32Type;
+		int32_t i32Encoding;
+	} oK;
+	
 	/* Column values */
 	int32_t i32Type;
 	int32_t i32Encoding;
@@ -252,9 +257,11 @@ typedef struct teLinkSwCapEntry_t
 	uint8_t u8StorageType;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oSwCap_BTreeNode;
 } teLinkSwCapEntry_t;
 
 extern xBTree_t oTeLinkSwCapTable_BTree;
+extern xBTree_t oTeLinkSwCapTable_SwCap_BTree;
 
 /* teLinkSwCapTable table mapper */
 void teLinkSwCapTable_init (void);
@@ -264,6 +271,10 @@ teLinkSwCapEntry_t * teLinkSwCapTable_createEntry (
 teLinkSwCapEntry_t * teLinkSwCapTable_getByIndex (
 	uint32_t u32IfIndex,
 	uint32_t u32Id);
+teLinkSwCapEntry_t * teLinkSwCapTable_SwCap_getByIndex (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	int32_t i32Encoding);
 teLinkSwCapEntry_t * teLinkSwCapTable_getNextIndex (
 	uint32_t u32IfIndex,
 	uint32_t u32Id);

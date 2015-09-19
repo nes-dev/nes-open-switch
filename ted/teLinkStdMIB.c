@@ -939,7 +939,22 @@ teLinkSwCapTable_BTreeNodeCmp (
 		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->u32Id == pEntry2->u32Id) ? 0: 1;
 }
 
+static int8_t
+teLinkSwCapTable_SwCap_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register teLinkSwCapEntry_t *pEntry1 = xBTree_entry (pNode1, teLinkSwCapEntry_t, oSwCap_BTreeNode);
+	register teLinkSwCapEntry_t *pEntry2 = xBTree_entry (pNode2, teLinkSwCapEntry_t, oSwCap_BTreeNode);
+	
+	return
+		(pEntry1->u32IfIndex < pEntry2->u32IfIndex) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->oK.i32Type < pEntry2->oK.i32Type) ||
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->oK.i32Type == pEntry2->oK.i32Type && pEntry1->oK.i32Encoding < pEntry2->oK.i32Encoding) ? -1:
+		(pEntry1->u32IfIndex == pEntry2->u32IfIndex && pEntry1->oK.i32Type == pEntry2->oK.i32Type && pEntry1->oK.i32Encoding == pEntry2->oK.i32Encoding) ? 0: 1;
+}
+
 xBTree_t oTeLinkSwCapTable_BTree = xBTree_initInline (&teLinkSwCapTable_BTreeNodeCmp);
+xBTree_t oTeLinkSwCapTable_SwCap_BTree = xBTree_initInline (&teLinkSwCapTable_SwCap_BTreeNodeCmp);
 
 /* create a new row in the table */
 teLinkSwCapEntry_t *
@@ -991,6 +1006,33 @@ teLinkSwCapTable_getByIndex (
 	
 	xBuffer_free (poTmpEntry);
 	return xBTree_entry (poNode, teLinkSwCapEntry_t, oBTreeNode);
+}
+
+teLinkSwCapEntry_t *
+teLinkSwCapTable_SwCap_getByIndex (
+	uint32_t u32IfIndex,
+	int32_t i32Type,
+	int32_t i32Encoding)
+{
+	register teLinkSwCapEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32IfIndex = u32IfIndex;
+	poTmpEntry->oK.i32Type = i32Type;
+	poTmpEntry->oK.i32Encoding = i32Encoding;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oSwCap_BTreeNode, &oTeLinkSwCapTable_SwCap_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, teLinkSwCapEntry_t, oSwCap_BTreeNode);
 }
 
 teLinkSwCapEntry_t *
