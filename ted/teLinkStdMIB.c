@@ -2955,7 +2955,7 @@ componentLinkTable_mapper (
 			switch (table_info->colnum)
 			{
 			case COMPONENTLINKMAXRESBANDWIDTH:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxResBandwidth, table_entry->u16MaxResBandwidth_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxResBandwidth, sizeof (table_entry->au8MaxResBandwidth));
 				break;
 			case COMPONENTLINKPREFERREDPROTECTION:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PreferredProtection);
@@ -3124,14 +3124,13 @@ componentLinkTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MaxResBandwidth_len;
+					((xOctetString_t*) pvOldDdata)->u16Len = sizeof (table_entry->au8MaxResBandwidth);
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxResBandwidth, sizeof (table_entry->au8MaxResBandwidth));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8MaxResBandwidth, 0, sizeof (table_entry->au8MaxResBandwidth));
 				memcpy (table_entry->au8MaxResBandwidth, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16MaxResBandwidth_len = request->requestvb->val_len;
 				break;
 			case COMPONENTLINKPREFERREDPROTECTION:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PreferredProtection))) == NULL)
@@ -3202,7 +3201,6 @@ componentLinkTable_mapper (
 			{
 			case COMPONENTLINKMAXRESBANDWIDTH:
 				memcpy (table_entry->au8MaxResBandwidth, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16MaxResBandwidth_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case COMPONENTLINKPREFERREDPROTECTION:
 				memcpy (&table_entry->i32PreferredProtection, pvOldDdata, sizeof (table_entry->i32PreferredProtection));
@@ -4350,7 +4348,7 @@ componentLinkBandwidthTable_mapper (
 			switch (table_info->colnum)
 			{
 			case COMPONENTLINKBANDWIDTHUNRESERVED:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Unreserved, table_entry->u16Unreserved_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Unreserved, sizeof (table_entry->au8Unreserved));
 				break;
 			case COMPONENTLINKBANDWIDTHROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);

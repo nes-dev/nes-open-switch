@@ -46,123 +46,6 @@ void teLinkStdMIB_init (void);
  *	table mapper(s)
  */
 /**
- *	table teLinkTable definitions
- */
-#define TELINKADDRESSTYPE 1
-#define TELINKLOCALIPADDR 2
-#define TELINKREMOTEIPADDR 3
-#define TELINKMETRIC 4
-#define TELINKMAXRESBANDWIDTH 5
-#define TELINKPROTECTIONTYPE 6
-#define TELINKWORKINGPRIORITY 7
-#define TELINKRESOURCECLASS 8
-#define TELINKREMOTEID 9
-#define TELINKLOCALID 10
-#define TELINKROWSTATUS 11
-#define TELINKSTORAGETYPE 12
-
-enum
-{
-	/* enums for column teLinkAddressType */
-	teLinkAddressType_unknown_c = 0,
-	teLinkAddressType_ipv4_c = 1,
-	teLinkAddressType_ipv6_c = 2,
-	teLinkAddressType_ipv4z_c = 3,
-	teLinkAddressType_ipv6z_c = 4,
-	teLinkAddressType_dns_c = 16,
-
-	/* enums for column teLinkProtectionType */
-	teLinkProtectionType_extraTraffic_c = 1,
-	teLinkProtectionType_unprotected_c = 2,
-	teLinkProtectionType_shared_c = 3,
-	teLinkProtectionType_dedicated1For1_c = 4,
-	teLinkProtectionType_dedicated1Plus1_c = 5,
-	teLinkProtectionType_enhanced_c = 6,
-
-	/* enums for column teLinkRowStatus */
-	teLinkRowStatus_active_c = 1,
-	teLinkRowStatus_notInService_c = 2,
-	teLinkRowStatus_notReady_c = 3,
-	teLinkRowStatus_createAndGo_c = 4,
-	teLinkRowStatus_createAndWait_c = 5,
-	teLinkRowStatus_destroy_c = 6,
-
-	/* enums for column teLinkStorageType */
-	teLinkStorageType_other_c = 1,
-	teLinkStorageType_volatile_c = 2,
-	teLinkStorageType_nonVolatile_c = 3,
-	teLinkStorageType_permanent_c = 4,
-	teLinkStorageType_readOnly_c = 5,
-};
-
-/* table teLinkTable row entry data structure */
-typedef struct teLinkEntry_t
-{
-	/* Index values */
-	uint32_t u32IfIndex;
-	
-	struct {
-		int32_t i32AddrType;
-		uint8_t au8LocalAddr[20];
-		size_t u16LocalAddr_len;
-		uint32_t u32LocalId;
-		uint8_t au8RemoteAddr[20];
-		size_t u16RemoteAddr_len;
-		uint32_t u32RemoteId;
-	} oK;
-	
-	/* Column values */
-	int32_t i32AddressType;
-	uint8_t au8LocalIpAddr[20];
-	size_t u16LocalIpAddr_len;	/* # of uint8_t elements */
-	uint8_t au8RemoteIpAddr[20];
-	size_t u16RemoteIpAddr_len;	/* # of uint8_t elements */
-	uint32_t u32Metric;
-	uint8_t au8MaxResBandwidth[8];
-	size_t u16MaxResBandwidth_len;	/* # of uint8_t elements */
-	int32_t i32ProtectionType;
-	uint32_t u32WorkingPriority;
-	uint32_t u32ResourceClass;
-	uint32_t u32RemoteId;
-	uint32_t u32LocalId;
-	uint8_t u8RowStatus;
-	uint8_t u8StorageType;
-	
-	xBTree_Node_t oBTreeNode;
-	xBTree_Node_t oAddrLocal_BTreeNode;
-	xBTree_Node_t oAddrRemote_BTreeNode;
-} teLinkEntry_t;
-
-extern xBTree_t oTeLinkTable_BTree;
-extern xBTree_t oTeLinkTable_AddrLocal_BTree;
-extern xBTree_t oTeLinkTable_AddrRemote_BTree;
-
-/* teLinkTable table mapper */
-void teLinkTable_init (void);
-teLinkEntry_t * teLinkTable_createEntry (
-	uint32_t u32IfIndex);
-teLinkEntry_t * teLinkTable_getByIndex (
-	uint32_t u32IfIndex);
-teLinkEntry_t * teLinkTable_getNextIndex (
-	uint32_t u32IfIndex);
-teLinkEntry_t * teLinkTable_AddrLocal_getNextIndex (
-	int32_t i32AddressType,
-	uint8_t *pau8LocalIpAddr, size_t u16LocalIpAddr_len,
-	uint32_t u32LocalId);
-teLinkEntry_t * teLinkTable_AddrRemote_getNextIndex (
-	int32_t i32AddressType,
-	uint8_t *pau8RemoteIpAddr, size_t u16RemoteIpAddr_len,
-	uint32_t u32RemoteId);
-void teLinkTable_removeEntry (teLinkEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point teLinkTable_getFirst;
-Netsnmp_Next_Data_Point teLinkTable_getNext;
-Netsnmp_Get_Data_Point teLinkTable_get;
-Netsnmp_Node_Handler teLinkTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
  *	table teLinkSwCapTable definitions
  */
 #define TELINKSWCAPID 1
@@ -413,77 +296,6 @@ Netsnmp_Node_Handler teLinkBandwidthTable_mapper;
 
 
 /**
- *	table componentLinkTable definitions
- */
-#define COMPONENTLINKMAXRESBANDWIDTH 1
-#define COMPONENTLINKPREFERREDPROTECTION 2
-#define COMPONENTLINKCURRENTPROTECTION 3
-#define COMPONENTLINKROWSTATUS 4
-#define COMPONENTLINKSTORAGETYPE 5
-
-enum
-{
-	/* enums for column componentLinkPreferredProtection */
-	componentLinkPreferredProtection_primary_c = 1,
-	componentLinkPreferredProtection_secondary_c = 2,
-
-	/* enums for column componentLinkCurrentProtection */
-	componentLinkCurrentProtection_primary_c = 1,
-	componentLinkCurrentProtection_secondary_c = 2,
-
-	/* enums for column componentLinkRowStatus */
-	componentLinkRowStatus_active_c = 1,
-	componentLinkRowStatus_notInService_c = 2,
-	componentLinkRowStatus_notReady_c = 3,
-	componentLinkRowStatus_createAndGo_c = 4,
-	componentLinkRowStatus_createAndWait_c = 5,
-	componentLinkRowStatus_destroy_c = 6,
-
-	/* enums for column componentLinkStorageType */
-	componentLinkStorageType_other_c = 1,
-	componentLinkStorageType_volatile_c = 2,
-	componentLinkStorageType_nonVolatile_c = 3,
-	componentLinkStorageType_permanent_c = 4,
-	componentLinkStorageType_readOnly_c = 5,
-};
-
-/* table componentLinkTable row entry data structure */
-typedef struct componentLinkEntry_t
-{
-	/* Index values */
-	uint32_t u32IfIndex;
-	
-	/* Column values */
-	uint8_t au8MaxResBandwidth[8];
-	size_t u16MaxResBandwidth_len;	/* # of uint8_t elements */
-	int32_t i32PreferredProtection;
-	int32_t i32CurrentProtection;
-	uint8_t u8RowStatus;
-	uint8_t u8StorageType;
-	
-	xBTree_Node_t oBTreeNode;
-} componentLinkEntry_t;
-
-extern xBTree_t oComponentLinkTable_BTree;
-
-/* componentLinkTable table mapper */
-void componentLinkTable_init (void);
-componentLinkEntry_t * componentLinkTable_createEntry (
-	uint32_t u32IfIndex);
-componentLinkEntry_t * componentLinkTable_getByIndex (
-	uint32_t u32IfIndex);
-componentLinkEntry_t * componentLinkTable_getNextIndex (
-	uint32_t u32IfIndex);
-void componentLinkTable_removeEntry (componentLinkEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point componentLinkTable_getFirst;
-Netsnmp_Next_Data_Point componentLinkTable_getNext;
-Netsnmp_Get_Data_Point componentLinkTable_get;
-Netsnmp_Node_Handler componentLinkTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
  *	table componentLinkSwCapTable definitions
  */
 #define COMPONENTLINKSWCAPID 1
@@ -632,7 +444,6 @@ typedef struct componentLinkBandwidthEntry_t
 	
 	/* Column values */
 	uint8_t au8Unreserved[8];
-	size_t u16Unreserved_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
@@ -709,6 +520,193 @@ Netsnmp_First_Data_Point teAdminGroupTable_getFirst;
 Netsnmp_Next_Data_Point teAdminGroupTable_getNext;
 Netsnmp_Get_Data_Point teAdminGroupTable_get;
 Netsnmp_Node_Handler teAdminGroupTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table teLinkTable definitions
+ */
+#define TELINKADDRESSTYPE 1
+#define TELINKLOCALIPADDR 2
+#define TELINKREMOTEIPADDR 3
+#define TELINKMETRIC 4
+#define TELINKMAXRESBANDWIDTH 5
+#define TELINKPROTECTIONTYPE 6
+#define TELINKWORKINGPRIORITY 7
+#define TELINKRESOURCECLASS 8
+#define TELINKREMOTEID 9
+#define TELINKLOCALID 10
+#define TELINKROWSTATUS 11
+#define TELINKSTORAGETYPE 12
+
+enum
+{
+	/* enums for column teLinkAddressType */
+	teLinkAddressType_unknown_c = 0,
+	teLinkAddressType_ipv4_c = 1,
+	teLinkAddressType_ipv6_c = 2,
+	teLinkAddressType_ipv4z_c = 3,
+	teLinkAddressType_ipv6z_c = 4,
+	teLinkAddressType_dns_c = 16,
+
+	/* enums for column teLinkProtectionType */
+	teLinkProtectionType_extraTraffic_c = 1,
+	teLinkProtectionType_unprotected_c = 2,
+	teLinkProtectionType_shared_c = 3,
+	teLinkProtectionType_dedicated1For1_c = 4,
+	teLinkProtectionType_dedicated1Plus1_c = 5,
+	teLinkProtectionType_enhanced_c = 6,
+
+	/* enums for column teLinkRowStatus */
+	teLinkRowStatus_active_c = 1,
+	teLinkRowStatus_notInService_c = 2,
+	teLinkRowStatus_notReady_c = 3,
+	teLinkRowStatus_createAndGo_c = 4,
+	teLinkRowStatus_createAndWait_c = 5,
+	teLinkRowStatus_destroy_c = 6,
+
+	/* enums for column teLinkStorageType */
+	teLinkStorageType_other_c = 1,
+	teLinkStorageType_volatile_c = 2,
+	teLinkStorageType_nonVolatile_c = 3,
+	teLinkStorageType_permanent_c = 4,
+	teLinkStorageType_readOnly_c = 5,
+};
+
+/* table teLinkTable row entry data structure */
+typedef struct teLinkEntry_t
+{
+	/* Index values */
+	uint32_t u32IfIndex;
+	
+	struct {
+		int32_t i32AddrType;
+		uint8_t au8LocalAddr[20];
+		size_t u16LocalAddr_len;
+		uint32_t u32LocalId;
+		uint8_t au8RemoteAddr[20];
+		size_t u16RemoteAddr_len;
+		uint32_t u32RemoteId;
+	} oK;
+	
+	/* Column values */
+	int32_t i32AddressType;
+	uint8_t au8LocalIpAddr[20];
+	size_t u16LocalIpAddr_len;	/* # of uint8_t elements */
+	uint8_t au8RemoteIpAddr[20];
+	size_t u16RemoteIpAddr_len;	/* # of uint8_t elements */
+	uint32_t u32Metric;
+	uint8_t au8MaxResBandwidth[8];
+	size_t u16MaxResBandwidth_len;	/* # of uint8_t elements */
+	int32_t i32ProtectionType;
+	uint32_t u32WorkingPriority;
+	uint32_t u32ResourceClass;
+	uint32_t u32RemoteId;
+	uint32_t u32LocalId;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	
+	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oAddrLocal_BTreeNode;
+	xBTree_Node_t oAddrRemote_BTreeNode;
+} teLinkEntry_t;
+
+extern xBTree_t oTeLinkTable_BTree;
+extern xBTree_t oTeLinkTable_AddrLocal_BTree;
+extern xBTree_t oTeLinkTable_AddrRemote_BTree;
+
+/* teLinkTable table mapper */
+void teLinkTable_init (void);
+teLinkEntry_t * teLinkTable_createEntry (
+	uint32_t u32IfIndex);
+teLinkEntry_t * teLinkTable_getByIndex (
+	uint32_t u32IfIndex);
+teLinkEntry_t * teLinkTable_getNextIndex (
+	uint32_t u32IfIndex);
+teLinkEntry_t * teLinkTable_AddrLocal_getNextIndex (
+	int32_t i32AddressType,
+	uint8_t *pau8LocalIpAddr, size_t u16LocalIpAddr_len,
+	uint32_t u32LocalId);
+teLinkEntry_t * teLinkTable_AddrRemote_getNextIndex (
+	int32_t i32AddressType,
+	uint8_t *pau8RemoteIpAddr, size_t u16RemoteIpAddr_len,
+	uint32_t u32RemoteId);
+void teLinkTable_removeEntry (teLinkEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point teLinkTable_getFirst;
+Netsnmp_Next_Data_Point teLinkTable_getNext;
+Netsnmp_Get_Data_Point teLinkTable_get;
+Netsnmp_Node_Handler teLinkTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table componentLinkTable definitions
+ */
+#define COMPONENTLINKMAXRESBANDWIDTH 1
+#define COMPONENTLINKPREFERREDPROTECTION 2
+#define COMPONENTLINKCURRENTPROTECTION 3
+#define COMPONENTLINKROWSTATUS 4
+#define COMPONENTLINKSTORAGETYPE 5
+
+enum
+{
+	/* enums for column componentLinkPreferredProtection */
+	componentLinkPreferredProtection_primary_c = 1,
+	componentLinkPreferredProtection_secondary_c = 2,
+
+	/* enums for column componentLinkCurrentProtection */
+	componentLinkCurrentProtection_primary_c = 1,
+	componentLinkCurrentProtection_secondary_c = 2,
+
+	/* enums for column componentLinkRowStatus */
+	componentLinkRowStatus_active_c = 1,
+	componentLinkRowStatus_notInService_c = 2,
+	componentLinkRowStatus_notReady_c = 3,
+	componentLinkRowStatus_createAndGo_c = 4,
+	componentLinkRowStatus_createAndWait_c = 5,
+	componentLinkRowStatus_destroy_c = 6,
+
+	/* enums for column componentLinkStorageType */
+	componentLinkStorageType_other_c = 1,
+	componentLinkStorageType_volatile_c = 2,
+	componentLinkStorageType_nonVolatile_c = 3,
+	componentLinkStorageType_permanent_c = 4,
+	componentLinkStorageType_readOnly_c = 5,
+};
+
+/* table componentLinkTable row entry data structure */
+typedef struct componentLinkEntry_t
+{
+	/* Index values */
+	uint32_t u32IfIndex;
+	
+	/* Column values */
+	uint8_t au8MaxResBandwidth[8];
+	int32_t i32PreferredProtection;
+	int32_t i32CurrentProtection;
+	uint8_t u8RowStatus;
+	uint8_t u8StorageType;
+	
+	xBTree_Node_t oBTreeNode;
+} componentLinkEntry_t;
+
+extern xBTree_t oComponentLinkTable_BTree;
+
+/* componentLinkTable table mapper */
+void componentLinkTable_init (void);
+componentLinkEntry_t * componentLinkTable_createEntry (
+	uint32_t u32IfIndex);
+componentLinkEntry_t * componentLinkTable_getByIndex (
+	uint32_t u32IfIndex);
+componentLinkEntry_t * componentLinkTable_getNextIndex (
+	uint32_t u32IfIndex);
+void componentLinkTable_removeEntry (componentLinkEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point componentLinkTable_getFirst;
+Netsnmp_Next_Data_Point componentLinkTable_getNext;
+Netsnmp_Get_Data_Point componentLinkTable_get;
+Netsnmp_Node_Handler componentLinkTable_mapper;
 #endif	/* SNMP_SRC */
 
 
