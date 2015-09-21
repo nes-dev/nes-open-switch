@@ -3802,7 +3802,7 @@ gmplsTunnelTable_init (void)
 		ASN_UNSIGNED /* index: mplsTunnelEgressLSRId */,
 		0);
 	table_info->min_column = GMPLSTUNNELUNNUMIF;
-	table_info->max_column = GMPLSTUNNELEXTRAPARAMSPTR;
+	table_info->max_column = GMPLSTUNNELADMINSTATUSFLAGS;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &gmplsTunnelTable_getFirst;
@@ -3834,7 +3834,7 @@ gmplsTunnelTable_createEntry (
 	poEntry = &poTunnel->oG;
 	
 	poEntry->u8UnnumIf = gmplsTunnelUnnumIf_false_c;
-	poEntry->i32LSPEncoding = gmplsTunnelLSPEncoding_tunnelLspNotGmpls_c;
+	poEntry->i32LSPEncoding = gmplsTunnelLSPEncoding_notGmpls_c;
 	poEntry->i32SwitchingType = gmplsTunnelSwitchingType_unknown_c;
 	poEntry->i32GPid = gmplsTunnelGPid_unknown_c;
 	poEntry->u8Secondary = gmplsTunnelSecondary_false_c;
@@ -3848,7 +3848,6 @@ gmplsTunnelTable_createEntry (
 	/*poEntry->au8DownstreamNotifyRecipient = 0*/;
 	poEntry->i32SendPathNotifyRecipientType = gmplsTunnelSendPathNotifyRecipientType_unknown_c;
 	/*poEntry->au8SendPathNotifyRecipient = 0*/;
-	/*poEntry->aoExtraParamsPtr = zeroDotZero*/;
 	
 	return poEntry;
 }
@@ -4041,9 +4040,6 @@ gmplsTunnelTable_mapper (
 			case GMPLSTUNNELADMINSTATUSFLAGS:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdminStatusFlags, table_entry->u16AdminStatusFlags_len);
 				break;
-			case GMPLSTUNNELEXTRAPARAMSPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoExtraParamsPtr, table_entry->u16ExtraParamsPtr_len);
-				break;
 				
 			default:
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
@@ -4207,14 +4203,6 @@ gmplsTunnelTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case GMPLSTUNNELEXTRAPARAMSPTR:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoExtraParamsPtr));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
 				
 			default:
 				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
@@ -4253,7 +4241,6 @@ gmplsTunnelTable_mapper (
 			case GMPLSTUNNELSENDPATHNOTIFYRECIPIENTTYPE:
 			case GMPLSTUNNELSENDPATHNOTIFYRECIPIENT:
 			case GMPLSTUNNELADMINSTATUSFLAGS:
-			case GMPLSTUNNELEXTRAPARAMSPTR:
 				if (table_entry == NULL)
 				{
 					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
@@ -4320,7 +4307,6 @@ gmplsTunnelTable_mapper (
 			case GMPLSTUNNELSENDPATHNOTIFYRECIPIENTTYPE:
 			case GMPLSTUNNELSENDPATHNOTIFYRECIPIENT:
 			case GMPLSTUNNELADMINSTATUSFLAGS:
-			case GMPLSTUNNELEXTRAPARAMSPTR:
 				gmplsTunnelTable_removeEntry (table_entry);
 				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				break;
@@ -4617,24 +4603,6 @@ gmplsTunnelTable_mapper (
 				memcpy (table_entry->au8AdminStatusFlags, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16AdminStatusFlags_len = request->requestvb->val_len;
 				break;
-			case GMPLSTUNNELEXTRAPARAMSPTR:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoExtraParamsPtr))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ExtraParamsPtr_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoExtraParamsPtr, sizeof (table_entry->aoExtraParamsPtr));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoExtraParamsPtr, 0, sizeof (table_entry->aoExtraParamsPtr));
-				memcpy (table_entry->aoExtraParamsPtr, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16ExtraParamsPtr_len = request->requestvb->val_len;
-				break;
 			}
 		}
 		break;
@@ -4855,18 +4823,6 @@ gmplsTunnelTable_mapper (
 				{
 					memcpy (table_entry->au8AdminStatusFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 					table_entry->u16AdminStatusFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				}
-				break;
-			case GMPLSTUNNELEXTRAPARAMSPTR:
-				if (pvOldDdata == table_entry)
-				{
-					gmplsTunnelTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				}
-				else
-				{
-					memcpy (table_entry->aoExtraParamsPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16ExtraParamsPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				}
 				break;
 			}

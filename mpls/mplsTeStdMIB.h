@@ -280,7 +280,6 @@ Netsnmp_Node_Handler mplsTunnelPerfTable_mapper;
 #define GMPLSTUNNELSENDPATHNOTIFYRECIPIENTTYPE 16
 #define GMPLSTUNNELSENDPATHNOTIFYRECIPIENT 17
 #define GMPLSTUNNELADMINSTATUSFLAGS 18
-#define GMPLSTUNNELEXTRAPARAMSPTR 19
 
 enum
 {
@@ -292,18 +291,18 @@ enum
 	gmplsTunnelAttributes_labelRecordingDesired_c = 0,
 
 	/* enums for column gmplsTunnelLSPEncoding */
-	gmplsTunnelLSPEncoding_tunnelLspNotGmpls_c = 0,
-	gmplsTunnelLSPEncoding_tunnelLspPacket_c = 1,
-	gmplsTunnelLSPEncoding_tunnelLspEthernet_c = 2,
-	gmplsTunnelLSPEncoding_tunnelLspAnsiEtsiPdh_c = 3,
-	gmplsTunnelLSPEncoding_tunnelLspSdhSonet_c = 5,
-	gmplsTunnelLSPEncoding_tunnelLspDigitalWrapper_c = 7,
-	gmplsTunnelLSPEncoding_tunnelLspLambda_c = 8,
-	gmplsTunnelLSPEncoding_tunnelLspFiber_c = 9,
-	gmplsTunnelLSPEncoding_tunnelLspFiberChannel_c = 11,
-	gmplsTunnelLSPEncoding_tunnelDigitalPath_c = 12,
-	gmplsTunnelLSPEncoding_tunnelOpticalChannel_c = 13,
-	gmplsTunnelLSPEncoding_tunnelLine_c = 14,
+	gmplsTunnelLSPEncoding_notGmpls_c = 0,
+	gmplsTunnelLSPEncoding_packet_c = 1,
+	gmplsTunnelLSPEncoding_ethernet_c = 2,
+	gmplsTunnelLSPEncoding_ansiEtsiPdh_c = 3,
+	gmplsTunnelLSPEncoding_sdhSonet_c = 5,
+	gmplsTunnelLSPEncoding_digitalWrapper_c = 7,
+	gmplsTunnelLSPEncoding_lambda_c = 8,
+	gmplsTunnelLSPEncoding_fiber_c = 9,
+	gmplsTunnelLSPEncoding_fiberChannel_c = 11,
+	gmplsTunnelLSPEncoding_digitalPath_c = 12,
+	gmplsTunnelLSPEncoding_opticalChannel_c = 13,
+	gmplsTunnelLSPEncoding_line_c = 14,
 
 	/* enums for column gmplsTunnelSwitchingType */
 	gmplsTunnelSwitchingType_unknown_c = 0,
@@ -497,21 +496,19 @@ typedef struct gmplsTunnelEntry_t
 	int32_t i32Direction;
 	int32_t i32PathComp;
 	int32_t i32UpstreamNotifyRecipientType;
-	uint8_t au8UpstreamNotifyRecipient[255];
+	uint8_t au8UpstreamNotifyRecipient[20];
 	size_t u16UpstreamNotifyRecipient_len;	/* # of uint8_t elements */
 	int32_t i32SendResvNotifyRecipientType;
-	uint8_t au8SendResvNotifyRecipient[255];
+	uint8_t au8SendResvNotifyRecipient[20];
 	size_t u16SendResvNotifyRecipient_len;	/* # of uint8_t elements */
 	int32_t i32DownstreamNotifyRecipientType;
-	uint8_t au8DownstreamNotifyRecipient[255];
+	uint8_t au8DownstreamNotifyRecipient[20];
 	size_t u16DownstreamNotifyRecipient_len;	/* # of uint8_t elements */
 	int32_t i32SendPathNotifyRecipientType;
-	uint8_t au8SendPathNotifyRecipient[255];
+	uint8_t au8SendPathNotifyRecipient[20];
 	size_t u16SendPathNotifyRecipient_len;	/* # of uint8_t elements */
 	uint8_t au8AdminStatusFlags[4];
 	size_t u16AdminStatusFlags_len;	/* # of uint8_t elements */
-	xOid_t aoExtraParamsPtr[128];
-	size_t u16ExtraParamsPtr_len;	/* # of xOid_t elements */
 	
 // 	xBTree_Node_t oBTreeNode;
 } gmplsTunnelEntry_t;
