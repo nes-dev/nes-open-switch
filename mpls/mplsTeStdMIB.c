@@ -24,6 +24,7 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 #include "mplsTeStdMIB.h"
+#include "mplsTeExtStdMIB.h"
 #include "neMplsTeMIB.h"
 #include "ted/neTedMIB.h"
 
@@ -645,6 +646,7 @@ mplsTunnelTable_removeEntry (mplsTunnelEntry_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oMplsTunnelTable_BTree);
+	xBTree_nodeRemove (&poEntry->oXC_BTreeNode, &oMplsTunnelTable_XC_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
@@ -720,12 +722,22 @@ mplsTunnelTable_createHier (
 		goto mplsTunnelTable_createHier_cleanup;
 	}
 	
+	if (mplsTunnelExtTable_createEntry (poEntry->u32Index, poEntry->u32Instance, poEntry->u32IngressLSRId, poEntry->u32EgressLSRId) == NULL)
+	{
+		goto mplsTunnelTable_createHier_cleanup;
+	}
+	
 	if (gmplsTunnelTable_createEntry (poEntry->u32Index, poEntry->u32Instance, poEntry->u32IngressLSRId, poEntry->u32EgressLSRId) == NULL)
 	{
 		goto mplsTunnelTable_createHier_cleanup;
 	}
 	
 	if (gmplsTunnelReversePerfTable_createEntry (poEntry->u32Index, poEntry->u32Instance, poEntry->u32IngressLSRId, poEntry->u32EgressLSRId) == NULL)
+	{
+		goto mplsTunnelTable_createHier_cleanup;
+	}
+	
+	if (gmplsTunnelErrorTable_createEntry (poEntry->u32Index, poEntry->u32Instance, poEntry->u32IngressLSRId, poEntry->u32EgressLSRId) == NULL)
 	{
 		goto mplsTunnelTable_createHier_cleanup;
 	}
@@ -750,8 +762,10 @@ mplsTunnelTable_removeHier (
 	register bool bRetCode = false;
 	
 	neMplsTunnelTable_removeEntry (&poEntry->oNe);
+	gmplsTunnelErrorTable_removeEntry (&poEntry->oError);
 	gmplsTunnelReversePerfTable_removeEntry (&poEntry->oReversePerf);
 	gmplsTunnelTable_removeEntry (&poEntry->oG);
+	mplsTunnelExtTable_removeEntry (&poEntry->oX);
 	mplsTunnelPerfTable_removeEntry (&poEntry->oPerf);
 	
 	bRetCode = true;
