@@ -4809,7 +4809,7 @@ gmplsTunnelHopTable_init (void)
 	reg = netsnmp_create_handler_registration (
 		"gmplsTunnelHopTable", &gmplsTunnelHopTable_mapper,
 		gmplsTunnelHopTable_oid, OID_LENGTH (gmplsTunnelHopTable_oid),
-		HANDLER_CAN_RWRITE
+		HANDLER_CAN_RONLY
 		);
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
@@ -4819,7 +4819,7 @@ gmplsTunnelHopTable_init (void)
 		ASN_UNSIGNED /* index: mplsTunnelHopIndex */,
 		0);
 	table_info->min_column = GMPLSTUNNELHOPLABELSTATUSES;
-	table_info->max_column = GMPLSTUNNELHOPEXPLICITREVERSELABELPTR;
+	table_info->max_column = GMPLSTUNNELHOPLABELSTATUSES;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &gmplsTunnelHopTable_getFirst;
@@ -4962,8 +4962,6 @@ gmplsTunnelHopTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	gmplsTunnelHopEntry_t *table_entry;
-	void *pvOldDdata = NULL;
-	int ret;
 	
 	switch (reqinfo->mode)
 	{
@@ -4986,18 +4984,6 @@ gmplsTunnelHopTable_mapper (
 			case GMPLSTUNNELHOPLABELSTATUSES:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LabelStatuses, table_entry->u16LabelStatuses_len);
 				break;
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABEL:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ExplicitForwardLabel);
-				break;
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABELPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoExplicitForwardLabelPtr, table_entry->u16ExplicitForwardLabelPtr_len);
-				break;
-			case GMPLSTUNNELHOPEXPLICITREVERSELABEL:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ExplicitReverseLabel);
-				break;
-			case GMPLSTUNNELHOPEXPLICITREVERSELABELPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoExplicitReverseLabelPtr, table_entry->u16ExplicitReverseLabelPtr_len);
-				break;
 				
 			default:
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
@@ -5006,272 +4992,6 @@ gmplsTunnelHopTable_mapper (
 		}
 		break;
 		
-	/*
-	 * Write-support
-	 */
-	case MODE_SET_RESERVE1:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			table_entry = (gmplsTunnelHopEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			
-			switch (table_info->colnum)
-			{
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABEL:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABELPTR:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoExplicitForwardLabelPtr));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case GMPLSTUNNELHOPEXPLICITREVERSELABEL:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case GMPLSTUNNELHOPEXPLICITREVERSELABELPTR:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoExplicitReverseLabelPtr));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-				
-			default:
-				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
-				return SNMP_ERR_NOERROR;
-			}
-		}
-		break;
-		
-	case MODE_SET_RESERVE2:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			table_entry = (gmplsTunnelHopEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			register netsnmp_variable_list *idx1 = table_info->indexes;
-			register netsnmp_variable_list *idx2 = idx1->next_variable;
-			register netsnmp_variable_list *idx3 = idx2->next_variable;
-			
-			switch (table_info->colnum)
-			{
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABEL:
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABELPTR:
-			case GMPLSTUNNELHOPEXPLICITREVERSELABEL:
-			case GMPLSTUNNELHOPEXPLICITREVERSELABELPTR:
-				if (table_entry == NULL)
-				{
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-						return SNMP_ERR_NOERROR;
-					}
-					
-					table_entry = gmplsTunnelHopTable_createEntry (
-						*idx1->val.integer,
-						*idx2->val.integer,
-						*idx3->val.integer);
-					if (table_entry != NULL)
-					{
-						netsnmp_insert_iterator_context (request, table_entry);
-						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
-					}
-					else
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-						return SNMP_ERR_NOERROR;
-					}
-				}
-				break;
-			default:
-				if (table_entry == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
-				}
-				break;
-			}
-		}
-		break;
-		
-	case MODE_SET_FREE:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (gmplsTunnelHopEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
-			{
-				continue;
-			}
-			
-			switch (table_info->colnum)
-			{
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABEL:
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABELPTR:
-			case GMPLSTUNNELHOPEXPLICITREVERSELABEL:
-			case GMPLSTUNNELHOPEXPLICITREVERSELABELPTR:
-				gmplsTunnelHopTable_removeEntry (table_entry);
-				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				break;
-			}
-		}
-		break;
-		
-	case MODE_SET_ACTION:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (gmplsTunnelHopEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			
-			switch (table_info->colnum)
-			{
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABEL:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ExplicitForwardLabel))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u32ExplicitForwardLabel, sizeof (table_entry->u32ExplicitForwardLabel));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u32ExplicitForwardLabel = *request->requestvb->val.integer;
-				break;
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABELPTR:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoExplicitForwardLabelPtr))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ExplicitForwardLabelPtr_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoExplicitForwardLabelPtr, sizeof (table_entry->aoExplicitForwardLabelPtr));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoExplicitForwardLabelPtr, 0, sizeof (table_entry->aoExplicitForwardLabelPtr));
-				memcpy (table_entry->aoExplicitForwardLabelPtr, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16ExplicitForwardLabelPtr_len = request->requestvb->val_len;
-				break;
-			case GMPLSTUNNELHOPEXPLICITREVERSELABEL:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ExplicitReverseLabel))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u32ExplicitReverseLabel, sizeof (table_entry->u32ExplicitReverseLabel));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u32ExplicitReverseLabel = *request->requestvb->val.integer;
-				break;
-			case GMPLSTUNNELHOPEXPLICITREVERSELABELPTR:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoExplicitReverseLabelPtr))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ExplicitReverseLabelPtr_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoExplicitReverseLabelPtr, sizeof (table_entry->aoExplicitReverseLabelPtr));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoExplicitReverseLabelPtr, 0, sizeof (table_entry->aoExplicitReverseLabelPtr));
-				memcpy (table_entry->aoExplicitReverseLabelPtr, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16ExplicitReverseLabelPtr_len = request->requestvb->val_len;
-				break;
-			}
-		}
-		break;
-		
-	case MODE_SET_UNDO:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (gmplsTunnelHopEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
-			{
-				continue;
-			}
-			
-			switch (table_info->colnum)
-			{
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABEL:
-				if (pvOldDdata == table_entry)
-				{
-					gmplsTunnelHopTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				}
-				else
-				{
-					memcpy (&table_entry->u32ExplicitForwardLabel, pvOldDdata, sizeof (table_entry->u32ExplicitForwardLabel));
-				}
-				break;
-			case GMPLSTUNNELHOPEXPLICITFORWARDLABELPTR:
-				if (pvOldDdata == table_entry)
-				{
-					gmplsTunnelHopTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				}
-				else
-				{
-					memcpy (table_entry->aoExplicitForwardLabelPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16ExplicitForwardLabelPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				}
-				break;
-			case GMPLSTUNNELHOPEXPLICITREVERSELABEL:
-				if (pvOldDdata == table_entry)
-				{
-					gmplsTunnelHopTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				}
-				else
-				{
-					memcpy (&table_entry->u32ExplicitReverseLabel, pvOldDdata, sizeof (table_entry->u32ExplicitReverseLabel));
-				}
-				break;
-			case GMPLSTUNNELHOPEXPLICITREVERSELABELPTR:
-				if (pvOldDdata == table_entry)
-				{
-					gmplsTunnelHopTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				}
-				else
-				{
-					memcpy (table_entry->aoExplicitReverseLabelPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16ExplicitReverseLabelPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				}
-				break;
-			}
-		}
-		break;
-		
-	case MODE_SET_COMMIT:
-		break;
 	}
 	
 	return SNMP_ERR_NOERROR;
