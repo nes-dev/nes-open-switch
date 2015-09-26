@@ -2593,19 +2593,17 @@ dot3adAggPortXTable_createEntry (
 	uint32_t u32Index)
 {
 	register dot3adAggPortXEntry_t *poEntry = NULL;
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
-		xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c))
+	if ((poAggPort = dot3adAggPortTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
-	poEntry = &poDot3adAggPortData->oPortX;
+	poEntry = &poAggPort->oX;
 	
 	/*poEntry->au8ProtocolDA = 1652522221570*/;
 	memcpy (poEntry->au8ProtocolDA, IeeeEui_slowProtocolsMulticast, sizeof (poEntry->au8ProtocolDA));
 	
-	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c, 1);
 	return poEntry;
 }
 
@@ -2613,44 +2611,34 @@ dot3adAggPortXEntry_t *
 dot3adAggPortXTable_getByIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c))
+	if ((poAggPort = dot3adAggPortTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggPortData->oPortX;
+	return &poAggPort->oX;
 }
 
 dot3adAggPortXEntry_t *
 dot3adAggPortXTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_getNextIndex (u32Index)) == NULL ||
-		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c))
+	if ((poAggPort = dot3adAggPortTable_getNextIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggPortData->oPortX;
+	return &poAggPort->oX;
 }
 
 /* remove a row from the table */
 void
 dot3adAggPortXTable_removeEntry (dot3adAggPortXEntry_t *poEntry)
 {
-	if (poEntry == NULL)
-	{
-		return;
-	}
-	
-	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortXEntry (poEntry);
-	
-	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_portXCreated_c, 0);
 	return;
 }
 
@@ -2660,7 +2648,7 @@ dot3adAggPortXTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortData_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggPortTable_BTree);
 	return dot3adAggPortXTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2669,18 +2657,18 @@ dot3adAggPortXTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggPortData_t *poEntry = NULL;
+	dot3adAggPortEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortData_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortData_BTree);
+	*my_data_context = (void*) &poEntry->oX;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortTable_BTree);
 	return put_index_data;
 }
 
@@ -2689,17 +2677,17 @@ dot3adAggPortXTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggPortXEntry_t *poEntry = NULL;
+	dot3adAggPortEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = dot3adAggPortXTable_getByIndex (
+	poEntry = dot3adAggPortTable_getByIndex (
 		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oX;
 	return true;
 }
 

@@ -822,6 +822,7 @@ typedef struct dot3adAggPortEntry_t
 	
 	dot3adAggPortStatsEntry_t oStats;
 	dot3adAggPortDebugEntry_t oDebug;
+	dot3adAggPortXEntry_t oX;
 	
  	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oGroup_BTreeNode;
