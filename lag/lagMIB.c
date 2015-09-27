@@ -2450,7 +2450,7 @@ dot3adAggPortDebugTable_getNext (
 	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) &poEntry->oDebug;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortTable_BTree);
 	return put_index_data;
 }
@@ -2470,7 +2470,7 @@ dot3adAggPortDebugTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oDebug;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -2485,6 +2485,7 @@ dot3adAggPortDebugTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	dot3adAggPortDebugEntry_t *table_entry;
+	register dot3adAggPortEntry_t *poEntry = NULL;
 	
 	switch (reqinfo->mode)
 	{
@@ -2494,13 +2495,14 @@ dot3adAggPortDebugTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (dot3adAggPortDebugEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggPortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oDebug;
 			
 			switch (table_info->colnum)
 			{
