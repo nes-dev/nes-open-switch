@@ -841,10 +841,8 @@ mplsInSegmentTable_createEntry (
 		return NULL;
 	}
 	
-	/*poEntry->aoLabelPtr = zeroDotZero*/;
 	poEntry->i32NPop = 1;
 	poEntry->i32AddrFamily = mplsInSegmentAddrFamily_other_c;
-	/*poEntry->aoTrafficParamPtr = zeroDotZero*/;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = mplsInSegmentStorageType_volatile_c;
 	
@@ -1182,12 +1180,6 @@ mplsInSegmentTable_mapper (
 			case MPLSINSEGMENTINTERFACE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32Interface);
 				break;
-			case MPLSINSEGMENTLABEL:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Label);
-				break;
-			case MPLSINSEGMENTLABELPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoLabelPtr, table_entry->u16LabelPtr_len);
-				break;
 			case MPLSINSEGMENTNPOP:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32NPop);
 				break;
@@ -1199,9 +1191,6 @@ mplsInSegmentTable_mapper (
 				break;
 			case MPLSINSEGMENTOWNER:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Owner);
-				break;
-			case MPLSINSEGMENTTRAFFICPARAMPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoTrafficParamPtr, table_entry->u16TrafficParamPtr_len);
 				break;
 			case MPLSINSEGMENTROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -1236,22 +1225,6 @@ mplsInSegmentTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case MPLSINSEGMENTLABEL:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case MPLSINSEGMENTLABELPTR:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoLabelPtr));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
 			case MPLSINSEGMENTNPOP:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
@@ -1262,14 +1235,6 @@ mplsInSegmentTable_mapper (
 				break;
 			case MPLSINSEGMENTADDRFAMILY:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case MPLSINSEGMENTTRAFFICPARAMPTR:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoTrafficParamPtr));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1401,38 +1366,6 @@ mplsInSegmentTable_mapper (
 				
 				table_entry->u32Interface = *request->requestvb->val.integer;
 				break;
-			case MPLSINSEGMENTLABEL:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32Label))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u32Label, sizeof (table_entry->u32Label));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u32Label = *request->requestvb->val.integer;
-				break;
-			case MPLSINSEGMENTLABELPTR:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoLabelPtr))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16LabelPtr_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoLabelPtr, sizeof (table_entry->aoLabelPtr));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoLabelPtr, 0, sizeof (table_entry->aoLabelPtr));
-				memcpy (table_entry->aoLabelPtr, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16LabelPtr_len = request->requestvb->val_len;
-				break;
 			case MPLSINSEGMENTNPOP:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32NPop))) == NULL)
 				{
@@ -1460,24 +1393,6 @@ mplsInSegmentTable_mapper (
 				}
 				
 				table_entry->i32AddrFamily = *request->requestvb->val.integer;
-				break;
-			case MPLSINSEGMENTTRAFFICPARAMPTR:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoTrafficParamPtr))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16TrafficParamPtr_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoTrafficParamPtr, sizeof (table_entry->aoTrafficParamPtr));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoTrafficParamPtr, 0, sizeof (table_entry->aoTrafficParamPtr));
-				memcpy (table_entry->aoTrafficParamPtr, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16TrafficParamPtr_len = request->requestvb->val_len;
 				break;
 			case MPLSINSEGMENTSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
@@ -1535,22 +1450,11 @@ mplsInSegmentTable_mapper (
 			case MPLSINSEGMENTINTERFACE:
 				memcpy (&table_entry->u32Interface, pvOldDdata, sizeof (table_entry->u32Interface));
 				break;
-			case MPLSINSEGMENTLABEL:
-				memcpy (&table_entry->u32Label, pvOldDdata, sizeof (table_entry->u32Label));
-				break;
-			case MPLSINSEGMENTLABELPTR:
-				memcpy (table_entry->aoLabelPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16LabelPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				break;
 			case MPLSINSEGMENTNPOP:
 				memcpy (&table_entry->i32NPop, pvOldDdata, sizeof (table_entry->i32NPop));
 				break;
 			case MPLSINSEGMENTADDRFAMILY:
 				memcpy (&table_entry->i32AddrFamily, pvOldDdata, sizeof (table_entry->i32AddrFamily));
-				break;
-			case MPLSINSEGMENTTRAFFICPARAMPTR:
-				memcpy (table_entry->aoTrafficParamPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16TrafficParamPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case MPLSINSEGMENTROWSTATUS:
 				switch (*request->requestvb->val.integer)

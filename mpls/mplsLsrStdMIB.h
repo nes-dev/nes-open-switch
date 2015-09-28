@@ -516,13 +516,10 @@ Netsnmp_Node_Handler mplsInterfaceTable_mapper;
  */
 #define MPLSINSEGMENTINDEX 1
 #define MPLSINSEGMENTINTERFACE 2
-#define MPLSINSEGMENTLABEL 3
-#define MPLSINSEGMENTLABELPTR 4
 #define MPLSINSEGMENTNPOP 5
 #define MPLSINSEGMENTADDRFAMILY 6
 #define MPLSINSEGMENTXCINDEX 7
 #define MPLSINSEGMENTOWNER 8
-#define MPLSINSEGMENTTRAFFICPARAMPTR 9
 #define MPLSINSEGMENTROWSTATUS 10
 #define MPLSINSEGMENTSTORAGETYPE 11
 
@@ -610,16 +607,11 @@ typedef struct mplsInSegmentEntry_t
 	
 	/* Column values */
 	uint32_t u32Interface;
-	uint32_t u32Label;
-	xOid_t aoLabelPtr[128];
-	size_t u16LabelPtr_len;	/* # of xOid_t elements */
 	int32_t i32NPop;
 	int32_t i32AddrFamily;
 	uint8_t au8XCIndex[24];
 	size_t u16XCIndex_len;	/* # of uint8_t elements */
 	int32_t i32Owner;
-	xOid_t aoTrafficParamPtr[128];
-	size_t u16TrafficParamPtr_len;	/* # of xOid_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
