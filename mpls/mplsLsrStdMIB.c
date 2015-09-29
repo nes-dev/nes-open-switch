@@ -2538,7 +2538,7 @@ mplsOutSegmentPerfTable_getNext (
 	poEntry = xBTree_entry (*my_loop_context, mplsOutSegmentEntry_t, oBTreeNode);
 	
 	snmp_set_var_value (idx, poEntry->au8Index, poEntry->u16Index_len);
-	*my_data_context = (void*) &poEntry->oPerf;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsOutSegmentTable_BTree);
 	return put_index_data;
 }
@@ -2558,7 +2558,7 @@ mplsOutSegmentPerfTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oPerf;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -2573,6 +2573,7 @@ mplsOutSegmentPerfTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	mplsOutSegmentPerfEntry_t *table_entry;
+	register mplsOutSegmentEntry_t *poEntry = NULL;
 	
 	switch (reqinfo->mode)
 	{
@@ -2582,13 +2583,14 @@ mplsOutSegmentPerfTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsOutSegmentPerfEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsOutSegmentEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oPerf;
 			
 			switch (table_info->colnum)
 			{
