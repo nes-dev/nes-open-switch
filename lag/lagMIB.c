@@ -2879,21 +2879,20 @@ neAggTable_createEntry (
 	uint32_t u32Dot3adAggIndex)
 {
 	register neAggEntry_t *poEntry = NULL;
-	register dot3adAggData_t *poDot3adAggData = NULL;
+	register dot3adAggEntry_t *poAgg = NULL;
 	
-	if ((poDot3adAggData = dot3adAggData_createEntry (u32Dot3adAggIndex)) == NULL)
+	if ((poAgg = dot3adAggTable_createEntry (u32Dot3adAggIndex)) == NULL)
 	{
 		return NULL;
 	}
-	poEntry = &poDot3adAggData->oNe;
+	poEntry = &poAgg->oNe;
 	
-	poEntry->i32GroupType = neAggGroupType_none_c;
+	poEntry->i32GroupType = neAggGroupType_internal_c;
 	poEntry->u32GroupIndex = 0;
 	/*poEntry->au8BandwidthMax = 0*/;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neAggStorageType_nonVolatile_c;
 	
-	xBitmap_setBit (poDot3adAggData->au8Flags, dot3adAggFlags_neCreated_c, 1); 
 	return poEntry;
 }
 
@@ -2901,30 +2900,28 @@ neAggEntry_t *
 neAggTable_getByIndex (
 	uint32_t u32Dot3adAggIndex)
 {
-	register dot3adAggData_t *poDot3adAggData = NULL;
+	register dot3adAggEntry_t *poAgg = NULL;
 	
-	if ((poDot3adAggData = dot3adAggData_getByIndex (u32Dot3adAggIndex)) == NULL ||
-		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_neCreated_c))
+	if ((poAgg = dot3adAggTable_getByIndex (u32Dot3adAggIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggData->oNe;
+	return &poAgg->oNe;
 }
 
 neAggEntry_t *
 neAggTable_getNextIndex (
 	uint32_t u32Dot3adAggIndex)
 {
-	register dot3adAggData_t *poDot3adAggData = NULL;
+	register dot3adAggEntry_t *poAgg = NULL;
 	
-	if ((poDot3adAggData = dot3adAggData_getNextIndex (u32Dot3adAggIndex)) == NULL ||
-		!xBitmap_getBit (poDot3adAggData->au8Flags, dot3adAggFlags_neCreated_c))
+	if ((poAgg = dot3adAggTable_getNextIndex (u32Dot3adAggIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggData->oNe;
+	return &poAgg->oNe;
 }
 
 /* remove a row from the table */
@@ -2936,7 +2933,7 @@ neAggTable_removeEntry (neAggEntry_t *poEntry)
 		return;
 	}
 	
-	dot3adAggData_removeEntry (dot3adAggData_getByNeEntry (poEntry));
+	dot3adAggTable_removeEntry (dot3adAggTable_getByNeEntry (poEntry));
 	return;
 }
 
