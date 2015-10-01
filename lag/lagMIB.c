@@ -2704,6 +2704,7 @@ dot3adAggPortXTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	dot3adAggPortXEntry_t *table_entry;
+	register dot3adAggPortEntry_t *poEntry = NULL;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -2715,13 +2716,14 @@ dot3adAggPortXTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (dot3adAggPortXEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggPortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
@@ -2742,8 +2744,9 @@ dot3adAggPortXTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (dot3adAggPortXEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggPortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
@@ -2766,13 +2769,26 @@ dot3adAggPortXTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (dot3adAggPortXEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggPortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
+			}
+			table_entry = &poEntry->oX;
+			
+			register dot3adAggPortEntry_t *poAggPort = dot3adAggPortTable_getByPortXEntry (table_entry);
+			
+			switch (table_info->colnum)
+			{
+			case DOT3ADAGGPORTPROTOCOLDA:
+				if (poAggPort->oNe.u8RowStatus == xRowStatus_active_c || poAggPort->oNe.u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
 			}
 		}
 		break;
@@ -2784,8 +2800,9 @@ dot3adAggPortXTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (dot3adAggPortXEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggPortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
@@ -2815,12 +2832,13 @@ dot3adAggPortXTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (dot3adAggPortXEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggPortEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
