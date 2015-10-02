@@ -821,6 +821,7 @@ typedef struct dot3adAggPortEntry_t
 	size_t u16PartnerOperState_len;	/* # of uint8_t elements */
 	uint8_t u8AggregateOrIndividual;
 	
+	neAggPortEntry_t oNe;
 	dot3adAggPortStatsEntry_t oStats;
 	dot3adAggPortDebugEntry_t oDebug;
 	dot3adAggPortXEntry_t oX;

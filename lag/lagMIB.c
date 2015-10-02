@@ -3843,21 +3843,20 @@ neAggPortTable_createEntry (
 	uint32_t u32Dot3adAggPortIndex)
 {
 	register neAggPortEntry_t *poEntry = NULL;
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_createEntry (u32Dot3adAggPortIndex)) == NULL)
+	if ((poAggPort = dot3adAggPortTable_createEntry (u32Dot3adAggPortIndex)) == NULL)
 	{
 		return NULL;
 	}
-	poEntry = &poDot3adAggPortData->oNe;
+	poEntry = &poAggPort->oNe;
 	
-	poEntry->i32GroupType = neAggPortGroupType_none_c;
+	poEntry->i32GroupType = neAggPortGroupType_internal_c;
 	poEntry->u32GroupIndex = 0;
 	xBitmap_setBitsRev (poEntry->au8Flags, 2, 1, neAggPortFlags_lacp_c, neAggPortFlags_lacpActive_c);
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = neAggPortStorageType_nonVolatile_c;
 	
-	xBitmap_setBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_neCreated_c, 1); 
 	return poEntry;
 }
 
@@ -3865,30 +3864,28 @@ neAggPortEntry_t *
 neAggPortTable_getByIndex (
 	uint32_t u32Dot3adAggPortIndex)
 {
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (u32Dot3adAggPortIndex)) == NULL ||
-		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_neCreated_c))
+	if ((poAggPort = dot3adAggPortTable_getByIndex (u32Dot3adAggPortIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggPortData->oNe;
+	return &poAggPort->oNe;
 }
 
 neAggPortEntry_t *
 neAggPortTable_getNextIndex (
 	uint32_t u32Dot3adAggPortIndex)
 {
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_getNextIndex (u32Dot3adAggPortIndex)) == NULL ||
-		!xBitmap_getBit (poDot3adAggPortData->au8Flags, dot3adAggPortFlags_neCreated_c))
+	if ((poAggPort = dot3adAggPortTable_getNextIndex (u32Dot3adAggPortIndex)) == NULL)
 	{
 		return NULL;
 	}
 	
-	return &poDot3adAggPortData->oNe;
+	return &poAggPort->oNe;
 }
 
 /* remove a row from the table */
@@ -3900,7 +3897,7 @@ neAggPortTable_removeEntry (neAggPortEntry_t *poEntry)
 		return;
 	}
 	
-	dot3adAggPortData_removeEntry (dot3adAggPortData_getByNeEntry (poEntry));
+	dot3adAggPortTable_removeEntry (dot3adAggPortTable_getByNeEntry (poEntry));
 	return;
 }
 
