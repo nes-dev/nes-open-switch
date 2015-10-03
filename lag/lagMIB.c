@@ -3163,7 +3163,7 @@ neAggTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggData_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oDot3adAggTable_BTree);
 	return neAggTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -3172,18 +3172,18 @@ neAggTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	dot3adAggData_t *poEntry = NULL;
+	dot3adAggEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, dot3adAggData_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, dot3adAggEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggData_BTree);
+	*my_data_context = (void*) &poEntry->oNe;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggTable_BTree);
 	return put_index_data;
 }
 
@@ -3192,7 +3192,7 @@ neAggTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neAggEntry_t *poEntry = NULL;
+	dot3adAggEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
 	poEntry = neAggTable_getByIndex (
@@ -3202,7 +3202,7 @@ neAggTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oNe;
 	return true;
 }
 
@@ -3217,6 +3217,7 @@ neAggTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	neAggEntry_t *table_entry;
+	register dot3adAggEntry_t *poEntry = NULL;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -3228,13 +3229,14 @@ neAggTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3267,8 +3269,9 @@ neAggTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3323,9 +3326,10 @@ neAggTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
 			register netsnmp_variable_list *idx1 = table_info->indexes;
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3369,6 +3373,20 @@ neAggTable_mapper (
 				}
 				break;
 			}
+			
+			switch (table_info->colnum)
+			{
+			case NEAGGGROUPTYPE:
+			case NEAGGGROUPINDEX:
+			case NEAGGBANDWIDTHMAX:
+			case NEAGGSTORAGETYPE:
+				if (table_entry->u8RowStatus == xRowStatus_active_c || table_entry->u8RowStatus == xRowStatus_notReady_c)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			}
 		}
 		break;
 		
@@ -3376,12 +3394,13 @@ neAggTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3402,8 +3421,9 @@ neAggTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3472,8 +3492,9 @@ neAggTable_mapper (
 		/* Check the internal consistency of an active row */
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3500,12 +3521,13 @@ neAggTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
@@ -3539,8 +3561,9 @@ neAggTable_mapper (
 	case MODE_SET_COMMIT:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neAggEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (dot3adAggEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
