@@ -40,8 +40,7 @@ extern neIfTypeStatusModifier_t lag_portStatusModify;
 
 bool
 	neAggRowStatus_update (
-		neAggEntry_t *poEntry,
-		uint8_t u8RowStatus);
+		dot3adAggEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	neAggPortRowStatus_update (
 		neAggPortEntry_t *poEntry,

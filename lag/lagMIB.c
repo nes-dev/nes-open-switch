@@ -3046,7 +3046,7 @@ bool
 neAggRowStatus_handler (
 	neAggEntry_t *poEntry, uint8_t u8RowStatus)
 {
-	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByNeEntry (poEntry);
+	register dot3adAggEntry_t *poAgg = dot3adAggTable_getByNeEntry (poEntry);
 	
 	if (poEntry->u8RowStatus == u8RowStatus)
 	{
@@ -3056,26 +3056,10 @@ neAggRowStatus_handler (
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
+		
 		/* TODO */
 		
-		{
-			register uint32_t u32Index = 0;
-			register dot3adAggPortData_t *poDot3adAggPortData = NULL;
-			
-			while (
-				(poDot3adAggPortData = dot3adAggPortData_Group_getNextIndex (poDot3adAggData->i32GroupType, poDot3adAggData->u32GroupIndex, u32Index)) != NULL &&
-				poDot3adAggPortData->i32GroupType == poDot3adAggData->i32GroupType && poDot3adAggPortData->u32GroupIndex == poDot3adAggData->u32GroupIndex)
-			{
-				u32Index = poDot3adAggPortData->u32Index;
-				
-				if (!neAggPortRowStatus_handler (&poDot3adAggPortData->oNe, u8RowStatus | xRowStatus_fromParent_c))
-				{
-					goto neAggRowStatus_handler_cleanup;
-				}
-			}
-		}
-		
-		if (!neAggRowStatus_update (poEntry, u8RowStatus))
+		if (!neAggRowStatus_update (poAgg, u8RowStatus))
 		{
 			goto neAggRowStatus_handler_cleanup;
 		}
@@ -3084,24 +3068,7 @@ neAggRowStatus_handler (
 		break;
 		
 	case xRowStatus_notInService_c:
-		{
-			register uint32_t u32Index = 0;
-			register dot3adAggPortData_t *poDot3adAggPortData = NULL;
-			
-			while (
-				(poDot3adAggPortData = dot3adAggPortData_Group_getNextIndex (poDot3adAggData->i32GroupType, poDot3adAggData->u32GroupIndex, u32Index)) != NULL &&
-				poDot3adAggPortData->i32GroupType == poDot3adAggData->i32GroupType && poDot3adAggPortData->u32GroupIndex == poDot3adAggData->u32GroupIndex)
-			{
-				u32Index = poDot3adAggPortData->u32Index;
-				
-				if (!neAggPortRowStatus_handler (&poDot3adAggPortData->oNe, u8RowStatus | xRowStatus_fromParent_c))
-				{
-					goto neAggRowStatus_handler_cleanup;
-				}
-			}
-		}
-		
-		if (!neAggRowStatus_update (poEntry, u8RowStatus))
+		if (!neAggRowStatus_update (poAgg, u8RowStatus))
 		{
 			goto neAggRowStatus_handler_cleanup;
 		}
@@ -3119,24 +3086,7 @@ neAggRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		{
-			register uint32_t u32Index = 0;
-			register dot3adAggPortData_t *poDot3adAggPortData = NULL;
-			
-			while (
-				(poDot3adAggPortData = dot3adAggPortData_Group_getNextIndex (poDot3adAggData->i32GroupType, poDot3adAggData->u32GroupIndex, u32Index)) != NULL &&
-				poDot3adAggPortData->i32GroupType == poDot3adAggData->i32GroupType && poDot3adAggPortData->u32GroupIndex == poDot3adAggData->u32GroupIndex)
-			{
-				u32Index = poDot3adAggPortData->u32Index;
-				
-				if (!neAggPortRowStatus_handler (&poDot3adAggPortData->oNe, u8RowStatus | xRowStatus_fromParent_c))
-				{
-					goto neAggRowStatus_handler_cleanup;
-				}
-			}
-		}
-		
-		if (!neAggRowStatus_update (poEntry, u8RowStatus))
+		if (!neAggRowStatus_update (poAgg, u8RowStatus))
 		{
 			goto neAggRowStatus_handler_cleanup;
 		}

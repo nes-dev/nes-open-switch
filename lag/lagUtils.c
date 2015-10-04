@@ -122,51 +122,66 @@ lag_aggPortStatusModify_cleanup:
 
 bool
 neAggRowStatus_update (
-	neAggEntry_t *poEntry,
-	uint8_t u8RowStatus)
+	dot3adAggEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
-	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByAggEntry (poEntry);
+	
+	{
+		register uint32_t u32Index = 0;
+		register dot3adAggPortEntry_t *poAggPort = NULL;
+		
+		while (
+			(poAggPort = dot3adAggPortTable_Group_getNextIndex (poEntry->oK.i32GroupType, poEntry->oK.u32GroupIndex, u32Index)) != NULL &&
+			poAggPort->oK.i32GroupType == poEntry->oK.i32GroupType && poAggPort->oK.u32GroupIndex == poEntry->oK.u32GroupIndex)
+		{
+			u32Index = poAggPort->u32Index;
+			
+			if (!neAggPortRowStatus_handler (&poAggPort->oNe, u8RowStatus | xRowStatus_fromParent_c))
+			{
+				goto neAggRowStatus_update_cleanup;
+			}
+		}
+	}
 	
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
-		if (!neIfStatus_modify (poDot3adAggData->u32Index, 0, xOperStatus_notPresent_c, true, false))
+		if (!neIfStatus_modify (poEntry->u32Index, 0, xOperStatus_notPresent_c, true, false))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
 		
 		/* TODO */
 		
-		if (!dot3adAggLacpStatus_update (poDot3adAggData, u8RowStatus))
+		if (!dot3adAggLacpStatus_update (poEntry, u8RowStatus))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!neIfStatus_modify (poDot3adAggData->u32Index, 0, xOperStatus_down_c, true, false))
+		if (!neIfStatus_modify (poEntry->u32Index, 0, xOperStatus_down_c, true, false))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
 		
 		/* TODO */
 		
-		if (!dot3adAggLacpStatus_update (poDot3adAggData, u8RowStatus))
+		if (!dot3adAggLacpStatus_update (poEntry, u8RowStatus))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!neIfStatus_modify (poDot3adAggData->u32Index, 0, xOperStatus_notPresent_c, true, false))
+		if (!neIfStatus_modify (poEntry->u32Index, 0, xOperStatus_notPresent_c, true, false))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
 		
 		/* TODO */
 		
-		if (!dot3adAggLacpStatus_update (poDot3adAggData, u8RowStatus))
+		if (!dot3adAggLacpStatus_update (poEntry, u8RowStatus))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
