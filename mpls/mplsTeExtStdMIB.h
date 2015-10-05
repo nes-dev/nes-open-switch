@@ -79,10 +79,10 @@ enum
 typedef struct mplsTunnelExtEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
-	uint32_t u32Instance;
-	uint32_t u32IngressLSRId;
-	uint32_t u32EgressLSRId;
+// 	uint32_t u32Index;
+// 	uint32_t u32Instance;
+// 	uint32_t u32IngressLSRId;
+// 	uint32_t u32EgressLSRId;
 	
 	/* Column values */
 	xOid_t aoOppositeDirPtr[128];
@@ -94,10 +94,10 @@ typedef struct mplsTunnelExtEntry_t
 	uint8_t u8IngressLSRLocalIdValid;
 	uint8_t u8EgressLSRLocalIdValid;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } mplsTunnelExtEntry_t;
 
-extern xBTree_t oMplsTunnelExtTable_BTree;
+// extern xBTree_t oMplsTunnelExtTable_BTree;
 
 /* mplsTunnelExtTable table mapper */
 void mplsTunnelExtTable_init (void);

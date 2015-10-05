@@ -201,7 +201,7 @@ mplsTunnelExtTable_getNext (
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32IngressLSRId);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32EgressLSRId);
-	*my_data_context = (void*) &poEntry->oX;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsTunnelTable_BTree);
 	return put_index_data;
 }
@@ -227,7 +227,7 @@ mplsTunnelExtTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oX;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -242,6 +242,7 @@ mplsTunnelExtTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	mplsTunnelExtEntry_t *table_entry;
+	register mplsTunnelEntry_t *poEntry = NULL;
 	void *pvOldDdata = NULL;
 	int ret;
 	
@@ -253,13 +254,14 @@ mplsTunnelExtTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsTunnelExtEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsTunnelEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
@@ -298,8 +300,9 @@ mplsTunnelExtTable_mapper (
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsTunnelExtEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsTunnelEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
@@ -370,12 +373,14 @@ mplsTunnelExtTable_mapper (
 	case MODE_SET_RESERVE2:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (mplsTunnelExtEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsTunnelEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			register netsnmp_variable_list *idx1 = table_info->indexes;
-			register netsnmp_variable_list *idx2 = idx1->next_variable;
-			register netsnmp_variable_list *idx3 = idx2->next_variable;
-			register netsnmp_variable_list *idx4 = idx3->next_variable;
+			if (poEntry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
@@ -386,35 +391,10 @@ mplsTunnelExtTable_mapper (
 			case MPLSTUNNELEXTDESTTNLVALID:
 			case MPLSTUNNELEXTINGRESSLSRLOCALIDVALID:
 			case MPLSTUNNELEXTEGRESSLSRLOCALIDVALID:
-				if (table_entry == NULL)
+				if (poEntry->u8RowStatus == xRowStatus_active_c || poEntry->u8RowStatus == xRowStatus_notReady_c)
 				{
-					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
-						return SNMP_ERR_NOERROR;
-					}
-					
-					table_entry = mplsTunnelExtTable_createEntry (
-						*idx1->val.integer,
-						*idx2->val.integer,
-						*idx3->val.integer,
-						*idx4->val.integer);
-					if (table_entry != NULL)
-					{
-						netsnmp_insert_iterator_context (request, table_entry);
-						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
-					}
-					else
-					{
-						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-						return SNMP_ERR_NOERROR;
-					}
-				}
-				break;
-			default:
-				if (table_entry == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
 				}
 				break;
 			}
@@ -422,38 +402,15 @@ mplsTunnelExtTable_mapper (
 		break;
 		
 	case MODE_SET_FREE:
-		for (request = requests; request != NULL; request = request->next)
-		{
-			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (mplsTunnelExtEntry_t*) netsnmp_extract_iterator_context (request);
-			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
-			{
-				continue;
-			}
-			
-			switch (table_info->colnum)
-			{
-			case MPLSTUNNELEXTOPPOSITEDIRPTR:
-			case MPLSTUNNELEXTOPPOSITEDIRTNLVALID:
-			case MPLSTUNNELEXTDESTTNLINDEX:
-			case MPLSTUNNELEXTDESTTNLLSPINDEX:
-			case MPLSTUNNELEXTDESTTNLVALID:
-			case MPLSTUNNELEXTINGRESSLSRLOCALIDVALID:
-			case MPLSTUNNELEXTEGRESSLSRLOCALIDVALID:
-				mplsTunnelExtTable_removeEntry (table_entry);
-				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				break;
-			}
-		}
 		break;
 		
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (mplsTunnelExtEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsTunnelEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
@@ -567,12 +524,13 @@ mplsTunnelExtTable_mapper (
 		for (request = requests; request != NULL; request = request->next)
 		{
 			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
-			table_entry = (mplsTunnelExtEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsTunnelEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL || pvOldDdata == NULL)
+			if (poEntry == NULL || pvOldDdata == NULL)
 			{
 				continue;
 			}
+			table_entry = &poEntry->oX;
 			
 			switch (table_info->colnum)
 			{
