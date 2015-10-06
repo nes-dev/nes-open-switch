@@ -775,6 +775,62 @@ mplsTunnelTable_removeHier (
 	return bRetCode;
 }
 
+bool
+mplsTunnelRowStatus_handler (
+	mplsTunnelEntry_t *poEntry, uint8_t u8RowStatus)
+{
+	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8RowStatus & xRowStatus_mask_c;
+	
+	if (poEntry->u8RowStatus == u8RealStatus)
+	{
+		goto mplsTunnelRowStatus_handler_success;
+	}
+	
+	switch (u8RealStatus)
+	{
+	case xRowStatus_active_c:
+		/*if (!mplsTunnelRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto mplsTunnelRowStatus_handler_cleanup;
+		}*/
+		
+		poEntry->u8RowStatus = u8RealStatus;
+		break;
+		
+	case xRowStatus_notInService_c:
+		/*if (!mplsTunnelRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto mplsTunnelRowStatus_handler_cleanup;
+		}*/
+		
+		poEntry->u8RowStatus =
+			poEntry->u8RowStatus == xRowStatus_active_c && (u8RowStatus & xRowStatus_fromParent_c) ? xRowStatus_notReady_c: xRowStatus_notInService_c;
+		break;
+		
+	case xRowStatus_createAndGo_c:
+		goto mplsTunnelRowStatus_handler_cleanup;
+		
+	case xRowStatus_createAndWait_c:
+	case xRowStatus_destroy_c:
+		/*if (!mplsTunnelRowStatus_update (poEntry, u8RealStatus))
+		{
+			goto mplsTunnelRowStatus_handler_cleanup;
+		}*/
+		
+		poEntry->u8RowStatus = xRowStatus_notInService_c;
+		break;
+	}
+	
+mplsTunnelRowStatus_handler_success:
+	
+	bRetCode = true;
+	
+mplsTunnelRowStatus_handler_cleanup:
+	
+	return bRetCode || (u8RowStatus & xRowStatus_fromParent_c);
+}
+
 /* example iterator hook routines - using 'getNext' to do most of the work */
 netsnmp_variable_list *
 mplsTunnelTable_getFirst (

@@ -1058,6 +1058,8 @@ mplsTunnelEntry_t * mplsTunnelTable_createExt (
 bool mplsTunnelTable_removeExt (mplsTunnelEntry_t *poEntry);
 bool mplsTunnelTable_createHier (mplsTunnelEntry_t *poEntry);
 bool mplsTunnelTable_removeHier (mplsTunnelEntry_t *poEntry);
+bool mplsTunnelRowStatus_handler (
+	mplsTunnelEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point mplsTunnelTable_getFirst;
 Netsnmp_Next_Data_Point mplsTunnelTable_getNext;
