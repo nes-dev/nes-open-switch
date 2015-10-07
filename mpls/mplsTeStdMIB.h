@@ -597,10 +597,6 @@ Netsnmp_Node_Handler gmplsTunnelHopTable_mapper;
  *	table gmplsTunnelARHopTable definitions
  */
 #define GMPLSTUNNELARHOPLABELSTATUSES 1
-#define GMPLSTUNNELARHOPEXPLICITFORWARDLABEL 2
-#define GMPLSTUNNELARHOPEXPLICITFORWARDLABELPTR 3
-#define GMPLSTUNNELARHOPEXPLICITREVERSELABEL 4
-#define GMPLSTUNNELARHOPEXPLICITREVERSELABELPTR 5
 #define GMPLSTUNNELARHOPPROTECTION 6
 
 enum
@@ -626,12 +622,6 @@ typedef struct gmplsTunnelARHopEntry_t
 	/* Column values */
 	uint8_t au8LabelStatuses[1];
 	size_t u16LabelStatuses_len;	/* # of uint8_t elements */
-	uint32_t u32ExplicitForwardLabel;
-	xOid_t aoExplicitForwardLabelPtr[128];
-	size_t u16ExplicitForwardLabelPtr_len;	/* # of xOid_t elements */
-	uint32_t u32ExplicitReverseLabel;
-	xOid_t aoExplicitReverseLabelPtr[128];
-	size_t u16ExplicitReverseLabelPtr_len;	/* # of xOid_t elements */
 	uint8_t au8Protection[1];
 	size_t u16Protection_len;	/* # of uint8_t elements */
 	
