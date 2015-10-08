@@ -659,13 +659,10 @@ Netsnmp_Node_Handler mplsInSegmentTable_mapper;
 #define MPLSOUTSEGMENTINDEX 1
 #define MPLSOUTSEGMENTINTERFACE 2
 #define MPLSOUTSEGMENTPUSHTOPLABEL 3
-#define MPLSOUTSEGMENTTOPLABEL 4
-#define MPLSOUTSEGMENTTOPLABELPTR 5
 #define MPLSOUTSEGMENTNEXTHOPADDRTYPE 6
 #define MPLSOUTSEGMENTNEXTHOPADDR 7
 #define MPLSOUTSEGMENTXCINDEX 8
 #define MPLSOUTSEGMENTOWNER 9
-#define MPLSOUTSEGMENTTRAFFICPARAMPTR 10
 #define MPLSOUTSEGMENTROWSTATUS 11
 #define MPLSOUTSEGMENTSTORAGETYPE 12
 
@@ -722,17 +719,12 @@ typedef struct mplsOutSegmentEntry_t
 	/* Column values */
 	uint32_t u32Interface;
 	uint8_t u8PushTopLabel;
-	uint32_t u32TopLabel;
-	xOid_t aoTopLabelPtr[128];
-	size_t u16TopLabelPtr_len;	/* # of xOid_t elements */
 	int32_t i32NextHopAddrType;
 	uint8_t au8NextHopAddr[255];
 	size_t u16NextHopAddr_len;	/* # of uint8_t elements */
 	uint8_t au8XCIndex[24];
 	size_t u16XCIndex_len;	/* # of uint8_t elements */
 	int32_t i32Owner;
-	xOid_t aoTrafficParamPtr[128];
-	size_t u16TrafficParamPtr_len;	/* # of xOid_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	

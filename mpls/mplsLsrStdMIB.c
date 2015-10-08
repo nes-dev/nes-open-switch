@@ -1789,9 +1789,6 @@ mplsOutSegmentTable_createEntry (
 	}
 	
 	poEntry->u8PushTopLabel = mplsOutSegmentPushTopLabel_true_c;
-	poEntry->u32TopLabel = 0;
-	/*poEntry->aoTopLabelPtr = zeroDotZero*/;
-	/*poEntry->aoTrafficParamPtr = zeroDotZero*/;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = mplsOutSegmentStorageType_volatile_c;
 	
@@ -1975,12 +1972,6 @@ mplsOutSegmentTable_mapper (
 			case MPLSOUTSEGMENTPUSHTOPLABEL:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8PushTopLabel);
 				break;
-			case MPLSOUTSEGMENTTOPLABEL:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32TopLabel);
-				break;
-			case MPLSOUTSEGMENTTOPLABELPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoTopLabelPtr, table_entry->u16TopLabelPtr_len);
-				break;
 			case MPLSOUTSEGMENTNEXTHOPADDRTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32NextHopAddrType);
 				break;
@@ -1992,9 +1983,6 @@ mplsOutSegmentTable_mapper (
 				break;
 			case MPLSOUTSEGMENTOWNER:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Owner);
-				break;
-			case MPLSOUTSEGMENTTRAFFICPARAMPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoTrafficParamPtr, table_entry->u16TrafficParamPtr_len);
 				break;
 			case MPLSOUTSEGMENTROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -2037,22 +2025,6 @@ mplsOutSegmentTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case MPLSOUTSEGMENTTOPLABEL:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case MPLSOUTSEGMENTTOPLABELPTR:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoTopLabelPtr));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
 			case MPLSOUTSEGMENTNEXTHOPADDRTYPE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
@@ -2063,14 +2035,6 @@ mplsOutSegmentTable_mapper (
 				break;
 			case MPLSOUTSEGMENTNEXTHOPADDR:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8NextHopAddr));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case MPLSOUTSEGMENTTRAFFICPARAMPTR:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoTrafficParamPtr));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -2216,38 +2180,6 @@ mplsOutSegmentTable_mapper (
 				
 				table_entry->u8PushTopLabel = *request->requestvb->val.integer;
 				break;
-			case MPLSOUTSEGMENTTOPLABEL:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32TopLabel))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u32TopLabel, sizeof (table_entry->u32TopLabel));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u32TopLabel = *request->requestvb->val.integer;
-				break;
-			case MPLSOUTSEGMENTTOPLABELPTR:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoTopLabelPtr))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16TopLabelPtr_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoTopLabelPtr, sizeof (table_entry->aoTopLabelPtr));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoTopLabelPtr, 0, sizeof (table_entry->aoTopLabelPtr));
-				memcpy (table_entry->aoTopLabelPtr, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16TopLabelPtr_len = request->requestvb->val_len;
-				break;
 			case MPLSOUTSEGMENTNEXTHOPADDRTYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32NextHopAddrType))) == NULL)
 				{
@@ -2279,24 +2211,6 @@ mplsOutSegmentTable_mapper (
 				memset (table_entry->au8NextHopAddr, 0, sizeof (table_entry->au8NextHopAddr));
 				memcpy (table_entry->au8NextHopAddr, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16NextHopAddr_len = request->requestvb->val_len;
-				break;
-			case MPLSOUTSEGMENTTRAFFICPARAMPTR:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoTrafficParamPtr))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16TrafficParamPtr_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoTrafficParamPtr, sizeof (table_entry->aoTrafficParamPtr));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoTrafficParamPtr, 0, sizeof (table_entry->aoTrafficParamPtr));
-				memcpy (table_entry->aoTrafficParamPtr, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16TrafficParamPtr_len = request->requestvb->val_len;
 				break;
 			case MPLSOUTSEGMENTSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
@@ -2357,23 +2271,12 @@ mplsOutSegmentTable_mapper (
 			case MPLSOUTSEGMENTPUSHTOPLABEL:
 				memcpy (&table_entry->u8PushTopLabel, pvOldDdata, sizeof (table_entry->u8PushTopLabel));
 				break;
-			case MPLSOUTSEGMENTTOPLABEL:
-				memcpy (&table_entry->u32TopLabel, pvOldDdata, sizeof (table_entry->u32TopLabel));
-				break;
-			case MPLSOUTSEGMENTTOPLABELPTR:
-				memcpy (table_entry->aoTopLabelPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16TopLabelPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				break;
 			case MPLSOUTSEGMENTNEXTHOPADDRTYPE:
 				memcpy (&table_entry->i32NextHopAddrType, pvOldDdata, sizeof (table_entry->i32NextHopAddrType));
 				break;
 			case MPLSOUTSEGMENTNEXTHOPADDR:
 				memcpy (table_entry->au8NextHopAddr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16NextHopAddr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				break;
-			case MPLSOUTSEGMENTTRAFFICPARAMPTR:
-				memcpy (table_entry->aoTrafficParamPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16TrafficParamPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case MPLSOUTSEGMENTROWSTATUS:
 				switch (*request->requestvb->val.integer)
