@@ -3818,7 +3818,7 @@ neAggPortTable_createEntry (
 	register neAggPortEntry_t *poEntry = NULL;
 	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poAggPort = dot3adAggPortTable_createEntry (u32Dot3adAggPortIndex)) == NULL)
+	if ((poAggPort = dot3adAggPortTable_createExt (u32Dot3adAggPortIndex)) == NULL)
 	{
 		return NULL;
 	}
@@ -3870,101 +3870,16 @@ neAggPortTable_removeEntry (neAggPortEntry_t *poEntry)
 		return;
 	}
 	
-	dot3adAggPortTable_removeEntry (dot3adAggPortTable_getByNeEntry (poEntry));
+	dot3adAggPortTable_removeExt (dot3adAggPortTable_getByNeEntry (poEntry));
 	return;
-}
-
-neAggPortEntry_t *
-neAggPortTable_createExt (
-	uint32_t u32Dot3adAggPortIndex)
-{
-	neAggPortEntry_t *poEntry = NULL;
-	
-	poEntry = neAggPortTable_createEntry (
-		u32Dot3adAggPortIndex);
-	if (poEntry == NULL)
-	{
-		goto neAggPortTable_createExt_cleanup;
-	}
-	
-	if (!neAggPortTable_createHier (poEntry))
-	{
-		neAggPortTable_removeEntry (poEntry);
-		poEntry = NULL;
-		goto neAggPortTable_createExt_cleanup;
-	}
-	
-	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
-	
-	
-neAggPortTable_createExt_cleanup:
-	return poEntry;
-}
-
-bool
-neAggPortTable_removeExt (neAggPortEntry_t *poEntry)
-{
-	register bool bRetCode = false;
-	
-	if (!neAggPortTable_removeHier (poEntry))
-	{
-		goto neAggPortTable_removeExt_cleanup;
-	}
-	neAggPortTable_removeEntry (poEntry);
-	bRetCode = true;
-	
-	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
-	
-	
-neAggPortTable_removeExt_cleanup:
-	return bRetCode;
-}
-
-bool
-neAggPortTable_createHier (
-	neAggPortEntry_t *poEntry)
-{
-	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByNeEntry (poEntry);
-	
-	if (dot3adAggPortTable_getByIndex (poDot3adAggPortData->u32Index) == NULL &&
-		dot3adAggPortTable_createExt (poDot3adAggPortData->u32Index) == NULL)
-	{
-		goto neAggPortTable_createHier_cleanup;
-	}
-	
-	return true;
-	
-	
-neAggPortTable_createHier_cleanup:
-	
-	neAggPortTable_removeHier (poEntry);
-	return false;
-}
-
-bool
-neAggPortTable_removeHier (
-	neAggPortEntry_t *poEntry)
-{
-	register bool bRetCode = false;
-	register dot3adAggPortEntry_t *poDot3adAggPortEntry = NULL;
-	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByNeEntry (poEntry);
-	
-	if ((poDot3adAggPortEntry = dot3adAggPortTable_getByIndex (poDot3adAggPortData->u32Index)) != NULL &&
-		!dot3adAggPortTable_removeExt (poDot3adAggPortEntry))
-	{
-		goto neAggPortTable_removeHier_cleanup;
-	}
-	
-	bRetCode = true;
-	
-neAggPortTable_removeHier_cleanup:
-	return bRetCode;
 }
 
 bool
 neAggPortRowStatus_handler (
 	neAggPortEntry_t *poEntry, uint8_t u8RowStatus)
 {
+	register dot3adAggPortEntry_t *poAggPort = dot3adAggPortTable_getByNeEntry (poEntry);
+	
 	if (poEntry->u8RowStatus == u8RowStatus)
 	{
 		goto neAggPortRowStatus_handler_success;
@@ -3975,7 +3890,7 @@ neAggPortRowStatus_handler (
 	case xRowStatus_active_c:
 		/* TODO */
 		
-		if (!neAggPortRowStatus_update (poEntry, u8RowStatus))
+		if (!neAggPortRowStatus_update (poAggPort, u8RowStatus))
 		{
 			goto neAggPortRowStatus_handler_cleanup;
 		}
@@ -3984,7 +3899,7 @@ neAggPortRowStatus_handler (
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!neAggPortRowStatus_update (poEntry, u8RowStatus))
+		if (!neAggPortRowStatus_update (poAggPort, u8RowStatus))
 		{
 			goto neAggPortRowStatus_handler_cleanup;
 		}
@@ -4005,7 +3920,7 @@ neAggPortRowStatus_handler (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!neAggPortRowStatus_update (poEntry, u8RowStatus))
+		if (!neAggPortRowStatus_update (poAggPort, u8RowStatus))
 		{
 			goto neAggPortRowStatus_handler_cleanup;
 		}
