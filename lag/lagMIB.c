@@ -2899,7 +2899,7 @@ neAggTable_createEntry (
 	register neAggEntry_t *poEntry = NULL;
 	register dot3adAggEntry_t *poAgg = NULL;
 	
-	if ((poAgg = dot3adAggTable_createEntry (u32Dot3adAggIndex)) == NULL)
+	if ((poAgg = dot3adAggTable_createExt (u32Dot3adAggIndex)) == NULL)
 	{
 		return NULL;
 	}
@@ -2951,95 +2951,8 @@ neAggTable_removeEntry (neAggEntry_t *poEntry)
 		return;
 	}
 	
-	dot3adAggTable_removeEntry (dot3adAggTable_getByNeEntry (poEntry));
+	dot3adAggTable_removeExt (dot3adAggTable_getByNeEntry (poEntry));
 	return;
-}
-
-neAggEntry_t *
-neAggTable_createExt (
-	uint32_t u32Dot3adAggIndex)
-{
-	neAggEntry_t *poEntry = NULL;
-	
-	poEntry = neAggTable_createEntry (
-		u32Dot3adAggIndex);
-	if (poEntry == NULL)
-	{
-		goto neAggTable_createExt_cleanup;
-	}
-	
-	if (!neAggTable_createHier (poEntry))
-	{
-		neAggTable_removeEntry (poEntry);
-		poEntry = NULL;
-		goto neAggTable_createExt_cleanup;
-	}
-	
-	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
-	
-	
-neAggTable_createExt_cleanup:
-	return poEntry;
-}
-
-bool
-neAggTable_removeExt (neAggEntry_t *poEntry)
-{
-	register bool bRetCode = false;
-	
-	if (!neAggTable_removeHier (poEntry))
-	{
-		goto neAggTable_removeExt_cleanup;
-	}
-	neAggTable_removeEntry (poEntry);
-	bRetCode = true;
-	
-	oLagMIBObjects.u32Dot3adTablesLastChanged++;	/* TODO */
-	
-	
-neAggTable_removeExt_cleanup:
-	return bRetCode;
-}
-
-bool
-neAggTable_createHier (
-	neAggEntry_t *poEntry)
-{
-	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByNeEntry (poEntry);
-	
-	if (dot3adAggTable_getByIndex (poDot3adAggData->u32Index) == NULL &&
-		dot3adAggTable_createExt (poDot3adAggData->u32Index) == NULL)
-	{
-		goto neAggTable_createHier_cleanup;
-	}
-	
-	return true;
-	
-	
-neAggTable_createHier_cleanup:
-	
-	neAggTable_removeHier (poEntry);
-	return false;
-}
-
-bool
-neAggTable_removeHier (
-	neAggEntry_t *poEntry)
-{
-	register bool bRetCode = false;
-	register dot3adAggEntry_t *poDot3adAggEntry = NULL;
-	register dot3adAggData_t *poDot3adAggData = dot3adAggData_getByNeEntry (poEntry);
-	
-	if ((poDot3adAggEntry = dot3adAggTable_getByIndex (poDot3adAggData->u32Index)) != NULL &&
-		!dot3adAggTable_removeExt (poDot3adAggEntry))
-	{
-		goto neAggTable_removeHier_cleanup;
-	}
-	
-	bRetCode = true;
-	
-neAggTable_removeHier_cleanup:
-	return bRetCode;
 }
 
 bool
@@ -3132,7 +3045,7 @@ neAggTable_getNext (
 	poEntry = xBTree_entry (*my_loop_context, dot3adAggEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) &poEntry->oNe;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggTable_BTree);
 	return put_index_data;
 }
@@ -3152,7 +3065,7 @@ neAggTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oNe;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
