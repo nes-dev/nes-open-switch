@@ -4368,7 +4368,7 @@ gmplsOutSegmentTable_init (void)
 		ASN_OCTET_STR /* index: mplsOutSegmentIndex */,
 		0);
 	table_info->min_column = GMPLSOUTSEGMENTDIRECTION;
-	table_info->max_column = GMPLSOUTSEGMENTEXTRAPARAMSPTR;
+	table_info->max_column = GMPLSOUTSEGMENTTTLDECREMENT;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &gmplsOutSegmentTable_getFirst;
@@ -4574,9 +4574,6 @@ gmplsOutSegmentTable_mapper (
 			case GMPLSOUTSEGMENTTTLDECREMENT:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32TTLDecrement);
 				break;
-			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoExtraParamsPtr, table_entry->u16ExtraParamsPtr_len);
-				break;
 				
 			default:
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
@@ -4612,14 +4609,6 @@ gmplsOutSegmentTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoExtraParamsPtr));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
 				
 			default:
 				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
@@ -4639,7 +4628,6 @@ gmplsOutSegmentTable_mapper (
 			{
 			case GMPLSOUTSEGMENTDIRECTION:
 			case GMPLSOUTSEGMENTTTLDECREMENT:
-			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
 				if (table_entry == NULL)
 				{
 					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
@@ -4687,7 +4675,6 @@ gmplsOutSegmentTable_mapper (
 			{
 			case GMPLSOUTSEGMENTDIRECTION:
 			case GMPLSOUTSEGMENTTTLDECREMENT:
-			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
 				gmplsOutSegmentTable_removeEntry (table_entry);
 				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
 				break;
@@ -4732,24 +4719,6 @@ gmplsOutSegmentTable_mapper (
 				
 				table_entry->u32TTLDecrement = *request->requestvb->val.integer;
 				break;
-			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoExtraParamsPtr))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ExtraParamsPtr_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoExtraParamsPtr, sizeof (table_entry->aoExtraParamsPtr));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoExtraParamsPtr, 0, sizeof (table_entry->aoExtraParamsPtr));
-				memcpy (table_entry->aoExtraParamsPtr, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16ExtraParamsPtr_len = request->requestvb->val_len;
-				break;
 			}
 		}
 		break;
@@ -4787,18 +4756,6 @@ gmplsOutSegmentTable_mapper (
 				else
 				{
 					memcpy (&table_entry->u32TTLDecrement, pvOldDdata, sizeof (table_entry->u32TTLDecrement));
-				}
-				break;
-			case GMPLSOUTSEGMENTEXTRAPARAMSPTR:
-				if (pvOldDdata == table_entry)
-				{
-					gmplsOutSegmentTable_removeEntry (table_entry);
-					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
-				}
-				else
-				{
-					memcpy (table_entry->aoExtraParamsPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16ExtraParamsPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				}
 				break;
 			}

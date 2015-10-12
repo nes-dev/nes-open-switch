@@ -394,7 +394,6 @@ Netsnmp_Node_Handler gmplsInSegmentTable_mapper;
  */
 #define GMPLSOUTSEGMENTDIRECTION 1
 #define GMPLSOUTSEGMENTTTLDECREMENT 2
-#define GMPLSOUTSEGMENTEXTRAPARAMSPTR 3
 
 enum
 {
@@ -413,8 +412,6 @@ typedef struct gmplsOutSegmentEntry_t
 	/* Column values */
 	int32_t i32Direction;
 	uint32_t u32TTLDecrement;
-	xOid_t aoExtraParamsPtr[128];
-	size_t u16ExtraParamsPtr_len;	/* # of xOid_t elements */
 	
 	xBTree_Node_t oBTreeNode;
 } gmplsOutSegmentEntry_t;
