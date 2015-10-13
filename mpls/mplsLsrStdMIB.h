@@ -346,7 +346,6 @@ Netsnmp_Node_Handler gmplsInterfaceTable_mapper;
  *	table gmplsInSegmentTable definitions
  */
 #define GMPLSINSEGMENTDIRECTION 1
-#define GMPLSINSEGMENTEXTRAPARAMSPTR 2
 
 enum
 {
@@ -364,8 +363,6 @@ typedef struct gmplsInSegmentEntry_t
 	
 	/* Column values */
 	int32_t i32Direction;
-	xOid_t aoExtraParamsPtr[128];
-	size_t u16ExtraParamsPtr_len;	/* # of xOid_t elements */
 	
 // 	xBTree_Node_t oBTreeNode;
 } gmplsInSegmentEntry_t;
