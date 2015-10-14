@@ -229,8 +229,6 @@ Netsnmp_Node_Handler mplsOutSegmentPerfTable_mapper;
  */
 #define MPLSLABELSTACKINDEX 1
 #define MPLSLABELSTACKLABELINDEX 2
-#define MPLSLABELSTACKLABEL 3
-#define MPLSLABELSTACKLABELPTR 4
 #define MPLSLABELSTACKROWSTATUS 5
 #define MPLSLABELSTACKSTORAGETYPE 6
 
@@ -261,9 +259,6 @@ typedef struct mplsLabelStackEntry_t
 	uint32_t u32LabelIndex;
 	
 	/* Column values */
-	uint32_t u32Label;
-	xOid_t aoLabelPtr[128];
-	size_t u16LabelPtr_len;	/* # of xOid_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	

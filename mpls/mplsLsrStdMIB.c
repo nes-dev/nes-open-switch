@@ -3143,7 +3143,7 @@ mplsLabelStackTable_init (void)
 		ASN_OCTET_STR /* index: mplsLabelStackIndex */,
 		ASN_UNSIGNED /* index: mplsLabelStackLabelIndex */,
 		0);
-	table_info->min_column = MPLSLABELSTACKLABEL;
+	table_info->min_column = MPLSLABELSTACKROWSTATUS;
 	table_info->max_column = MPLSLABELSTACKSTORAGETYPE;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
@@ -3195,7 +3195,6 @@ mplsLabelStackTable_createEntry (
 		return NULL;
 	}
 	
-	/*poEntry->aoLabelPtr = zeroDotZero*/;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
 	poEntry->u8StorageType = mplsLabelStackStorageType_volatile_c;
 	
@@ -3355,12 +3354,6 @@ mplsLabelStackTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case MPLSLABELSTACKLABEL:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Label);
-				break;
-			case MPLSLABELSTACKLABELPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoLabelPtr, table_entry->u16LabelPtr_len);
-				break;
 			case MPLSLABELSTACKROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
@@ -3386,22 +3379,6 @@ mplsLabelStackTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case MPLSLABELSTACKLABEL:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case MPLSLABELSTACKLABELPTR:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OBJECT_ID, sizeof (table_entry->aoLabelPtr));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
 			case MPLSLABELSTACKROWSTATUS:
 				ret = netsnmp_check_vb_rowstatus (request->requestvb, (table_entry ? RS_ACTIVE : RS_NONEXISTENT));
 				if (ret != SNMP_ERR_NOERROR)
@@ -3515,38 +3492,6 @@ mplsLabelStackTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case MPLSLABELSTACKLABEL:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32Label))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->u32Label, sizeof (table_entry->u32Label));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->u32Label = *request->requestvb->val.integer;
-				break;
-			case MPLSLABELSTACKLABELPTR:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->aoLabelPtr))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16LabelPtr_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->aoLabelPtr, sizeof (table_entry->aoLabelPtr));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->aoLabelPtr, 0, sizeof (table_entry->aoLabelPtr));
-				memcpy (table_entry->aoLabelPtr, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16LabelPtr_len = request->requestvb->val_len;
-				break;
 			case MPLSLABELSTACKSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
 				{
@@ -3600,13 +3545,6 @@ mplsLabelStackTable_mapper (
 			
 			switch (table_info->colnum)
 			{
-			case MPLSLABELSTACKLABEL:
-				memcpy (&table_entry->u32Label, pvOldDdata, sizeof (table_entry->u32Label));
-				break;
-			case MPLSLABELSTACKLABELPTR:
-				memcpy (table_entry->aoLabelPtr, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16LabelPtr_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				break;
 			case MPLSLABELSTACKROWSTATUS:
 				switch (*request->requestvb->val.integer)
 				{
