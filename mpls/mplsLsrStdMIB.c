@@ -2578,7 +2578,22 @@ mplsXCTable_BTreeNodeCmp (
 		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0 && xBinCmp (pEntry1->au8InSegmentIndex, pEntry2->au8InSegmentIndex, pEntry1->u16InSegmentIndex_len, pEntry2->u16InSegmentIndex_len) == 0 && xBinCmp (pEntry1->au8OutSegmentIndex, pEntry2->au8OutSegmentIndex, pEntry1->u16OutSegmentIndex_len, pEntry2->u16OutSegmentIndex_len) == 0) ? 0: 1;
 }
 
+static int8_t
+mplsXCTable_Out_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register mplsXCEntry_t *pEntry1 = xBTree_entry (pNode1, mplsXCEntry_t, oOut_BTreeNode);
+	register mplsXCEntry_t *pEntry2 = xBTree_entry (pNode2, mplsXCEntry_t, oOut_BTreeNode);
+	
+	return
+		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == -1) ||
+		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0 && xBinCmp (pEntry1->au8OutSegmentIndex, pEntry2->au8OutSegmentIndex, pEntry1->u16OutSegmentIndex_len, pEntry2->u16OutSegmentIndex_len) == -1) ||
+		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0 && xBinCmp (pEntry1->au8OutSegmentIndex, pEntry2->au8OutSegmentIndex, pEntry1->u16OutSegmentIndex_len, pEntry2->u16OutSegmentIndex_len) == 0 && xBinCmp (pEntry1->au8InSegmentIndex, pEntry2->au8InSegmentIndex, pEntry1->u16InSegmentIndex_len, pEntry2->u16InSegmentIndex_len) == -1) ? -1:
+		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0 && xBinCmp (pEntry1->au8OutSegmentIndex, pEntry2->au8OutSegmentIndex, pEntry1->u16OutSegmentIndex_len, pEntry2->u16OutSegmentIndex_len) == 0 && xBinCmp (pEntry1->au8InSegmentIndex, pEntry2->au8InSegmentIndex, pEntry1->u16InSegmentIndex_len, pEntry2->u16InSegmentIndex_len) == 0) ? 0: 1;
+}
+
 xBTree_t oMplsXCTable_BTree = xBTree_initInline (&mplsXCTable_BTreeNodeCmp);
+xBTree_t oMplsXCTable_Out_BTree = xBTree_initInline (&mplsXCTable_Out_BTreeNodeCmp);
 
 /* create a new row in the table */
 mplsXCEntry_t *
@@ -2674,6 +2689,36 @@ mplsXCTable_getNextIndex (
 	return xBTree_entry (poNode, mplsXCEntry_t, oBTreeNode);
 }
 
+mplsXCEntry_t *
+mplsXCTable_Out_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len,
+	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
+	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len)
+{
+	register mplsXCEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
+	poTmpEntry->u16Index_len = u16Index_len;
+	memcpy (poTmpEntry->au8InSegmentIndex, pau8InSegmentIndex, u16InSegmentIndex_len);
+	poTmpEntry->u16InSegmentIndex_len = u16InSegmentIndex_len;
+	memcpy (poTmpEntry->au8OutSegmentIndex, pau8OutSegmentIndex, u16OutSegmentIndex_len);
+	poTmpEntry->u16OutSegmentIndex_len = u16OutSegmentIndex_len;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oOut_BTreeNode, &oMplsXCTable_Out_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, mplsXCEntry_t, oOut_BTreeNode);
+}
+
 /* remove a row from the table */
 void
 mplsXCTable_removeEntry (mplsXCEntry_t *poEntry)
@@ -2685,6 +2730,7 @@ mplsXCTable_removeEntry (mplsXCEntry_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oMplsXCTable_BTree);
+	xBTree_nodeRemove (&poEntry->oOut_BTreeNode, &oMplsXCTable_Out_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }

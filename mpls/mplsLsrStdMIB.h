@@ -826,9 +826,11 @@ typedef struct mplsXCEntry_t
 	mplsXCExtEntry_t oX;
 	
 	xBTree_Node_t oBTreeNode;
+	xBTree_Node_t oOut_BTreeNode;
 } mplsXCEntry_t;
 
 extern xBTree_t oMplsXCTable_BTree;
+extern xBTree_t oMplsXCTable_Out_BTree;
 
 /* mplsXCTable table mapper */
 void mplsXCTable_init (void);
@@ -841,6 +843,10 @@ mplsXCEntry_t * mplsXCTable_getByIndex (
 	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
 	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len);
 mplsXCEntry_t * mplsXCTable_getNextIndex (
+	uint8_t *pau8Index, size_t u16Index_len,
+	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
+	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len);
+mplsXCEntry_t * mplsXCTable_Out_getNextIndex (
 	uint8_t *pau8Index, size_t u16Index_len,
 	uint8_t *pau8InSegmentIndex, size_t u16InSegmentIndex_len,
 	uint8_t *pau8OutSegmentIndex, size_t u16OutSegmentIndex_len);
