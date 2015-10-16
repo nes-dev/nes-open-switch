@@ -295,12 +295,8 @@ Netsnmp_Node_Handler dot3adAggPortXTable_mapper;
 enum
 {
 	/* enums for column neAggGroupType */
-	neAggGroupType_none_c = 1,
-	neAggGroupType_if_c = 2,
-	neAggGroupType_entity_c = 3,
-	neAggGroupType_lsr_c = 4,
-	neAggGroupType_rg_c = 5,
-	neAggGroupType_other_c = 6,
+	neAggGroupType_internal_c = 1,
+	neAggGroupType_external_c = 2,
 
 	/* enums for column neAggRowStatus */
 	neAggRowStatus_active_c = 1,
@@ -346,11 +342,6 @@ neAggEntry_t * neAggTable_getByIndex (
 neAggEntry_t * neAggTable_getNextIndex (
 	uint32_t u32Dot3adAggIndex);
 void neAggTable_removeEntry (neAggEntry_t *poEntry);
-neAggEntry_t * neAggTable_createExt (
-	uint32_t u32Dot3adAggIndex);
-bool neAggTable_removeExt (neAggEntry_t *poEntry);
-bool neAggTable_createHier (neAggEntry_t *poEntry);
-bool neAggTable_removeHier (neAggEntry_t *poEntry);
 bool neAggRowStatus_handler (
 	neAggEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC
@@ -468,12 +459,8 @@ Netsnmp_Node_Handler neAggPortListTable_mapper;
 enum
 {
 	/* enums for column neAggPortGroupType */
-	neAggPortGroupType_none_c = 1,
-	neAggPortGroupType_if_c = 2,
-	neAggPortGroupType_entity_c = 3,
-	neAggPortGroupType_lsr_c = 4,
-	neAggPortGroupType_rg_c = 5,
-	neAggPortGroupType_other_c = 6,
+	neAggPortGroupType_internal_c = 1,
+	neAggPortGroupType_external_c = 2,
 
 	/* enums for column neAggPortFlags */
 	neAggPortFlags_lacp_c = 0,
@@ -689,6 +676,16 @@ dot3adAggEntry_t * dot3adAggTable_getByIndex (
 	uint32_t u32Index);
 dot3adAggEntry_t * dot3adAggTable_getNextIndex (
 	uint32_t u32Index);
+dot3adAggEntry_t * dot3adAggTable_Group_getByIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index);
+dot3adAggEntry_t * dot3adAggTable_Group_getNextIndex (
+	int32_t i32GroupType,
+	uint32_t u32GroupIndex,
+	uint32_t u32Index);
+#define dot3adAggTable_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggEntry_t, oNe))
+#define dot3adAggTable_getByPortListEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggEntry_t, oPortList))
 void dot3adAggTable_removeEntry (dot3adAggEntry_t *poEntry);
 dot3adAggEntry_t * dot3adAggTable_createExt (
 	uint32_t u32Index);

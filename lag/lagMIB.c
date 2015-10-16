@@ -595,8 +595,7 @@ dot3adAggTable_createHier (
 		goto dot3adAggTable_createHier_cleanup;
 	}
 	
-	if (dot3adAggPortListTable_getByIndex (poEntry->u32Index) == NULL &&
-		dot3adAggPortListTable_createEntry (poEntry->u32Index) == NULL)
+	if (dot3adAggPortListTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto dot3adAggTable_createHier_cleanup;
 	}
@@ -1527,20 +1526,17 @@ dot3adAggPortTable_createHier (
 		goto dot3adAggPortTable_createHier_cleanup;
 	}
 	
-	if (dot3adAggPortStatsTable_getByIndex (poEntry->u32Index) == NULL &&
-		dot3adAggPortStatsTable_createEntry (poEntry->u32Index) == NULL)
+	if (dot3adAggPortStatsTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto dot3adAggPortTable_createHier_cleanup;
 	}
 	
-	if (dot3adAggPortDebugTable_getByIndex (poEntry->u32Index) == NULL &&
-		dot3adAggPortDebugTable_createEntry (poEntry->u32Index) == NULL)
+	if (dot3adAggPortDebugTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto dot3adAggPortTable_createHier_cleanup;
 	}
 	
-	if (dot3adAggPortXTable_getByIndex (poEntry->u32Index) == NULL &&
-		dot3adAggPortXTable_createEntry (poEntry->u32Index) == NULL)
+	if (dot3adAggPortXTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto dot3adAggPortTable_createHier_cleanup;
 	}
@@ -2669,7 +2665,7 @@ dot3adAggPortXTable_getNext (
 	poEntry = xBTree_entry (*my_loop_context, dot3adAggPortEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
-	*my_data_context = (void*) &poEntry->oX;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot3adAggPortTable_BTree);
 	return put_index_data;
 }
@@ -2689,7 +2685,7 @@ dot3adAggPortXTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oX;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -2969,6 +2965,21 @@ neAggRowStatus_handler (
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
+		if (poEntry->i32GroupType == neAggGroupType_internal_c && poEntry->u32GroupIndex == 0)
+		{
+			poEntry->u32GroupIndex = poAgg->u32Index;
+		}
+		if (poAgg->i32ActorAdminKey == 0)
+		{
+			poAgg->i32ActorAdminKey = (poEntry->u32GroupIndex & 0xFFFF) ^ (poEntry->u32GroupIndex >> 16) ^ poEntry->i32GroupType;
+		}
+		
+		poAgg->oK.i32GroupType = poEntry->i32GroupType;
+		poAgg->oK.u32GroupIndex = poEntry->u32GroupIndex;
+		poAgg->oK.i32ActorAdminKey = poAgg->i32ActorAdminKey;
+		
+		xBTree_nodeAdd (&poAgg->oGroup_BTreeNode, &oDot3adAggTable_Group_BTree);
+		xBTree_nodeAdd (&poAgg->oKey_BTreeNode, &oDot3adAggTable_Key_BTree);
 		
 		/* TODO */
 		
