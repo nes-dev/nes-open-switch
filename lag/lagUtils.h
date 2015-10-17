@@ -43,8 +43,7 @@ bool
 		dot3adAggEntry_t *poEntry, uint8_t u8RowStatus);
 bool
 	neAggPortRowStatus_update (
-		neAggPortEntry_t *poEntry,
-		uint8_t u8RowStatus);
+		dot3adAggPortEntry_t *poEntry, uint8_t u8RowStatus);
 
 
 

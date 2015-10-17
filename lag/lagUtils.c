@@ -197,18 +197,16 @@ neAggRowStatus_update_cleanup:
 
 bool
 neAggPortRowStatus_update (
-	neAggPortEntry_t *poEntry,
-	uint8_t u8RowStatus)
+	dot3adAggPortEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
-	register dot3adAggPortData_t *poDot3adAggPortData = dot3adAggPortData_getByPortEntry (poEntry);
 	
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
 		/* TODO */
 		
-		if (!dot3adAggPortLacpStatus_update (poDot3adAggPortData, u8RowStatus))
+		if (!dot3adAggPortLacpStatus_update (poEntry, u8RowStatus))
 		{
 			goto neAggPortRowStatus_update_cleanup;
 		}
@@ -216,7 +214,7 @@ neAggPortRowStatus_update (
 		{
 			ifEntry_t *poIfEntry = NULL;
 			
-			if (!ifTable_getByIndexExt (poDot3adAggPortData->u32Index, true, &poIfEntry))
+			if (!ifTable_getByIndexExt (poEntry->u32Index, true, &poIfEntry))
 			{
 				goto neAggPortRowStatus_update_cleanup;
 			}
@@ -233,7 +231,7 @@ neAggPortRowStatus_update (
 		{
 			ifEntry_t *poIfEntry = NULL;
 			
-			if (!ifTable_getByIndexExt (poDot3adAggPortData->u32Index, true, &poIfEntry))
+			if (!ifTable_getByIndexExt (poEntry->u32Index, true, &poIfEntry))
 			{
 				goto neAggPortRowStatus_update_cleanup;
 			}
@@ -242,7 +240,7 @@ neAggPortRowStatus_update (
 			ifEntry_unLock (poIfEntry);
 		}
 		
-		if (!dot3adAggPortLacpStatus_update (poDot3adAggPortData, u8RowStatus))
+		if (!dot3adAggPortLacpStatus_update (poEntry, u8RowStatus))
 		{
 			goto neAggPortRowStatus_update_cleanup;
 		}
