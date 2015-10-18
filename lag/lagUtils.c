@@ -96,18 +96,20 @@ lag_aggPortStatusModify (
 	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
 {
 	register bool bRetCode = false;
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (poIfEntry->u32Index)) == NULL)
+	dot3adAgg_wrLock ();
+	
+	if ((poAggPort = dot3adAggPortTable_getByIndex (poIfEntry->u32Index)) == NULL)
 	{
 		goto lag_aggPortStatusModify_cleanup;
 	}
 	
-	register bool bForce = poDot3adAggPortData->u8OperStatus == i32OperStatus && bPropagate;
+	register bool bForce = poAggPort->u8OperStatus == i32OperStatus && bPropagate;
 	
-	poDot3adAggPortData->u8OperStatus = i32OperStatus;
+	poAggPort->u8OperStatus = i32OperStatus;
 	
-	if (!dot3adAggPortLacp_stateUpdate (poDot3adAggPortData, bForce))
+	if (!dot3adAggPortLacp_stateUpdate (poAggPort, bForce))
 	{
 		goto lag_aggPortStatusModify_cleanup;
 	}
@@ -116,6 +118,7 @@ lag_aggPortStatusModify (
 	
 lag_aggPortStatusModify_cleanup:
 	
+	dot3adAgg_unLock ();
 	return bRetCode;
 }
 
