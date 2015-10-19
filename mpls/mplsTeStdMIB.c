@@ -5266,7 +5266,7 @@ gmplsTunnelCHopTable_init (void)
 		ASN_UNSIGNED /* index: mplsTunnelCHopIndex */,
 		0);
 	table_info->min_column = GMPLSTUNNELCHOPLABELSTATUSES;
-	table_info->max_column = GMPLSTUNNELCHOPEXPLICITREVERSELABELPTR;
+	table_info->max_column = GMPLSTUNNELCHOPLABELSTATUSES;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &gmplsTunnelCHopTable_getFirst;
@@ -5470,18 +5470,6 @@ gmplsTunnelCHopTable_mapper (
 			{
 			case GMPLSTUNNELCHOPLABELSTATUSES:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LabelStatuses, table_entry->u16LabelStatuses_len);
-				break;
-			case GMPLSTUNNELCHOPEXPLICITFORWARDLABEL:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ExplicitForwardLabel);
-				break;
-			case GMPLSTUNNELCHOPEXPLICITFORWARDLABELPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoExplicitForwardLabelPtr, table_entry->u16ExplicitForwardLabelPtr_len);
-				break;
-			case GMPLSTUNNELCHOPEXPLICITREVERSELABEL:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ExplicitReverseLabel);
-				break;
-			case GMPLSTUNNELCHOPEXPLICITREVERSELABELPTR:
-				snmp_set_var_typed_value (request->requestvb, ASN_OBJECT_ID, (u_char*) table_entry->aoExplicitReverseLabelPtr, table_entry->u16ExplicitReverseLabelPtr_len);
 				break;
 				
 			default:
