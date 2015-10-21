@@ -36,12 +36,10 @@ extern "C" {
 
 extern bool
 	dot3adAggLacpStatus_update (
-		dot3adAggData_t *poEntry,
-		uint8_t u8RowStatus);
+		dot3adAggEntry_t *poEntry, uint8_t u8RowStatus);
 extern bool
 	dot3adAggPortLacpStatus_update (
-		dot3adAggPortData_t *poEntry,
-		uint8_t u8RowStatus);
+		dot3adAggPortEntry_t *poEntry, uint8_t u8RowStatus);
 
 extern bool
 	dot3adAggPortLacp_stateUpdate (dot3adAggPortData_t *poEntry, bool bForce);

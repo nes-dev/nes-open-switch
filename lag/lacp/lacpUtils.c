@@ -97,8 +97,7 @@ static bool
 
 bool
 dot3adAggLacpStatus_update (
-	dot3adAggData_t *poEntry,
-	uint8_t u8RowStatus)
+	dot3adAggEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
 	
@@ -123,8 +122,7 @@ dot3adAggLacpStatus_update (
 
 bool
 dot3adAggPortLacpStatus_update (
-	dot3adAggPortData_t *poEntry,
-	uint8_t u8RowStatus)
+	dot3adAggPortEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
 	
@@ -140,7 +138,7 @@ dot3adAggPortLacpStatus_update (
 		
 		if (xBitmap_getBit (poEntry->oNe.au8Flags, neAggPortFlags_lacp_c))
 		{
-			if (!ifRcvAddressTable_createRegister (poEntry->u32Index, poEntry->oPortX.au8ProtocolDA, poEntry->oPortX.u16ProtocolDA_len))
+			if (!ifRcvAddressTable_createRegister (poEntry->u32Index, poEntry->oX.au8ProtocolDA, poEntry->oX.u16ProtocolDA_len))
 			{
 				goto dot3adAggPortLacpStatus_update_cleanup;
 			}
@@ -160,7 +158,7 @@ dot3adAggPortLacpStatus_update (
 		{
 			/* TODO */
 			
-			if (!ifRcvAddressTable_removeRegister (poEntry->u32Index, poEntry->oPortX.au8ProtocolDA, poEntry->oPortX.u16ProtocolDA_len))
+			if (!ifRcvAddressTable_removeRegister (poEntry->u32Index, poEntry->oX.au8ProtocolDA, poEntry->oX.u16ProtocolDA_len))
 			{
 				goto dot3adAggPortLacpStatus_update_cleanup;
 			}
