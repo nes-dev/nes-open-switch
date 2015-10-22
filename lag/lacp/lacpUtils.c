@@ -195,7 +195,7 @@ dot3adAggPortLacp_reset (dot3adAggPortData_t *poEntry)
 {
 	/* TODO */
 	
-	dot3adAggPortData_zeroOperState (poEntry);
+	dot3adAggPortTable_zeroOperState (poEntry);
 	return true;
 }
 

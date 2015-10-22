@@ -865,21 +865,21 @@ Netsnmp_Node_Handler dot3adAggPortTable_mapper;
 
 
 inline void
-	dot3adAggPortData_zeroOperState (dot3adAggPortData_t *poEntry)
+	dot3adAggPortTable_zeroOperState (dot3adAggPortEntry_t *poEntry)
 {
-	poEntry->oPort.i32ActorOperKey = 0;
-	poEntry->oPort.i32PartnerOperSystemPriority = 0;
-	memset (poEntry->oPort.au8PartnerOperSystemID, 0, sizeof (poEntry->oPort.au8PartnerOperSystemID));
-	poEntry->oPort.u16PartnerOperSystemID_len = 0;
-	poEntry->oPort.i32PartnerOperKey = 0;
-	poEntry->oPort.u32SelectedAggID = 0;
-	poEntry->oPort.u32AttachedAggID = 0;
-	poEntry->oPort.i32PartnerOperPort = 0;
-	poEntry->oPort.i32PartnerOperPortPriority = 0;
-	memset (poEntry->oPort.au8ActorOperState, 0, sizeof (poEntry->oPort.au8ActorOperState));
-	poEntry->oPort.u16ActorOperState_len = 0;
-	memset (poEntry->oPort.au8PartnerOperState, 0, sizeof (poEntry->oPort.au8PartnerOperState));
-	poEntry->oPort.u16PartnerOperState_len = 0;
+	poEntry->i32ActorOperKey = 0;
+	poEntry->i32PartnerOperSystemPriority = 0;
+	memset (poEntry->au8PartnerOperSystemID, 0, sizeof (poEntry->au8PartnerOperSystemID));
+	poEntry->u16PartnerOperSystemID_len = 0;
+	poEntry->i32PartnerOperKey = 0;
+	poEntry->u32SelectedAggID = 0;
+	poEntry->u32AttachedAggID = 0;
+	poEntry->i32PartnerOperPort = 0;
+	poEntry->i32PartnerOperPortPriority = 0;
+	memset (poEntry->au8ActorOperState, 0, sizeof (poEntry->au8ActorOperState));
+	poEntry->u16ActorOperState_len = 0;
+	memset (poEntry->au8PartnerOperState, 0, sizeof (poEntry->au8PartnerOperState));
+	poEntry->u16PartnerOperState_len = 0;
 	
 	memset (&poEntry->oStats, 0, sizeof (poEntry->oStats));
 	memset (&poEntry->oDebug, 0, sizeof (poEntry->oDebug));
