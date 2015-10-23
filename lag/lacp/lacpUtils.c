@@ -177,10 +177,10 @@ dot3adAggPortLacpStatus_update_cleanup:
 
 
 bool
-dot3adAggPortLacp_init (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_init (dot3adAggPortEntry_t *poEntry)
 {
 	dot3adAggPortLacp_setDefaults (poEntry);
-	xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_expired_c, 0);
+	xBitmap_setBitRev (poEntry->au8ActorOperState, dot3adAggPortState_expired_c, 0);
 	
 	if (!dot3adAggPortLacp_setSelected (poEntry, dot3adAggPortSelection_none_c))
 	{
@@ -191,7 +191,7 @@ dot3adAggPortLacp_init (dot3adAggPortData_t *poEntry)
 }
 
 bool
-dot3adAggPortLacp_reset (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_reset (dot3adAggPortEntry_t *poEntry)
 {
 	/* TODO */
 	
