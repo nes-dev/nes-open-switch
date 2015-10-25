@@ -4324,45 +4324,23 @@ gmplsOutSegmentTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-gmplsOutSegmentTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register gmplsOutSegmentEntry_t *pEntry1 = xBTree_entry (pNode1, gmplsOutSegmentEntry_t, oBTreeNode);
-	register gmplsOutSegmentEntry_t *pEntry2 = xBTree_entry (pNode2, gmplsOutSegmentEntry_t, oBTreeNode);
-	
-	return
-		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == -1) ? -1:
-		(xBinCmp (pEntry1->au8Index, pEntry2->au8Index, pEntry1->u16Index_len, pEntry2->u16Index_len) == 0) ? 0: 1;
-}
-
-xBTree_t oGmplsOutSegmentTable_BTree = xBTree_initInline (&gmplsOutSegmentTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 gmplsOutSegmentEntry_t *
 gmplsOutSegmentTable_createEntry (
 	uint8_t *pau8Index, size_t u16Index_len)
 {
 	register gmplsOutSegmentEntry_t *poEntry = NULL;
+	register mplsOutSegmentEntry_t *poOutSegment = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poOutSegment = mplsOutSegmentTable_getByIndex (pau8Index, u16Index_len)) == NULL)
 	{
 		return NULL;
 	}
-	
-	memcpy (poEntry->au8Index, pau8Index, u16Index_len);
-	poEntry->u16Index_len = u16Index_len;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poOutSegment->oG;
 	
 	poEntry->i32Direction = gmplsOutSegmentDirection_forward_c;
 	poEntry->u32TTLDecrement = 0;
-	/*poEntry->aoExtraParamsPtr = zeroDotZero*/;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree);
 	return poEntry;
 }
 
@@ -4370,62 +4348,34 @@ gmplsOutSegmentEntry_t *
 gmplsOutSegmentTable_getByIndex (
 	uint8_t *pau8Index, size_t u16Index_len)
 {
-	register gmplsOutSegmentEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsOutSegmentEntry_t *poOutSegment = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poOutSegment = mplsOutSegmentTable_getByIndex (pau8Index, u16Index_len)) == NULL)
 	{
 		return NULL;
 	}
 	
-	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
-	poTmpEntry->u16Index_len = u16Index_len;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, gmplsOutSegmentEntry_t, oBTreeNode);
+	return &poOutSegment->oG;
 }
 
 gmplsOutSegmentEntry_t *
 gmplsOutSegmentTable_getNextIndex (
 	uint8_t *pau8Index, size_t u16Index_len)
 {
-	register gmplsOutSegmentEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsOutSegmentEntry_t *poOutSegment = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poOutSegment = mplsOutSegmentTable_getNextIndex (pau8Index, u16Index_len)) == NULL)
 	{
 		return NULL;
 	}
 	
-	memcpy (poTmpEntry->au8Index, pau8Index, u16Index_len);
-	poTmpEntry->u16Index_len = u16Index_len;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, gmplsOutSegmentEntry_t, oBTreeNode);
+	return &poOutSegment->oG;
 }
 
 /* remove a row from the table */
 void
 gmplsOutSegmentTable_removeEntry (gmplsOutSegmentEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -4435,7 +4385,7 @@ gmplsOutSegmentTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oGmplsOutSegmentTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsOutSegmentTable_BTree);
 	return gmplsOutSegmentTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -4444,18 +4394,18 @@ gmplsOutSegmentTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	gmplsOutSegmentEntry_t *poEntry = NULL;
+	mplsOutSegmentEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, gmplsOutSegmentEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, mplsOutSegmentEntry_t, oBTreeNode);
 	
 	snmp_set_var_value (idx, poEntry->au8Index, poEntry->u16Index_len);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oGmplsOutSegmentTable_BTree);
+	*my_data_context = (void*) &poEntry->oG;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsOutSegmentTable_BTree);
 	return put_index_data;
 }
 
@@ -4464,17 +4414,17 @@ gmplsOutSegmentTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	gmplsOutSegmentEntry_t *poEntry = NULL;
+	mplsOutSegmentEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = gmplsOutSegmentTable_getByIndex (
+	poEntry = mplsOutSegmentTable_getByIndex (
 		(void*) idx1->val.string, idx1->val_len);
 	if (poEntry == NULL)
 	{
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oG;
 	return true;
 }
 
