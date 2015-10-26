@@ -719,6 +719,7 @@ typedef struct mplsOutSegmentEntry_t
 	
 	mplsOutSegmentPerfEntry_t oPerf;
 	gmplsOutSegmentEntry_t oG;
+	neMplsOutSegmentEntry_t oNe;
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oIf_BTreeNode;
