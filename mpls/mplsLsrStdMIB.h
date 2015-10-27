@@ -740,6 +740,11 @@ mplsOutSegmentEntry_t * mplsOutSegmentTable_If_getNextIndex (
 	uint32_t u32Interface,
 	uint8_t *pau8Index, size_t u16Index_len);
 void mplsOutSegmentTable_removeEntry (mplsOutSegmentEntry_t *poEntry);
+mplsOutSegmentEntry_t * mplsOutSegmentTable_createExt (
+	uint8_t *pau8Index, size_t u16Index_len);
+bool mplsOutSegmentTable_removeExt (mplsOutSegmentEntry_t *poEntry);
+bool mplsOutSegmentTable_createHier (mplsOutSegmentEntry_t *poEntry);
+bool mplsOutSegmentTable_removeHier (mplsOutSegmentEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point mplsOutSegmentTable_getFirst;
 Netsnmp_Next_Data_Point mplsOutSegmentTable_getNext;
