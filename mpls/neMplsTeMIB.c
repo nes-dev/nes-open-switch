@@ -502,7 +502,9 @@ neMplsTunnelTable_createEntry (
 	}
 	poEntry = &poTunnel->oNe;
 	
-	xBitmap_setBitsRev (poEntry->au8PathCompModel, 2, 1, neMplsTunnelPathCompModel_contiguous_c, neMplsTunnelPathCompModel_nested_c);
+	poEntry->u32ResourceIndex = 0;
+	poEntry->u32ReverseResourceIndex = 0;
+	xBitmap_setBitsRev (poEntry->au8PathCompModel, 2, 1, neMplsTunnelPathCompModel_bContiguous_c, neMplsTunnelPathCompModel_bNested_c);
 	poEntry->u32PeerIfIndex = 0;
 	poEntry->i32ReoptimizationEnable = neMplsTunnelReoptimizationEnable_auto_c;
 	poEntry->i32DiffServType = neMplsTunnelDiffServType_uniform_c;
@@ -653,10 +655,13 @@ neMplsTunnelTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Type, table_entry->u16Type_len);
 				break;
 			case NEMPLSTUNNELXCINDEX:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8XcIndex, table_entry->u16XcIndex_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8XCIndex, table_entry->u16XCIndex_len);
 				break;
 			case NEMPLSTUNNELRESOURCEINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ResourceIndex);
+				break;
+			case NEMPLSTUNNELREVERSERESOURCEINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ReverseResourceIndex);
 				break;
 			case NEMPLSTUNNELPATHCOMPMODEL:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PathCompModel, table_entry->u16PathCompModel_len);
@@ -721,6 +726,14 @@ neMplsTunnelTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
+			case NEMPLSTUNNELREVERSERESOURCEINDEX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
 			case NEMPLSTUNNELPATHCOMPMODEL:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8PathCompModel));
 				if (ret != SNMP_ERR_NOERROR)
@@ -777,6 +790,7 @@ neMplsTunnelTable_mapper (
 			{
 			case NEMPLSTUNNELCALLID:
 			case NEMPLSTUNNELRESOURCEINDEX:
+			case NEMPLSTUNNELREVERSERESOURCEINDEX:
 			case NEMPLSTUNNELPATHCOMPMODEL:
 			case NEMPLSTUNNELPEERIFINDEX:
 			case NEMPLSTUNNELDIFFSERVTYPE:
@@ -830,6 +844,20 @@ neMplsTunnelTable_mapper (
 				}
 				
 				table_entry->u32ResourceIndex = *request->requestvb->val.integer;
+				break;
+			case NEMPLSTUNNELREVERSERESOURCEINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ReverseResourceIndex))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32ReverseResourceIndex, sizeof (table_entry->u32ReverseResourceIndex));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32ReverseResourceIndex = *request->requestvb->val.integer;
 				break;
 			case NEMPLSTUNNELPATHCOMPMODEL:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8PathCompModel))) == NULL)
@@ -929,6 +957,17 @@ neMplsTunnelTable_mapper (
 				else
 				{
 					memcpy (&table_entry->u32ResourceIndex, pvOldDdata, sizeof (table_entry->u32ResourceIndex));
+				}
+				break;
+			case NEMPLSTUNNELREVERSERESOURCEINDEX:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u32ReverseResourceIndex, pvOldDdata, sizeof (table_entry->u32ReverseResourceIndex));
 				}
 				break;
 			case NEMPLSTUNNELPATHCOMPMODEL:

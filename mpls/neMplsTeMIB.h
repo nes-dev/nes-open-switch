@@ -118,41 +118,42 @@ Netsnmp_Node_Handler neMplsTeScalars_mapper;
 #define NEMPLSTUNNELTYPE 2
 #define NEMPLSTUNNELXCINDEX 3
 #define NEMPLSTUNNELRESOURCEINDEX 4
-#define NEMPLSTUNNELPATHCOMPMODEL 5
-#define NEMPLSTUNNELPEERIFINDEX 6
-#define NEMPLSTUNNELLASTACTION 7
-#define NEMPLSTUNNELREOPTIMIZATIONENABLE 8
-#define NEMPLSTUNNELREOPTIMIZATIONSTATUS 9
-#define NEMPLSTUNNELACTIVEINSTANCE 10
-#define NEMPLSTUNNELSHAREDPARENTINSTANCE 11
-#define NEMPLSTUNNELPROTECTIONSTATUS 12
-#define NEMPLSTUNNELDIFFSERVTYPE 13
+#define NEMPLSTUNNELREVERSERESOURCEINDEX 5
+#define NEMPLSTUNNELPATHCOMPMODEL 6
+#define NEMPLSTUNNELPEERIFINDEX 7
+#define NEMPLSTUNNELLASTACTION 8
+#define NEMPLSTUNNELREOPTIMIZATIONENABLE 9
+#define NEMPLSTUNNELREOPTIMIZATIONSTATUS 10
+#define NEMPLSTUNNELACTIVEINSTANCE 11
+#define NEMPLSTUNNELSHAREDPARENTINSTANCE 12
+#define NEMPLSTUNNELPROTECTIONSTATUS 13
+#define NEMPLSTUNNELDIFFSERVTYPE 14
 
 enum
 {
 	/* enums for column neMplsTunnelType */
-	neMplsTunnelType_p2p_c = 0,
-	neMplsTunnelType_p2mp_c = 1,
-	neMplsTunnelType_sLsp_c = 2,
-	neMplsTunnelType_hLsp_c = 3,
+	neMplsTunnelType_bP2p_c = 0,
+	neMplsTunnelType_bP2mp_c = 1,
+	neMplsTunnelType_bSLsp_c = 2,
+	neMplsTunnelType_bHLsp_c = 3,
 
 	/* enums for column neMplsTunnelPathCompModel */
-	neMplsTunnelPathCompModel_contiguous_c = 0,
-	neMplsTunnelPathCompModel_nested_c = 1,
-	neMplsTunnelPathCompModel_stitched_c = 2,
+	neMplsTunnelPathCompModel_bContiguous_c = 0,
+	neMplsTunnelPathCompModel_bNested_c = 1,
+	neMplsTunnelPathCompModel_bStitched_c = 2,
 
 	/* enums for column neMplsTunnelLastAction */
-	neMplsTunnelLastAction_sharedInstanceInitiated_c = 0,
-	neMplsTunnelLastAction_sharedInstanceUp_c = 1,
-	neMplsTunnelLastAction_sharedInstanceDown_c = 2,
-	neMplsTunnelLastAction_sharedInstanceComplete_c = 3,
-	neMplsTunnelLastAction_protectionSwitchingInitiated_c = 4,
-	neMplsTunnelLastAction_protectionSwitchingComplete_c = 5,
-	neMplsTunnelLastAction_optimizationInitiated_c = 6,
-	neMplsTunnelLastAction_optimizationComplete_c = 7,
-	neMplsTunnelLastAction_rerouteUpstreamRequested_c = 8,
-	neMplsTunnelLastAction_adminStatusRequested_c = 9,
-	neMplsTunnelLastAction_adminStatusReflected_c = 10,
+	neMplsTunnelLastAction_bSharedInstanceInitiated_c = 0,
+	neMplsTunnelLastAction_bSharedInstanceUp_c = 1,
+	neMplsTunnelLastAction_bSharedInstanceDown_c = 2,
+	neMplsTunnelLastAction_bSharedInstanceComplete_c = 3,
+	neMplsTunnelLastAction_bProtectionSwitchingInitiated_c = 4,
+	neMplsTunnelLastAction_bProtectionSwitchingComplete_c = 5,
+	neMplsTunnelLastAction_bOptimizationInitiated_c = 6,
+	neMplsTunnelLastAction_bOptimizationComplete_c = 7,
+	neMplsTunnelLastAction_bRerouteUpstreamRequested_c = 8,
+	neMplsTunnelLastAction_bAdminStatusRequested_c = 9,
+	neMplsTunnelLastAction_bAdminStatusReflected_c = 10,
 
 	/* enums for column neMplsTunnelReoptimizationEnable */
 	neMplsTunnelReoptimizationEnable_enabled_c = 1,
@@ -164,11 +165,11 @@ enum
 	neMplsTunnelReoptimizationStatus_false_c = 2,
 
 	/* enums for column neMplsTunnelProtectionStatus */
-	neMplsTunnelProtectionStatus_primary_c = 0,
-	neMplsTunnelProtectionStatus_secondary_c = 1,
-	neMplsTunnelProtectionStatus_working_c = 2,
-	neMplsTunnelProtectionStatus_protected_c = 3,
-	neMplsTunnelProtectionStatus_protecting_c = 4,
+	neMplsTunnelProtectionStatus_bPrimary_c = 0,
+	neMplsTunnelProtectionStatus_bSecondary_c = 1,
+	neMplsTunnelProtectionStatus_bWorking_c = 2,
+	neMplsTunnelProtectionStatus_bProtected_c = 3,
+	neMplsTunnelProtectionStatus_bProtecting_c = 4,
 
 	/* enums for column neMplsTunnelDiffServType */
 	neMplsTunnelDiffServType_uniform_c = 1,
@@ -189,9 +190,10 @@ typedef struct neMplsTunnelEntry_t
 	uint32_t u32CallId;
 	uint8_t au8Type[1];
 	size_t u16Type_len;	/* # of uint8_t elements */
-	uint8_t au8XcIndex[24];
-	size_t u16XcIndex_len;	/* # of uint8_t elements */
+	uint8_t au8XCIndex[24];
+	size_t u16XCIndex_len;	/* # of uint8_t elements */
 	uint32_t u32ResourceIndex;
+	uint32_t u32ReverseResourceIndex;
 	uint8_t au8PathCompModel[1];
 	size_t u16PathCompModel_len;	/* # of uint8_t elements */
 	uint32_t u32PeerIfIndex;
