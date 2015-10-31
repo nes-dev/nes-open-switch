@@ -44,28 +44,28 @@ static bool
 	dot3adAggPortLacp_reset (dot3adAggPortEntry_t *poEntry);
 static bool
 	dot3adAggPortLacp_setCurrentTimer (
-		dot3adAggPortData_t *poEntry, bool bDefault);
+		dot3adAggPortEntry_t *poEntry, bool bDefault);
 static bool
-	dot3adAggPortLacp_setWaitTimer (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_setWaitTimer (dot3adAggPortEntry_t *poEntry);
 
 static bool
-	dot3adAggPortLacp_detachAggregator (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_detachAggregator (dot3adAggPortEntry_t *poEntry);
 static bool
-	dot3adAggPortLacp_attachAggregator (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_attachAggregator (dot3adAggPortEntry_t *poEntry);
 static bool
-	dot3adAggPortLacp_disableColx (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_disableColx (dot3adAggPortEntry_t *poEntry);
 static bool
-	dot3adAggPortLacp_enableColx (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_enableColx (dot3adAggPortEntry_t *poEntry);
 static bool
-	dot3adAggPortLacp_disableDisx (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_disableDisx (dot3adAggPortEntry_t *poEntry);
 static bool
-	dot3adAggPortLacp_enableDisx (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_enableDisx (dot3adAggPortEntry_t *poEntry);
 
 static bool
 	dot3adAggPortLacp_detach (dot3adAggPortEntry_t *poEntry);
 static bool
 	dot3adAggPortLacp_setSelected (
-		dot3adAggPortData_t *poEntry, uint8_t u8Selection);
+		dot3adAggPortEntry_t *poEntry, uint8_t u8Selection);
 static bool
 	dot3adAggPortLacp_attach (dot3adAggPortData_t *poEntry);
 static bool
@@ -201,18 +201,18 @@ dot3adAggPortLacp_reset (dot3adAggPortEntry_t *poEntry)
 
 bool
 dot3adAggPortLacp_stateUpdate (
-	dot3adAggPortData_t *poEntry, bool bForce)
+	dot3adAggPortEntry_t *poEntry, bool bForce)
 {
 	register bool bRetCode = false;
 	
-	xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_synchronization_c, 0);
+	xBitmap_setBitRev (poEntry->au8PartnerOperState, dot3adAggPortState_synchronization_c, 0);
 	
 	if (poEntry->u8OperStatus != xOperStatus_up_c || !poEntry->bFullDuplex)
 	{
 		dot3adAggPortLacp_setDefaults (poEntry);
 		
-		xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_expired_c, 0);
-		xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_aggregation_c, 0);
+		xBitmap_setBitRev (poEntry->au8ActorOperState, dot3adAggPortState_expired_c, 0);
+		xBitmap_setBitRev (poEntry->au8PartnerOperState, dot3adAggPortState_aggregation_c, 0);
 		
 		if (!dot3adAggPortLacp_setSelected (poEntry, dot3adAggPortSelection_none_c))
 		{
@@ -236,14 +236,14 @@ dot3adAggPortLacp_stateUpdate_cleanup:
 
 bool
 dot3adAggPortLacp_setCurrentTimer (
-	dot3adAggPortData_t *poEntry, bool bDefault)
+	dot3adAggPortEntry_t *poEntry, bool bDefault)
 {
 	/* TODO */
 	return false;
 }
 
 bool
-dot3adAggPortLacp_setWaitTimer (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_setWaitTimer (dot3adAggPortEntry_t *poEntry)
 {
 	poEntry->u8AggState = dot3adAggPortAggState_waiting_c;
 	
@@ -298,49 +298,49 @@ dot3adAggPortLacp_detach_cleanup:
 }
 
 bool
-dot3adAggPortLacp_detachAggregator (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_detachAggregator (dot3adAggPortEntry_t *poEntry)
 {
 	/* TODO */
 	return true;
 }
 
 bool
-dot3adAggPortLacp_attachAggregator (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_attachAggregator (dot3adAggPortEntry_t *poEntry)
 {
 	/* TODO */
 	return true;
 }
 
 bool
-dot3adAggPortLacp_disableDisxColx (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_disableDisxColx (dot3adAggPortEntry_t *poEntry)
 {
 	/* TODO */
 	return true;
 }
 
 bool
-dot3adAggPortLacp_disableColx (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_disableColx (dot3adAggPortEntry_t *poEntry)
 {
 	/* TODO */
 	return true;
 }
 
 bool
-dot3adAggPortLacp_enableColx (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_enableColx (dot3adAggPortEntry_t *poEntry)
 {
 	/* TODO */
 	return true;
 }
 
 bool
-dot3adAggPortLacp_disableDisx (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_disableDisx (dot3adAggPortEntry_t *poEntry)
 {
 	/* TODO */
 	return true;
 }
 
 bool
-dot3adAggPortLacp_enableDisx (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_enableDisx (dot3adAggPortEntry_t *poEntry)
 {
 	/* TODO */
 	return true;
@@ -348,7 +348,7 @@ dot3adAggPortLacp_enableDisx (dot3adAggPortData_t *poEntry)
 
 bool
 dot3adAggPortLacp_setSelected (
-	dot3adAggPortData_t *poEntry, uint8_t u8Selection)
+	dot3adAggPortEntry_t *poEntry, uint8_t u8Selection)
 {
 	register bool bRetCode = false;
 	
@@ -376,7 +376,7 @@ dot3adAggPortLacp_setSelected_cleanup:
 }
 
 void
-dot3adAggPortLacp_expireWaitTimer (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_expireWaitTimer (dot3adAggPortEntry_t *poEntry)
 {
 	uint8_t u8Ready = false;
 	
