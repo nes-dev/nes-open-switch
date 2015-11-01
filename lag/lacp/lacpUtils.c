@@ -395,7 +395,7 @@ dot3adAggPortLacp_expireWaitTimer_cleanup:
 }
 
 bool
-dot3adAggPortLacp_attach (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_attach (dot3adAggPortEntry_t *poEntry)
 {
 	register bool bRetCode = false;
 	
@@ -405,21 +405,21 @@ dot3adAggPortLacp_attach (dot3adAggPortData_t *poEntry)
 		goto dot3adAggPortLacp_attach_cleanup;
 	}
 	
-	if (xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_collecting_c) &&
+	if (xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_collecting_c) &&
 		!dot3adAggPortLacp_disableColx (poEntry))
 	{
 		goto dot3adAggPortLacp_attach_cleanup;
 	}
 	
-	if (xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_distributing_c) &&
+	if (xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_distributing_c) &&
 		!dot3adAggPortLacp_disableDisx (poEntry))
 	{
 		goto dot3adAggPortLacp_attach_cleanup;
 	}
 	
-	xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_synchronization_c, 1);
-	xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_distributing_c, 0);
-	xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_collecting_c, 0);
+	xBitmap_setBitRev (poEntry->au8ActorOperState, dot3adAggPortState_synchronization_c, 1);
+	xBitmap_setBitRev (poEntry->au8ActorOperState, dot3adAggPortState_distributing_c, 0);
+	xBitmap_setBitRev (poEntry->au8ActorOperState, dot3adAggPortState_collecting_c, 0);
 	poEntry->u8AggState = dot3adAggPortAggState_attached_c;
 	
 	if (!dot3adAggPortLacp_lacpPduTx (poEntry))
@@ -565,11 +565,11 @@ dot3adAggPortLacp_lacpPduTx_cleanup:
 }
 
 bool
-dot3adAggPortLacp_rxInit (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_rxInit (dot3adAggPortEntry_t *poEntry)
 {
-	xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_expired_c, 1);
-	xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_synchronization_c, 0);
-	xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_lacpTimeout_c, 0);
+	xBitmap_setBitRev (poEntry->au8ActorOperState, dot3adAggPortState_expired_c, 1);
+	xBitmap_setBitRev (poEntry->au8PartnerOperState, dot3adAggPortState_synchronization_c, 0);
+	xBitmap_setBitRev (poEntry->au8PartnerOperState, dot3adAggPortState_lacpTimeout_c, 0);
 	
 	if (!dot3adAggPortLacp_setCurrentTimer (poEntry, true))
 	{
