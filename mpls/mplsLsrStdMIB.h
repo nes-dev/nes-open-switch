@@ -831,6 +831,7 @@ typedef struct mplsXCEntry_t
 	int32_t i32OperStatus;
 	
 	mplsXCExtEntry_t oX;
+	neMplsXCEntry_t oNe;
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oOut_BTreeNode;
