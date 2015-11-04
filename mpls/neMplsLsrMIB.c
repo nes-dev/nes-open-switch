@@ -2108,7 +2108,7 @@ neMplsXCTable_getNext (
 	snmp_set_var_value (idx, poEntry->au8InSegmentIndex, poEntry->u16InSegmentIndex_len);
 	idx = idx->next_variable;
 	snmp_set_var_value (idx, poEntry->au8OutSegmentIndex, poEntry->u16OutSegmentIndex_len);
-	*my_data_context = (void*) &poEntry->oNe;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsXCTable_BTree);
 	return put_index_data;
 }
@@ -2132,7 +2132,7 @@ neMplsXCTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oNe;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -2147,6 +2147,7 @@ neMplsXCTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	neMplsXCEntry_t *table_entry;
+	register mplsXCEntry_t *poEntry = NULL;
 	
 	switch (reqinfo->mode)
 	{
@@ -2156,13 +2157,14 @@ neMplsXCTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (neMplsXCEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsXCEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oNe;
 			
 			switch (table_info->colnum)
 			{
