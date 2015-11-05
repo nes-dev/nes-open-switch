@@ -1133,6 +1133,7 @@ typedef struct mplsTunnelHopEntry_t
 	uint8_t u8StorageType;
 	
 	gmplsTunnelHopEntry_t oG;
+	neMplsTunnelHopEntry_t oNe;
 	
 	xBTree_Node_t oBTreeNode;
 } mplsTunnelHopEntry_t;
