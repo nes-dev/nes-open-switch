@@ -42,9 +42,9 @@ extern bool
 		dot3adAggPortEntry_t *poEntry, uint8_t u8RowStatus);
 
 extern bool
-	dot3adAggPortLacp_stateUpdate (dot3adAggPortData_t *poEntry, bool bForce);
+	dot3adAggPortLacp_stateUpdate (dot3adAggPortEntry_t *poEntry, bool bForce);
 extern void
-	dot3adAggPortLacp_processPduRx (lacpMessage_Pdu_t *pMessage);
+	dot3adAggLacp_processPduRx (lacpMessage_Pdu_t *pMessage);
 
 
 #	ifdef __cplusplus

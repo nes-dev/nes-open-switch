@@ -580,49 +580,49 @@ dot3adAggPortLacp_rxInit (dot3adAggPortEntry_t *poEntry)
 }
 
 void
-dot3adAggPortLacp_processPduRx (lacpMessage_Pdu_t *pMessage)
+dot3adAggLacp_processPduRx (lacpMessage_Pdu_t *pMessage)
 {
-	register dot3adAggPortData_t *poDot3adAggPortData = NULL;
+	register dot3adAggPortEntry_t *poAggPort = NULL;
 	
 	if (pMessage == NULL ||
 		(pMessage->u8Type != IeeeSlowProtocolsType_lacp_c && pMessage->u8Type != IeeeSlowProtocolsType_marker_c))
 	{
-		goto dot3adAggPortLacp_processPduRx_cleanup;
+		goto dot3adAggLacp_processPduRx_cleanup;
 	}
 	
-	if ((poDot3adAggPortData = dot3adAggPortData_getByIndex (pMessage->u32IfIndex)) == NULL)
+	if ((poAggPort = dot3adAggPortTable_getByIndex (pMessage->u32IfIndex)) == NULL)
 	{
-		goto dot3adAggPortLacp_processPduRx_cleanup;
+		goto dot3adAggLacp_processPduRx_cleanup;
 	}
 	
-	if (poDot3adAggPortData->u8OperStatus != xOperStatus_up_c ||
-		!poDot3adAggPortData->bFullDuplex)
+	if (poAggPort->u8OperStatus != xOperStatus_up_c ||
+		!poAggPort->bFullDuplex)
 	{
-		goto dot3adAggPortLacp_processPduRx_cleanup;
+		goto dot3adAggLacp_processPduRx_cleanup;
 	}
 	
 	
 	switch (pMessage->u8Type)
 	{
 	default:
-		poDot3adAggPortData->oStats.u32UnknownRx++;
-		goto dot3adAggPortLacp_processPduRx_cleanup;
+		poAggPort->oStats.u32UnknownRx++;
+		goto dot3adAggLacp_processPduRx_cleanup;
 		
 	case IeeeSlowProtocolsType_lacp_c:
-		if (!dot3adAggPortLacp_lacpPduRx (poDot3adAggPortData, pMessage->pvData))
+		if (!dot3adAggPortLacp_lacpPduRx (poAggPort, pMessage->pvData))
 		{
-			goto dot3adAggPortLacp_processPduRx_cleanup;
+			goto dot3adAggLacp_processPduRx_cleanup;
 		}
 		break;
 		
 	case IeeeSlowProtocolsType_marker_c:
 		/* TODO */
-		poDot3adAggPortData->oStats.u32MarkerPDUsRx++;
-// 		poDot3adAggPortData->oStats.u32MarkerResponsePDUsRx++;
+		poAggPort->oStats.u32MarkerPDUsRx++;
+// 		poAggPort->oStats.u32MarkerResponsePDUsRx++;
 		break;
 	}
 	
-dot3adAggPortLacp_processPduRx_cleanup:
+dot3adAggLacp_processPduRx_cleanup:
 	
 	if (pMessage->pvData != NULL)
 	{
