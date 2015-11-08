@@ -502,7 +502,7 @@ dot3adAggPortLacp_handleDisxColx_cleanup:
 }
 
 bool
-dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_lacpPduTx (dot3adAggPortEntry_t *poEntry)
 {
 	register bool bRetCode = false;
 	register LacpPdu_Lacp_t *poPdu = NULL;
@@ -522,21 +522,21 @@ dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry)
 	
 	poPdu->oActor.oHeader.u8Type = LacpTlv_Actor_c;
 	poPdu->oActor.oHeader.u8Length = LacpTlv_Actor_size_c;
-	poPdu->oActor.u16SystemPriority = poEntry->oPort.i32ActorSystemPriority;
-	memcpy (poPdu->oActor.oSystemAddress, poEntry->oPort.au8ActorSystemID, sizeof (poPdu->oActor.oSystemAddress));
-	poPdu->oActor.u16Key = poEntry->oPort.i32ActorOperKey;
-	poPdu->oActor.u16PortPriority = poEntry->oPort.i32ActorPortPriority;
-	poPdu->oActor.u16PortNumber = poEntry->oPort.i32ActorPort;
-	xBitmap_copyFromRev (poPdu->oActor.au8State, poEntry->oPort.au8ActorOperState, dot3adAggPortState_bitMin, dot3adAggPortState_bitMax_c);
+	poPdu->oActor.u16SystemPriority = poEntry->i32ActorSystemPriority;
+	memcpy (poPdu->oActor.oSystemAddress, poEntry->au8ActorSystemID, sizeof (poPdu->oActor.oSystemAddress));
+	poPdu->oActor.u16Key = poEntry->i32ActorOperKey;
+	poPdu->oActor.u16PortPriority = poEntry->i32ActorPortPriority;
+	poPdu->oActor.u16PortNumber = poEntry->i32ActorPort;
+	xBitmap_copyFromRev (poPdu->oActor.au8State, poEntry->au8ActorOperState, dot3adAggPortState_bitMin, dot3adAggPortState_bitMax_c);
 	
 	poPdu->oPartner.oHeader.u8Type = LacpTlv_Partner_c;
 	poPdu->oPartner.oHeader.u8Length = LacpTlv_Partner_size_c;
-	poPdu->oPartner.u16SystemPriority = poEntry->oPort.i32PartnerOperSystemPriority;
-	memcpy (poPdu->oPartner.oSystemAddress, poEntry->oPort.au8PartnerOperSystemID, sizeof (poPdu->oPartner.oSystemAddress));
-	poPdu->oPartner.u16Key = poEntry->oPort.i32PartnerOperKey;
-	poPdu->oPartner.u16PortPriority = poEntry->oPort.i32PartnerOperPortPriority;
-	poPdu->oPartner.u16PortNumber = poEntry->oPort.i32PartnerOperPort;
-	xBitmap_copyFromRev (poPdu->oPartner.au8State, poEntry->oPort.au8PartnerOperState, dot3adAggPortState_bitMin, dot3adAggPortState_bitMax_c);
+	poPdu->oPartner.u16SystemPriority = poEntry->i32PartnerOperSystemPriority;
+	memcpy (poPdu->oPartner.oSystemAddress, poEntry->au8PartnerOperSystemID, sizeof (poPdu->oPartner.oSystemAddress));
+	poPdu->oPartner.u16Key = poEntry->i32PartnerOperKey;
+	poPdu->oPartner.u16PortPriority = poEntry->i32PartnerOperPortPriority;
+	poPdu->oPartner.u16PortNumber = poEntry->i32PartnerOperPort;
+	xBitmap_copyFromRev (poPdu->oPartner.au8State, poEntry->au8PartnerOperState, dot3adAggPortState_bitMin, dot3adAggPortState_bitMax_c);
 	
 	poPdu->oCollector.oHeader.u8Type = LacpTlv_Collector_c;
 	poPdu->oCollector.oHeader.u8Length = LacpTlv_Collector_size_c;
@@ -674,22 +674,22 @@ dot3adAggPortLacp_lacpPduRx_cleanup:
 
 bool
 dot3adAggPortLacp_checkPartnerInfoPdu (
-	dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu)
+	dot3adAggPortEntry_t *poEntry, LacpPdu_Lacp_t *poPdu)
 {
 	return
-		poPdu->oPartner.u16PortNumber == poEntry->oPort.i32ActorPort &&
-		poPdu->oPartner.u16PortPriority == poEntry->oPort.i32ActorPortPriority &&
-		memcmp (poPdu->oPartner.oSystemAddress, poEntry->oPort.au8ActorSystemID, sizeof (poPdu->oPartner.oSystemAddress)) == 0 &&
-		poPdu->oPartner.u16SystemPriority == poEntry->oPort.i32ActorSystemPriority &&
-		poPdu->oPartner.u16Key == poEntry->oPort.i32ActorOperKey &&
+		poPdu->oPartner.u16PortNumber == poEntry->i32ActorPort &&
+		poPdu->oPartner.u16PortPriority == poEntry->i32ActorPortPriority &&
+		memcmp (poPdu->oPartner.oSystemAddress, poEntry->au8ActorSystemID, sizeof (poPdu->oPartner.oSystemAddress)) == 0 &&
+		poPdu->oPartner.u16SystemPriority == poEntry->i32ActorSystemPriority &&
+		poPdu->oPartner.u16Key == poEntry->i32ActorOperKey &&
 		(xBitmap_getBit (poPdu->oPartner.au8State, dot3adAggPortState_lacpActivity_c) != 0) ==
-			(xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_lacpActivity_c) != 0) &&
+			(xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_lacpActivity_c) != 0) &&
 		(xBitmap_getBit (poPdu->oPartner.au8State, dot3adAggPortState_lacpTimeout_c) != 0) ==
-			(xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_lacpTimeout_c) != 0) &&
+			(xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_lacpTimeout_c) != 0) &&
 		(xBitmap_getBit (poPdu->oPartner.au8State, dot3adAggPortState_aggregation_c) != 0) ==
-			(xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_aggregation_c) != 0) &&
+			(xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_aggregation_c) != 0) &&
 		(xBitmap_getBit (poPdu->oPartner.au8State, dot3adAggPortState_synchronization_c) != 0) ==
-			(xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_synchronization_c) != 0);
+			(xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_synchronization_c) != 0);
 }
 
 void
