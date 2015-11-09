@@ -302,8 +302,8 @@ enum
 typedef struct neMplsOutSegmentEntry_t
 {
 	/* Index values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
+// 	uint8_t au8Index[24];
+// 	size_t u16Index_len;	/* # of uint8_t elements */
 	
 	/* Column values */
 	int32_t i32LabelType;
@@ -314,10 +314,10 @@ typedef struct neMplsOutSegmentEntry_t
 	uint8_t au8NextHopPhysAddress[8];
 	size_t u16NextHopPhysAddress_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neMplsOutSegmentEntry_t;
 
-extern xBTree_t oNeMplsOutSegmentTable_BTree;
+// extern xBTree_t oNeMplsOutSegmentTable_BTree;
 
 /* neMplsOutSegmentTable table mapper */
 void neMplsOutSegmentTable_init (void);
