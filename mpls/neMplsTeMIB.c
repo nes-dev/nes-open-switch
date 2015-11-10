@@ -1039,7 +1039,7 @@ neMplsTunnelHopTable_init (void)
 		ASN_UNSIGNED /* index: mplsTunnelHopPathOptionIndex */,
 		ASN_UNSIGNED /* index: mplsTunnelHopIndex */,
 		0);
-	table_info->min_column = NEMPLSTUNNELHOPLABELTYPE;
+	table_info->min_column = NEMPLSTUNNELHOPNODEID;
 	table_info->max_column = NEMPLSTUNNELHOPREVERSELABEL;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
@@ -1201,6 +1201,12 @@ neMplsTunnelHopTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NEMPLSTUNNELHOPNODEID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32NodeId);
+				break;
+			case NEMPLSTUNNELHOPLINKID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32LinkId);
+				break;
 			case NEMPLSTUNNELHOPLABELTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LabelType);
 				break;
@@ -1229,6 +1235,22 @@ neMplsTunnelHopTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NEMPLSTUNNELHOPNODEID:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEMPLSTUNNELHOPLINKID:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
 			case NEMPLSTUNNELHOPLABELTYPE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
@@ -1272,6 +1294,8 @@ neMplsTunnelHopTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NEMPLSTUNNELHOPNODEID:
+			case NEMPLSTUNNELHOPLINKID:
 			case NEMPLSTUNNELHOPLABELTYPE:
 			case NEMPLSTUNNELHOPFORWARDLABEL:
 			case NEMPLSTUNNELHOPREVERSELABEL:
@@ -1341,6 +1365,34 @@ neMplsTunnelHopTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NEMPLSTUNNELHOPNODEID:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32NodeId))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32NodeId, sizeof (table_entry->u32NodeId));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32NodeId = *request->requestvb->val.integer;
+				break;
+			case NEMPLSTUNNELHOPLINKID:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32LinkId))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32LinkId, sizeof (table_entry->u32LinkId));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32LinkId = *request->requestvb->val.integer;
+				break;
 			case NEMPLSTUNNELHOPLABELTYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32LabelType))) == NULL)
 				{
@@ -1408,6 +1460,28 @@ neMplsTunnelHopTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NEMPLSTUNNELHOPNODEID:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelHopTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u32NodeId, pvOldDdata, sizeof (table_entry->u32NodeId));
+				}
+				break;
+			case NEMPLSTUNNELHOPLINKID:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelHopTable_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u32LinkId, pvOldDdata, sizeof (table_entry->u32LinkId));
+				}
+				break;
 			case NEMPLSTUNNELHOPLABELTYPE:
 				if (pvOldDdata == table_entry)
 				{
