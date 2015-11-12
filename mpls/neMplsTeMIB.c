@@ -1512,7 +1512,7 @@ neMplsTunnelARHopTable_init (void)
 		ASN_UNSIGNED /* index: mplsTunnelARHopListIndex */,
 		ASN_UNSIGNED /* index: mplsTunnelARHopIndex */,
 		0);
-	table_info->min_column = NEMPLSTUNNELARHOPLABELTYPE;
+	table_info->min_column = NEMPLSTUNNELARHOPNODEID;
 	table_info->max_column = NEMPLSTUNNELARHOPREVERSELABEL;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
@@ -1715,6 +1715,12 @@ neMplsTunnelARHopTable_mapper (
 			
 			switch (table_info->colnum)
 			{
+			case NEMPLSTUNNELARHOPNODEID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32NodeId);
+				break;
+			case NEMPLSTUNNELARHOPLINKID:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32LinkId);
+				break;
 			case NEMPLSTUNNELARHOPLABELTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LabelType);
 				break;
