@@ -84,7 +84,7 @@ static bool
 		dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu);
 static void
 	dot3adAggPortLacp_updatePartnerInfo (
-		dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu);
+		dot3adAggPortEntry_t *poEntry, LacpPdu_Lacp_t *poPdu);
 
 static bool
 	dot3adAggPortLacp_setDefaults (dot3adAggPortEntry_t *poEntry);
@@ -694,28 +694,28 @@ dot3adAggPortLacp_checkPartnerInfoPdu (
 
 void
 dot3adAggPortLacp_updatePartnerInfo (
-	dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu)
+	dot3adAggPortEntry_t *poEntry, LacpPdu_Lacp_t *poPdu)
 {
 	register bool bPartnerSynchronization = false;
 	
-	poEntry->oPort.i32PartnerOperPort = poPdu->oActor.u16PortNumber;
-	poEntry->oPort.i32PartnerOperPortPriority = poPdu->oActor.u16PortPriority;
-	memcpy (poEntry->oPort.au8PartnerOperSystemID, poPdu->oActor.oSystemAddress, sizeof (poEntry->oPort.au8PartnerOperSystemID));
-	poEntry->oPort.i32PartnerOperSystemPriority = poPdu->oActor.u16SystemPriority;
-	poEntry->oPort.i32PartnerOperKey = poPdu->oActor.u16Key;
-	xBitmap_copyToRev (poEntry->oPort.au8PartnerOperState, poPdu->oActor.au8State, dot3adAggPortState_bitMin, dot3adAggPortState_bitMax_c);
-	xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_defaulted_c, 0);
+	poEntry->i32PartnerOperPort = poPdu->oActor.u16PortNumber;
+	poEntry->i32PartnerOperPortPriority = poPdu->oActor.u16PortPriority;
+	memcpy (poEntry->au8PartnerOperSystemID, poPdu->oActor.oSystemAddress, sizeof (poEntry->au8PartnerOperSystemID));
+	poEntry->i32PartnerOperSystemPriority = poPdu->oActor.u16SystemPriority;
+	poEntry->i32PartnerOperKey = poPdu->oActor.u16Key;
+	xBitmap_copyToRev (poEntry->au8PartnerOperState, poPdu->oActor.au8State, dot3adAggPortState_bitMin, dot3adAggPortState_bitMax_c);
+	xBitmap_setBitRev (poEntry->au8ActorOperState, dot3adAggPortState_defaulted_c, 0);
 	
-	if (poPdu->oPartner.u16PortNumber == poEntry->oPort.i32ActorPort &&
-		poPdu->oPartner.u16PortPriority == poEntry->oPort.i32ActorPortPriority &&
-		memcmp (poPdu->oPartner.oSystemAddress, poEntry->oPort.au8ActorSystemID, sizeof (poPdu->oPartner.oSystemAddress)) == 0 &&
-		poPdu->oPartner.u16SystemPriority == poEntry->oPort.i32ActorSystemPriority &&
-		poPdu->oPartner.u16Key == poEntry->oPort.i32ActorOperKey)
+	if (poPdu->oPartner.u16PortNumber == poEntry->i32ActorPort &&
+		poPdu->oPartner.u16PortPriority == poEntry->i32ActorPortPriority &&
+		memcmp (poPdu->oPartner.oSystemAddress, poEntry->au8ActorSystemID, sizeof (poPdu->oPartner.oSystemAddress)) == 0 &&
+		poPdu->oPartner.u16SystemPriority == poEntry->i32ActorSystemPriority &&
+		poPdu->oPartner.u16Key == poEntry->i32ActorOperKey)
 	{
 		register bool bPduActorSynchronization = xBitmap_getBit (poPdu->oActor.au8State, dot3adAggPortState_synchronization_c) != 0;
 		register bool bPduActorAggregation = xBitmap_getBit (poPdu->oActor.au8State, dot3adAggPortState_aggregation_c) != 0;
 		register bool bPduPartnerAggregation = xBitmap_getBit (poPdu->oPartner.au8State, dot3adAggPortState_aggregation_c) != 0;
-		register bool bActorAggregation = xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_aggregation_c) != 0;
+		register bool bActorAggregation = xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_aggregation_c) != 0;
 		
 		if ((!bPduActorAggregation && bPduActorSynchronization) || (bPduPartnerAggregation == bActorAggregation))
 		{
@@ -723,7 +723,7 @@ dot3adAggPortLacp_updatePartnerInfo (
 		}
 	}
 	
-	xBitmap_setBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_synchronization_c, bPartnerSynchronization);
+	xBitmap_setBitRev (poEntry->au8PartnerOperState, dot3adAggPortState_synchronization_c, bPartnerSynchronization);
 	
 	return;
 }
