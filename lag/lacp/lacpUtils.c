@@ -69,7 +69,7 @@ static bool
 static bool
 	dot3adAggPortLacp_attach (dot3adAggPortData_t *poEntry);
 static bool
-	dot3adAggPortLacp_handleDisxColx (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_handleDisxColx (dot3adAggPortEntry_t *poEntry);
 
 static bool
 	dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry);
@@ -435,30 +435,30 @@ dot3adAggPortLacp_attach_cleanup:
 }
 
 bool
-dot3adAggPortLacp_handleDisxColx (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_handleDisxColx (dot3adAggPortEntry_t *poEntry)
 {
 	register bool bRetCode = false;
 	
-	if (xBitmap_getBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_synchronization_c))
+	if (xBitmap_getBitRev (poEntry->au8PartnerOperState, dot3adAggPortState_synchronization_c))
 	{
 		if (poEntry->u8AggState == dot3adAggPortAggState_attached_c ||
 			(poEntry->u8AggState == dot3adAggPortAggState_distributing_c &&
-			 !xBitmap_getBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_collecting_c)))
+			 !xBitmap_getBitRev (poEntry->au8PartnerOperState, dot3adAggPortState_collecting_c)))
 		{
-			if (!xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_collecting_c) &&
+			if (!xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_collecting_c) &&
 				!dot3adAggPortLacp_enableColx (poEntry))
 			{
 				goto dot3adAggPortLacp_handleDisxColx_cleanup;
 			}
 			
-			if (xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_distributing_c) &&
+			if (xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_distributing_c) &&
 				!dot3adAggPortLacp_disableDisx (poEntry))
 			{
 				goto dot3adAggPortLacp_handleDisxColx_cleanup;
 			}
 			
-			xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_collecting_c, 1);
-			xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_distributing_c, 0);
+			xBitmap_setBitRev (poEntry->au8ActorOperState, dot3adAggPortState_collecting_c, 1);
+			xBitmap_setBitRev (poEntry->au8ActorOperState, dot3adAggPortState_distributing_c, 0);
 			poEntry->u8AggState = dot3adAggPortAggState_collecting_c;
 			
 			if (!dot3adAggPortLacp_lacpPduTx (poEntry))
@@ -468,16 +468,16 @@ dot3adAggPortLacp_handleDisxColx (dot3adAggPortData_t *poEntry)
 		}
 		else if (
 			poEntry->u8AggState == dot3adAggPortAggState_collecting_c &&
-			xBitmap_getBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_collecting_c) &&
-			!xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_distributing_c))
+			xBitmap_getBitRev (poEntry->au8PartnerOperState, dot3adAggPortState_collecting_c) &&
+			!xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_distributing_c))
 		{
-			if (!xBitmap_getBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_distributing_c) &&
+			if (!xBitmap_getBitRev (poEntry->au8ActorOperState, dot3adAggPortState_distributing_c) &&
 				!dot3adAggPortLacp_enableDisx (poEntry))
 			{
 				goto dot3adAggPortLacp_handleDisxColx_cleanup;
 			}
 			
-			xBitmap_setBitRev (poEntry->oPort.au8ActorOperState, dot3adAggPortState_distributing_c, 1);
+			xBitmap_setBitRev (poEntry->au8ActorOperState, dot3adAggPortState_distributing_c, 1);
 			poEntry->u8AggState = dot3adAggPortAggState_distributing_c;
 			
 			if (!dot3adAggPortLacp_lacpPduTx (poEntry))
