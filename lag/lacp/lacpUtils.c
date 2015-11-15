@@ -67,21 +67,21 @@ static bool
 	dot3adAggPortLacp_setSelected (
 		dot3adAggPortEntry_t *poEntry, uint8_t u8Selection);
 static bool
-	dot3adAggPortLacp_attach (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_attach (dot3adAggPortEntry_t *poEntry);
 static bool
 	dot3adAggPortLacp_handleDisxColx (dot3adAggPortEntry_t *poEntry);
 
 static bool
-	dot3adAggPortLacp_lacpPduTx (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_lacpPduTx (dot3adAggPortEntry_t *poEntry);
 static bool
-	dot3adAggPortLacp_rxInit (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_rxInit (dot3adAggPortEntry_t *poEntry);
 static bool
 	dot3adAggPortLacp_lacpPduRx (
 		dot3adAggPortEntry_t *poEntry, LacpPdu_Lacp_t *poPdu);
 
 static bool
 	dot3adAggPortLacp_checkPartnerInfoPdu (
-		dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu);
+		dot3adAggPortEntry_t *poEntry, LacpPdu_Lacp_t *poPdu);
 static void
 	dot3adAggPortLacp_updatePartnerInfo (
 		dot3adAggPortEntry_t *poEntry, LacpPdu_Lacp_t *poPdu);
@@ -90,9 +90,9 @@ static bool
 	dot3adAggPortLacp_setDefaults (dot3adAggPortEntry_t *poEntry);
 static bool
 	dot3adAggPortLacp_checkPortSelected (
-		dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu);
+		dot3adAggPortEntry_t *poEntry, LacpPdu_Lacp_t *poPdu);
 static bool
-	dot3adAggPortLacp_checkDefaultSelected (dot3adAggPortData_t *poEntry);
+	dot3adAggPortLacp_checkDefaultSelected (dot3adAggPortEntry_t *poEntry);
 
 
 bool
@@ -758,29 +758,29 @@ dot3adAggPortLacp_setDefaults (dot3adAggPortEntry_t *poEntry)
 
 bool
 dot3adAggPortLacp_checkPortSelected (
-	dot3adAggPortData_t *poEntry, LacpPdu_Lacp_t *poPdu)
+	dot3adAggPortEntry_t *poEntry, LacpPdu_Lacp_t *poPdu)
 {
 	return
-		poPdu->oActor.u16PortNumber == poEntry->oPort.i32PartnerOperPort &&
-		poPdu->oActor.u16PortPriority == poEntry->oPort.i32PartnerOperPortPriority &&
-		memcmp (poPdu->oActor.oSystemAddress, poEntry->oPort.au8PartnerOperSystemID, sizeof (poPdu->oActor.oSystemAddress)) == 0 &&
-		poPdu->oActor.u16SystemPriority == poEntry->oPort.i32PartnerOperSystemPriority &&
-		poPdu->oActor.u16Key == poEntry->oPort.i32PartnerOperKey &&
+		poPdu->oActor.u16PortNumber == poEntry->i32PartnerOperPort &&
+		poPdu->oActor.u16PortPriority == poEntry->i32PartnerOperPortPriority &&
+		memcmp (poPdu->oActor.oSystemAddress, poEntry->au8PartnerOperSystemID, sizeof (poPdu->oActor.oSystemAddress)) == 0 &&
+		poPdu->oActor.u16SystemPriority == poEntry->i32PartnerOperSystemPriority &&
+		poPdu->oActor.u16Key == poEntry->i32PartnerOperKey &&
 		(xBitmap_getBit (poPdu->oActor.au8State, dot3adAggPortState_aggregation_c) != 0) ==
-			(xBitmap_getBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_aggregation_c) != 0);
+			(xBitmap_getBitRev (poEntry->au8PartnerOperState, dot3adAggPortState_aggregation_c) != 0);
 }
 
 bool
-dot3adAggPortLacp_checkDefaultSelected (dot3adAggPortData_t *poEntry)
+dot3adAggPortLacp_checkDefaultSelected (dot3adAggPortEntry_t *poEntry)
 {
 	return
-		poEntry->oPort.i32PartnerAdminPort == poEntry->oPort.i32PartnerOperPort &&
-		poEntry->oPort.i32PartnerAdminPortPriority == poEntry->oPort.i32PartnerOperPortPriority &&
-		memcmp (poEntry->oPort.au8PartnerAdminSystemID, poEntry->oPort.au8PartnerOperSystemID, sizeof (poEntry->oPort.au8PartnerAdminSystemID)) == 0 &&
-		poEntry->oPort.i32PartnerAdminSystemPriority == poEntry->oPort.i32PartnerOperSystemPriority &&
-		poEntry->oPort.i32PartnerAdminKey == poEntry->oPort.i32PartnerOperKey &&
-		(xBitmap_getBitRev (poEntry->oPort.au8PartnerAdminState, dot3adAggPortState_aggregation_c) != 0) ==
-			(xBitmap_getBitRev (poEntry->oPort.au8PartnerOperState, dot3adAggPortState_aggregation_c) != 0);
+		poEntry->i32PartnerAdminPort == poEntry->i32PartnerOperPort &&
+		poEntry->i32PartnerAdminPortPriority == poEntry->i32PartnerOperPortPriority &&
+		memcmp (poEntry->au8PartnerAdminSystemID, poEntry->au8PartnerOperSystemID, sizeof (poEntry->au8PartnerAdminSystemID)) == 0 &&
+		poEntry->i32PartnerAdminSystemPriority == poEntry->i32PartnerOperSystemPriority &&
+		poEntry->i32PartnerAdminKey == poEntry->i32PartnerOperKey &&
+		(xBitmap_getBitRev (poEntry->au8PartnerAdminState, dot3adAggPortState_aggregation_c) != 0) ==
+			(xBitmap_getBitRev (poEntry->au8PartnerOperState, dot3adAggPortState_aggregation_c) != 0);
 }
 
 
