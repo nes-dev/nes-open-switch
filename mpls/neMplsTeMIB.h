@@ -239,6 +239,109 @@ Netsnmp_Node_Handler neMplsTunnelTable_mapper;
 
 
 /**
+ *	table neMplsTunnelX1Table definitions
+ */
+#define NEMPLSTUNNELRESOURCEUPSTREAMINDEX 1
+#define NEMPLSTUNNELREROUTEUPSTREAMENABLE 2
+#define NEMPLSTUNNELCRANKBACKMODEL 3
+#define NEMPLSTUNNELCRANKBACKENABLE 4
+#define NEMPLSTUNNELCRANKBACKSTATUS 5
+#define NEMPLSTUNNELCRANKBACKLISTINDEX 6
+#define NEMPLSTUNNELSOFTPREEMPTIONENABLE 7
+#define NEMPLSTUNNELSOFTPREEMPTIONSTATUS 8
+#define NEMPLSTUNNELOAMENABLE 9
+#define NEMPLSTUNNELOAMMEGINDEX 10
+#define NEMPLSTUNNELOAMMEINDEX 11
+
+enum
+{
+	/* enums for column neMplsTunnelRerouteUpstreamEnable */
+	neMplsTunnelRerouteUpstreamEnable_true_c = 1,
+	neMplsTunnelRerouteUpstreamEnable_false_c = 2,
+
+	/* enums for column neMplsTunnelCrankbackModel */
+	neMplsTunnelCrankbackModel_bE2eRerouting_c = 0,
+	neMplsTunnelCrankbackModel_bBoundaryRerouting_c = 1,
+	neMplsTunnelCrankbackModel_bSegmentRerouting_c = 2,
+
+	/* enums for column neMplsTunnelCrankbackEnable */
+	neMplsTunnelCrankbackEnable_enabled_c = 1,
+	neMplsTunnelCrankbackEnable_disabled_c = 2,
+	neMplsTunnelCrankbackEnable_auto_c = 3,
+
+	/* enums for column neMplsTunnelCrankbackStatus */
+	neMplsTunnelCrankbackStatus_true_c = 1,
+	neMplsTunnelCrankbackStatus_false_c = 2,
+
+	/* enums for column neMplsTunnelSoftPreemptionEnable */
+	neMplsTunnelSoftPreemptionEnable_enabled_c = 1,
+	neMplsTunnelSoftPreemptionEnable_disabled_c = 2,
+	neMplsTunnelSoftPreemptionEnable_auto_c = 3,
+
+	/* enums for column neMplsTunnelSoftPreemptionStatus */
+	neMplsTunnelSoftPreemptionStatus_true_c = 1,
+	neMplsTunnelSoftPreemptionStatus_false_c = 2,
+
+	/* enums for column neMplsTunnelOamEnable */
+	neMplsTunnelOamEnable_true_c = 1,
+	neMplsTunnelOamEnable_false_c = 2,
+};
+
+/* table neMplsTunnelX1Table row entry data structure */
+typedef struct neMplsTunnelX1Entry_t
+{
+	/* Index values */
+	uint32_t u32Index;
+	uint32_t u32Instance;
+	uint32_t u32IngressLSRId;
+	uint32_t u32EgressLSRId;
+	
+	/* Column values */
+	uint32_t u32ResourceUpstreamIndex;
+	uint8_t u8RerouteUpstreamEnable;
+	uint8_t au8CrankbackModel[1];
+	size_t u16CrankbackModel_len;	/* # of uint8_t elements */
+	int32_t i32CrankbackEnable;
+	uint8_t u8CrankbackStatus;
+	uint32_t u32CrankbackListIndex;
+	int32_t i32SoftPreemptionEnable;
+	uint8_t u8SoftPreemptionStatus;
+	uint8_t u8OamEnable;
+	uint32_t u32OamMegIndex;
+	uint32_t u32OamMeIndex;
+	
+	xBTree_Node_t oBTreeNode;
+} neMplsTunnelX1Entry_t;
+
+extern xBTree_t oNeMplsTunnelX1Table_BTree;
+
+/* neMplsTunnelX1Table table mapper */
+void neMplsTunnelX1Table_init (void);
+neMplsTunnelX1Entry_t * neMplsTunnelX1Table_createEntry (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+neMplsTunnelX1Entry_t * neMplsTunnelX1Table_getByIndex (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+neMplsTunnelX1Entry_t * neMplsTunnelX1Table_getNextIndex (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId);
+void neMplsTunnelX1Table_removeEntry (neMplsTunnelX1Entry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neMplsTunnelX1Table_getFirst;
+Netsnmp_Next_Data_Point neMplsTunnelX1Table_getNext;
+Netsnmp_Get_Data_Point neMplsTunnelX1Table_get;
+Netsnmp_Node_Handler neMplsTunnelX1Table_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
  *	table neMplsTunnelHopTable definitions
  */
 #define NEMPLSTUNNELHOPNODEID 1

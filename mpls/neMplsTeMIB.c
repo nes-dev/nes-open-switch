@@ -45,6 +45,7 @@ static oid neMplsTeMIB_oid[] = {1,3,6,1,4,1,36969,64};
 static oid neMplsTeScalars_oid[] = {1,3,6,1,4,1,36969,64,1,1};
 
 static oid neMplsTunnelTable_oid[] = {1,3,6,1,4,1,36969,64,1,2};
+static oid neMplsTunnelX1Table_oid[] = {1,3,6,1,4,1,36969,64,1,3};
 static oid neMplsTunnelHopTable_oid[] = {1,3,6,1,4,1,36969,64,1,4};
 static oid neMplsTunnelARHopTable_oid[] = {1,3,6,1,4,1,36969,64,1,5};
 static oid neMplsTunnelCHopTable_oid[] = {1,3,6,1,4,1,36969,64,1,6};
@@ -79,6 +80,7 @@ neMplsTeMIB_init (void)
 	
 	/* register neMplsTeMIB group table mappers */
 	neMplsTunnelTable_init ();
+	neMplsTunnelX1Table_init ();
 	neMplsTunnelHopTable_init ();
 	neMplsTunnelARHopTable_init ();
 	neMplsTunnelCHopTable_init ();
@@ -1005,6 +1007,708 @@ neMplsTunnelTable_mapper (
 				else
 				{
 					memcpy (&table_entry->i32DiffServType, pvOldDdata, sizeof (table_entry->i32DiffServType));
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_COMMIT:
+		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neMplsTunnelX1Table table mapper **/
+void
+neMplsTunnelX1Table_init (void)
+{
+	extern oid neMplsTunnelX1Table_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neMplsTunnelX1Table", &neMplsTunnelX1Table_mapper,
+		neMplsTunnelX1Table_oid, OID_LENGTH (neMplsTunnelX1Table_oid),
+		HANDLER_CAN_RWRITE
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_UNSIGNED /* index: mplsTunnelIndex */,
+		ASN_UNSIGNED /* index: mplsTunnelInstance */,
+		ASN_UNSIGNED /* index: mplsTunnelIngressLSRId */,
+		ASN_UNSIGNED /* index: mplsTunnelEgressLSRId */,
+		0);
+	table_info->min_column = NEMPLSTUNNELRESOURCEUPSTREAMINDEX;
+	table_info->max_column = NEMPLSTUNNELOAMMEINDEX;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neMplsTunnelX1Table_getFirst;
+	iinfo->get_next_data_point = &neMplsTunnelX1Table_getNext;
+	iinfo->get_data_point = &neMplsTunnelX1Table_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neMplsTunnelX1Table_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neMplsTunnelX1Entry_t *pEntry1 = xBTree_entry (pNode1, neMplsTunnelX1Entry_t, oBTreeNode);
+	register neMplsTunnelX1Entry_t *pEntry2 = xBTree_entry (pNode2, neMplsTunnelX1Entry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32Index < pEntry2->u32Index) ||
+		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Instance < pEntry2->u32Instance) ||
+		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Instance == pEntry2->u32Instance && pEntry1->u32IngressLSRId < pEntry2->u32IngressLSRId) ||
+		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Instance == pEntry2->u32Instance && pEntry1->u32IngressLSRId == pEntry2->u32IngressLSRId && pEntry1->u32EgressLSRId < pEntry2->u32EgressLSRId) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32Instance == pEntry2->u32Instance && pEntry1->u32IngressLSRId == pEntry2->u32IngressLSRId && pEntry1->u32EgressLSRId == pEntry2->u32EgressLSRId) ? 0: 1;
+}
+
+xBTree_t oNeMplsTunnelX1Table_BTree = xBTree_initInline (&neMplsTunnelX1Table_BTreeNodeCmp);
+
+/* create a new row in the table */
+neMplsTunnelX1Entry_t *
+neMplsTunnelX1Table_createEntry (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId)
+{
+	register neMplsTunnelX1Entry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32Index = u32Index;
+	poEntry->u32Instance = u32Instance;
+	poEntry->u32IngressLSRId = u32IngressLSRId;
+	poEntry->u32EgressLSRId = u32EgressLSRId;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeMplsTunnelX1Table_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	poEntry->i32CrankbackEnable = neMplsTunnelCrankbackEnable_auto_c;
+	poEntry->i32SoftPreemptionEnable = neMplsTunnelSoftPreemptionEnable_auto_c;
+	poEntry->u8OamEnable = neMplsTunnelOamEnable_false_c;
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeMplsTunnelX1Table_BTree);
+	return poEntry;
+}
+
+neMplsTunnelX1Entry_t *
+neMplsTunnelX1Table_getByIndex (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId)
+{
+	register neMplsTunnelX1Entry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Index = u32Index;
+	poTmpEntry->u32Instance = u32Instance;
+	poTmpEntry->u32IngressLSRId = u32IngressLSRId;
+	poTmpEntry->u32EgressLSRId = u32EgressLSRId;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeMplsTunnelX1Table_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neMplsTunnelX1Entry_t, oBTreeNode);
+}
+
+neMplsTunnelX1Entry_t *
+neMplsTunnelX1Table_getNextIndex (
+	uint32_t u32Index,
+	uint32_t u32Instance,
+	uint32_t u32IngressLSRId,
+	uint32_t u32EgressLSRId)
+{
+	register neMplsTunnelX1Entry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Index = u32Index;
+	poTmpEntry->u32Instance = u32Instance;
+	poTmpEntry->u32IngressLSRId = u32IngressLSRId;
+	poTmpEntry->u32EgressLSRId = u32EgressLSRId;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeMplsTunnelX1Table_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neMplsTunnelX1Entry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neMplsTunnelX1Table_removeEntry (neMplsTunnelX1Entry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeMplsTunnelX1Table_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeMplsTunnelX1Table_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neMplsTunnelX1Table_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeMplsTunnelX1Table_BTree);
+	return neMplsTunnelX1Table_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neMplsTunnelX1Table_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neMplsTunnelX1Entry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neMplsTunnelX1Entry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Instance);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32IngressLSRId);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32EgressLSRId);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeMplsTunnelX1Table_BTree);
+	return put_index_data;
+}
+
+bool
+neMplsTunnelX1Table_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neMplsTunnelX1Entry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	register netsnmp_variable_list *idx3 = idx2->next_variable;
+	register netsnmp_variable_list *idx4 = idx3->next_variable;
+	
+	poEntry = neMplsTunnelX1Table_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer,
+		*idx3->val.integer,
+		*idx4->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neMplsTunnelX1Table table mapper */
+int
+neMplsTunnelX1Table_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neMplsTunnelX1Entry_t *table_entry;
+	void *pvOldDdata = NULL;
+	int ret;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neMplsTunnelX1Entry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEMPLSTUNNELRESOURCEUPSTREAMINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ResourceUpstreamIndex);
+				break;
+			case NEMPLSTUNNELREROUTEUPSTREAMENABLE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RerouteUpstreamEnable);
+				break;
+			case NEMPLSTUNNELCRANKBACKMODEL:
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8CrankbackModel, table_entry->u16CrankbackModel_len);
+				break;
+			case NEMPLSTUNNELCRANKBACKENABLE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32CrankbackEnable);
+				break;
+			case NEMPLSTUNNELCRANKBACKSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8CrankbackStatus);
+				break;
+			case NEMPLSTUNNELCRANKBACKLISTINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32CrankbackListIndex);
+				break;
+			case NEMPLSTUNNELSOFTPREEMPTIONENABLE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SoftPreemptionEnable);
+				break;
+			case NEMPLSTUNNELSOFTPREEMPTIONSTATUS:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8SoftPreemptionStatus);
+				break;
+			case NEMPLSTUNNELOAMENABLE:
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8OamEnable);
+				break;
+			case NEMPLSTUNNELOAMMEGINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32OamMegIndex);
+				break;
+			case NEMPLSTUNNELOAMMEINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32OamMeIndex);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
+	/*
+	 * Write-support
+	 */
+	case MODE_SET_RESERVE1:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neMplsTunnelX1Entry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEMPLSTUNNELREROUTEUPSTREAMENABLE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEMPLSTUNNELCRANKBACKMODEL:
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8CrankbackModel));
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEMPLSTUNNELCRANKBACKENABLE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEMPLSTUNNELCRANKBACKLISTINDEX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEMPLSTUNNELSOFTPREEMPTIONENABLE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEMPLSTUNNELOAMENABLE:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEMPLSTUNNELOAMMEGINDEX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+			case NEMPLSTUNNELOAMMEINDEX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				if (ret != SNMP_ERR_NOERROR)
+				{
+					netsnmp_set_request_error (reqinfo, request, ret);
+					return SNMP_ERR_NOERROR;
+				}
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_ERR_NOTWRITABLE);
+				return SNMP_ERR_NOERROR;
+			}
+		}
+		break;
+		
+	case MODE_SET_RESERVE2:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neMplsTunnelX1Entry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			register netsnmp_variable_list *idx1 = table_info->indexes;
+			register netsnmp_variable_list *idx2 = idx1->next_variable;
+			register netsnmp_variable_list *idx3 = idx2->next_variable;
+			register netsnmp_variable_list *idx4 = idx3->next_variable;
+			
+			switch (table_info->colnum)
+			{
+			case NEMPLSTUNNELREROUTEUPSTREAMENABLE:
+			case NEMPLSTUNNELCRANKBACKMODEL:
+			case NEMPLSTUNNELCRANKBACKENABLE:
+			case NEMPLSTUNNELCRANKBACKLISTINDEX:
+			case NEMPLSTUNNELSOFTPREEMPTIONENABLE:
+			case NEMPLSTUNNELOAMENABLE:
+			case NEMPLSTUNNELOAMMEGINDEX:
+			case NEMPLSTUNNELOAMMEINDEX:
+				if (table_entry == NULL)
+				{
+					if (/* TODO */ TOBE_REPLACED != TOBE_REPLACED)
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+						return SNMP_ERR_NOERROR;
+					}
+					
+					table_entry = neMplsTunnelX1Table_createEntry (
+						*idx1->val.integer,
+						*idx2->val.integer,
+						*idx3->val.integer,
+						*idx4->val.integer);
+					if (table_entry != NULL)
+					{
+						netsnmp_insert_iterator_context (request, table_entry);
+						netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, table_entry, &xBuffer_free));
+					}
+					else
+					{
+						netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+						return SNMP_ERR_NOERROR;
+					}
+				}
+				break;
+			default:
+				if (table_entry == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				}
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_FREE:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neMplsTunnelX1Entry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEMPLSTUNNELREROUTEUPSTREAMENABLE:
+			case NEMPLSTUNNELCRANKBACKMODEL:
+			case NEMPLSTUNNELCRANKBACKENABLE:
+			case NEMPLSTUNNELCRANKBACKLISTINDEX:
+			case NEMPLSTUNNELSOFTPREEMPTIONENABLE:
+			case NEMPLSTUNNELOAMENABLE:
+			case NEMPLSTUNNELOAMMEGINDEX:
+			case NEMPLSTUNNELOAMMEINDEX:
+				neMplsTunnelX1Table_removeEntry (table_entry);
+				netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_ACTION:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neMplsTunnelX1Entry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			
+			switch (table_info->colnum)
+			{
+			case NEMPLSTUNNELREROUTEUPSTREAMENABLE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8RerouteUpstreamEnable))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8RerouteUpstreamEnable, sizeof (table_entry->u8RerouteUpstreamEnable));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8RerouteUpstreamEnable = *request->requestvb->val.integer;
+				break;
+			case NEMPLSTUNNELCRANKBACKMODEL:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8CrankbackModel))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16CrankbackModel_len;
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8CrankbackModel, sizeof (table_entry->au8CrankbackModel));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				memset (table_entry->au8CrankbackModel, 0, sizeof (table_entry->au8CrankbackModel));
+				memcpy (table_entry->au8CrankbackModel, request->requestvb->val.string, request->requestvb->val_len);
+				table_entry->u16CrankbackModel_len = request->requestvb->val_len;
+				break;
+			case NEMPLSTUNNELCRANKBACKENABLE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32CrankbackEnable))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32CrankbackEnable, sizeof (table_entry->i32CrankbackEnable));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32CrankbackEnable = *request->requestvb->val.integer;
+				break;
+			case NEMPLSTUNNELCRANKBACKLISTINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32CrankbackListIndex))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32CrankbackListIndex, sizeof (table_entry->u32CrankbackListIndex));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32CrankbackListIndex = *request->requestvb->val.integer;
+				break;
+			case NEMPLSTUNNELSOFTPREEMPTIONENABLE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SoftPreemptionEnable))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->i32SoftPreemptionEnable, sizeof (table_entry->i32SoftPreemptionEnable));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->i32SoftPreemptionEnable = *request->requestvb->val.integer;
+				break;
+			case NEMPLSTUNNELOAMENABLE:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8OamEnable))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u8OamEnable, sizeof (table_entry->u8OamEnable));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u8OamEnable = *request->requestvb->val.integer;
+				break;
+			case NEMPLSTUNNELOAMMEGINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32OamMegIndex))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32OamMegIndex, sizeof (table_entry->u32OamMegIndex));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32OamMegIndex = *request->requestvb->val.integer;
+				break;
+			case NEMPLSTUNNELOAMMEINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32OamMeIndex))) == NULL)
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
+					return SNMP_ERR_NOERROR;
+				}
+				else if (pvOldDdata != table_entry)
+				{
+					memcpy (pvOldDdata, &table_entry->u32OamMeIndex, sizeof (table_entry->u32OamMeIndex));
+					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
+				}
+				
+				table_entry->u32OamMeIndex = *request->requestvb->val.integer;
+				break;
+			}
+		}
+		break;
+		
+	case MODE_SET_UNDO:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			pvOldDdata = netsnmp_request_get_list_data (request, ROLLBACK_BUFFER);
+			table_entry = (neMplsTunnelX1Entry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL || pvOldDdata == NULL)
+			{
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEMPLSTUNNELREROUTEUPSTREAMENABLE:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelX1Table_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u8RerouteUpstreamEnable, pvOldDdata, sizeof (table_entry->u8RerouteUpstreamEnable));
+				}
+				break;
+			case NEMPLSTUNNELCRANKBACKMODEL:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelX1Table_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (table_entry->au8CrankbackModel, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+					table_entry->u16CrankbackModel_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				}
+				break;
+			case NEMPLSTUNNELCRANKBACKENABLE:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelX1Table_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->i32CrankbackEnable, pvOldDdata, sizeof (table_entry->i32CrankbackEnable));
+				}
+				break;
+			case NEMPLSTUNNELCRANKBACKLISTINDEX:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelX1Table_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u32CrankbackListIndex, pvOldDdata, sizeof (table_entry->u32CrankbackListIndex));
+				}
+				break;
+			case NEMPLSTUNNELSOFTPREEMPTIONENABLE:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelX1Table_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->i32SoftPreemptionEnable, pvOldDdata, sizeof (table_entry->i32SoftPreemptionEnable));
+				}
+				break;
+			case NEMPLSTUNNELOAMENABLE:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelX1Table_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u8OamEnable, pvOldDdata, sizeof (table_entry->u8OamEnable));
+				}
+				break;
+			case NEMPLSTUNNELOAMMEGINDEX:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelX1Table_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u32OamMegIndex, pvOldDdata, sizeof (table_entry->u32OamMegIndex));
+				}
+				break;
+			case NEMPLSTUNNELOAMMEINDEX:
+				if (pvOldDdata == table_entry)
+				{
+					neMplsTunnelX1Table_removeEntry (table_entry);
+					netsnmp_request_remove_list_entry (request, ROLLBACK_BUFFER);
+				}
+				else
+				{
+					memcpy (&table_entry->u32OamMeIndex, pvOldDdata, sizeof (table_entry->u32OamMeIndex));
 				}
 				break;
 			}
