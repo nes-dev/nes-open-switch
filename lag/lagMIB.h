@@ -352,53 +352,6 @@ Netsnmp_Node_Handler neAggTable_mapper;
 #endif	/* SNMP_SRC */
 
 
-enum
-{
-	dot3adAggFlags_neCreated_c = 0,
-	dot3adAggFlags_aggCreated_c,
-	dot3adAggFlags_portListCreated_c,
-	dot3adAggFlags_count_c,
-};
-
-typedef struct dot3adAggData_t
-{
-	uint32_t u32Index;
-	int32_t i32GroupType;
-	uint32_t u32GroupIndex;
-	
-	neAggEntry_t oNe;
-	dot3adAggEntry_t oAgg;
-	dot3adAggPortListEntry_t oPortList;
-	
-	uint8_t au8Flags[1];
-	
-	xBTree_Node_t oBTreeNode;
-	xBTree_Node_t oGroup_BTreeNode;
-} dot3adAggData_t;
-
-// extern xBTree_t oDot3adAggData_BTree;
-// extern xBTree_t oDot3adAggData_Group_BTree;
-
-dot3adAggData_t * dot3adAggData_createEntry (
-	uint32_t u32Index);
-dot3adAggData_t * dot3adAggData_getByIndex (
-	uint32_t u32Index);
-dot3adAggData_t * dot3adAggData_getNextIndex (
-	uint32_t u32Index);
-dot3adAggData_t * dot3adAggData_Group_getByIndex (
-	int32_t i32GroupType,
-	uint32_t u32GroupIndex,
-	uint32_t u32Index);
-dot3adAggData_t * dot3adAggData_Group_getNextIndex (
-	int32_t i32GroupType,
-	uint32_t u32GroupIndex,
-	uint32_t u32Index);
-#define dot3adAggData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggData_t, oNe))
-#define dot3adAggData_getByAggEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggData_t, oAgg))
-#define dot3adAggData_getByPortListEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggData_t, oPortList))
-void dot3adAggData_removeEntry (dot3adAggData_t *poEntry);
-
-
 /**
  *	table neAggPortListTable definitions
  */
@@ -525,86 +478,6 @@ Netsnmp_Next_Data_Point neAggPortTable_getNext;
 Netsnmp_Get_Data_Point neAggPortTable_get;
 Netsnmp_Node_Handler neAggPortTable_mapper;
 #endif	/* SNMP_SRC */
-
-
-enum
-{
-	dot3adAggPortState_lacpActivity_c = 0,
-	dot3adAggPortState_lacpTimeout_c = 1,
-	dot3adAggPortState_aggregation_c = 2,
-	dot3adAggPortState_synchronization_c = 3,
-	dot3adAggPortState_collecting_c = 4,
-	dot3adAggPortState_distributing_c = 5,
-	dot3adAggPortState_defaulted_c = 6,
-	dot3adAggPortState_expired_c = 7,
-	dot3adAggPortState_count_c,
-	dot3adAggPortState_bitMin = dot3adAggPortState_lacpActivity_c,
-	dot3adAggPortState_bitMax_c = dot3adAggPortState_expired_c,
-	
-	dot3adAggPortFlags_neCreated_c = 0,
-	dot3adAggPortFlags_portCreated_c,
-	dot3adAggPortFlags_statsCreated_c,
-	dot3adAggPortFlags_debugCreated_c,
-	dot3adAggPortFlags_portXCreated_c,
-	dot3adAggPortFlags_count_c,
-	
-	dot3adAggPortSelection_active_c = 1,
-	dot3adAggPortSelection_standby_c,
-	dot3adAggPortSelection_none_c,
-	
-	dot3adAggPortAggState_detached_c = 1,
-	dot3adAggPortAggState_waiting_c,
-	dot3adAggPortAggState_attached_c,
-	dot3adAggPortAggState_collecting_c,
-	dot3adAggPortAggState_distributing_c,
-};
-
-typedef struct dot3adAggPortData_t
-{
-	uint32_t u32Index;
-	int32_t i32GroupType;
-	uint32_t u32GroupIndex;
-	
-	neAggPortEntry_t oNe;
-	dot3adAggPortEntry_t oPort;
-	dot3adAggPortStatsEntry_t oStats;
-	dot3adAggPortDebugEntry_t oDebug;
-	dot3adAggPortXEntry_t oPortX;
-	
-	uint8_t au8Flags[1];
-	uint8_t u8OperStatus;
-	bool bFullDuplex;
-	uint8_t u8Selection;
-	int32_t i32CollectorMaxDelay;
-	uint8_t u8AggState;
-	
-	xBTree_Node_t oBTreeNode;
-	xBTree_Node_t oGroup_BTreeNode;
-} dot3adAggPortData_t;
-
-// extern xBTree_t oDot3adAggPortData_BTree;
-// extern xBTree_t oDot3adAggPortData_Group_BTree;
-
-dot3adAggPortData_t * dot3adAggPortData_createEntry (
-	uint32_t u32Index);
-dot3adAggPortData_t * dot3adAggPortData_getByIndex (
-	uint32_t u32Index);
-dot3adAggPortData_t * dot3adAggPortData_getNextIndex (
-	uint32_t u32Index);
-dot3adAggPortData_t * dot3adAggPortData_Group_getByIndex (
-	int32_t i32GroupType,
-	uint32_t u32GroupIndex,
-	uint32_t u32Index);
-dot3adAggPortData_t * dot3adAggPortData_Group_getNextIndex (
-	int32_t i32GroupType,
-	uint32_t u32GroupIndex,
-	uint32_t u32Index);
-#define dot3adAggPortData_getByNeEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oNe))
-#define dot3adAggPortData_getByPortEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oPort))
-#define dot3adAggPortData_getByStatsEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oStats))
-#define dot3adAggPortData_getByDebugEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oDebug))
-#define dot3adAggPortData_getByPortXEntry(poEntry) ((poEntry) == NULL ? NULL: xGetParentByMemberPtr ((poEntry), dot3adAggPortData_t, oPortX))
-void dot3adAggPortData_removeEntry (dot3adAggPortData_t *poEntry);
 
 
 /**
@@ -773,6 +646,28 @@ enum
 	/* enums for column dot3adAggPortAggregateOrIndividual */
 	dot3adAggPortAggregateOrIndividual_true_c = 1,
 	dot3adAggPortAggregateOrIndividual_false_c = 2,
+	
+	dot3adAggPortState_lacpActivity_c = 0,
+	dot3adAggPortState_lacpTimeout_c = 1,
+	dot3adAggPortState_aggregation_c = 2,
+	dot3adAggPortState_synchronization_c = 3,
+	dot3adAggPortState_collecting_c = 4,
+	dot3adAggPortState_distributing_c = 5,
+	dot3adAggPortState_defaulted_c = 6,
+	dot3adAggPortState_expired_c = 7,
+	dot3adAggPortState_count_c,
+	dot3adAggPortState_bitMin = dot3adAggPortState_lacpActivity_c,
+	dot3adAggPortState_bitMax_c = dot3adAggPortState_expired_c,
+	
+	dot3adAggPortSelection_active_c = 1,
+	dot3adAggPortSelection_standby_c,
+	dot3adAggPortSelection_none_c,
+	
+	dot3adAggPortAggState_detached_c = 1,
+	dot3adAggPortAggState_waiting_c,
+	dot3adAggPortAggState_attached_c,
+	dot3adAggPortAggState_collecting_c,
+	dot3adAggPortAggState_distributing_c,
 };
 
 /* table dot3adAggPortTable row entry data structure */
@@ -823,7 +718,14 @@ typedef struct dot3adAggPortEntry_t
 	dot3adAggPortDebugEntry_t oDebug;
 	dot3adAggPortXEntry_t oX;
 	
- 	xBTree_Node_t oBTreeNode;
+	uint8_t u8OperStatus;
+	bool bFullDuplex;
+	uint8_t u8Selection;
+	int32_t i32CollectorMaxDelay;
+	uint8_t u8AggState;
+	uint32_t u32KeyAggID;
+	
+	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oGroup_BTreeNode;
 } dot3adAggPortEntry_t;
 

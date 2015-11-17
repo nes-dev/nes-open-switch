@@ -109,7 +109,7 @@ lacp_start (void *pvArgv)
 					break;
 					
 				case lacpMessage_PduRx_c:
-					dot3adAggPortLacp_processPduRx (poMsg->pvData);
+					dot3adAggLacp_processPduRx (poMsg->pvData);
 					break;
 				}
 				
