@@ -2231,21 +2231,6 @@ neMplsTunnelARHopTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-neMplsTunnelARHopTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register neMplsTunnelARHopEntry_t *pEntry1 = xBTree_entry (pNode1, neMplsTunnelARHopEntry_t, oBTreeNode);
-	register neMplsTunnelARHopEntry_t *pEntry2 = xBTree_entry (pNode2, neMplsTunnelARHopEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32ListIndex < pEntry2->u32ListIndex) ||
-		(pEntry1->u32ListIndex == pEntry2->u32ListIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32ListIndex == pEntry2->u32ListIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oNeMplsTunnelARHopTable_BTree = xBTree_initInline (&neMplsTunnelARHopTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 neMplsTunnelARHopEntry_t *
 neMplsTunnelARHopTable_createEntry (
@@ -2253,21 +2238,14 @@ neMplsTunnelARHopTable_createEntry (
 	uint32_t u32Index)
 {
 	register neMplsTunnelARHopEntry_t *poEntry = NULL;
+	register mplsTunnelARHopEntry_t *poTunnelARHop = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poTunnelARHop = mplsTunnelARHopTable_getByIndex (u32ListIndex, u32Index)) == NULL)
 	{
 		return NULL;
 	}
+	poEntry = &poTunnelARHop->oNe;
 	
-	poEntry->u32ListIndex = u32ListIndex;
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeMplsTunnelARHopTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
-	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeMplsTunnelARHopTable_BTree);
 	return poEntry;
 }
 
@@ -2276,24 +2254,14 @@ neMplsTunnelARHopTable_getByIndex (
 	uint32_t u32ListIndex,
 	uint32_t u32Index)
 {
-	register neMplsTunnelARHopEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsTunnelARHopEntry_t *poTunnelARHop = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poTunnelARHop = mplsTunnelARHopTable_getByIndex (u32ListIndex, u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ListIndex = u32ListIndex;
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeMplsTunnelARHopTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neMplsTunnelARHopEntry_t, oBTreeNode);
+	return &poTunnelARHop->oNe;
 }
 
 neMplsTunnelARHopEntry_t *
@@ -2301,38 +2269,20 @@ neMplsTunnelARHopTable_getNextIndex (
 	uint32_t u32ListIndex,
 	uint32_t u32Index)
 {
-	register neMplsTunnelARHopEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsTunnelARHopEntry_t *poTunnelARHop = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poTunnelARHop = mplsTunnelARHopTable_getNextIndex (u32ListIndex, u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32ListIndex = u32ListIndex;
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeMplsTunnelARHopTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neMplsTunnelARHopEntry_t, oBTreeNode);
+	return &poTunnelARHop->oNe;
 }
 
 /* remove a row from the table */
 void
 neMplsTunnelARHopTable_removeEntry (neMplsTunnelARHopEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeMplsTunnelARHopTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeMplsTunnelARHopTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -2342,7 +2292,7 @@ neMplsTunnelARHopTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oNeMplsTunnelARHopTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsTunnelARHopTable_BTree);
 	return neMplsTunnelARHopTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -2351,20 +2301,20 @@ neMplsTunnelARHopTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neMplsTunnelARHopEntry_t *poEntry = NULL;
+	mplsTunnelARHopEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, neMplsTunnelARHopEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, mplsTunnelARHopEntry_t, oBTreeNode);
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ListIndex);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeMplsTunnelARHopTable_BTree);
+	*my_data_context = (void*) &poEntry->oNe;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsTunnelARHopTable_BTree);
 	return put_index_data;
 }
 
@@ -2373,11 +2323,11 @@ neMplsTunnelARHopTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neMplsTunnelARHopEntry_t *poEntry = NULL;
+	mplsTunnelARHopEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	register netsnmp_variable_list *idx2 = idx1->next_variable;
 	
-	poEntry = neMplsTunnelARHopTable_getByIndex (
+	poEntry = mplsTunnelARHopTable_getByIndex (
 		*idx1->val.integer,
 		*idx2->val.integer);
 	if (poEntry == NULL)
@@ -2385,7 +2335,7 @@ neMplsTunnelARHopTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oNe;
 	return true;
 }
 
