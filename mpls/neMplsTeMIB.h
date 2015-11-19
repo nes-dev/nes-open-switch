@@ -510,8 +510,8 @@ enum
 typedef struct neMplsTunnelCHopEntry_t
 {
 	/* Index values */
-	uint32_t u32ListIndex;
-	uint32_t u32Index;
+// 	uint32_t u32ListIndex;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	int32_t i32LabelType;
@@ -520,10 +520,10 @@ typedef struct neMplsTunnelCHopEntry_t
 	uint8_t au8ReverseLabel[64];
 	size_t u16ReverseLabel_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neMplsTunnelCHopEntry_t;
 
-extern xBTree_t oNeMplsTunnelCHopTable_BTree;
+// extern xBTree_t oNeMplsTunnelCHopTable_BTree;
 
 /* neMplsTunnelCHopTable table mapper */
 void neMplsTunnelCHopTable_init (void);
