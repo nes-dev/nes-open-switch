@@ -973,7 +973,6 @@ typedef struct mplsTunnelEntry_t
 	int32_t i32SetupPrio;
 	int32_t i32HoldingPrio;
 	uint8_t au8SessionAttributes[1];
-	size_t u16SessionAttributes_len;	/* # of uint8_t elements */
 	uint8_t u8LocalProtectInUse;
 	uint32_t u32PrimaryInstance;
 	uint32_t u32InstancePriority;

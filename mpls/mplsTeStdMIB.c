@@ -952,7 +952,7 @@ mplsTunnelTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32HoldingPrio);
 				break;
 			case MPLSTUNNELSESSIONATTRIBUTES:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8SessionAttributes, table_entry->u16SessionAttributes_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8SessionAttributes, sizeof (table_entry->au8SessionAttributes));
 				break;
 			case MPLSTUNNELLOCALPROTECTINUSE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8LocalProtectInUse);
@@ -1396,14 +1396,12 @@ mplsTunnelTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16SessionAttributes_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8SessionAttributes, sizeof (table_entry->au8SessionAttributes));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8SessionAttributes, 0, sizeof (table_entry->au8SessionAttributes));
 				memcpy (table_entry->au8SessionAttributes, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16SessionAttributes_len = request->requestvb->val_len;
 				break;
 			case MPLSTUNNELLOCALPROTECTINUSE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8LocalProtectInUse))) == NULL)
@@ -1595,7 +1593,6 @@ mplsTunnelTable_mapper (
 				break;
 			case MPLSTUNNELSESSIONATTRIBUTES:
 				memcpy (table_entry->au8SessionAttributes, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16SessionAttributes_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case MPLSTUNNELLOCALPROTECTINUSE:
 				memcpy (&table_entry->u8LocalProtectInUse, pvOldDdata, sizeof (table_entry->u8LocalProtectInUse));
