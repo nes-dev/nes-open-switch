@@ -1056,13 +1056,10 @@ Netsnmp_Node_Handler mplsTunnelTable_mapper;
 #define MPLSTUNNELHOPADDRTYPE 4
 #define MPLSTUNNELHOPIPADDR 5
 #define MPLSTUNNELHOPIPPREFIXLEN 6
-#define MPLSTUNNELHOPASNUMBER 7
 #define MPLSTUNNELHOPADDRUNNUM 8
-#define MPLSTUNNELHOPLSPID 9
 #define MPLSTUNNELHOPTYPE 10
 #define MPLSTUNNELHOPINCLUDE 11
 #define MPLSTUNNELHOPPATHOPTIONNAME 12
-#define MPLSTUNNELHOPENTRYPATHCOMP 13
 #define MPLSTUNNELHOPROWSTATUS 14
 #define MPLSTUNNELHOPSTORAGETYPE 15
 
@@ -1083,10 +1080,6 @@ enum
 	/* enums for column mplsTunnelHopInclude */
 	mplsTunnelHopInclude_true_c = 1,
 	mplsTunnelHopInclude_false_c = 2,
-
-	/* enums for column mplsTunnelHopEntryPathComp */
-	mplsTunnelHopEntryPathComp_dynamic_c = 1,
-	mplsTunnelHopEntryPathComp_explicit_c = 2,
 
 	/* enums for column mplsTunnelHopRowStatus */
 	mplsTunnelHopRowStatus_active_c = 1,
@@ -1117,17 +1110,12 @@ typedef struct mplsTunnelHopEntry_t
 	uint8_t au8IpAddr[32];
 	size_t u16IpAddr_len;	/* # of uint8_t elements */
 	uint32_t u32IpPrefixLen;
-	uint8_t au8AsNumber[4];
-	size_t u16AsNumber_len;	/* # of uint8_t elements */
 	uint8_t au8AddrUnnum[4];
 	size_t u16AddrUnnum_len;	/* # of uint8_t elements */
-	uint8_t au8LspId[6];
-	size_t u16LspId_len;	/* # of uint8_t elements */
 	int32_t i32Type;
 	uint8_t u8Include;
 	uint8_t au8PathOptionName[255];
 	size_t u16PathOptionName_len;	/* # of uint8_t elements */
-	int32_t i32EntryPathComp;
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	

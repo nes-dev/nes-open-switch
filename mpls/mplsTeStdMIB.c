@@ -1923,14 +1923,10 @@ mplsTunnelHopTable_mapper (
 			case MPLSTUNNELHOPIPPREFIXLEN:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32IpPrefixLen);
 				break;
-			case MPLSTUNNELHOPASNUMBER:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AsNumber, table_entry->u16AsNumber_len);
 				break;
 			case MPLSTUNNELHOPADDRUNNUM:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AddrUnnum, table_entry->u16AddrUnnum_len);
 				break;
-			case MPLSTUNNELHOPLSPID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LspId, table_entry->u16LspId_len);
 				break;
 			case MPLSTUNNELHOPTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
@@ -1940,9 +1936,6 @@ mplsTunnelHopTable_mapper (
 				break;
 			case MPLSTUNNELHOPPATHOPTIONNAME:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PathOptionName, table_entry->u16PathOptionName_len);
-				break;
-			case MPLSTUNNELHOPENTRYPATHCOMP:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32EntryPathComp);
 				break;
 			case MPLSTUNNELHOPROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -1993,24 +1986,8 @@ mplsTunnelHopTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case MPLSTUNNELHOPASNUMBER:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8AsNumber));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
 			case MPLSTUNNELHOPADDRUNNUM:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8AddrUnnum));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case MPLSTUNNELHOPLSPID:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8LspId));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -2035,14 +2012,6 @@ mplsTunnelHopTable_mapper (
 				break;
 			case MPLSTUNNELHOPPATHOPTIONNAME:
 				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8PathOptionName));
-				if (ret != SNMP_ERR_NOERROR)
-				{
-					netsnmp_set_request_error (reqinfo, request, ret);
-					return SNMP_ERR_NOERROR;
-				}
-				break;
-			case MPLSTUNNELHOPENTRYPATHCOMP:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -2210,24 +2179,6 @@ mplsTunnelHopTable_mapper (
 				
 				table_entry->u32IpPrefixLen = *request->requestvb->val.integer;
 				break;
-			case MPLSTUNNELHOPASNUMBER:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8AsNumber))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16AsNumber_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8AsNumber, sizeof (table_entry->au8AsNumber));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->au8AsNumber, 0, sizeof (table_entry->au8AsNumber));
-				memcpy (table_entry->au8AsNumber, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16AsNumber_len = request->requestvb->val_len;
-				break;
 			case MPLSTUNNELHOPADDRUNNUM:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8AddrUnnum))) == NULL)
 				{
@@ -2245,24 +2196,6 @@ mplsTunnelHopTable_mapper (
 				memset (table_entry->au8AddrUnnum, 0, sizeof (table_entry->au8AddrUnnum));
 				memcpy (table_entry->au8AddrUnnum, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16AddrUnnum_len = request->requestvb->val_len;
-				break;
-			case MPLSTUNNELHOPLSPID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8LspId))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16LspId_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8LspId, sizeof (table_entry->au8LspId));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				memset (table_entry->au8LspId, 0, sizeof (table_entry->au8LspId));
-				memcpy (table_entry->au8LspId, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16LspId_len = request->requestvb->val_len;
 				break;
 			case MPLSTUNNELHOPTYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Type))) == NULL)
@@ -2309,20 +2242,6 @@ mplsTunnelHopTable_mapper (
 				memset (table_entry->au8PathOptionName, 0, sizeof (table_entry->au8PathOptionName));
 				memcpy (table_entry->au8PathOptionName, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16PathOptionName_len = request->requestvb->val_len;
-				break;
-			case MPLSTUNNELHOPENTRYPATHCOMP:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32EntryPathComp))) == NULL)
-				{
-					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
-					return SNMP_ERR_NOERROR;
-				}
-				else if (pvOldDdata != table_entry)
-				{
-					memcpy (pvOldDdata, &table_entry->i32EntryPathComp, sizeof (table_entry->i32EntryPathComp));
-					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
-				}
-				
-				table_entry->i32EntryPathComp = *request->requestvb->val.integer;
 				break;
 			case MPLSTUNNELHOPSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
@@ -2387,17 +2306,9 @@ mplsTunnelHopTable_mapper (
 			case MPLSTUNNELHOPIPPREFIXLEN:
 				memcpy (&table_entry->u32IpPrefixLen, pvOldDdata, sizeof (table_entry->u32IpPrefixLen));
 				break;
-			case MPLSTUNNELHOPASNUMBER:
-				memcpy (table_entry->au8AsNumber, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16AsNumber_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				break;
 			case MPLSTUNNELHOPADDRUNNUM:
 				memcpy (table_entry->au8AddrUnnum, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16AddrUnnum_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				break;
-			case MPLSTUNNELHOPLSPID:
-				memcpy (table_entry->au8LspId, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16LspId_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case MPLSTUNNELHOPTYPE:
 				memcpy (&table_entry->i32Type, pvOldDdata, sizeof (table_entry->i32Type));
@@ -2408,9 +2319,6 @@ mplsTunnelHopTable_mapper (
 			case MPLSTUNNELHOPPATHOPTIONNAME:
 				memcpy (table_entry->au8PathOptionName, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				table_entry->u16PathOptionName_len = ((xOctetString_t*) pvOldDdata)->u16Len;
-				break;
-			case MPLSTUNNELHOPENTRYPATHCOMP:
-				memcpy (&table_entry->i32EntryPathComp, pvOldDdata, sizeof (table_entry->i32EntryPathComp));
 				break;
 			case MPLSTUNNELHOPROWSTATUS:
 				switch (*request->requestvb->val.integer)
