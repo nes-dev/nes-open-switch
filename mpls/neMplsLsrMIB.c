@@ -1964,7 +1964,7 @@ neMplsXCTable_init (void)
 	reg = netsnmp_create_handler_registration (
 		"neMplsXCTable", &neMplsXCTable_mapper,
 		neMplsXCTable_oid, OID_LENGTH (neMplsXCTable_oid),
-		HANDLER_CAN_RONLY
+		HANDLER_CAN_RWRITE
 		);
 		
 	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));

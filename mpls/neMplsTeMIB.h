@@ -484,9 +484,11 @@ Netsnmp_Node_Handler neMplsTunnelARHopTable_mapper;
 /**
  *	table neMplsTunnelCHopTable definitions
  */
-#define NEMPLSTUNNELCHOPLABELTYPE 1
-#define NEMPLSTUNNELCHOPFORWARDLABEL 2
-#define NEMPLSTUNNELCHOPREVERSELABEL 3
+#define NEMPLSTUNNELCHOPNODEID 1
+#define NEMPLSTUNNELCHOPLINKID 2
+#define NEMPLSTUNNELCHOPLABELTYPE 3
+#define NEMPLSTUNNELCHOPFORWARDLABEL 4
+#define NEMPLSTUNNELCHOPREVERSELABEL 5
 
 enum
 {
@@ -514,6 +516,8 @@ typedef struct neMplsTunnelCHopEntry_t
 // 	uint32_t u32Index;
 	
 	/* Column values */
+	uint32_t u32NodeId;
+	uint32_t u32LinkId;
 	int32_t i32LabelType;
 	uint8_t au8ForwardLabel[64];
 	size_t u16ForwardLabel_len;	/* # of uint8_t elements */
