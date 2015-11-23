@@ -444,8 +444,8 @@ enum
 typedef struct neMplsTunnelARHopEntry_t
 {
 	/* Index values */
-	uint32_t u32ListIndex;
-	uint32_t u32Index;
+// 	uint32_t u32ListIndex;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint32_t u32NodeId;
@@ -456,10 +456,10 @@ typedef struct neMplsTunnelARHopEntry_t
 	uint8_t au8ReverseLabel[64];
 	size_t u16ReverseLabel_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } neMplsTunnelARHopEntry_t;
 
-extern xBTree_t oNeMplsTunnelARHopTable_BTree;
+// extern xBTree_t oNeMplsTunnelARHopTable_BTree;
 
 /* neMplsTunnelARHopTable table mapper */
 void neMplsTunnelARHopTable_init (void);
