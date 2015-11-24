@@ -32,6 +32,9 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
@@ -109,10 +112,11 @@ dot1agCfmDefaultMd_t oDot1agCfmDefaultMd;
 
 /** dot1agCfmDefaultMd scalar mapper **/
 int
-dot1agCfmDefaultMd_mapper (netsnmp_mib_handler *handler,
+dot1agCfmDefaultMd_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid dot1agCfmDefaultMd_oid[];
 	netsnmp_request_info *request;
@@ -125,7 +129,7 @@ dot1agCfmDefaultMd_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (dot1agCfmDefaultMd_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (dot1agCfmDefaultMd_oid)])
 			{
 			case DOT1AGCFMDEFAULTMDDEFLEVEL:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oDot1agCfmDefaultMd.i32DefLevel);
@@ -153,7 +157,7 @@ dot1agCfmDefaultMd_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (dot1agCfmDefaultMd_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (dot1agCfmDefaultMd_oid)])
 			{
 			case DOT1AGCFMDEFAULTMDDEFLEVEL:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
@@ -193,7 +197,7 @@ dot1agCfmDefaultMd_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (dot1agCfmDefaultMd_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (dot1agCfmDefaultMd_oid)])
 			{
 			case DOT1AGCFMDEFAULTMDDEFLEVEL:
 				/* XXX: perform the value change here */
@@ -229,7 +233,7 @@ dot1agCfmDefaultMd_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (dot1agCfmDefaultMd_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (dot1agCfmDefaultMd_oid)])
 			{
 			case DOT1AGCFMDEFAULTMDDEFLEVEL:
 				/* XXX: UNDO and return to previous value for the object */
@@ -272,10 +276,11 @@ dot1agCfmMd_t oDot1agCfmMd;
 
 /** dot1agCfmMd scalar mapper **/
 int
-dot1agCfmMd_mapper (netsnmp_mib_handler *handler,
+dot1agCfmMd_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid dot1agCfmMd_oid[];
 	netsnmp_request_info *request;
@@ -287,7 +292,7 @@ dot1agCfmMd_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (dot1agCfmMd_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (dot1agCfmMd_oid)])
 			{
 			case DOT1AGCFMMDTABLENEXTINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oDot1agCfmMd.u32TableNextIndex);
@@ -939,8 +944,8 @@ dot1agCfmMaNetTable_BTreeNodeCmp (
 	
 	return
 		(pEntry1->u32MdIndex < pEntry2->u32MdIndex) ||
-		(pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex < pEntry2->u32MaIndex) ? -1:
-		(pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex == pEntry2->u32MaIndex) ? 0: 1;
+		(pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
 }
 
 static int8_t
@@ -953,8 +958,8 @@ dot1agCfmMaNetTable_Meg_BTreeNodeCmp (
 	return
 		(xBinCmp (pEntry1->au8Name, pEntry2->au8Name, pEntry1->u16Name_len, pEntry2->u16Name_len) == -1) ||
 		(xBinCmp (pEntry1->au8Name, pEntry2->au8Name, pEntry1->u16Name_len, pEntry2->u16Name_len) == 0 && pEntry1->u32MdIndex < pEntry2->u32MdIndex) ||
-		(xBinCmp (pEntry1->au8Name, pEntry2->au8Name, pEntry1->u16Name_len, pEntry2->u16Name_len) == 0 && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex < pEntry2->u32MaIndex) ? -1:
-		(xBinCmp (pEntry1->au8Name, pEntry2->au8Name, pEntry1->u16Name_len, pEntry2->u16Name_len) == 0 && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex == pEntry2->u32MaIndex) ? 0: 1;
+		(xBinCmp (pEntry1->au8Name, pEntry2->au8Name, pEntry1->u16Name_len, pEntry2->u16Name_len) == 0 && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32Index < pEntry2->u32Index) ? -1:
+		(xBinCmp (pEntry1->au8Name, pEntry2->au8Name, pEntry1->u16Name_len, pEntry2->u16Name_len) == 0 && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
 }
 
 xBTree_t oDot1agCfmMaNetTable_BTree = xBTree_initInline (&dot1agCfmMaNetTable_BTreeNodeCmp);
@@ -964,7 +969,7 @@ xBTree_t oDot1agCfmMaNetTable_Meg_BTree = xBTree_initInline (&dot1agCfmMaNetTabl
 dot1agCfmMaNetEntry_t *
 dot1agCfmMaNetTable_createEntry (
 	uint32_t u32MdIndex,
-	uint32_t u32MaIndex)
+	uint32_t u32Index)
 {
 	register dot1agCfmMaNetEntry_t *poEntry = NULL;
 	
@@ -974,7 +979,7 @@ dot1agCfmMaNetTable_createEntry (
 	}
 	
 	poEntry->u32MdIndex = u32MdIndex;
-	poEntry->u32MaIndex = u32MaIndex;
+	poEntry->u32Index = u32Index;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oDot1agCfmMaNetTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -991,7 +996,7 @@ dot1agCfmMaNetTable_createEntry (
 dot1agCfmMaNetEntry_t *
 dot1agCfmMaNetTable_getByIndex (
 	uint32_t u32MdIndex,
-	uint32_t u32MaIndex)
+	uint32_t u32Index)
 {
 	register dot1agCfmMaNetEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -1002,7 +1007,7 @@ dot1agCfmMaNetTable_getByIndex (
 	}
 	
 	poTmpEntry->u32MdIndex = u32MdIndex;
-	poTmpEntry->u32MaIndex = u32MaIndex;
+	poTmpEntry->u32Index = u32Index;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oDot1agCfmMaNetTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -1016,7 +1021,7 @@ dot1agCfmMaNetTable_getByIndex (
 dot1agCfmMaNetEntry_t *
 dot1agCfmMaNetTable_getNextIndex (
 	uint32_t u32MdIndex,
-	uint32_t u32MaIndex)
+	uint32_t u32Index)
 {
 	register dot1agCfmMaNetEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -1027,7 +1032,7 @@ dot1agCfmMaNetTable_getNextIndex (
 	}
 	
 	poTmpEntry->u32MdIndex = u32MdIndex;
-	poTmpEntry->u32MaIndex = u32MaIndex;
+	poTmpEntry->u32Index = u32Index;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oDot1agCfmMaNetTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -1079,7 +1084,7 @@ dot1agCfmMaNetTable_getNext (
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32MdIndex);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32MaIndex);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oDot1agCfmMaNetTable_BTree);
 	return put_index_data;
@@ -1990,23 +1995,23 @@ dot1agCfmMepTable_createEntry (
 	}
 	
 	poEntry->u32PrimaryVid = 0;
-	poEntry->i32Active = dot1agCfmMepActive_false_c;
+	poEntry->u8Active = dot1agCfmMepActive_false_c;
 	poEntry->i32FngState = dot1agCfmMepFngState_fngReset_c;
-	poEntry->i32CciEnabled = dot1agCfmMepCciEnabled_false_c;
+	poEntry->u8CciEnabled = dot1agCfmMepCciEnabled_false_c;
 	poEntry->i32LowPrDef = dot1agCfmMepLowPrDef_macRemErrXcon_c;
 	poEntry->i32FngAlarmTime = 250;
 	poEntry->i32FngResetTime = 1000;
-	poEntry->i32TransmitLbmStatus = dot1agCfmMepTransmitLbmStatus_false_c;
+	poEntry->u8TransmitLbmStatus = dot1agCfmMepTransmitLbmStatus_false_c;
 	poEntry->i32TransmitLbmMessages = 1;
-	poEntry->i32TransmitLbmVlanDropEnable = dot1agCfmMepTransmitLbmVlanDropEnable_false_c;
-	poEntry->i32TransmitLbmResultOK = dot1agCfmMepTransmitLbmResultOK_true_c;
-	poEntry->i32TransmitLtmStatus = dot1agCfmMepTransmitLtmStatus_true_c;
+	poEntry->u8TransmitLbmVlanDropEnable = dot1agCfmMepTransmitLbmVlanDropEnable_false_c;
+	poEntry->u8TransmitLbmResultOK = dot1agCfmMepTransmitLbmResultOK_true_c;
+	poEntry->u8TransmitLtmStatus = dot1agCfmMepTransmitLtmStatus_true_c;
 	xBitmap_setBitsRev (poEntry->au8TransmitLtmFlags, 1, 1, dot1agCfmMepTransmitLtmFlags_useFDBonly_c);
 	poEntry->u32TransmitLtmTtl = 64;
-	poEntry->i32TransmitLtmResult = dot1agCfmMepTransmitLtmResult_true_c;
+	poEntry->u8TransmitLtmResult = dot1agCfmMepTransmitLtmResult_true_c;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
-	poEntry->i32PbbTeCanReportPbbTePresence = dot1agCfmMepPbbTeCanReportPbbTePresence_false_c;
-	poEntry->i32PbbTeMismatchAlarm = dot1agCfmMepPbbTeMismatchAlarm_false_c;
+	poEntry->u8PbbTeCanReportPbbTePresence = dot1agCfmMepPbbTeCanReportPbbTePresence_false_c;
+	poEntry->u8PbbTeMismatchAlarm = dot1agCfmMepPbbTeMismatchAlarm_false_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oDot1agCfmMepTable_BTree);
 	return poEntry;
@@ -2180,19 +2185,19 @@ dot1agCfmMepTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PrimaryVid);
 				break;
 			case DOT1AGCFMMEPACTIVE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Active);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Active);
 				break;
 			case DOT1AGCFMMEPFNGSTATE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32FngState);
 				break;
 			case DOT1AGCFMMEPCCIENABLED:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32CciEnabled);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8CciEnabled);
 				break;
 			case DOT1AGCFMMEPCCMLTMPRIORITY:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32CcmLtmPriority);
 				break;
 			case DOT1AGCFMMEPMACADDRESS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, table_entry->u16MacAddress_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, sizeof (table_entry->au8MacAddress));
 				break;
 			case DOT1AGCFMMEPLOWPRDEF:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LowPrDef);
@@ -2207,7 +2212,7 @@ dot1agCfmMepTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32HighestPrDefect);
 				break;
 			case DOT1AGCFMMEPDEFECTS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Defects, table_entry->u16Defects_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Defects, sizeof (table_entry->au8Defects));
 				break;
 			case DOT1AGCFMMEPERRORCCMLASTFAILURE:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ErrorCcmLastFailure, table_entry->u16ErrorCcmLastFailure_len);
@@ -2243,16 +2248,16 @@ dot1agCfmMepTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32LbrOut);
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TransmitLbmStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8TransmitLbmStatus);
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMDESTMACADDRESS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8TransmitLbmDestMacAddress, table_entry->u16TransmitLbmDestMacAddress_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8TransmitLbmDestMacAddress, sizeof (table_entry->au8TransmitLbmDestMacAddress));
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMDESTMEPID:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32TransmitLbmDestMepId);
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMDESTISMEPID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TransmitLbmDestIsMepId);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8TransmitLbmDestIsMepId);
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMMESSAGES:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TransmitLbmMessages);
@@ -2264,61 +2269,61 @@ dot1agCfmMepTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TransmitLbmVlanPriority);
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMVLANDROPENABLE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TransmitLbmVlanDropEnable);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8TransmitLbmVlanDropEnable);
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMRESULTOK:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TransmitLbmResultOK);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8TransmitLbmResultOK);
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMSEQNUMBER:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32TransmitLbmSeqNumber);
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TransmitLtmStatus);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8TransmitLtmStatus);
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMFLAGS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8TransmitLtmFlags, table_entry->u16TransmitLtmFlags_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8TransmitLtmFlags, sizeof (table_entry->au8TransmitLtmFlags));
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTARGETMACADDRESS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8TransmitLtmTargetMacAddress, table_entry->u16TransmitLtmTargetMacAddress_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8TransmitLtmTargetMacAddress, sizeof (table_entry->au8TransmitLtmTargetMacAddress));
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTARGETMEPID:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32TransmitLtmTargetMepId);
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTARGETISMEPID:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TransmitLtmTargetIsMepId);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8TransmitLtmTargetIsMepId);
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTTL:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32TransmitLtmTtl);
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMRESULT:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TransmitLtmResult);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8TransmitLtmResult);
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMSEQNUMBER:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32TransmitLtmSeqNumber);
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMEGRESSIDENTIFIER:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8TransmitLtmEgressIdentifier, table_entry->u16TransmitLtmEgressIdentifier_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8TransmitLtmEgressIdentifier, sizeof (table_entry->au8TransmitLtmEgressIdentifier));
 				break;
 			case DOT1AGCFMMEPROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
 				break;
 			case DOT1AGCFMMEPPBBTECANREPORTPBBTEPRESENCE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PbbTeCanReportPbbTePresence);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8PbbTeCanReportPbbTePresence);
 				break;
 			case DOT1AGCFMMEPPBBTETRAFFICMISMATCHDEFECT:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PbbTeTrafficMismatchDefect);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8PbbTeTrafficMismatchDefect);
 				break;
 			case DOT1AGCFMMEPPBBTRANSMITLBMLTMREVERSEVID:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PbbTransmitLbmLtmReverseVid);
 				break;
 			case DOT1AGCFMMEPPBBTEMISMATCHALARM:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PbbTeMismatchAlarm);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8PbbTeMismatchAlarm);
 				break;
 			case DOT1AGCFMMEPPBBTELOCALMISMATCHDEFECT:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PbbTeLocalMismatchDefect);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8PbbTeLocalMismatchDefect);
 				break;
 			case DOT1AGCFMMEPPBBTEMISMATCHSINCERESET:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PbbTeMismatchSinceReset);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8PbbTeMismatchSinceReset);
 				break;
 				
 			default:
@@ -2705,32 +2710,32 @@ dot1agCfmMepTable_mapper (
 				table_entry->u32PrimaryVid = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPACTIVE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Active))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8Active))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32Active, sizeof (table_entry->i32Active));
+					memcpy (pvOldDdata, &table_entry->u8Active, sizeof (table_entry->u8Active));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32Active = *request->requestvb->val.integer;
+				table_entry->u8Active = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPCCIENABLED:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32CciEnabled))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8CciEnabled))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32CciEnabled, sizeof (table_entry->i32CciEnabled));
+					memcpy (pvOldDdata, &table_entry->u8CciEnabled, sizeof (table_entry->u8CciEnabled));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32CciEnabled = *request->requestvb->val.integer;
+				table_entry->u8CciEnabled = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPCCMLTMPRIORITY:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32CcmLtmPriority))) == NULL)
@@ -2789,18 +2794,18 @@ dot1agCfmMepTable_mapper (
 				table_entry->i32FngResetTime = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMSTATUS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TransmitLbmStatus))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8TransmitLbmStatus))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32TransmitLbmStatus, sizeof (table_entry->i32TransmitLbmStatus));
+					memcpy (pvOldDdata, &table_entry->u8TransmitLbmStatus, sizeof (table_entry->u8TransmitLbmStatus));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32TransmitLbmStatus = *request->requestvb->val.integer;
+				table_entry->u8TransmitLbmStatus = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMDESTMACADDRESS:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8TransmitLbmDestMacAddress))) == NULL)
@@ -2811,14 +2816,12 @@ dot1agCfmMepTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16TransmitLbmDestMacAddress_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8TransmitLbmDestMacAddress, sizeof (table_entry->au8TransmitLbmDestMacAddress));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8TransmitLbmDestMacAddress, 0, sizeof (table_entry->au8TransmitLbmDestMacAddress));
 				memcpy (table_entry->au8TransmitLbmDestMacAddress, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16TransmitLbmDestMacAddress_len = request->requestvb->val_len;
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMDESTMEPID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32TransmitLbmDestMepId))) == NULL)
@@ -2835,18 +2838,18 @@ dot1agCfmMepTable_mapper (
 				table_entry->u32TransmitLbmDestMepId = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMDESTISMEPID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TransmitLbmDestIsMepId))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8TransmitLbmDestIsMepId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32TransmitLbmDestIsMepId, sizeof (table_entry->i32TransmitLbmDestIsMepId));
+					memcpy (pvOldDdata, &table_entry->u8TransmitLbmDestIsMepId, sizeof (table_entry->u8TransmitLbmDestIsMepId));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32TransmitLbmDestIsMepId = *request->requestvb->val.integer;
+				table_entry->u8TransmitLbmDestIsMepId = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMMESSAGES:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TransmitLbmMessages))) == NULL)
@@ -2895,32 +2898,32 @@ dot1agCfmMepTable_mapper (
 				table_entry->i32TransmitLbmVlanPriority = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMVLANDROPENABLE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TransmitLbmVlanDropEnable))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8TransmitLbmVlanDropEnable))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32TransmitLbmVlanDropEnable, sizeof (table_entry->i32TransmitLbmVlanDropEnable));
+					memcpy (pvOldDdata, &table_entry->u8TransmitLbmVlanDropEnable, sizeof (table_entry->u8TransmitLbmVlanDropEnable));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32TransmitLbmVlanDropEnable = *request->requestvb->val.integer;
+				table_entry->u8TransmitLbmVlanDropEnable = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMSTATUS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TransmitLtmStatus))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8TransmitLtmStatus))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32TransmitLtmStatus, sizeof (table_entry->i32TransmitLtmStatus));
+					memcpy (pvOldDdata, &table_entry->u8TransmitLtmStatus, sizeof (table_entry->u8TransmitLtmStatus));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32TransmitLtmStatus = *request->requestvb->val.integer;
+				table_entry->u8TransmitLtmStatus = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMFLAGS:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8TransmitLtmFlags))) == NULL)
@@ -2931,14 +2934,12 @@ dot1agCfmMepTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16TransmitLtmFlags_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8TransmitLtmFlags, sizeof (table_entry->au8TransmitLtmFlags));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8TransmitLtmFlags, 0, sizeof (table_entry->au8TransmitLtmFlags));
 				memcpy (table_entry->au8TransmitLtmFlags, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16TransmitLtmFlags_len = request->requestvb->val_len;
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTARGETMACADDRESS:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8TransmitLtmTargetMacAddress))) == NULL)
@@ -2949,14 +2950,12 @@ dot1agCfmMepTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16TransmitLtmTargetMacAddress_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8TransmitLtmTargetMacAddress, sizeof (table_entry->au8TransmitLtmTargetMacAddress));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8TransmitLtmTargetMacAddress, 0, sizeof (table_entry->au8TransmitLtmTargetMacAddress));
 				memcpy (table_entry->au8TransmitLtmTargetMacAddress, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16TransmitLtmTargetMacAddress_len = request->requestvb->val_len;
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTARGETMEPID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32TransmitLtmTargetMepId))) == NULL)
@@ -2973,18 +2972,18 @@ dot1agCfmMepTable_mapper (
 				table_entry->u32TransmitLtmTargetMepId = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTARGETISMEPID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TransmitLtmTargetIsMepId))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8TransmitLtmTargetIsMepId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32TransmitLtmTargetIsMepId, sizeof (table_entry->i32TransmitLtmTargetIsMepId));
+					memcpy (pvOldDdata, &table_entry->u8TransmitLtmTargetIsMepId, sizeof (table_entry->u8TransmitLtmTargetIsMepId));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32TransmitLtmTargetIsMepId = *request->requestvb->val.integer;
+				table_entry->u8TransmitLtmTargetIsMepId = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTTL:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32TransmitLtmTtl))) == NULL)
@@ -3009,28 +3008,26 @@ dot1agCfmMepTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16TransmitLtmEgressIdentifier_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8TransmitLtmEgressIdentifier, sizeof (table_entry->au8TransmitLtmEgressIdentifier));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8TransmitLtmEgressIdentifier, 0, sizeof (table_entry->au8TransmitLtmEgressIdentifier));
 				memcpy (table_entry->au8TransmitLtmEgressIdentifier, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16TransmitLtmEgressIdentifier_len = request->requestvb->val_len;
 				break;
 			case DOT1AGCFMMEPPBBTECANREPORTPBBTEPRESENCE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PbbTeCanReportPbbTePresence))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8PbbTeCanReportPbbTePresence))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PbbTeCanReportPbbTePresence, sizeof (table_entry->i32PbbTeCanReportPbbTePresence));
+					memcpy (pvOldDdata, &table_entry->u8PbbTeCanReportPbbTePresence, sizeof (table_entry->u8PbbTeCanReportPbbTePresence));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PbbTeCanReportPbbTePresence = *request->requestvb->val.integer;
+				table_entry->u8PbbTeCanReportPbbTePresence = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPPBBTRANSMITLBMLTMREVERSEVID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PbbTransmitLbmLtmReverseVid))) == NULL)
@@ -3047,18 +3044,18 @@ dot1agCfmMepTable_mapper (
 				table_entry->u32PbbTransmitLbmLtmReverseVid = *request->requestvb->val.integer;
 				break;
 			case DOT1AGCFMMEPPBBTEMISMATCHALARM:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PbbTeMismatchAlarm))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8PbbTeMismatchAlarm))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PbbTeMismatchAlarm, sizeof (table_entry->i32PbbTeMismatchAlarm));
+					memcpy (pvOldDdata, &table_entry->u8PbbTeMismatchAlarm, sizeof (table_entry->u8PbbTeMismatchAlarm));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PbbTeMismatchAlarm = *request->requestvb->val.integer;
+				table_entry->u8PbbTeMismatchAlarm = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -3109,10 +3106,10 @@ dot1agCfmMepTable_mapper (
 				memcpy (&table_entry->u32PrimaryVid, pvOldDdata, sizeof (table_entry->u32PrimaryVid));
 				break;
 			case DOT1AGCFMMEPACTIVE:
-				memcpy (&table_entry->i32Active, pvOldDdata, sizeof (table_entry->i32Active));
+				memcpy (&table_entry->u8Active, pvOldDdata, sizeof (table_entry->u8Active));
 				break;
 			case DOT1AGCFMMEPCCIENABLED:
-				memcpy (&table_entry->i32CciEnabled, pvOldDdata, sizeof (table_entry->i32CciEnabled));
+				memcpy (&table_entry->u8CciEnabled, pvOldDdata, sizeof (table_entry->u8CciEnabled));
 				break;
 			case DOT1AGCFMMEPCCMLTMPRIORITY:
 				memcpy (&table_entry->u32CcmLtmPriority, pvOldDdata, sizeof (table_entry->u32CcmLtmPriority));
@@ -3127,17 +3124,16 @@ dot1agCfmMepTable_mapper (
 				memcpy (&table_entry->i32FngResetTime, pvOldDdata, sizeof (table_entry->i32FngResetTime));
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMSTATUS:
-				memcpy (&table_entry->i32TransmitLbmStatus, pvOldDdata, sizeof (table_entry->i32TransmitLbmStatus));
+				memcpy (&table_entry->u8TransmitLbmStatus, pvOldDdata, sizeof (table_entry->u8TransmitLbmStatus));
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMDESTMACADDRESS:
 				memcpy (table_entry->au8TransmitLbmDestMacAddress, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16TransmitLbmDestMacAddress_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMDESTMEPID:
 				memcpy (&table_entry->u32TransmitLbmDestMepId, pvOldDdata, sizeof (table_entry->u32TransmitLbmDestMepId));
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMDESTISMEPID:
-				memcpy (&table_entry->i32TransmitLbmDestIsMepId, pvOldDdata, sizeof (table_entry->i32TransmitLbmDestIsMepId));
+				memcpy (&table_entry->u8TransmitLbmDestIsMepId, pvOldDdata, sizeof (table_entry->u8TransmitLbmDestIsMepId));
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMMESSAGES:
 				memcpy (&table_entry->i32TransmitLbmMessages, pvOldDdata, sizeof (table_entry->i32TransmitLbmMessages));
@@ -3150,31 +3146,28 @@ dot1agCfmMepTable_mapper (
 				memcpy (&table_entry->i32TransmitLbmVlanPriority, pvOldDdata, sizeof (table_entry->i32TransmitLbmVlanPriority));
 				break;
 			case DOT1AGCFMMEPTRANSMITLBMVLANDROPENABLE:
-				memcpy (&table_entry->i32TransmitLbmVlanDropEnable, pvOldDdata, sizeof (table_entry->i32TransmitLbmVlanDropEnable));
+				memcpy (&table_entry->u8TransmitLbmVlanDropEnable, pvOldDdata, sizeof (table_entry->u8TransmitLbmVlanDropEnable));
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMSTATUS:
-				memcpy (&table_entry->i32TransmitLtmStatus, pvOldDdata, sizeof (table_entry->i32TransmitLtmStatus));
+				memcpy (&table_entry->u8TransmitLtmStatus, pvOldDdata, sizeof (table_entry->u8TransmitLtmStatus));
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMFLAGS:
 				memcpy (table_entry->au8TransmitLtmFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16TransmitLtmFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTARGETMACADDRESS:
 				memcpy (table_entry->au8TransmitLtmTargetMacAddress, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16TransmitLtmTargetMacAddress_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTARGETMEPID:
 				memcpy (&table_entry->u32TransmitLtmTargetMepId, pvOldDdata, sizeof (table_entry->u32TransmitLtmTargetMepId));
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTARGETISMEPID:
-				memcpy (&table_entry->i32TransmitLtmTargetIsMepId, pvOldDdata, sizeof (table_entry->i32TransmitLtmTargetIsMepId));
+				memcpy (&table_entry->u8TransmitLtmTargetIsMepId, pvOldDdata, sizeof (table_entry->u8TransmitLtmTargetIsMepId));
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMTTL:
 				memcpy (&table_entry->u32TransmitLtmTtl, pvOldDdata, sizeof (table_entry->u32TransmitLtmTtl));
 				break;
 			case DOT1AGCFMMEPTRANSMITLTMEGRESSIDENTIFIER:
 				memcpy (table_entry->au8TransmitLtmEgressIdentifier, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16TransmitLtmEgressIdentifier_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case DOT1AGCFMMEPROWSTATUS:
 				switch (*request->requestvb->val.integer)
@@ -3187,13 +3180,13 @@ dot1agCfmMepTable_mapper (
 				}
 				break;
 			case DOT1AGCFMMEPPBBTECANREPORTPBBTEPRESENCE:
-				memcpy (&table_entry->i32PbbTeCanReportPbbTePresence, pvOldDdata, sizeof (table_entry->i32PbbTeCanReportPbbTePresence));
+				memcpy (&table_entry->u8PbbTeCanReportPbbTePresence, pvOldDdata, sizeof (table_entry->u8PbbTeCanReportPbbTePresence));
 				break;
 			case DOT1AGCFMMEPPBBTRANSMITLBMLTMREVERSEVID:
 				memcpy (&table_entry->u32PbbTransmitLbmLtmReverseVid, pvOldDdata, sizeof (table_entry->u32PbbTransmitLbmLtmReverseVid));
 				break;
 			case DOT1AGCFMMEPPBBTEMISMATCHALARM:
-				memcpy (&table_entry->i32PbbTeMismatchAlarm, pvOldDdata, sizeof (table_entry->i32PbbTeMismatchAlarm));
+				memcpy (&table_entry->u8PbbTeMismatchAlarm, pvOldDdata, sizeof (table_entry->u8PbbTeMismatchAlarm));
 				break;
 			}
 		}
@@ -3497,16 +3490,16 @@ dot1agCfmLtrTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Ttl);
 				break;
 			case DOT1AGCFMLTRFORWARDED:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Forwarded);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Forwarded);
 				break;
 			case DOT1AGCFMLTRTERMINALMEP:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TerminalMep);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8TerminalMep);
 				break;
 			case DOT1AGCFMLTRLASTEGRESSIDENTIFIER:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LastEgressIdentifier, table_entry->u16LastEgressIdentifier_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LastEgressIdentifier, sizeof (table_entry->au8LastEgressIdentifier));
 				break;
 			case DOT1AGCFMLTRNEXTEGRESSIDENTIFIER:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8NextEgressIdentifier, table_entry->u16NextEgressIdentifier_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8NextEgressIdentifier, sizeof (table_entry->au8NextEgressIdentifier));
 				break;
 			case DOT1AGCFMLTRRELAY:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Relay);
@@ -3527,7 +3520,7 @@ dot1agCfmLtrTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Ingress);
 				break;
 			case DOT1AGCFMLTRINGRESSMAC:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8IngressMac, table_entry->u16IngressMac_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8IngressMac, sizeof (table_entry->au8IngressMac));
 				break;
 			case DOT1AGCFMLTRINGRESSPORTIDSUBTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32IngressPortIdSubtype);
@@ -3539,7 +3532,7 @@ dot1agCfmLtrTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Egress);
 				break;
 			case DOT1AGCFMLTREGRESSMAC:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8EgressMac, table_entry->u16EgressMac_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8EgressMac, sizeof (table_entry->au8EgressMac));
 				break;
 			case DOT1AGCFMLTREGRESSPORTIDSUBTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32EgressPortIdSubtype);
@@ -3822,10 +3815,10 @@ dot1agCfmMepDbTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, table_entry->u32RMepFailedOkTime);
 				break;
 			case DOT1AGCFMMEPDBMACADDRESS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, table_entry->u16MacAddress_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, sizeof (table_entry->au8MacAddress));
 				break;
 			case DOT1AGCFMMEPDBRDI:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Rdi);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Rdi);
 				break;
 			case DOT1AGCFMMEPDBPORTSTATUSTLV:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PortStatusTlv);
@@ -3846,7 +3839,7 @@ dot1agCfmMepDbTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ManAddress, table_entry->u16ManAddress_len);
 				break;
 			case DOT1AGCFMMEPDBRMEPISACTIVE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32RMepIsActive);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RMepIsActive);
 				break;
 				
 			default:
@@ -3888,7 +3881,6 @@ dot1agCfmMepDbTable_mapper (
 		{
 			table_entry = (dot1agCfmMepDbEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -3910,18 +3902,18 @@ dot1agCfmMepDbTable_mapper (
 			switch (table_info->colnum)
 			{
 			case DOT1AGCFMMEPDBRMEPISACTIVE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32RMepIsActive))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8RMepIsActive))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32RMepIsActive, sizeof (table_entry->i32RMepIsActive));
+					memcpy (pvOldDdata, &table_entry->u8RMepIsActive, sizeof (table_entry->u8RMepIsActive));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32RMepIsActive = *request->requestvb->val.integer;
+				table_entry->u8RMepIsActive = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -3941,7 +3933,7 @@ dot1agCfmMepDbTable_mapper (
 			switch (table_info->colnum)
 			{
 			case DOT1AGCFMMEPDBRMEPISACTIVE:
-				memcpy (&table_entry->i32RMepIsActive, pvOldDdata, sizeof (table_entry->i32RMepIsActive));
+				memcpy (&table_entry->u8RMepIsActive, pvOldDdata, sizeof (table_entry->u8RMepIsActive));
 				break;
 			}
 		}

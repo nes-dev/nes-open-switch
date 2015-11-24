@@ -30,6 +30,9 @@ extern "C" {
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define TOBE_REPLACED 1
 
 
@@ -213,7 +216,7 @@ typedef struct dot1agCfmMaNetEntry_t
 {
 	/* Index values */
 	uint32_t u32MdIndex;
-	uint32_t u32MaIndex;
+	uint32_t u32Index;
 	
 	/* Column values */
 	int32_t i32Format;
@@ -237,13 +240,13 @@ extern xBTree_t oDot1agCfmMaNetTable_Meg_BTree;
 void dot1agCfmMaNetTable_init (void);
 dot1agCfmMaNetEntry_t * dot1agCfmMaNetTable_createEntry (
 	uint32_t u32MdIndex,
-	uint32_t u32MaIndex);
+	uint32_t u32Index);
 dot1agCfmMaNetEntry_t * dot1agCfmMaNetTable_getByIndex (
 	uint32_t u32MdIndex,
-	uint32_t u32MaIndex);
+	uint32_t u32Index);
 dot1agCfmMaNetEntry_t * dot1agCfmMaNetTable_getNextIndex (
 	uint32_t u32MdIndex,
-	uint32_t u32MaIndex);
+	uint32_t u32Index);
 void dot1agCfmMaNetTable_removeEntry (dot1agCfmMaNetEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point dot1agCfmMaNetTable_getFirst;
@@ -480,18 +483,16 @@ typedef struct dot1agCfmMepEntry_t
 	uint32_t u32IfIndex;
 	int32_t i32Direction;
 	uint32_t u32PrimaryVid;
-	int32_t i32Active;
+	uint8_t u8Active;
 	int32_t i32FngState;
-	int32_t i32CciEnabled;
+	uint8_t u8CciEnabled;
 	uint32_t u32CcmLtmPriority;
 	uint8_t au8MacAddress[6];
-	size_t u16MacAddress_len;	/* # of uint8_t elements */
 	int32_t i32LowPrDef;
 	int32_t i32FngAlarmTime;
 	int32_t i32FngResetTime;
 	int32_t i32HighestPrDefect;
 	uint8_t au8Defects[1];
-	size_t u16Defects_len;	/* # of uint8_t elements */
 	uint8_t au8ErrorCcmLastFailure[1522];
 	size_t u16ErrorCcmLastFailure_len;	/* # of uint8_t elements */
 	uint8_t au8XconCcmLastFailure[1522];
@@ -505,37 +506,33 @@ typedef struct dot1agCfmMepEntry_t
 	uint32_t u32LtmNextSeqNumber;
 	uint32_t u32UnexpLtrIn;
 	uint32_t u32LbrOut;
-	int32_t i32TransmitLbmStatus;
+	uint8_t u8TransmitLbmStatus;
 	uint8_t au8TransmitLbmDestMacAddress[6];
-	size_t u16TransmitLbmDestMacAddress_len;	/* # of uint8_t elements */
 	uint32_t u32TransmitLbmDestMepId;
-	int32_t i32TransmitLbmDestIsMepId;
+	uint8_t u8TransmitLbmDestIsMepId;
 	int32_t i32TransmitLbmMessages;
 	uint8_t au8TransmitLbmDataTlv[/* TODO: , OCTETSTR, "" */ TOBE_REPLACED];
 	size_t u16TransmitLbmDataTlv_len;	/* # of uint8_t elements */
 	int32_t i32TransmitLbmVlanPriority;
-	int32_t i32TransmitLbmVlanDropEnable;
-	int32_t i32TransmitLbmResultOK;
+	uint8_t u8TransmitLbmVlanDropEnable;
+	uint8_t u8TransmitLbmResultOK;
 	uint32_t u32TransmitLbmSeqNumber;
-	int32_t i32TransmitLtmStatus;
-	uint8_t au8TransmitLtmFlags[0];
-	size_t u16TransmitLtmFlags_len;	/* # of uint8_t elements */
+	uint8_t u8TransmitLtmStatus;
+	uint8_t au8TransmitLtmFlags[1];
 	uint8_t au8TransmitLtmTargetMacAddress[6];
-	size_t u16TransmitLtmTargetMacAddress_len;	/* # of uint8_t elements */
 	uint32_t u32TransmitLtmTargetMepId;
-	int32_t i32TransmitLtmTargetIsMepId;
+	uint8_t u8TransmitLtmTargetIsMepId;
 	uint32_t u32TransmitLtmTtl;
-	int32_t i32TransmitLtmResult;
+	uint8_t u8TransmitLtmResult;
 	uint32_t u32TransmitLtmSeqNumber;
 	uint8_t au8TransmitLtmEgressIdentifier[8];
-	size_t u16TransmitLtmEgressIdentifier_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
-	int32_t i32PbbTeCanReportPbbTePresence;
-	int32_t i32PbbTeTrafficMismatchDefect;
+	uint8_t u8PbbTeCanReportPbbTePresence;
+	uint8_t u8PbbTeTrafficMismatchDefect;
 	uint32_t u32PbbTransmitLbmLtmReverseVid;
-	int32_t i32PbbTeMismatchAlarm;
-	int32_t i32PbbTeLocalMismatchDefect;
-	int32_t i32PbbTeMismatchSinceReset;
+	uint8_t u8PbbTeMismatchAlarm;
+	uint8_t u8PbbTeLocalMismatchDefect;
+	uint8_t u8PbbTeMismatchSinceReset;
 	
 	xBTree_Node_t oBTreeNode;
 	xBTree_Node_t oIf_BTreeNode;
@@ -661,12 +658,10 @@ typedef struct dot1agCfmLtrEntry_t
 	
 	/* Column values */
 	uint32_t u32Ttl;
-	int32_t i32Forwarded;
-	int32_t i32TerminalMep;
+	uint8_t u8Forwarded;
+	uint8_t u8TerminalMep;
 	uint8_t au8LastEgressIdentifier[8];
-	size_t u16LastEgressIdentifier_len;	/* # of uint8_t elements */
 	uint8_t au8NextEgressIdentifier[8];
-	size_t u16NextEgressIdentifier_len;	/* # of uint8_t elements */
 	int32_t i32Relay;
 	int32_t i32ChassisIdSubtype;
 	uint8_t au8ChassisId[255];
@@ -677,13 +672,11 @@ typedef struct dot1agCfmLtrEntry_t
 	size_t u16ManAddress_len;	/* # of uint8_t elements */
 	int32_t i32Ingress;
 	uint8_t au8IngressMac[6];
-	size_t u16IngressMac_len;	/* # of uint8_t elements */
 	int32_t i32IngressPortIdSubtype;
 	uint8_t au8IngressPortId[255];
 	size_t u16IngressPortId_len;	/* # of uint8_t elements */
 	int32_t i32Egress;
 	uint8_t au8EgressMac[6];
-	size_t u16EgressMac_len;	/* # of uint8_t elements */
 	int32_t i32EgressPortIdSubtype;
 	uint8_t au8EgressPortId[255];
 	size_t u16EgressPortId_len;	/* # of uint8_t elements */
@@ -794,8 +787,7 @@ typedef struct dot1agCfmMepDbEntry_t
 	int32_t i32RMepState;
 	uint32_t u32RMepFailedOkTime;
 	uint8_t au8MacAddress[6];
-	size_t u16MacAddress_len;	/* # of uint8_t elements */
-	int32_t i32Rdi;
+	uint8_t u8Rdi;
 	int32_t i32PortStatusTlv;
 	int32_t i32InterfaceStatusTlv;
 	int32_t i32ChassisIdSubtype;
@@ -805,7 +797,7 @@ typedef struct dot1agCfmMepDbEntry_t
 	size_t u16ManAddressDomain_len;	/* # of xOid_t elements */
 	uint8_t au8ManAddress[255];
 	size_t u16ManAddress_len;	/* # of uint8_t elements */
-	int32_t i32RMepIsActive;
+	uint8_t u8RMepIsActive;
 	
 	xBTree_Node_t oBTreeNode;
 } dot1agCfmMepDbEntry_t;
