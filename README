@@ -1,6 +1,6 @@
 
 Copyright (c) 2008-2015
-    NES Repo <nes.repo@gmail.com>
+    NES Repo <nes.repo@gmail.com>, NES Dev <nes.open.switch@gmail.com>
 
 NES Open Switch
 ===============
@@ -42,3 +42,10 @@ NES Open Switch is always under continuous development cycle. Modules are
 continuously getting developed and added to NES Open Switch. The author provides
 routine bug fixes and updates. But others are also welcome in collabrating or
 contributing in the development.
+
+
+What is where ?
+===============
+
+You can find the steps to install NES Open Switch in the INSTALL file. The list
+of authors & contributors can be found in AUTHORS file.

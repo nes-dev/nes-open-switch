@@ -10,7 +10,7 @@
 <a href="https://google.com/+NES-Dev?rel=author" rel="author"></a>
 <a href="https://google.com/+NES-Open-Switch?rel=publisher" rel="publisher"></a>
 Copyright (c) 2008-2015</br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NES Repo &lt;nes.repo@gmail.com&gt;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NES Repo &lt;nes.repo@gmail.com&gt;, NES Dev &lt;nes.open.switch@gmail.com&gt;
 
 NES Open Switch
 ===============
@@ -52,3 +52,10 @@ NES Open Switch is always under continuous development cycle. Modules are
 continuously getting developed and added to NES Open Switch. The author provides
 routine bug fixes and updates. But others are also welcome in collabrating or
 contributing in the development.
+
+
+What is where ?
+===============
+
+You can find the steps to install NES Open Switch in the INSTALL file. The list
+of authors & contributors can be found in AUTHORS file.
