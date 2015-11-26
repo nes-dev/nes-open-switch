@@ -31,6 +31,9 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
@@ -340,7 +343,7 @@ ieee8021CfmStackTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32MepId);
 				break;
 			case IEEE8021CFMSTACKMACADDRESS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, table_entry->u16MacAddress_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, sizeof (table_entry->au8MacAddress));
 				break;
 				
 			default:
@@ -597,7 +600,7 @@ ieee8021CfmDefaultMdTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021CFMDEFAULTMDSTATUS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Status);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8Status);
 				break;
 			case IEEE8021CFMDEFAULTMDLEVEL:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Level);
@@ -664,7 +667,6 @@ ieee8021CfmDefaultMdTable_mapper (
 		{
 			table_entry = (ieee8021CfmDefaultMdEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -1470,7 +1472,7 @@ ieee8021CfmConfigErrorListTable_mapper (
 			switch (table_info->colnum)
 			{
 			case IEEE8021CFMCONFIGERRORLISTERRORTYPE:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ErrorType, table_entry->u16ErrorType_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ErrorType, sizeof (table_entry->au8ErrorType));
 				break;
 				
 			default:
@@ -1530,9 +1532,9 @@ ieee8021CfmMaCompTable_BTreeNodeCmp (
 	
 	return
 		(pEntry1->u32ComponentId < pEntry2->u32ComponentId) ||
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32Dot1agCfmMdIndex < pEntry2->u32Dot1agCfmMdIndex) ||
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32Dot1agCfmMdIndex == pEntry2->u32Dot1agCfmMdIndex && pEntry1->u32Dot1agCfmMaIndex < pEntry2->u32Dot1agCfmMaIndex) ? -1:
-		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32Dot1agCfmMdIndex == pEntry2->u32Dot1agCfmMdIndex && pEntry1->u32Dot1agCfmMaIndex == pEntry2->u32Dot1agCfmMaIndex) ? 0: 1;
+		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32MdIndex < pEntry2->u32MdIndex) ||
+		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex < pEntry2->u32MaIndex) ? -1:
+		(pEntry1->u32ComponentId == pEntry2->u32ComponentId && pEntry1->u32MdIndex == pEntry2->u32MdIndex && pEntry1->u32MaIndex == pEntry2->u32MaIndex) ? 0: 1;
 }
 
 xBTree_t oIeee8021CfmMaCompTable_BTree = xBTree_initInline (&ieee8021CfmMaCompTable_BTreeNodeCmp);
@@ -1541,8 +1543,8 @@ xBTree_t oIeee8021CfmMaCompTable_BTree = xBTree_initInline (&ieee8021CfmMaCompTa
 ieee8021CfmMaCompEntry_t *
 ieee8021CfmMaCompTable_createEntry (
 	uint32_t u32ComponentId,
-	uint32_t u32Dot1agCfmMdIndex,
-	uint32_t u32Dot1agCfmMaIndex)
+	uint32_t u32MdIndex,
+	uint32_t u32MaIndex)
 {
 	register ieee8021CfmMaCompEntry_t *poEntry = NULL;
 	
@@ -1552,8 +1554,8 @@ ieee8021CfmMaCompTable_createEntry (
 	}
 	
 	poEntry->u32ComponentId = u32ComponentId;
-	poEntry->u32Dot1agCfmMdIndex = u32Dot1agCfmMdIndex;
-	poEntry->u32Dot1agCfmMaIndex = u32Dot1agCfmMaIndex;
+	poEntry->u32MdIndex = u32MdIndex;
+	poEntry->u32MaIndex = u32MaIndex;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIeee8021CfmMaCompTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -1571,8 +1573,8 @@ ieee8021CfmMaCompTable_createEntry (
 ieee8021CfmMaCompEntry_t *
 ieee8021CfmMaCompTable_getByIndex (
 	uint32_t u32ComponentId,
-	uint32_t u32Dot1agCfmMdIndex,
-	uint32_t u32Dot1agCfmMaIndex)
+	uint32_t u32MdIndex,
+	uint32_t u32MaIndex)
 {
 	register ieee8021CfmMaCompEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -1583,8 +1585,8 @@ ieee8021CfmMaCompTable_getByIndex (
 	}
 	
 	poTmpEntry->u32ComponentId = u32ComponentId;
-	poTmpEntry->u32Dot1agCfmMdIndex = u32Dot1agCfmMdIndex;
-	poTmpEntry->u32Dot1agCfmMaIndex = u32Dot1agCfmMaIndex;
+	poTmpEntry->u32MdIndex = u32MdIndex;
+	poTmpEntry->u32MaIndex = u32MaIndex;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIeee8021CfmMaCompTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -1598,8 +1600,8 @@ ieee8021CfmMaCompTable_getByIndex (
 ieee8021CfmMaCompEntry_t *
 ieee8021CfmMaCompTable_getNextIndex (
 	uint32_t u32ComponentId,
-	uint32_t u32Dot1agCfmMdIndex,
-	uint32_t u32Dot1agCfmMaIndex)
+	uint32_t u32MdIndex,
+	uint32_t u32MaIndex)
 {
 	register ieee8021CfmMaCompEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -1610,8 +1612,8 @@ ieee8021CfmMaCompTable_getNextIndex (
 	}
 	
 	poTmpEntry->u32ComponentId = u32ComponentId;
-	poTmpEntry->u32Dot1agCfmMdIndex = u32Dot1agCfmMdIndex;
-	poTmpEntry->u32Dot1agCfmMaIndex = u32Dot1agCfmMaIndex;
+	poTmpEntry->u32MdIndex = u32MdIndex;
+	poTmpEntry->u32MaIndex = u32MaIndex;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIeee8021CfmMaCompTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -1663,9 +1665,9 @@ ieee8021CfmMaCompTable_getNext (
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ComponentId);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Dot1agCfmMdIndex);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32MdIndex);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Dot1agCfmMaIndex);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32MaIndex);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIeee8021CfmMaCompTable_BTree);
 	return put_index_data;

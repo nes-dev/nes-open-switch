@@ -30,6 +30,9 @@ extern "C" {
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define TOBE_REPLACED 1
 
 
@@ -83,7 +86,6 @@ typedef struct ieee8021CfmStackEntry_t
 	uint32_t u32MaIndex;
 	uint32_t u32MepId;
 	uint8_t au8MacAddress[6];
-	size_t u16MacAddress_len;	/* # of uint8_t elements */
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021CfmStackEntry_t;
@@ -165,7 +167,7 @@ typedef struct ieee8021CfmDefaultMdEntry_t
 	uint32_t u32PrimarySelector;
 	
 	/* Column values */
-	int32_t i32Status;
+	uint8_t u8Status;
 	int32_t i32Level;
 	int32_t i32MhfCreation;
 	int32_t i32IdPermission;
@@ -286,7 +288,6 @@ typedef struct ieee8021CfmConfigErrorListEntry_t
 	
 	/* Column values */
 	uint8_t au8ErrorType[1];
-	size_t u16ErrorType_len;	/* # of uint8_t elements */
 	
 	xBTree_Node_t oBTreeNode;
 } ieee8021CfmConfigErrorListEntry_t;
@@ -362,8 +363,8 @@ typedef struct ieee8021CfmMaCompEntry_t
 {
 	/* Index values */
 	uint32_t u32ComponentId;
-	uint32_t u32Dot1agCfmMdIndex;
-	uint32_t u32Dot1agCfmMaIndex;
+	uint32_t u32MdIndex;
+	uint32_t u32MaIndex;
 	
 	/* Column values */
 	int32_t i32PrimarySelectorType;
@@ -382,16 +383,16 @@ extern xBTree_t oIeee8021CfmMaCompTable_BTree;
 void ieee8021CfmMaCompTable_init (void);
 ieee8021CfmMaCompEntry_t * ieee8021CfmMaCompTable_createEntry (
 	uint32_t u32ComponentId,
-	uint32_t u32Dot1agCfmMdIndex,
-	uint32_t u32Dot1agCfmMaIndex);
+	uint32_t u32MdIndex,
+	uint32_t u32MaIndex);
 ieee8021CfmMaCompEntry_t * ieee8021CfmMaCompTable_getByIndex (
 	uint32_t u32ComponentId,
-	uint32_t u32Dot1agCfmMdIndex,
-	uint32_t u32Dot1agCfmMaIndex);
+	uint32_t u32MdIndex,
+	uint32_t u32MaIndex);
 ieee8021CfmMaCompEntry_t * ieee8021CfmMaCompTable_getNextIndex (
 	uint32_t u32ComponentId,
-	uint32_t u32Dot1agCfmMdIndex,
-	uint32_t u32Dot1agCfmMaIndex);
+	uint32_t u32MdIndex,
+	uint32_t u32MaIndex);
 void ieee8021CfmMaCompTable_removeEntry (ieee8021CfmMaCompEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ieee8021CfmMaCompTable_getFirst;
