@@ -31,6 +31,9 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
@@ -151,10 +154,11 @@ isisSysObject_t oIsisSysObject;
 
 /** isisSysObject scalar mapper **/
 int
-isisSysObject_mapper (netsnmp_mib_handler *handler,
+isisSysObject_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid isisSysObject_oid[];
 	netsnmp_request_info *request;
@@ -167,7 +171,7 @@ isisSysObject_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (isisSysObject_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (isisSysObject_oid)])
 			{
 			case ISISSYSVERSION:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oIsisSysObject.i32Version);
@@ -176,7 +180,7 @@ isisSysObject_mapper (netsnmp_mib_handler *handler,
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oIsisSysObject.i32LevelType);
 				break;
 			case ISISSYSID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oIsisSysObject.au8ID, oIsisSysObject.u16ID_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oIsisSysObject.au8ID, sizeof (oIsisSysObject.au8ID));
 				break;
 			case ISISSYSMAXPATHSPLITS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oIsisSysObject.u32MaxPathSplits);
@@ -194,7 +198,7 @@ isisSysObject_mapper (netsnmp_mib_handler *handler,
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oIsisSysObject.i32AdminState);
 				break;
 			case ISISSYSL2TOL1LEAKING:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oIsisSysObject.i32L2toL1Leaking);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oIsisSysObject.u8L2toL1Leaking);
 				break;
 			case ISISSYSMAXAGE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oIsisSysObject.u32MaxAge);
@@ -203,10 +207,10 @@ isisSysObject_mapper (netsnmp_mib_handler *handler,
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oIsisSysObject.u32ReceiveLSPBufferSize);
 				break;
 			case ISISSYSPROTSUPPORTED:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oIsisSysObject.au8ProtSupported, oIsisSysObject.u16ProtSupported_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oIsisSysObject.au8ProtSupported, sizeof (oIsisSysObject.au8ProtSupported));
 				break;
 			case ISISSYSNOTIFICATIONENABLE:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oIsisSysObject.i32NotificationEnable);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oIsisSysObject.u8NotificationEnable);
 				break;
 				
 			default:
@@ -225,7 +229,7 @@ isisSysObject_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (isisSysObject_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (isisSysObject_oid)])
 			{
 			case ISISSYSLEVELTYPE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
@@ -321,7 +325,7 @@ isisSysObject_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (isisSysObject_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (isisSysObject_oid)])
 			{
 			case ISISSYSLEVELTYPE:
 				/* XXX: perform the value change here */
@@ -335,7 +339,6 @@ isisSysObject_mapper (netsnmp_mib_handler *handler,
 				/* XXX: perform the value change here */
 				memset (oIsisSysObject.au8ID, 0, sizeof (oIsisSysObject.au8ID));
 				memcpy (oIsisSysObject.au8ID, request->requestvb->val.string, request->requestvb->val_len);
-				oIsisSysObject.u16ID_len = request->requestvb->val_len;
 				if (/* TODO: error? */ TOBE_REPLACED != TOBE_REPLACED)
 				{
 					netsnmp_set_request_error (reqinfo, requests, /* some error */ TOBE_REPLACED);
@@ -383,7 +386,7 @@ isisSysObject_mapper (netsnmp_mib_handler *handler,
 				break;
 			case ISISSYSL2TOL1LEAKING:
 				/* XXX: perform the value change here */
-				oIsisSysObject.i32L2toL1Leaking = *request->requestvb->val.integer;
+				oIsisSysObject.u8L2toL1Leaking = *request->requestvb->val.integer;
 				if (/* TODO: error? */ TOBE_REPLACED != TOBE_REPLACED)
 				{
 					netsnmp_set_request_error (reqinfo, requests, /* some error */ TOBE_REPLACED);
@@ -407,7 +410,7 @@ isisSysObject_mapper (netsnmp_mib_handler *handler,
 				break;
 			case ISISSYSNOTIFICATIONENABLE:
 				/* XXX: perform the value change here */
-				oIsisSysObject.i32NotificationEnable = *request->requestvb->val.integer;
+				oIsisSysObject.u8NotificationEnable = *request->requestvb->val.integer;
 				if (/* TODO: error? */ TOBE_REPLACED != TOBE_REPLACED)
 				{
 					netsnmp_set_request_error (reqinfo, requests, /* some error */ TOBE_REPLACED);
@@ -423,7 +426,7 @@ isisSysObject_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (isisSysObject_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (isisSysObject_oid)])
 			{
 			case ISISSYSLEVELTYPE:
 				/* XXX: UNDO and return to previous value for the object */
@@ -530,10 +533,11 @@ isisCirc_t oIsisCirc;
 
 /** isisCirc scalar mapper **/
 int
-isisCirc_mapper (netsnmp_mib_handler *handler,
+isisCirc_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid isisCirc_oid[];
 	netsnmp_request_info *request;
@@ -545,7 +549,7 @@ isisCirc_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (isisCirc_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (isisCirc_oid)])
 			{
 			case ISISNEXTCIRCINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oIsisCirc.u32NextCircIndex);
@@ -2252,9 +2256,9 @@ isisRouterTable_BTreeNodeCmp (
 	register isisRouterEntry_t *pEntry2 = xBTree_entry (pNode2, isisRouterEntry_t, oBTreeNode);
 	
 	return
-		(xBinCmp (pEntry1->au8SysID, pEntry2->au8SysID, pEntry1->u16SysID_len, pEntry2->u16SysID_len) == -1) ||
-		(xBinCmp (pEntry1->au8SysID, pEntry2->au8SysID, pEntry1->u16SysID_len, pEntry2->u16SysID_len) == 0 && pEntry1->i32Level < pEntry2->i32Level) ? -1:
-		(xBinCmp (pEntry1->au8SysID, pEntry2->au8SysID, pEntry1->u16SysID_len, pEntry2->u16SysID_len) == 0 && pEntry1->i32Level == pEntry2->i32Level) ? 0: 1;
+		(xBinCmp (pEntry1->au8SysID, pEntry2->au8SysID, sizeof (pEntry1->au8SysID), sizeof (pEntry2->au8SysID)) == -1) ||
+		(xBinCmp (pEntry1->au8SysID, pEntry2->au8SysID, sizeof (pEntry1->au8SysID), sizeof (pEntry2->au8SysID)) == 0 && pEntry1->i32Level < pEntry2->i32Level) ? -1:
+		(xBinCmp (pEntry1->au8SysID, pEntry2->au8SysID, sizeof (pEntry1->au8SysID), sizeof (pEntry2->au8SysID)) == 0 && pEntry1->i32Level == pEntry2->i32Level) ? 0: 1;
 }
 
 xBTree_t oIsisRouterTable_BTree = xBTree_initInline (&isisRouterTable_BTreeNodeCmp);
@@ -2273,7 +2277,6 @@ isisRouterTable_createEntry (
 	}
 	
 	memcpy (poEntry->au8SysID, pau8SysID, u16SysID_len);
-	poEntry->u16SysID_len = u16SysID_len;
 	poEntry->i32Level = i32Level;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIsisRouterTable_BTree) != NULL)
 	{
@@ -2299,7 +2302,6 @@ isisRouterTable_getByIndex (
 	}
 	
 	memcpy (poTmpEntry->au8SysID, pau8SysID, u16SysID_len);
-	poTmpEntry->u16SysID_len = u16SysID_len;
 	poTmpEntry->i32Level = i32Level;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIsisRouterTable_BTree)) == NULL)
 	{
@@ -2325,7 +2327,6 @@ isisRouterTable_getNextIndex (
 	}
 	
 	memcpy (poTmpEntry->au8SysID, pau8SysID, u16SysID_len);
-	poTmpEntry->u16SysID_len = u16SysID_len;
 	poTmpEntry->i32Level = i32Level;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIsisRouterTable_BTree)) == NULL)
 	{
@@ -2376,7 +2377,7 @@ isisRouterTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, isisRouterEntry_t, oBTreeNode);
 	
-	snmp_set_var_value (idx, poEntry->au8SysID, poEntry->u16SysID_len);
+	snmp_set_var_value (idx, poEntry->au8SysID, sizeof (poEntry->au8SysID));
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32Level);
 	*my_data_context = (void*) poEntry;
@@ -2523,10 +2524,10 @@ isisSysLevelTable_createEntry (
 	
 	poEntry->u32OrigLSPBuffSize = 1492;
 	poEntry->u32MinLSPGenInt = 30;
-	poEntry->i32SetOverload = isisSysLevelSetOverload_false_c;
+	poEntry->u8SetOverload = isisSysLevelSetOverload_false_c;
 	poEntry->i32MetricStyle = isisSysLevelMetricStyle_narrow_c;
 	poEntry->i32SPFConsiders = isisSysLevelSPFConsiders_narrow_c;
-	poEntry->i32TEEnabled = isisSysLevelTEEnabled_false_c;
+	poEntry->u8TEEnabled = isisSysLevelTEEnabled_false_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIsisSysLevelTable_BTree);
 	return poEntry;
@@ -2684,7 +2685,7 @@ isisSysLevelTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32State);
 				break;
 			case ISISSYSLEVELSETOVERLOAD:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SetOverload);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8SetOverload);
 				break;
 			case ISISSYSLEVELSETOVERLOADUNTIL:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32SetOverloadUntil);
@@ -2696,7 +2697,7 @@ isisSysLevelTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SPFConsiders);
 				break;
 			case ISISSYSLEVELTEENABLED:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32TEEnabled);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8TEEnabled);
 				break;
 				
 			default:
@@ -2786,7 +2787,6 @@ isisSysLevelTable_mapper (
 		{
 			table_entry = (isisSysLevelEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -2836,18 +2836,18 @@ isisSysLevelTable_mapper (
 				table_entry->u32MinLSPGenInt = *request->requestvb->val.integer;
 				break;
 			case ISISSYSLEVELSETOVERLOAD:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SetOverload))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8SetOverload))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32SetOverload, sizeof (table_entry->i32SetOverload));
+					memcpy (pvOldDdata, &table_entry->u8SetOverload, sizeof (table_entry->u8SetOverload));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32SetOverload = *request->requestvb->val.integer;
+				table_entry->u8SetOverload = *request->requestvb->val.integer;
 				break;
 			case ISISSYSLEVELSETOVERLOADUNTIL:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32SetOverloadUntil))) == NULL)
@@ -2892,18 +2892,18 @@ isisSysLevelTable_mapper (
 				table_entry->i32SPFConsiders = *request->requestvb->val.integer;
 				break;
 			case ISISSYSLEVELTEENABLED:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32TEEnabled))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8TEEnabled))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32TEEnabled, sizeof (table_entry->i32TEEnabled));
+					memcpy (pvOldDdata, &table_entry->u8TEEnabled, sizeof (table_entry->u8TEEnabled));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32TEEnabled = *request->requestvb->val.integer;
+				table_entry->u8TEEnabled = *request->requestvb->val.integer;
 				break;
 			}
 		}
@@ -2929,7 +2929,7 @@ isisSysLevelTable_mapper (
 				memcpy (&table_entry->u32MinLSPGenInt, pvOldDdata, sizeof (table_entry->u32MinLSPGenInt));
 				break;
 			case ISISSYSLEVELSETOVERLOAD:
-				memcpy (&table_entry->i32SetOverload, pvOldDdata, sizeof (table_entry->i32SetOverload));
+				memcpy (&table_entry->u8SetOverload, pvOldDdata, sizeof (table_entry->u8SetOverload));
 				break;
 			case ISISSYSLEVELSETOVERLOADUNTIL:
 				memcpy (&table_entry->u32SetOverloadUntil, pvOldDdata, sizeof (table_entry->u32SetOverloadUntil));
@@ -2941,7 +2941,7 @@ isisSysLevelTable_mapper (
 				memcpy (&table_entry->i32SPFConsiders, pvOldDdata, sizeof (table_entry->i32SPFConsiders));
 				break;
 			case ISISSYSLEVELTEENABLED:
-				memcpy (&table_entry->i32TEEnabled, pvOldDdata, sizeof (table_entry->i32TEEnabled));
+				memcpy (&table_entry->u8TEEnabled, pvOldDdata, sizeof (table_entry->u8TEEnabled));
 				break;
 			}
 		}
@@ -3023,12 +3023,12 @@ isisCircTable_createEntry (
 	
 	poEntry->i32AdminState = isisCircAdminState_off_c;
 	poEntry->u8ExistState = xRowStatus_notInService_c;
-	poEntry->i32ExtDomain = isisCircExtDomain_false_c;
+	poEntry->u8ExtDomain = isisCircExtDomain_false_c;
 	poEntry->i32LevelType = isisCircLevelType_level1and2_c;
-	poEntry->i32PassiveCircuit = isisCircPassiveCircuit_false_c;
+	poEntry->u8PassiveCircuit = isisCircPassiveCircuit_false_c;
 	poEntry->i32MeshGroupEnabled = isisCircMeshGroupEnabled_inactive_c;
-	poEntry->i32SmallHellos = isisCircSmallHellos_false_c;
-	poEntry->i32Circ3WayEnabled = isisCirc3WayEnabled_true_c;
+	poEntry->u8SmallHellos = isisCircSmallHellos_false_c;
+	poEntry->u83WayEnabled = isisCirc3WayEnabled_true_c;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIsisCircTable_BTree);
 	return poEntry;
@@ -3189,13 +3189,13 @@ isisCircTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
 				break;
 			case ISISCIRCEXTDOMAIN:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ExtDomain);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8ExtDomain);
 				break;
 			case ISISCIRCLEVELTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LevelType);
 				break;
 			case ISISCIRCPASSIVECIRCUIT:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PassiveCircuit);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8PassiveCircuit);
 				break;
 			case ISISCIRCMESHGROUPENABLED:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32MeshGroupEnabled);
@@ -3204,13 +3204,13 @@ isisCircTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32MeshGroup);
 				break;
 			case ISISCIRCSMALLHELLOS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SmallHellos);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8SmallHellos);
 				break;
 			case ISISCIRCLASTUPTIME:
 				snmp_set_var_typed_integer (request->requestvb, ASN_TIMETICKS, table_entry->u32LastUpTime);
 				break;
 			case ISISCIRC3WAYENABLED:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Circ3WayEnabled);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u83WayEnabled);
 				break;
 			case ISISCIRCEXTENDEDCIRCID:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ExtendedCircID);
@@ -3468,18 +3468,18 @@ isisCircTable_mapper (
 				table_entry->i32Type = *request->requestvb->val.integer;
 				break;
 			case ISISCIRCEXTDOMAIN:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32ExtDomain))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8ExtDomain))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32ExtDomain, sizeof (table_entry->i32ExtDomain));
+					memcpy (pvOldDdata, &table_entry->u8ExtDomain, sizeof (table_entry->u8ExtDomain));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32ExtDomain = *request->requestvb->val.integer;
+				table_entry->u8ExtDomain = *request->requestvb->val.integer;
 				break;
 			case ISISCIRCLEVELTYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32LevelType))) == NULL)
@@ -3496,18 +3496,18 @@ isisCircTable_mapper (
 				table_entry->i32LevelType = *request->requestvb->val.integer;
 				break;
 			case ISISCIRCPASSIVECIRCUIT:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PassiveCircuit))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8PassiveCircuit))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32PassiveCircuit, sizeof (table_entry->i32PassiveCircuit));
+					memcpy (pvOldDdata, &table_entry->u8PassiveCircuit, sizeof (table_entry->u8PassiveCircuit));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32PassiveCircuit = *request->requestvb->val.integer;
+				table_entry->u8PassiveCircuit = *request->requestvb->val.integer;
 				break;
 			case ISISCIRCMESHGROUPENABLED:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32MeshGroupEnabled))) == NULL)
@@ -3538,32 +3538,32 @@ isisCircTable_mapper (
 				table_entry->u32MeshGroup = *request->requestvb->val.integer;
 				break;
 			case ISISCIRCSMALLHELLOS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32SmallHellos))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8SmallHellos))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32SmallHellos, sizeof (table_entry->i32SmallHellos));
+					memcpy (pvOldDdata, &table_entry->u8SmallHellos, sizeof (table_entry->u8SmallHellos));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32SmallHellos = *request->requestvb->val.integer;
+				table_entry->u8SmallHellos = *request->requestvb->val.integer;
 				break;
 			case ISISCIRC3WAYENABLED:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Circ3WayEnabled))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u83WayEnabled))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32Circ3WayEnabled, sizeof (table_entry->i32Circ3WayEnabled));
+					memcpy (pvOldDdata, &table_entry->u83WayEnabled, sizeof (table_entry->u83WayEnabled));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32Circ3WayEnabled = *request->requestvb->val.integer;
+				table_entry->u83WayEnabled = *request->requestvb->val.integer;
 				break;
 			case ISISCIRCEXTENDEDCIRCID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32ExtendedCircID))) == NULL)
@@ -3638,13 +3638,13 @@ isisCircTable_mapper (
 				memcpy (&table_entry->i32Type, pvOldDdata, sizeof (table_entry->i32Type));
 				break;
 			case ISISCIRCEXTDOMAIN:
-				memcpy (&table_entry->i32ExtDomain, pvOldDdata, sizeof (table_entry->i32ExtDomain));
+				memcpy (&table_entry->u8ExtDomain, pvOldDdata, sizeof (table_entry->u8ExtDomain));
 				break;
 			case ISISCIRCLEVELTYPE:
 				memcpy (&table_entry->i32LevelType, pvOldDdata, sizeof (table_entry->i32LevelType));
 				break;
 			case ISISCIRCPASSIVECIRCUIT:
-				memcpy (&table_entry->i32PassiveCircuit, pvOldDdata, sizeof (table_entry->i32PassiveCircuit));
+				memcpy (&table_entry->u8PassiveCircuit, pvOldDdata, sizeof (table_entry->u8PassiveCircuit));
 				break;
 			case ISISCIRCMESHGROUPENABLED:
 				memcpy (&table_entry->i32MeshGroupEnabled, pvOldDdata, sizeof (table_entry->i32MeshGroupEnabled));
@@ -3653,10 +3653,10 @@ isisCircTable_mapper (
 				memcpy (&table_entry->u32MeshGroup, pvOldDdata, sizeof (table_entry->u32MeshGroup));
 				break;
 			case ISISCIRCSMALLHELLOS:
-				memcpy (&table_entry->i32SmallHellos, pvOldDdata, sizeof (table_entry->i32SmallHellos));
+				memcpy (&table_entry->u8SmallHellos, pvOldDdata, sizeof (table_entry->u8SmallHellos));
 				break;
 			case ISISCIRC3WAYENABLED:
-				memcpy (&table_entry->i32Circ3WayEnabled, pvOldDdata, sizeof (table_entry->i32Circ3WayEnabled));
+				memcpy (&table_entry->u83WayEnabled, pvOldDdata, sizeof (table_entry->u83WayEnabled));
 				break;
 			case ISISCIRCEXTENDEDCIRCID:
 				memcpy (&table_entry->u32ExtendedCircID, pvOldDdata, sizeof (table_entry->u32ExtendedCircID));
@@ -4087,7 +4087,6 @@ isisCircLevelTable_mapper (
 		{
 			table_entry = (isisCircLevelEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -4348,8 +4347,8 @@ isisSystemCounterTable_BTreeNodeCmp (
 	register isisSystemCounterEntry_t *pEntry2 = xBTree_entry (pNode2, isisSystemCounterEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->i32StatLevel < pEntry2->i32StatLevel) ? -1:
-		(pEntry1->i32StatLevel == pEntry2->i32StatLevel) ? 0: 1;
+		(pEntry1->i32Level < pEntry2->i32Level) ? -1:
+		(pEntry1->i32Level == pEntry2->i32Level) ? 0: 1;
 }
 
 xBTree_t oIsisSystemCounterTable_BTree = xBTree_initInline (&isisSystemCounterTable_BTreeNodeCmp);
@@ -4357,7 +4356,7 @@ xBTree_t oIsisSystemCounterTable_BTree = xBTree_initInline (&isisSystemCounterTa
 /* create a new row in the table */
 isisSystemCounterEntry_t *
 isisSystemCounterTable_createEntry (
-	int32_t i32StatLevel)
+	int32_t i32Level)
 {
 	register isisSystemCounterEntry_t *poEntry = NULL;
 	
@@ -4366,7 +4365,7 @@ isisSystemCounterTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32StatLevel = i32StatLevel;
+	poEntry->i32Level = i32Level;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIsisSystemCounterTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -4379,7 +4378,7 @@ isisSystemCounterTable_createEntry (
 
 isisSystemCounterEntry_t *
 isisSystemCounterTable_getByIndex (
-	int32_t i32StatLevel)
+	int32_t i32Level)
 {
 	register isisSystemCounterEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -4389,7 +4388,7 @@ isisSystemCounterTable_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32StatLevel = i32StatLevel;
+	poTmpEntry->i32Level = i32Level;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIsisSystemCounterTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -4402,7 +4401,7 @@ isisSystemCounterTable_getByIndex (
 
 isisSystemCounterEntry_t *
 isisSystemCounterTable_getNextIndex (
-	int32_t i32StatLevel)
+	int32_t i32Level)
 {
 	register isisSystemCounterEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -4412,7 +4411,7 @@ isisSystemCounterTable_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->i32StatLevel = i32StatLevel;
+	poTmpEntry->i32Level = i32Level;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIsisSystemCounterTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -4462,7 +4461,7 @@ isisSystemCounterTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, isisSystemCounterEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32StatLevel);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32Level);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIsisSystemCounterTable_BTree);
 	return put_index_data;
@@ -4518,40 +4517,40 @@ isisSystemCounterTable_mapper (
 			switch (table_info->colnum)
 			{
 			case ISISSYSSTATCORRLSPS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatCorrLSPs);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32CorrLSPs);
 				break;
 			case ISISSYSSTATAUTHTYPEFAILS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatAuthTypeFails);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32AuthTypeFails);
 				break;
 			case ISISSYSSTATAUTHFAILS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatAuthFails);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32AuthFails);
 				break;
 			case ISISSYSSTATLSPDBASEOLOADS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatLSPDbaseOloads);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32LSPDbaseOloads);
 				break;
 			case ISISSYSSTATMANADDRDROPFROMAREAS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatManAddrDropFromAreas);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32ManAddrDropFromAreas);
 				break;
 			case ISISSYSSTATATTMPTTOEXMAXSEQNUMS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatAttmptToExMaxSeqNums);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32AttmptToExMaxSeqNums);
 				break;
 			case ISISSYSSTATSEQNUMSKIPS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatSeqNumSkips);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32SeqNumSkips);
 				break;
 			case ISISSYSSTATOWNLSPPURGES:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatOwnLSPPurges);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32OwnLSPPurges);
 				break;
 			case ISISSYSSTATIDFIELDLENMISMATCHES:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatIDFieldLenMismatches);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32IDFieldLenMismatches);
 				break;
 			case ISISSYSSTATPARTCHANGES:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatPartChanges);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32PartChanges);
 				break;
 			case ISISSYSSTATSPFRUNS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatSPFRuns);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32SPFRuns);
 				break;
 			case ISISSYSSTATLSPERRORS:
-				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32StatLSPErrors);
+				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, table_entry->u32LSPErrors);
 				break;
 				
 			default:
@@ -4610,8 +4609,8 @@ isisCircuitCounterTable_BTreeNodeCmp (
 	
 	return
 		(pEntry1->u32Index < pEntry2->u32Index) ||
-		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->i32IsisCircuitType < pEntry2->i32IsisCircuitType) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->i32IsisCircuitType == pEntry2->i32IsisCircuitType) ? 0: 1;
+		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->i32CircuitType < pEntry2->i32CircuitType) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->i32CircuitType == pEntry2->i32CircuitType) ? 0: 1;
 }
 
 xBTree_t oIsisCircuitCounterTable_BTree = xBTree_initInline (&isisCircuitCounterTable_BTreeNodeCmp);
@@ -4620,7 +4619,7 @@ xBTree_t oIsisCircuitCounterTable_BTree = xBTree_initInline (&isisCircuitCounter
 isisCircuitCounterEntry_t *
 isisCircuitCounterTable_createEntry (
 	uint32_t u32Index,
-	int32_t i32IsisCircuitType)
+	int32_t i32CircuitType)
 {
 	register isisCircuitCounterEntry_t *poEntry = NULL;
 	
@@ -4630,7 +4629,7 @@ isisCircuitCounterTable_createEntry (
 	}
 	
 	poEntry->u32Index = u32Index;
-	poEntry->i32IsisCircuitType = i32IsisCircuitType;
+	poEntry->i32CircuitType = i32CircuitType;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIsisCircuitCounterTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -4644,7 +4643,7 @@ isisCircuitCounterTable_createEntry (
 isisCircuitCounterEntry_t *
 isisCircuitCounterTable_getByIndex (
 	uint32_t u32Index,
-	int32_t i32IsisCircuitType)
+	int32_t i32CircuitType)
 {
 	register isisCircuitCounterEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -4655,7 +4654,7 @@ isisCircuitCounterTable_getByIndex (
 	}
 	
 	poTmpEntry->u32Index = u32Index;
-	poTmpEntry->i32IsisCircuitType = i32IsisCircuitType;
+	poTmpEntry->i32CircuitType = i32CircuitType;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIsisCircuitCounterTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -4669,7 +4668,7 @@ isisCircuitCounterTable_getByIndex (
 isisCircuitCounterEntry_t *
 isisCircuitCounterTable_getNextIndex (
 	uint32_t u32Index,
-	int32_t i32IsisCircuitType)
+	int32_t i32CircuitType)
 {
 	register isisCircuitCounterEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -4680,7 +4679,7 @@ isisCircuitCounterTable_getNextIndex (
 	}
 	
 	poTmpEntry->u32Index = u32Index;
-	poTmpEntry->i32IsisCircuitType = i32IsisCircuitType;
+	poTmpEntry->i32CircuitType = i32CircuitType;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIsisCircuitCounterTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -4732,7 +4731,7 @@ isisCircuitCounterTable_getNext (
 	
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32IsisCircuitType);
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->i32CircuitType);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIsisCircuitCounterTable_BTree);
 	return put_index_data;

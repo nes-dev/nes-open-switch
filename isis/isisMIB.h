@@ -29,7 +29,9 @@ extern "C" {
 
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
-#include "lib/ip.h"
+
+#include <stdbool.h>
+#include <stdint.h>
 
 #define TOBE_REPLACED 1
 
@@ -92,18 +94,16 @@ typedef struct isisSysObject_t
 	int32_t i32Version;
 	int32_t i32LevelType;
 	uint8_t au8ID[6];
-	size_t u16ID_len;	/* # of uint8_t elements */
 	uint32_t u32MaxPathSplits;
 	uint32_t u32MaxLSPGenInt;
 	uint32_t u32PollESHelloRate;
 	uint32_t u32WaitTime;
 	int32_t i32AdminState;
-	int32_t i32L2toL1Leaking;
+	uint8_t u8L2toL1Leaking;
 	uint32_t u32MaxAge;
 	uint32_t u32ReceiveLSPBufferSize;
 	uint8_t au8ProtSupported[1];
-	size_t u16ProtSupported_len;	/* # of uint8_t elements */
-	int32_t i32NotificationEnable;
+	uint8_t u8NotificationEnable;
 } isisSysObject_t;
 
 extern isisSysObject_t oIsisSysObject;
@@ -374,7 +374,6 @@ typedef struct isisRouterEntry_t
 {
 	/* Index values */
 	uint8_t au8SysID[6];
-	size_t u16SysID_len;	/* # of uint8_t elements */
 	int32_t i32Level;
 	
 	/* Column values */
@@ -461,11 +460,11 @@ typedef struct isisSysLevelEntry_t
 	uint32_t u32OrigLSPBuffSize;
 	uint32_t u32MinLSPGenInt;
 	int32_t i32State;
-	int32_t i32SetOverload;
+	uint8_t u8SetOverload;
 	uint32_t u32SetOverloadUntil;
 	int32_t i32MetricStyle;
 	int32_t i32SPFConsiders;
-	int32_t i32TEEnabled;
+	uint8_t u8TEEnabled;
 	
 	xBTree_Node_t oBTreeNode;
 } isisSysLevelEntry_t;
@@ -566,14 +565,14 @@ typedef struct isisCircEntry_t
 	int32_t i32AdminState;
 	uint8_t u8ExistState;
 	int32_t i32Type;
-	int32_t i32ExtDomain;
+	uint8_t u8ExtDomain;
 	int32_t i32LevelType;
-	int32_t i32PassiveCircuit;
+	uint8_t u8PassiveCircuit;
 	int32_t i32MeshGroupEnabled;
 	uint32_t u32MeshGroup;
-	int32_t i32SmallHellos;
+	uint8_t u8SmallHellos;
 	uint32_t u32LastUpTime;
-	int32_t i32Circ3WayEnabled;
+	uint8_t u83WayEnabled;
 	uint32_t u32ExtendedCircID;
 	
 	xBTree_Node_t oBTreeNode;
@@ -700,21 +699,21 @@ enum
 typedef struct isisSystemCounterEntry_t
 {
 	/* Index values */
-	int32_t i32StatLevel;
+	int32_t i32Level;
 	
 	/* Column values */
-	uint32_t u32StatCorrLSPs;
-	uint32_t u32StatAuthTypeFails;
-	uint32_t u32StatAuthFails;
-	uint32_t u32StatLSPDbaseOloads;
-	uint32_t u32StatManAddrDropFromAreas;
-	uint32_t u32StatAttmptToExMaxSeqNums;
-	uint32_t u32StatSeqNumSkips;
-	uint32_t u32StatOwnLSPPurges;
-	uint32_t u32StatIDFieldLenMismatches;
-	uint32_t u32StatPartChanges;
-	uint32_t u32StatSPFRuns;
-	uint32_t u32StatLSPErrors;
+	uint32_t u32CorrLSPs;
+	uint32_t u32AuthTypeFails;
+	uint32_t u32AuthFails;
+	uint32_t u32LSPDbaseOloads;
+	uint32_t u32ManAddrDropFromAreas;
+	uint32_t u32AttmptToExMaxSeqNums;
+	uint32_t u32SeqNumSkips;
+	uint32_t u32OwnLSPPurges;
+	uint32_t u32IDFieldLenMismatches;
+	uint32_t u32PartChanges;
+	uint32_t u32SPFRuns;
+	uint32_t u32LSPErrors;
 	
 	xBTree_Node_t oBTreeNode;
 } isisSystemCounterEntry_t;
@@ -724,11 +723,11 @@ extern xBTree_t oIsisSystemCounterTable_BTree;
 /* isisSystemCounterTable table mapper */
 void isisSystemCounterTable_init (void);
 isisSystemCounterEntry_t * isisSystemCounterTable_createEntry (
-	int32_t i32StatLevel);
+	int32_t i32Level);
 isisSystemCounterEntry_t * isisSystemCounterTable_getByIndex (
-	int32_t i32StatLevel);
+	int32_t i32Level);
 isisSystemCounterEntry_t * isisSystemCounterTable_getNextIndex (
-	int32_t i32StatLevel);
+	int32_t i32Level);
 void isisSystemCounterTable_removeEntry (isisSystemCounterEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point isisSystemCounterTable_getFirst;
@@ -765,7 +764,7 @@ typedef struct isisCircuitCounterEntry_t
 {
 	/* Index values */
 	uint32_t u32Index;
-	int32_t i32IsisCircuitType;
+	int32_t i32CircuitType;
 	
 	/* Column values */
 	uint32_t u32AdjChanges;
@@ -787,13 +786,13 @@ extern xBTree_t oIsisCircuitCounterTable_BTree;
 void isisCircuitCounterTable_init (void);
 isisCircuitCounterEntry_t * isisCircuitCounterTable_createEntry (
 	uint32_t u32Index,
-	int32_t i32IsisCircuitType);
+	int32_t i32CircuitType);
 isisCircuitCounterEntry_t * isisCircuitCounterTable_getByIndex (
 	uint32_t u32Index,
-	int32_t i32IsisCircuitType);
+	int32_t i32CircuitType);
 isisCircuitCounterEntry_t * isisCircuitCounterTable_getNextIndex (
 	uint32_t u32Index,
-	int32_t i32IsisCircuitType);
+	int32_t i32CircuitType);
 void isisCircuitCounterTable_removeEntry (isisCircuitCounterEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point isisCircuitCounterTable_getFirst;
