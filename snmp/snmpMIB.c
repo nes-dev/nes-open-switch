@@ -31,6 +31,9 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
@@ -176,10 +179,11 @@ snmpSet_t oSnmpSet;
 
 /** snmpSet scalar mapper **/
 int
-snmpSet_mapper (netsnmp_mib_handler *handler,
+snmpSet_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid snmpSet_oid[];
 	netsnmp_request_info *request;
@@ -192,7 +196,7 @@ snmpSet_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (snmpSet_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (snmpSet_oid)])
 			{
 			case SNMPSETSERIALNO:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oSnmpSet.i32SerialNo);
@@ -214,7 +218,7 @@ snmpSet_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (snmpSet_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (snmpSet_oid)])
 			{
 			case SNMPSETSERIALNO:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
@@ -240,7 +244,7 @@ snmpSet_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (snmpSet_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (snmpSet_oid)])
 			{
 			case SNMPSETSERIALNO:
 				/* XXX: perform the value change here */
@@ -260,7 +264,7 @@ snmpSet_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (snmpSet_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (snmpSet_oid)])
 			{
 			case SNMPSETSERIALNO:
 				/* XXX: UNDO and return to previous value for the object */
@@ -287,10 +291,11 @@ snmpTargetObjects_t oSnmpTargetObjects;
 
 /** snmpTargetObjects scalar mapper **/
 int
-snmpTargetObjects_mapper (netsnmp_mib_handler *handler,
+snmpTargetObjects_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid snmpTargetObjects_oid[];
 	netsnmp_request_info *request;
@@ -303,7 +308,7 @@ snmpTargetObjects_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (snmpTargetObjects_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (snmpTargetObjects_oid)])
 			{
 			case SNMPTARGETSPINLOCK:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oSnmpTargetObjects.i32TargetSpinLock);
@@ -331,7 +336,7 @@ snmpTargetObjects_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (snmpTargetObjects_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (snmpTargetObjects_oid)])
 			{
 			case SNMPTARGETSPINLOCK:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
@@ -357,7 +362,7 @@ snmpTargetObjects_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (snmpTargetObjects_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (snmpTargetObjects_oid)])
 			{
 			case SNMPTARGETSPINLOCK:
 				/* XXX: perform the value change here */
@@ -377,7 +382,7 @@ snmpTargetObjects_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (snmpTargetObjects_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (snmpTargetObjects_oid)])
 			{
 			case SNMPTARGETSPINLOCK:
 				/* XXX: UNDO and return to previous value for the object */
@@ -404,10 +409,11 @@ usmStats_t oUsmStats;
 
 /** usmStats scalar mapper **/
 int
-usmStats_mapper (netsnmp_mib_handler *handler,
+usmStats_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid usmStats_oid[];
 	netsnmp_request_info *request;
@@ -419,7 +425,7 @@ usmStats_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (usmStats_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (usmStats_oid)])
 			{
 			case USMSTATSUNSUPPORTEDSECLEVELS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_COUNTER, oUsmStats.u32UnsupportedSecLevels);
@@ -461,10 +467,11 @@ usmUser_t oUsmUser;
 
 /** usmUser scalar mapper **/
 int
-usmUser_mapper (netsnmp_mib_handler *handler,
+usmUser_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid usmUser_oid[];
 	netsnmp_request_info *request;
@@ -477,7 +484,7 @@ usmUser_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (usmUser_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (usmUser_oid)])
 			{
 			case USMUSERSPINLOCK:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oUsmUser.i32SpinLock);
@@ -499,7 +506,7 @@ usmUser_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (usmUser_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (usmUser_oid)])
 			{
 			case USMUSERSPINLOCK:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
@@ -525,7 +532,7 @@ usmUser_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (usmUser_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (usmUser_oid)])
 			{
 			case USMUSERSPINLOCK:
 				/* XXX: perform the value change here */
@@ -545,7 +552,7 @@ usmUser_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (usmUser_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (usmUser_oid)])
 			{
 			case USMUSERSPINLOCK:
 				/* XXX: UNDO and return to previous value for the object */
@@ -572,10 +579,11 @@ vacmMIBViews_t oVacmMIBViews;
 
 /** vacmMIBViews scalar mapper **/
 int
-vacmMIBViews_mapper (netsnmp_mib_handler *handler,
+vacmMIBViews_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid vacmMIBViews_oid[];
 	netsnmp_request_info *request;
@@ -588,7 +596,7 @@ vacmMIBViews_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (vacmMIBViews_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (vacmMIBViews_oid)])
 			{
 			case VACMVIEWSPINLOCK:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oVacmMIBViews.i32ViewSpinLock);
@@ -610,7 +618,7 @@ vacmMIBViews_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (vacmMIBViews_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (vacmMIBViews_oid)])
 			{
 			case VACMVIEWSPINLOCK:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
@@ -636,7 +644,7 @@ vacmMIBViews_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (vacmMIBViews_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (vacmMIBViews_oid)])
 			{
 			case VACMVIEWSPINLOCK:
 				/* XXX: perform the value change here */
@@ -656,7 +664,7 @@ vacmMIBViews_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (vacmMIBViews_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (vacmMIBViews_oid)])
 			{
 			case VACMVIEWSPINLOCK:
 				/* XXX: UNDO and return to previous value for the object */

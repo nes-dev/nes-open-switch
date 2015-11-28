@@ -30,6 +30,9 @@ extern "C" {
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define TOBE_REPLACED 1
 
 
@@ -954,15 +957,11 @@ Netsnmp_Node_Handler snmpTargetAddrExtTable_mapper;
 /* definitions for notification(s) of snmpTraps */
 #	define COLDSTART 1
 #	define WARMSTART 2
-#	define LINKDOWN 3
-#	define LINKUP 4
 #	define AUTHENTICATIONFAILURE 5
 
 /* snmpTraps mapper(s) */
 int coldStart_trap (void);
 int warmStart_trap (void);
-int linkDown_trap (void);
-int linkUp_trap (void);
 int authenticationFailure_trap (void);
 
 
