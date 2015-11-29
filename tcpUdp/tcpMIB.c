@@ -31,6 +31,9 @@
 #include "lib/buffer.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define ROLLBACK_BUFFER "ROLLBACK_BUFFER"
 
 
@@ -83,10 +86,11 @@ tcp_t oTcp;
 
 /** tcp scalar mapper **/
 int
-tcp_mapper (netsnmp_mib_handler *handler,
+tcp_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid tcp_oid[];
 	netsnmp_request_info *request;
@@ -98,7 +102,7 @@ tcp_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (tcp_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (tcp_oid)])
 			{
 			case TCPRTOALGORITHM:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oTcp.i32RtoAlgorithm);
@@ -238,9 +242,9 @@ tcpConnectionTable_createEntry (
 	uint8_t *pau8RemAddress, size_t u16RemAddress_len,
 	uint32_t u32RemPort)
 {
-	tcpConnectionEntry_t *poEntry = NULL;
+	register tcpConnectionEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (tcpConnectionEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -275,7 +279,7 @@ tcpConnectionTable_getByIndex (
 	register tcpConnectionEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (tcpConnectionEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -310,7 +314,7 @@ tcpConnectionTable_getNextIndex (
 	register tcpConnectionEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (tcpConnectionEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -495,7 +499,6 @@ tcpConnectionTable_mapper (
 		{
 			table_entry = (tcpConnectionEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -620,9 +623,9 @@ tcpListenerTable_createEntry (
 	uint8_t *pau8LocalAddress, size_t u16LocalAddress_len,
 	uint32_t u32LocalPort)
 {
-	tcpListenerEntry_t *poEntry = NULL;
+	register tcpListenerEntry_t *poEntry = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (tcpListenerEntry_t))) == NULL)
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -650,7 +653,7 @@ tcpListenerTable_getByIndex (
 	register tcpListenerEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (tcpListenerEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}
@@ -678,7 +681,7 @@ tcpListenerTable_getNextIndex (
 	register tcpListenerEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (tcpListenerEntry_t))) == NULL)
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
 	{
 		return NULL;
 	}

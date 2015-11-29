@@ -29,7 +29,9 @@ extern "C" {
 
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
-#include "lib/ip.h"
+
+#include <stdbool.h>
+#include <stdint.h>
 
 #define TOBE_REPLACED 1
 
