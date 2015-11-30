@@ -6088,7 +6088,7 @@ neTedLinkXCTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->i32Dir = neTedLinkXCDir_duplex_c;
+	xBitmap_setBitsRev (poEntry->au8Dir, 1, 1, neTedLinkXCDir_ingress_c);
 	poEntry->u32InMax = 0;
 	poEntry->u32OutMax = 0;
 	poEntry->u8RowStatus = xRowStatus_notInService_c;
@@ -6257,7 +6257,7 @@ neTedLinkXCTable_mapper (
 			switch (table_info->colnum)
 			{
 			case NETEDLINKXCDIR:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Dir);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Dir, sizeof (table_entry->au8Dir));
 				break;
 			case NETEDLINKXCINMAX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32InMax);
@@ -6291,7 +6291,7 @@ neTedLinkXCTable_mapper (
 			switch (table_info->colnum)
 			{
 			case NETEDLINKXCDIR:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8Dir));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -6430,18 +6430,20 @@ neTedLinkXCTable_mapper (
 			switch (table_info->colnum)
 			{
 			case NETEDLINKXCDIR:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Dir))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8Dir))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					memcpy (pvOldDdata, &table_entry->i32Dir, sizeof (table_entry->i32Dir));
+					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
+					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8Dir, sizeof (table_entry->au8Dir));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				table_entry->i32Dir = *request->requestvb->val.integer;
+				memset (table_entry->au8Dir, 0, sizeof (table_entry->au8Dir));
+				memcpy (table_entry->au8Dir, request->requestvb->val.string, request->requestvb->val_len);
 				break;
 			case NETEDLINKXCINMAX:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32InMax))) == NULL)
@@ -6525,7 +6527,7 @@ neTedLinkXCTable_mapper (
 			switch (table_info->colnum)
 			{
 			case NETEDLINKXCDIR:
-				memcpy (&table_entry->i32Dir, pvOldDdata, sizeof (table_entry->i32Dir));
+				memcpy (table_entry->au8Dir, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
 				break;
 			case NETEDLINKXCINMAX:
 				memcpy (&table_entry->u32InMax, pvOldDdata, sizeof (table_entry->u32InMax));

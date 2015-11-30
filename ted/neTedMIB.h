@@ -944,8 +944,8 @@ Netsnmp_Node_Handler neTeCompLinkAdjCapTable_mapper;
 enum
 {
 	/* enums for column neTedLinkXCDir */
+	neTedLinkXCDir_ingress_c = 0,
 	neTedLinkXCDir_simplex_c = 1,
-	neTedLinkXCDir_duplex_c = 2,
 
 	/* enums for column neTedLinkXCRowStatus */
 	neTedLinkXCRowStatus_active_c = 1,
@@ -975,7 +975,7 @@ typedef struct neTedLinkXCEntry_t
 	uint32_t u32OutIf;
 	
 	/* Column values */
-	int32_t i32Dir;
+	uint8_t au8Dir[1];
 	uint32_t u32InMax;
 	uint32_t u32OutMax;
 	uint8_t u8RowStatus;
