@@ -694,6 +694,7 @@ mplsTunnelTable_removeExt (mplsTunnelEntry_t *poEntry)
 		goto mplsTunnelTable_removeExt_cleanup;
 	}
 	mplsTunnelTable_removeEntry (poEntry);
+	
 	bRetCode = true;
 	
 mplsTunnelTable_removeExt_cleanup:
@@ -3967,7 +3968,7 @@ gmplsTunnelTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8UnnumIf);
 				break;
 			case GMPLSTUNNELATTRIBUTES:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Attributes, table_entry->u16Attributes_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Attributes, sizeof (table_entry->au8Attributes));
 				break;
 			case GMPLSTUNNELLSPENCODING:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32LSPEncoding);
@@ -3976,7 +3977,7 @@ gmplsTunnelTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32SwitchingType);
 				break;
 			case GMPLSTUNNELLINKPROTECTION:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LinkProtection, table_entry->u16LinkProtection_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LinkProtection, sizeof (table_entry->au8LinkProtection));
 				break;
 			case GMPLSTUNNELGPID:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32GPid);
@@ -4015,7 +4016,7 @@ gmplsTunnelTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8SendPathNotifyRecipient, table_entry->u16SendPathNotifyRecipient_len);
 				break;
 			case GMPLSTUNNELADMINSTATUSFLAGS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdminStatusFlags, table_entry->u16AdminStatusFlags_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdminStatusFlags, sizeof (table_entry->au8AdminStatusFlags));
 				break;
 				
 			default:
@@ -4267,14 +4268,12 @@ gmplsTunnelTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16Attributes_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8Attributes, sizeof (table_entry->au8Attributes));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8Attributes, 0, sizeof (table_entry->au8Attributes));
 				memcpy (table_entry->au8Attributes, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16Attributes_len = request->requestvb->val_len;
 				break;
 			case GMPLSTUNNELLSPENCODING:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32LSPEncoding))) == NULL)
@@ -4313,14 +4312,12 @@ gmplsTunnelTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16LinkProtection_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8LinkProtection, sizeof (table_entry->au8LinkProtection));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8LinkProtection, 0, sizeof (table_entry->au8LinkProtection));
 				memcpy (table_entry->au8LinkProtection, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16LinkProtection_len = request->requestvb->val_len;
 				break;
 			case GMPLSTUNNELGPID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32GPid))) == NULL)
@@ -4515,14 +4512,12 @@ gmplsTunnelTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16AdminStatusFlags_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8AdminStatusFlags, sizeof (table_entry->au8AdminStatusFlags));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8AdminStatusFlags, 0, sizeof (table_entry->au8AdminStatusFlags));
 				memcpy (table_entry->au8AdminStatusFlags, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16AdminStatusFlags_len = request->requestvb->val_len;
 				break;
 			}
 		}
@@ -4562,7 +4557,6 @@ gmplsTunnelTable_mapper (
 				else
 				{
 					memcpy (table_entry->au8Attributes, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16Attributes_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				}
 				break;
 			case GMPLSTUNNELLSPENCODING:
@@ -4596,7 +4590,6 @@ gmplsTunnelTable_mapper (
 				else
 				{
 					memcpy (table_entry->au8LinkProtection, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16LinkProtection_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				}
 				break;
 			case GMPLSTUNNELGPID:
@@ -4744,7 +4737,6 @@ gmplsTunnelTable_mapper (
 				else
 				{
 					memcpy (table_entry->au8AdminStatusFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16AdminStatusFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				}
 				break;
 			}

@@ -486,11 +486,9 @@ typedef struct gmplsTunnelEntry_t
 	/* Column values */
 	uint8_t u8UnnumIf;
 	uint8_t au8Attributes[1];
-	size_t u16Attributes_len;	/* # of uint8_t elements */
 	int32_t i32LSPEncoding;
 	int32_t i32SwitchingType;
 	uint8_t au8LinkProtection[1];
-	size_t u16LinkProtection_len;	/* # of uint8_t elements */
 	int32_t i32GPid;
 	uint8_t u8Secondary;
 	int32_t i32Direction;
@@ -508,7 +506,6 @@ typedef struct gmplsTunnelEntry_t
 	uint8_t au8SendPathNotifyRecipient[20];
 	size_t u16SendPathNotifyRecipient_len;	/* # of uint8_t elements */
 	uint8_t au8AdminStatusFlags[4];
-	size_t u16AdminStatusFlags_len;	/* # of uint8_t elements */
 	
 // 	xBTree_Node_t oBTreeNode;
 } gmplsTunnelEntry_t;
