@@ -18,6 +18,15 @@
  *  under the License.
  */
 //set ts=4 sw=4
+/**
+ *	Name            : Binary Tree libary test utility
+ *	Description     : Test utility for Binary Tree with Red Black algorithm
+ *		support. Does unit-test of the Binary Tree library.
+ *	Version         : 0.0003
+ *	Author(s)       : Nells K.S
+ *	Maintainer(s)   : Nes Dev
+ *	Platform        : NA
+ */
 
 #include "lib/binaryTree.h"
 

@@ -18,6 +18,14 @@
  *  under the License.
  */
 //set ts=4 sw=4
+/**
+ *	Name            : Binary Tree libary
+ *	Description     : Binary Tree with Red Black algorithm support.
+ *	Version         : 0.0003
+ *	Author(s)       : Nells K.S
+ *	Maintainer(s)   : Nes Dev
+ *	Platform        : NA
+ */
 
 #ifndef __BINARY_TREE_H__
 #	define __BINARY_TREE_H__
