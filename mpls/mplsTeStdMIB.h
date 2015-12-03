@@ -1260,6 +1260,7 @@ typedef struct mplsTunnelCHopEntry_t
 	size_t u16LspId_len;	/* # of uint8_t elements */
 	int32_t i32Type;
 	
+	gmplsTunnelCHopEntry_t oG;
 	neMplsTunnelCHopEntry_t oNe;
 	
 	xBTree_Node_t oBTreeNode;
