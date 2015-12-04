@@ -4935,7 +4935,7 @@ gmplsTunnelHopTable_mapper (
 			switch (table_info->colnum)
 			{
 			case GMPLSTUNNELHOPLABELSTATUSES:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LabelStatuses, table_entry->u16LabelStatuses_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LabelStatuses, sizeof (table_entry->au8LabelStatuses));
 				break;
 				
 			default:
@@ -5126,10 +5126,10 @@ gmplsTunnelARHopTable_mapper (
 			switch (table_info->colnum)
 			{
 			case GMPLSTUNNELARHOPLABELSTATUSES:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LabelStatuses, table_entry->u16LabelStatuses_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LabelStatuses, sizeof (table_entry->au8LabelStatuses));
 				break;
 			case GMPLSTUNNELARHOPPROTECTION:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Protection, table_entry->u16Protection_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Protection, sizeof (table_entry->au8Protection));
 				break;
 				
 			default:

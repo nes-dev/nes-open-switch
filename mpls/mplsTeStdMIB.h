@@ -554,18 +554,17 @@ enum
 typedef struct gmplsTunnelHopEntry_t
 {
 	/* Index values */
-	uint32_t u32ListIndex;
-	uint32_t u32PathOptionIndex;
-	uint32_t u32Index;
+// 	uint32_t u32ListIndex;
+// 	uint32_t u32PathOptionIndex;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8LabelStatuses[1];
-	size_t u16LabelStatuses_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } gmplsTunnelHopEntry_t;
 
-extern xBTree_t oGmplsTunnelHopTable_BTree;
+// extern xBTree_t oGmplsTunnelHopTable_BTree;
 
 /* gmplsTunnelHopTable table mapper */
 void gmplsTunnelHopTable_init (void);
@@ -613,19 +612,17 @@ enum
 typedef struct gmplsTunnelARHopEntry_t
 {
 	/* Index values */
-	uint32_t u32ListIndex;
-	uint32_t u32Index;
+// 	uint32_t u32ListIndex;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8LabelStatuses[1];
-	size_t u16LabelStatuses_len;	/* # of uint8_t elements */
 	uint8_t au8Protection[1];
-	size_t u16Protection_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } gmplsTunnelARHopEntry_t;
 
-extern xBTree_t oGmplsTunnelARHopTable_BTree;
+// extern xBTree_t oGmplsTunnelARHopTable_BTree;
 
 /* gmplsTunnelARHopTable table mapper */
 void gmplsTunnelARHopTable_init (void);
