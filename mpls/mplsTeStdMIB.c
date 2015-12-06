@@ -5263,7 +5263,7 @@ gmplsTunnelCHopTable_getNext (
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32ListIndex);
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
-	*my_data_context = (void*) &poEntry->oG;
+	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsTunnelCHopTable_BTree);
 	return put_index_data;
 }
@@ -5285,7 +5285,7 @@ gmplsTunnelCHopTable_get (
 		return false;
 	}
 	
-	*my_data_context = (void*) &poEntry->oG;
+	*my_data_context = (void*) poEntry;
 	return true;
 }
 
@@ -5300,6 +5300,7 @@ gmplsTunnelCHopTable_mapper (
 	netsnmp_request_info *request;
 	netsnmp_table_request_info *table_info;
 	gmplsTunnelCHopEntry_t *table_entry;
+	register mplsTunnelCHopEntry_t *poEntry = NULL;
 	
 	switch (reqinfo->mode)
 	{
@@ -5309,13 +5310,14 @@ gmplsTunnelCHopTable_mapper (
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			table_entry = (gmplsTunnelCHopEntry_t*) netsnmp_extract_iterator_context (request);
+			poEntry = (mplsTunnelCHopEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			if (table_entry == NULL)
+			if (poEntry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
 				continue;
 			}
+			table_entry = &poEntry->oG;
 			
 			switch (table_info->colnum)
 			{
