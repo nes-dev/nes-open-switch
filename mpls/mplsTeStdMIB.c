@@ -5322,7 +5322,7 @@ gmplsTunnelCHopTable_mapper (
 			switch (table_info->colnum)
 			{
 			case GMPLSTUNNELCHOPLABELSTATUSES:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LabelStatuses, table_entry->u16LabelStatuses_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LabelStatuses, sizeof (table_entry->au8LabelStatuses));
 				break;
 				
 			default:

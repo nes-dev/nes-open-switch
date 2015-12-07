@@ -660,17 +660,16 @@ enum
 typedef struct gmplsTunnelCHopEntry_t
 {
 	/* Index values */
-	uint32_t u32ListIndex;
-	uint32_t u32Index;
+// 	uint32_t u32ListIndex;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8LabelStatuses[1];
-	size_t u16LabelStatuses_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } gmplsTunnelCHopEntry_t;
 
-extern xBTree_t oGmplsTunnelCHopTable_BTree;
+// extern xBTree_t oGmplsTunnelCHopTable_BTree;
 
 /* gmplsTunnelCHopTable table mapper */
 void gmplsTunnelCHopTable_init (void);
