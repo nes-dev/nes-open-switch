@@ -30,6 +30,9 @@ extern "C" {
 #include "lib/binaryTree.h"
 #include "lib/snmp.h"
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #define TOBE_REPLACED 1
 
 
@@ -124,71 +127,6 @@ Netsnmp_Node_Handler mefServiceNotificationCfg_mapper;
 /**
  *	table mapper(s)
  */
-/**
- *	table mefServiceInterfaceCfgTable definitions
- */
-#define MEFSERVICEINTERFACECFGTYPE 1
-#define MEFSERVICEINTERFACECFGIDENTIFIER 2
-#define MEFSERVICEINTERFACECFGFRAMEFORMAT 3
-#define MEFSERVICEINTERFACECFGINGRESSBWPGRPINDEX 4
-#define MEFSERVICEINTERFACECFGEGRESSBWPGRPINDEX 5
-#define MEFSERVICEINTERFACECFGL2CPGRPINDEX 9
-
-enum
-{
-	/* enums for column mefServiceInterfaceCfgType */
-	mefServiceInterfaceCfgType_bUni1d1_c = 0,
-	mefServiceInterfaceCfgType_bUni1d2_c = 1,
-	mefServiceInterfaceCfgType_bUni2d1_c = 2,
-	mefServiceInterfaceCfgType_bUni2d2_c = 3,
-	mefServiceInterfaceCfgType_bEnni_c = 4,
-	mefServiceInterfaceCfgType_bEnniVuni_c = 5,
-
-	/* enums for column mefServiceInterfaceCfgFrameFormat */
-	mefServiceInterfaceCfgFrameFormat_noTag_c = 1,
-	mefServiceInterfaceCfgFrameFormat_ctag_c = 2,
-	mefServiceInterfaceCfgFrameFormat_stag_c = 3,
-	mefServiceInterfaceCfgFrameFormat_stagCtag_c = 4,
-};
-
-/* table mefServiceInterfaceCfgTable row entry data structure */
-typedef struct mefServiceInterfaceCfgEntry_t
-{
-	/* Index values */
-	uint32_t u32IfIndex;
-	
-	/* Column values */
-	uint8_t au8Type[1];
-	size_t u16Type_len;	/* # of uint8_t elements */
-	uint8_t au8Identifier[255];
-	size_t u16Identifier_len;	/* # of uint8_t elements */
-	int32_t i32FrameFormat;
-	uint32_t u32IngressBwpGrpIndex;
-	uint32_t u32EgressBwpGrpIndex;
-	uint32_t u32L2cpGrpIndex;
-	
-	xBTree_Node_t oBTreeNode;
-} mefServiceInterfaceCfgEntry_t;
-
-extern xBTree_t oMefServiceInterfaceCfgTable_BTree;
-
-/* mefServiceInterfaceCfgTable table mapper */
-void mefServiceInterfaceCfgTable_init (void);
-mefServiceInterfaceCfgEntry_t * mefServiceInterfaceCfgTable_createEntry (
-	uint32_t u32IfIndex);
-mefServiceInterfaceCfgEntry_t * mefServiceInterfaceCfgTable_getByIndex (
-	uint32_t u32IfIndex);
-mefServiceInterfaceCfgEntry_t * mefServiceInterfaceCfgTable_getNextIndex (
-	uint32_t u32IfIndex);
-void mefServiceInterfaceCfgTable_removeEntry (mefServiceInterfaceCfgEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point mefServiceInterfaceCfgTable_getFirst;
-Netsnmp_Next_Data_Point mefServiceInterfaceCfgTable_getNext;
-Netsnmp_Get_Data_Point mefServiceInterfaceCfgTable_get;
-Netsnmp_Node_Handler mefServiceInterfaceCfgTable_mapper;
-#endif	/* SNMP_SRC */
-
-
 /**
  *	table mefServiceInterfaceStatusTable definitions
  */
@@ -411,109 +349,6 @@ Netsnmp_First_Data_Point mefServiceEvcPerUniCfgTable_getFirst;
 Netsnmp_Next_Data_Point mefServiceEvcPerUniCfgTable_getNext;
 Netsnmp_Get_Data_Point mefServiceEvcPerUniCfgTable_get;
 Netsnmp_Node_Handler mefServiceEvcPerUniCfgTable_mapper;
-#endif	/* SNMP_SRC */
-
-
-/**
- *	table mefServiceEvcCfgTable definitions
- */
-#define MEFSERVICEEVCCFGINDEX 1
-#define MEFSERVICEEVCCFGIDENTIFIER 2
-#define MEFSERVICEEVCCFGSERVICETYPE 3
-#define MEFSERVICEEVCCFGMTUSIZE 4
-#define MEFSERVICEEVCCFGCEVLANIDPRESERVATION 5
-#define MEFSERVICEEVCCFGCEVLANCOSPRESERVATION 6
-#define MEFSERVICEEVCCFGUNICASTDELIVERY 7
-#define MEFSERVICEEVCCFGMULTICASTDELIVERY 8
-#define MEFSERVICEEVCCFGBROADCASTDELIVERY 9
-#define MEFSERVICEEVCCFGL2CPGRPINDEX 10
-#define MEFSERVICEEVCCFGADMINSTATE 11
-#define MEFSERVICEEVCCFGROWSTATUS 12
-
-enum
-{
-	/* enums for column mefServiceEvcCfgServiceType */
-	mefServiceEvcCfgServiceType_pointToPoint_c = 1,
-	mefServiceEvcCfgServiceType_multipointToMultipoint_c = 2,
-	mefServiceEvcCfgServiceType_rootedMultipoint_c = 3,
-
-	/* enums for column mefServiceEvcCfgCeVlanIdPreservation */
-	mefServiceEvcCfgCeVlanIdPreservation_preserve_c = 1,
-	mefServiceEvcCfgCeVlanIdPreservation_noPreserve_c = 2,
-
-	/* enums for column mefServiceEvcCfgCeVlanCosPreservation */
-	mefServiceEvcCfgCeVlanCosPreservation_preserve_c = 1,
-	mefServiceEvcCfgCeVlanCosPreservation_noPreserve_c = 2,
-
-	/* enums for column mefServiceEvcCfgUnicastDelivery */
-	mefServiceEvcCfgUnicastDelivery_discard_c = 1,
-	mefServiceEvcCfgUnicastDelivery_unconditional_c = 2,
-	mefServiceEvcCfgUnicastDelivery_conditional_c = 3,
-
-	/* enums for column mefServiceEvcCfgMulticastDelivery */
-	mefServiceEvcCfgMulticastDelivery_discard_c = 1,
-	mefServiceEvcCfgMulticastDelivery_unconditional_c = 2,
-	mefServiceEvcCfgMulticastDelivery_conditional_c = 3,
-
-	/* enums for column mefServiceEvcCfgBroadcastDelivery */
-	mefServiceEvcCfgBroadcastDelivery_discard_c = 1,
-	mefServiceEvcCfgBroadcastDelivery_unconditional_c = 2,
-	mefServiceEvcCfgBroadcastDelivery_conditional_c = 3,
-
-	/* enums for column mefServiceEvcCfgAdminState */
-	mefServiceEvcCfgAdminState_unknown_c = 1,
-	mefServiceEvcCfgAdminState_locked_c = 2,
-	mefServiceEvcCfgAdminState_shuttingDown_c = 3,
-	mefServiceEvcCfgAdminState_unlocked_c = 4,
-
-	/* enums for column mefServiceEvcCfgRowStatus */
-	mefServiceEvcCfgRowStatus_active_c = 1,
-	mefServiceEvcCfgRowStatus_notInService_c = 2,
-	mefServiceEvcCfgRowStatus_notReady_c = 3,
-	mefServiceEvcCfgRowStatus_createAndGo_c = 4,
-	mefServiceEvcCfgRowStatus_createAndWait_c = 5,
-	mefServiceEvcCfgRowStatus_destroy_c = 6,
-};
-
-/* table mefServiceEvcCfgTable row entry data structure */
-typedef struct mefServiceEvcCfgEntry_t
-{
-	/* Index values */
-	uint32_t u32Index;
-	
-	/* Column values */
-	uint8_t au8Identifier[255];
-	size_t u16Identifier_len;	/* # of uint8_t elements */
-	int32_t i32ServiceType;
-	uint32_t u32MtuSize;
-	int32_t i32CeVlanIdPreservation;
-	int32_t i32CeVlanCosPreservation;
-	int32_t i32UnicastDelivery;
-	int32_t i32MulticastDelivery;
-	int32_t i32BroadcastDelivery;
-	uint32_t u32L2cpGrpIndex;
-	int32_t i32AdminState;
-	uint8_t u8RowStatus;
-	
-	xBTree_Node_t oBTreeNode;
-} mefServiceEvcCfgEntry_t;
-
-extern xBTree_t oMefServiceEvcCfgTable_BTree;
-
-/* mefServiceEvcCfgTable table mapper */
-void mefServiceEvcCfgTable_init (void);
-mefServiceEvcCfgEntry_t * mefServiceEvcCfgTable_createEntry (
-	uint32_t u32Index);
-mefServiceEvcCfgEntry_t * mefServiceEvcCfgTable_getByIndex (
-	uint32_t u32Index);
-mefServiceEvcCfgEntry_t * mefServiceEvcCfgTable_getNextIndex (
-	uint32_t u32Index);
-void mefServiceEvcCfgTable_removeEntry (mefServiceEvcCfgEntry_t *poEntry);
-#ifdef SNMP_SRC
-Netsnmp_First_Data_Point mefServiceEvcCfgTable_getFirst;
-Netsnmp_Next_Data_Point mefServiceEvcCfgTable_getNext;
-Netsnmp_Get_Data_Point mefServiceEvcCfgTable_get;
-Netsnmp_Node_Handler mefServiceEvcCfgTable_mapper;
 #endif	/* SNMP_SRC */
 
 
@@ -1014,6 +849,174 @@ Netsnmp_First_Data_Point mefServiceL2cpCfgTable_getFirst;
 Netsnmp_Next_Data_Point mefServiceL2cpCfgTable_getNext;
 Netsnmp_Get_Data_Point mefServiceL2cpCfgTable_get;
 Netsnmp_Node_Handler mefServiceL2cpCfgTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table mefServiceInterfaceCfgTable definitions
+ */
+#define MEFSERVICEINTERFACECFGTYPE 1
+#define MEFSERVICEINTERFACECFGIDENTIFIER 2
+#define MEFSERVICEINTERFACECFGFRAMEFORMAT 3
+#define MEFSERVICEINTERFACECFGINGRESSBWPGRPINDEX 4
+#define MEFSERVICEINTERFACECFGEGRESSBWPGRPINDEX 5
+#define MEFSERVICEINTERFACECFGL2CPGRPINDEX 9
+
+enum
+{
+	/* enums for column mefServiceInterfaceCfgType */
+	mefServiceInterfaceCfgType_bUni1d1_c = 0,
+	mefServiceInterfaceCfgType_bUni1d2_c = 1,
+	mefServiceInterfaceCfgType_bUni2d1_c = 2,
+	mefServiceInterfaceCfgType_bUni2d2_c = 3,
+	mefServiceInterfaceCfgType_bEnni_c = 4,
+	mefServiceInterfaceCfgType_bEnniVuni_c = 5,
+
+	/* enums for column mefServiceInterfaceCfgFrameFormat */
+	mefServiceInterfaceCfgFrameFormat_noTag_c = 1,
+	mefServiceInterfaceCfgFrameFormat_ctag_c = 2,
+	mefServiceInterfaceCfgFrameFormat_stag_c = 3,
+	mefServiceInterfaceCfgFrameFormat_stagCtag_c = 4,
+};
+
+/* table mefServiceInterfaceCfgTable row entry data structure */
+typedef struct mefServiceInterfaceCfgEntry_t
+{
+	/* Index values */
+	uint32_t u32IfIndex;
+	
+	/* Column values */
+	uint8_t au8Type[1];
+	size_t u16Type_len;	/* # of uint8_t elements */
+	uint8_t au8Identifier[255];
+	size_t u16Identifier_len;	/* # of uint8_t elements */
+	int32_t i32FrameFormat;
+	uint32_t u32IngressBwpGrpIndex;
+	uint32_t u32EgressBwpGrpIndex;
+	uint32_t u32L2cpGrpIndex;
+	
+	xBTree_Node_t oBTreeNode;
+} mefServiceInterfaceCfgEntry_t;
+
+extern xBTree_t oMefServiceInterfaceCfgTable_BTree;
+
+/* mefServiceInterfaceCfgTable table mapper */
+void mefServiceInterfaceCfgTable_init (void);
+mefServiceInterfaceCfgEntry_t * mefServiceInterfaceCfgTable_createEntry (
+	uint32_t u32IfIndex);
+mefServiceInterfaceCfgEntry_t * mefServiceInterfaceCfgTable_getByIndex (
+	uint32_t u32IfIndex);
+mefServiceInterfaceCfgEntry_t * mefServiceInterfaceCfgTable_getNextIndex (
+	uint32_t u32IfIndex);
+void mefServiceInterfaceCfgTable_removeEntry (mefServiceInterfaceCfgEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point mefServiceInterfaceCfgTable_getFirst;
+Netsnmp_Next_Data_Point mefServiceInterfaceCfgTable_getNext;
+Netsnmp_Get_Data_Point mefServiceInterfaceCfgTable_get;
+Netsnmp_Node_Handler mefServiceInterfaceCfgTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
+ *	table mefServiceEvcCfgTable definitions
+ */
+#define MEFSERVICEEVCCFGINDEX 1
+#define MEFSERVICEEVCCFGIDENTIFIER 2
+#define MEFSERVICEEVCCFGSERVICETYPE 3
+#define MEFSERVICEEVCCFGMTUSIZE 4
+#define MEFSERVICEEVCCFGCEVLANIDPRESERVATION 5
+#define MEFSERVICEEVCCFGCEVLANCOSPRESERVATION 6
+#define MEFSERVICEEVCCFGUNICASTDELIVERY 7
+#define MEFSERVICEEVCCFGMULTICASTDELIVERY 8
+#define MEFSERVICEEVCCFGBROADCASTDELIVERY 9
+#define MEFSERVICEEVCCFGL2CPGRPINDEX 10
+#define MEFSERVICEEVCCFGADMINSTATE 11
+#define MEFSERVICEEVCCFGROWSTATUS 12
+
+enum
+{
+	/* enums for column mefServiceEvcCfgServiceType */
+	mefServiceEvcCfgServiceType_pointToPoint_c = 1,
+	mefServiceEvcCfgServiceType_multipointToMultipoint_c = 2,
+	mefServiceEvcCfgServiceType_rootedMultipoint_c = 3,
+
+	/* enums for column mefServiceEvcCfgCeVlanIdPreservation */
+	mefServiceEvcCfgCeVlanIdPreservation_preserve_c = 1,
+	mefServiceEvcCfgCeVlanIdPreservation_noPreserve_c = 2,
+
+	/* enums for column mefServiceEvcCfgCeVlanCosPreservation */
+	mefServiceEvcCfgCeVlanCosPreservation_preserve_c = 1,
+	mefServiceEvcCfgCeVlanCosPreservation_noPreserve_c = 2,
+
+	/* enums for column mefServiceEvcCfgUnicastDelivery */
+	mefServiceEvcCfgUnicastDelivery_discard_c = 1,
+	mefServiceEvcCfgUnicastDelivery_unconditional_c = 2,
+	mefServiceEvcCfgUnicastDelivery_conditional_c = 3,
+
+	/* enums for column mefServiceEvcCfgMulticastDelivery */
+	mefServiceEvcCfgMulticastDelivery_discard_c = 1,
+	mefServiceEvcCfgMulticastDelivery_unconditional_c = 2,
+	mefServiceEvcCfgMulticastDelivery_conditional_c = 3,
+
+	/* enums for column mefServiceEvcCfgBroadcastDelivery */
+	mefServiceEvcCfgBroadcastDelivery_discard_c = 1,
+	mefServiceEvcCfgBroadcastDelivery_unconditional_c = 2,
+	mefServiceEvcCfgBroadcastDelivery_conditional_c = 3,
+
+	/* enums for column mefServiceEvcCfgAdminState */
+	mefServiceEvcCfgAdminState_unknown_c = 1,
+	mefServiceEvcCfgAdminState_locked_c = 2,
+	mefServiceEvcCfgAdminState_shuttingDown_c = 3,
+	mefServiceEvcCfgAdminState_unlocked_c = 4,
+
+	/* enums for column mefServiceEvcCfgRowStatus */
+	mefServiceEvcCfgRowStatus_active_c = 1,
+	mefServiceEvcCfgRowStatus_notInService_c = 2,
+	mefServiceEvcCfgRowStatus_notReady_c = 3,
+	mefServiceEvcCfgRowStatus_createAndGo_c = 4,
+	mefServiceEvcCfgRowStatus_createAndWait_c = 5,
+	mefServiceEvcCfgRowStatus_destroy_c = 6,
+};
+
+/* table mefServiceEvcCfgTable row entry data structure */
+typedef struct mefServiceEvcCfgEntry_t
+{
+	/* Index values */
+	uint32_t u32Index;
+	
+	/* Column values */
+	uint8_t au8Identifier[255];
+	size_t u16Identifier_len;	/* # of uint8_t elements */
+	int32_t i32ServiceType;
+	uint32_t u32MtuSize;
+	int32_t i32CeVlanIdPreservation;
+	int32_t i32CeVlanCosPreservation;
+	int32_t i32UnicastDelivery;
+	int32_t i32MulticastDelivery;
+	int32_t i32BroadcastDelivery;
+	uint32_t u32L2cpGrpIndex;
+	int32_t i32AdminState;
+	uint8_t u8RowStatus;
+	
+	xBTree_Node_t oBTreeNode;
+} mefServiceEvcCfgEntry_t;
+
+extern xBTree_t oMefServiceEvcCfgTable_BTree;
+
+/* mefServiceEvcCfgTable table mapper */
+void mefServiceEvcCfgTable_init (void);
+mefServiceEvcCfgEntry_t * mefServiceEvcCfgTable_createEntry (
+	uint32_t u32Index);
+mefServiceEvcCfgEntry_t * mefServiceEvcCfgTable_getByIndex (
+	uint32_t u32Index);
+mefServiceEvcCfgEntry_t * mefServiceEvcCfgTable_getNextIndex (
+	uint32_t u32Index);
+void mefServiceEvcCfgTable_removeEntry (mefServiceEvcCfgEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point mefServiceEvcCfgTable_getFirst;
+Netsnmp_Next_Data_Point mefServiceEvcCfgTable_getNext;
+Netsnmp_Get_Data_Point mefServiceEvcCfgTable_get;
+Netsnmp_Node_Handler mefServiceEvcCfgTable_mapper;
 #endif	/* SNMP_SRC */
 
 
