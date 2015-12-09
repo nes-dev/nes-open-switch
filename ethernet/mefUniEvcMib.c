@@ -167,10 +167,11 @@ mefServiceEvcAttributes_t oMefServiceEvcAttributes;
 
 /** mefServiceEvcAttributes scalar mapper **/
 int
-mefServiceEvcAttributes_mapper (netsnmp_mib_handler *handler,
+mefServiceEvcAttributes_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid mefServiceEvcAttributes_oid[];
 	netsnmp_request_info *request;
@@ -182,7 +183,7 @@ mefServiceEvcAttributes_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (mefServiceEvcAttributes_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (mefServiceEvcAttributes_oid)])
 			{
 			case MEFSERVICEEVCNEXTINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oMefServiceEvcAttributes.u32NextIndex);
@@ -209,10 +210,11 @@ mefServiceBwpAttributes_t oMefServiceBwpAttributes;
 
 /** mefServiceBwpAttributes scalar mapper **/
 int
-mefServiceBwpAttributes_mapper (netsnmp_mib_handler *handler,
+mefServiceBwpAttributes_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid mefServiceBwpAttributes_oid[];
 	netsnmp_request_info *request;
@@ -224,7 +226,7 @@ mefServiceBwpAttributes_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (mefServiceBwpAttributes_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (mefServiceBwpAttributes_oid)])
 			{
 			case MEFSERVICEBWPGRPNEXTINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oMefServiceBwpAttributes.u32GrpNextIndex);
@@ -251,10 +253,11 @@ mefServiceCosAttributes_t oMefServiceCosAttributes;
 
 /** mefServiceCosAttributes scalar mapper **/
 int
-mefServiceCosAttributes_mapper (netsnmp_mib_handler *handler,
+mefServiceCosAttributes_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid mefServiceCosAttributes_oid[];
 	netsnmp_request_info *request;
@@ -266,7 +269,7 @@ mefServiceCosAttributes_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (mefServiceCosAttributes_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (mefServiceCosAttributes_oid)])
 			{
 			case MEFSERVICECOSNEXTINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oMefServiceCosAttributes.u32NextIndex);
@@ -293,10 +296,11 @@ mefServiceL2cpAttributes_t oMefServiceL2cpAttributes;
 
 /** mefServiceL2cpAttributes scalar mapper **/
 int
-mefServiceL2cpAttributes_mapper (netsnmp_mib_handler *handler,
+mefServiceL2cpAttributes_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid mefServiceL2cpAttributes_oid[];
 	netsnmp_request_info *request;
@@ -308,7 +312,7 @@ mefServiceL2cpAttributes_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (mefServiceL2cpAttributes_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (mefServiceL2cpAttributes_oid)])
 			{
 			case MEFSERVICEL2CPGRPNEXTINDEX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oMefServiceL2cpAttributes.u32GrpNextIndex);
@@ -335,10 +339,11 @@ mefServiceNotificationCfg_t oMefServiceNotificationCfg;
 
 /** mefServiceNotificationCfg scalar mapper **/
 int
-mefServiceNotificationCfg_mapper (netsnmp_mib_handler *handler,
+mefServiceNotificationCfg_mapper (
+	netsnmp_mib_handler *handler,
 	netsnmp_handler_registration *reginfo,
-	netsnmp_agent_request_info   *reqinfo,
-	netsnmp_request_info         *requests)
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
 {
 	extern oid mefServiceNotificationCfg_oid[];
 	netsnmp_request_info *request;
@@ -351,7 +356,7 @@ mefServiceNotificationCfg_mapper (netsnmp_mib_handler *handler,
 	case MODE_GET:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (mefServiceNotificationCfg_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (mefServiceNotificationCfg_oid)])
 			{
 			case MEFSERVICENOTIFICATIONCFGALARMENABLE:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oMefServiceNotificationCfg.au8AlarmEnable, oMefServiceNotificationCfg.u16AlarmEnable_len);
@@ -373,7 +378,7 @@ mefServiceNotificationCfg_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_RESERVE1:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (mefServiceNotificationCfg_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (mefServiceNotificationCfg_oid)])
 			{
 			case MEFSERVICENOTIFICATIONCFGALARMENABLE:
 				ret = netsnmp_check_vb_type (requests->requestvb, ASN_OCTET_STR);
@@ -399,7 +404,7 @@ mefServiceNotificationCfg_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_ACTION:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (mefServiceNotificationCfg_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (mefServiceNotificationCfg_oid)])
 			{
 			case MEFSERVICENOTIFICATIONCFGALARMENABLE:
 				/* XXX: perform the value change here */
@@ -421,7 +426,7 @@ mefServiceNotificationCfg_mapper (netsnmp_mib_handler *handler,
 	case MODE_SET_UNDO:
 		for (request = requests; request != NULL; request = request->next)
 		{
-			switch (request->requestvb->name[OID_LENGTH (mefServiceNotificationCfg_oid) - 1])
+			switch (request->requestvb->name[OID_LENGTH (mefServiceNotificationCfg_oid)])
 			{
 			case MEFSERVICENOTIFICATIONCFGALARMENABLE:
 				/* XXX: UNDO and return to previous value for the object */
