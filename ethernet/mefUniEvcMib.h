@@ -113,7 +113,6 @@ enum
 typedef struct mefServiceNotificationCfg_t
 {
 	uint8_t au8AlarmEnable[1];
-	size_t u16AlarmEnable_len;	/* # of uint8_t elements */
 } mefServiceNotificationCfg_t;
 
 extern mefServiceNotificationCfg_t oMefServiceNotificationCfg;
@@ -153,7 +152,6 @@ typedef struct mefServiceInterfaceStatusEntry_t
 	
 	/* Column values */
 	uint8_t au8Type[1];
-	size_t u16Type_len;	/* # of uint8_t elements */
 	uint32_t u32MaxVc;
 	uint32_t u32MaxEndPointPerVc;
 	
@@ -614,8 +612,8 @@ Netsnmp_Node_Handler mefServiceBwpCfgTable_mapper;
 typedef struct mefServicePerformanceEntry_t
 {
 	/* Index values */
-	uint32_t u32BwpGrpCfgIndex;
-	uint32_t u32BwpCfgIndex;
+	uint32_t u32GrpCfgIndex;
+	uint32_t u32CfgIndex;
 	
 	/* Column values */
 	uint64_t u64IngressGreenFrameCount;
@@ -641,14 +639,14 @@ extern xBTree_t oMefServicePerformanceTable_BTree;
 /* mefServicePerformanceTable table mapper */
 void mefServicePerformanceTable_init (void);
 mefServicePerformanceEntry_t * mefServicePerformanceTable_createEntry (
-	uint32_t u32BwpGrpCfgIndex,
-	uint32_t u32BwpCfgIndex);
+	uint32_t u32GrpCfgIndex,
+	uint32_t u32CfgIndex);
 mefServicePerformanceEntry_t * mefServicePerformanceTable_getByIndex (
-	uint32_t u32BwpGrpCfgIndex,
-	uint32_t u32BwpCfgIndex);
+	uint32_t u32GrpCfgIndex,
+	uint32_t u32CfgIndex);
 mefServicePerformanceEntry_t * mefServicePerformanceTable_getNextIndex (
-	uint32_t u32BwpGrpCfgIndex,
-	uint32_t u32BwpCfgIndex);
+	uint32_t u32GrpCfgIndex,
+	uint32_t u32CfgIndex);
 void mefServicePerformanceTable_removeEntry (mefServicePerformanceEntry_t *poEntry);
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point mefServicePerformanceTable_getFirst;
@@ -701,7 +699,6 @@ typedef struct mefServiceCosCfgEntry_t
 	uint8_t au8IdentifierList[255];
 	size_t u16IdentifierList_len;	/* # of uint8_t elements */
 	uint8_t au8MacAddress[6];
-	size_t u16MacAddress_len;	/* # of uint8_t elements */
 	uint32_t u32Protocol;
 	uint32_t u32SubType;
 	uint8_t u8RowStatus;
@@ -822,7 +819,6 @@ typedef struct mefServiceL2cpCfgEntry_t
 	int32_t i32Type;
 	int32_t i32MatchScope;
 	uint8_t au8MacAddress[6];
-	size_t u16MacAddress_len;	/* # of uint8_t elements */
 	uint32_t u32Protocol;
 	uint32_t u32SubType;
 	uint8_t u8RowStatus;
@@ -887,7 +883,6 @@ typedef struct mefServiceInterfaceCfgEntry_t
 	
 	/* Column values */
 	uint8_t au8Type[1];
-	size_t u16Type_len;	/* # of uint8_t elements */
 	uint8_t au8Identifier[255];
 	size_t u16Identifier_len;	/* # of uint8_t elements */
 	int32_t i32FrameFormat;

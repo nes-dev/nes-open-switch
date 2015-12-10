@@ -359,7 +359,7 @@ mefServiceNotificationCfg_mapper (
 			switch (request->requestvb->name[OID_LENGTH (mefServiceNotificationCfg_oid)])
 			{
 			case MEFSERVICENOTIFICATIONCFGALARMENABLE:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oMefServiceNotificationCfg.au8AlarmEnable, oMefServiceNotificationCfg.u16AlarmEnable_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oMefServiceNotificationCfg.au8AlarmEnable, sizeof (oMefServiceNotificationCfg.au8AlarmEnable));
 				break;
 				
 			default:
@@ -410,7 +410,6 @@ mefServiceNotificationCfg_mapper (
 				/* XXX: perform the value change here */
 				memset (oMefServiceNotificationCfg.au8AlarmEnable, 0, sizeof (oMefServiceNotificationCfg.au8AlarmEnable));
 				memcpy (oMefServiceNotificationCfg.au8AlarmEnable, request->requestvb->val.string, request->requestvb->val_len);
-				oMefServiceNotificationCfg.u16AlarmEnable_len = request->requestvb->val_len;
 				if (/* TODO: error? */ TOBE_REPLACED != TOBE_REPLACED)
 				{
 					netsnmp_set_request_error (reqinfo, requests, /* some error */ TOBE_REPLACED);
@@ -674,7 +673,7 @@ mefServiceInterfaceCfgTable_mapper (
 			switch (table_info->colnum)
 			{
 			case MEFSERVICEINTERFACECFGTYPE:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Type, table_entry->u16Type_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Type, sizeof (table_entry->au8Type));
 				break;
 			case MEFSERVICEINTERFACECFGIDENTIFIER:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Identifier, table_entry->u16Identifier_len);
@@ -771,7 +770,6 @@ mefServiceInterfaceCfgTable_mapper (
 		{
 			table_entry = (mefServiceInterfaceCfgEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -801,14 +799,12 @@ mefServiceInterfaceCfgTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16Type_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8Type, sizeof (table_entry->au8Type));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8Type, 0, sizeof (table_entry->au8Type));
 				memcpy (table_entry->au8Type, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16Type_len = request->requestvb->val_len;
 				break;
 			case MEFSERVICEINTERFACECFGIDENTIFIER:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8Identifier))) == NULL)
@@ -903,7 +899,6 @@ mefServiceInterfaceCfgTable_mapper (
 			{
 			case MEFSERVICEINTERFACECFGTYPE:
 				memcpy (table_entry->au8Type, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16Type_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case MEFSERVICEINTERFACECFGIDENTIFIER:
 				memcpy (table_entry->au8Identifier, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
@@ -1144,7 +1139,7 @@ mefServiceInterfaceStatusTable_mapper (
 			switch (table_info->colnum)
 			{
 			case MEFSERVICEINTERFACESTATUSTYPE:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Type, table_entry->u16Type_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Type, sizeof (table_entry->au8Type));
 				break;
 			case MEFSERVICEINTERFACESTATUSMAXVC:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32MaxVc);
@@ -1653,7 +1648,7 @@ mefServiceUniCfgTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32BundlingMultiplex);
 				break;
 			case MEFSERVICEUNICFGCEVIDUNTAGGED:
-				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32CeVidUntagged);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u32CeVidUntagged);
 				break;
 			case MEFSERVICEUNICFGCEPRIORITYUNTAGGED:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32CePriorityUntagged);
@@ -1694,7 +1689,7 @@ mefServiceUniCfgTable_mapper (
 				}
 				break;
 			case MEFSERVICEUNICFGCEVIDUNTAGGED:
-				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_INTEGER);
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -2219,7 +2214,6 @@ mefServiceEvcPerUniCfgTable_mapper (
 		{
 			table_entry = (mefServiceEvcPerUniCfgEntry_t*) netsnmp_extract_iterator_context (request);
 			table_info = netsnmp_extract_table_info (request);
-			
 			if (table_entry == NULL)
 			{
 				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
@@ -4934,9 +4928,9 @@ mefServicePerformanceTable_BTreeNodeCmp (
 	register mefServicePerformanceEntry_t *pEntry2 = xBTree_entry (pNode2, mefServicePerformanceEntry_t, oBTreeNode);
 	
 	return
-		(pEntry1->u32BwpGrpCfgIndex < pEntry2->u32BwpGrpCfgIndex) ||
-		(pEntry1->u32BwpGrpCfgIndex == pEntry2->u32BwpGrpCfgIndex && pEntry1->u32BwpCfgIndex < pEntry2->u32BwpCfgIndex) ? -1:
-		(pEntry1->u32BwpGrpCfgIndex == pEntry2->u32BwpGrpCfgIndex && pEntry1->u32BwpCfgIndex == pEntry2->u32BwpCfgIndex) ? 0: 1;
+		(pEntry1->u32GrpCfgIndex < pEntry2->u32GrpCfgIndex) ||
+		(pEntry1->u32GrpCfgIndex == pEntry2->u32GrpCfgIndex && pEntry1->u32CfgIndex < pEntry2->u32CfgIndex) ? -1:
+		(pEntry1->u32GrpCfgIndex == pEntry2->u32GrpCfgIndex && pEntry1->u32CfgIndex == pEntry2->u32CfgIndex) ? 0: 1;
 }
 
 xBTree_t oMefServicePerformanceTable_BTree = xBTree_initInline (&mefServicePerformanceTable_BTreeNodeCmp);
@@ -4944,8 +4938,8 @@ xBTree_t oMefServicePerformanceTable_BTree = xBTree_initInline (&mefServicePerfo
 /* create a new row in the table */
 mefServicePerformanceEntry_t *
 mefServicePerformanceTable_createEntry (
-	uint32_t u32BwpGrpCfgIndex,
-	uint32_t u32BwpCfgIndex)
+	uint32_t u32GrpCfgIndex,
+	uint32_t u32CfgIndex)
 {
 	register mefServicePerformanceEntry_t *poEntry = NULL;
 	
@@ -4954,8 +4948,8 @@ mefServicePerformanceTable_createEntry (
 		return NULL;
 	}
 	
-	poEntry->u32BwpGrpCfgIndex = u32BwpGrpCfgIndex;
-	poEntry->u32BwpCfgIndex = u32BwpCfgIndex;
+	poEntry->u32GrpCfgIndex = u32GrpCfgIndex;
+	poEntry->u32CfgIndex = u32CfgIndex;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oMefServicePerformanceTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -4968,8 +4962,8 @@ mefServicePerformanceTable_createEntry (
 
 mefServicePerformanceEntry_t *
 mefServicePerformanceTable_getByIndex (
-	uint32_t u32BwpGrpCfgIndex,
-	uint32_t u32BwpCfgIndex)
+	uint32_t u32GrpCfgIndex,
+	uint32_t u32CfgIndex)
 {
 	register mefServicePerformanceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -4979,8 +4973,8 @@ mefServicePerformanceTable_getByIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->u32BwpGrpCfgIndex = u32BwpGrpCfgIndex;
-	poTmpEntry->u32BwpCfgIndex = u32BwpCfgIndex;
+	poTmpEntry->u32GrpCfgIndex = u32GrpCfgIndex;
+	poTmpEntry->u32CfgIndex = u32CfgIndex;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oMefServicePerformanceTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -4993,8 +4987,8 @@ mefServicePerformanceTable_getByIndex (
 
 mefServicePerformanceEntry_t *
 mefServicePerformanceTable_getNextIndex (
-	uint32_t u32BwpGrpCfgIndex,
-	uint32_t u32BwpCfgIndex)
+	uint32_t u32GrpCfgIndex,
+	uint32_t u32CfgIndex)
 {
 	register mefServicePerformanceEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
@@ -5004,8 +4998,8 @@ mefServicePerformanceTable_getNextIndex (
 		return NULL;
 	}
 	
-	poTmpEntry->u32BwpGrpCfgIndex = u32BwpGrpCfgIndex;
-	poTmpEntry->u32BwpCfgIndex = u32BwpCfgIndex;
+	poTmpEntry->u32GrpCfgIndex = u32GrpCfgIndex;
+	poTmpEntry->u32CfgIndex = u32CfgIndex;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oMefServicePerformanceTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -5055,9 +5049,9 @@ mefServicePerformanceTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, mefServicePerformanceEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BwpGrpCfgIndex);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32GrpCfgIndex);
 	idx = idx->next_variable;
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32BwpCfgIndex);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32CfgIndex);
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMefServicePerformanceTable_BTree);
 	return put_index_data;
@@ -5400,7 +5394,7 @@ mefServiceCosCfgTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8IdentifierList, table_entry->u16IdentifierList_len);
 				break;
 			case MEFSERVICECOSCFGMACADDRESS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, table_entry->u16MacAddress_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, sizeof (table_entry->au8MacAddress));
 				break;
 			case MEFSERVICECOSCFGPROTOCOL:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Protocol);
@@ -5640,14 +5634,12 @@ mefServiceCosCfgTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MacAddress_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MacAddress, sizeof (table_entry->au8MacAddress));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8MacAddress, 0, sizeof (table_entry->au8MacAddress));
 				memcpy (table_entry->au8MacAddress, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16MacAddress_len = request->requestvb->val_len;
 				break;
 			case MEFSERVICECOSCFGPROTOCOL:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32Protocol))) == NULL)
@@ -5729,7 +5721,6 @@ mefServiceCosCfgTable_mapper (
 				break;
 			case MEFSERVICECOSCFGMACADDRESS:
 				memcpy (table_entry->au8MacAddress, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16MacAddress_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case MEFSERVICECOSCFGPROTOCOL:
 				memcpy (&table_entry->u32Protocol, pvOldDdata, sizeof (table_entry->u32Protocol));
@@ -6457,7 +6448,7 @@ mefServiceL2cpCfgTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32MatchScope);
 				break;
 			case MEFSERVICEL2CPCFGMACADDRESS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, table_entry->u16MacAddress_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MacAddress, sizeof (table_entry->au8MacAddress));
 				break;
 			case MEFSERVICEL2CPCFGPROTOCOL:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Protocol);
@@ -6669,14 +6660,12 @@ mefServiceL2cpCfgTable_mapper (
 				else if (pvOldDdata != table_entry)
 				{
 					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16MacAddress_len;
 					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MacAddress, sizeof (table_entry->au8MacAddress));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8MacAddress, 0, sizeof (table_entry->au8MacAddress));
 				memcpy (table_entry->au8MacAddress, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16MacAddress_len = request->requestvb->val_len;
 				break;
 			case MEFSERVICEL2CPCFGPROTOCOL:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32Protocol))) == NULL)
@@ -6753,7 +6742,6 @@ mefServiceL2cpCfgTable_mapper (
 				break;
 			case MEFSERVICEL2CPCFGMACADDRESS:
 				memcpy (table_entry->au8MacAddress, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16MacAddress_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				break;
 			case MEFSERVICEL2CPCFGPROTOCOL:
 				memcpy (&table_entry->u32Protocol, pvOldDdata, sizeof (table_entry->u32Protocol));
