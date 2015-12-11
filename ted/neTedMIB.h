@@ -54,10 +54,8 @@ void neTedMIB_init (void);
 typedef struct mplsIdObjects_t
 {
 	uint8_t au8GlobalId[4];
-	size_t u16GlobalId_len;	/* # of uint8_t elements */
 	uint32_t u32NodeId;
 	uint8_t au8Cc[2];
-	size_t u16Cc_len;	/* # of uint8_t elements */
 	uint8_t au8Icc[6];
 	size_t u16Icc_len;	/* # of uint8_t elements */
 } mplsIdObjects_t;
@@ -129,7 +127,6 @@ typedef struct mplsTeNodeIpMapEntry_t
 {
 	/* Index values */
 	uint8_t au8GlobalId[4];
-	size_t u16GlobalId_len;	/* # of uint8_t elements */
 	uint32_t u32NodeId;
 	
 	/* Column values */
@@ -173,7 +170,6 @@ typedef struct mplsTeNodeIccMapEntry_t
 {
 	/* Index values */
 	uint8_t au8CcId[2];
-	size_t u16CcId_len;	/* # of uint8_t elements */
 	uint8_t au8IccId[6];
 	size_t u16IccId_len;	/* # of uint8_t elements */
 	uint32_t u32NodeId;
@@ -1055,9 +1051,7 @@ typedef struct mplsTeNodeEntry_t
 	
 	/* Column values */
 	uint8_t au8GlobalId[4];
-	size_t u16GlobalId_len;	/* # of uint8_t elements */
 	uint8_t au8CcId[2];
-	size_t u16CcId_len;	/* # of uint8_t elements */
 	uint8_t au8IccId[6];
 	size_t u16IccId_len;	/* # of uint8_t elements */
 	uint32_t u32NodeId;

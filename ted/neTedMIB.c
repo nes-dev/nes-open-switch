@@ -163,13 +163,13 @@ mplsIdObjects_mapper (
 			switch (request->requestvb->name[OID_LENGTH (mplsIdObjects_oid)])
 			{
 			case MPLSIDGLOBALID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oMplsIdObjects.au8GlobalId, oMplsIdObjects.u16GlobalId_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oMplsIdObjects.au8GlobalId, sizeof (oMplsIdObjects.au8GlobalId));
 				break;
 			case MPLSIDNODEID:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oMplsIdObjects.u32NodeId);
 				break;
 			case MPLSIDCC:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oMplsIdObjects.au8Cc, oMplsIdObjects.u16Cc_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oMplsIdObjects.au8Cc, sizeof (oMplsIdObjects.au8Cc));
 				break;
 			case MPLSIDICC:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oMplsIdObjects.au8Icc, oMplsIdObjects.u16Icc_len);
@@ -244,7 +244,6 @@ mplsIdObjects_mapper (
 				/* XXX: perform the value change here */
 				memset (oMplsIdObjects.au8GlobalId, 0, sizeof (oMplsIdObjects.au8GlobalId));
 				memcpy (oMplsIdObjects.au8GlobalId, request->requestvb->val.string, request->requestvb->val_len);
-				oMplsIdObjects.u16GlobalId_len = request->requestvb->val_len;
 				if (/* TODO: error? */ TOBE_REPLACED != TOBE_REPLACED)
 				{
 					netsnmp_set_request_error (reqinfo, requests, /* some error */ TOBE_REPLACED);
@@ -262,7 +261,6 @@ mplsIdObjects_mapper (
 				/* XXX: perform the value change here */
 				memset (oMplsIdObjects.au8Cc, 0, sizeof (oMplsIdObjects.au8Cc));
 				memcpy (oMplsIdObjects.au8Cc, request->requestvb->val.string, request->requestvb->val_len);
-				oMplsIdObjects.u16Cc_len = request->requestvb->val_len;
 				if (/* TODO: error? */ TOBE_REPLACED != TOBE_REPLACED)
 				{
 					netsnmp_set_request_error (reqinfo, requests, /* some error */ TOBE_REPLACED);
@@ -736,10 +734,10 @@ mplsTeNodeTable_mapper (
 			switch (table_info->colnum)
 			{
 			case MPLSTENODEGLOBALID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8GlobalId, table_entry->u16GlobalId_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8GlobalId, sizeof (table_entry->au8GlobalId));
 				break;
 			case MPLSTENODECCID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8CcId, table_entry->u16CcId_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8CcId, sizeof (table_entry->au8CcId));
 				break;
 			case MPLSTENODEICCID:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8IccId, table_entry->u16IccId_len);
@@ -927,40 +925,34 @@ mplsTeNodeTable_mapper (
 			switch (table_info->colnum)
 			{
 			case MPLSTENODEGLOBALID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8GlobalId))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8GlobalId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16GlobalId_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8GlobalId, sizeof (table_entry->au8GlobalId));
+					memcpy (pvOldDdata, table_entry->au8GlobalId, sizeof (table_entry->au8GlobalId));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8GlobalId, 0, sizeof (table_entry->au8GlobalId));
 				memcpy (table_entry->au8GlobalId, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16GlobalId_len = request->requestvb->val_len;
 				break;
 			case MPLSTENODECCID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8CcId))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8CcId))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16CcId_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8CcId, sizeof (table_entry->au8CcId));
+					memcpy (pvOldDdata, table_entry->au8CcId, sizeof (table_entry->au8CcId));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8CcId, 0, sizeof (table_entry->au8CcId));
 				memcpy (table_entry->au8CcId, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16CcId_len = request->requestvb->val_len;
 				break;
 			case MPLSTENODEICCID:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8IccId))) == NULL)
@@ -1062,12 +1054,10 @@ mplsTeNodeTable_mapper (
 			switch (table_info->colnum)
 			{
 			case MPLSTENODEGLOBALID:
-				memcpy (table_entry->au8GlobalId, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16GlobalId_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8GlobalId, pvOldDdata, sizeof (table_entry->au8GlobalId));
 				break;
 			case MPLSTENODECCID:
-				memcpy (table_entry->au8CcId, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16CcId_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8CcId, ((xOctetString_t*) pvOldDdata)->pData, sizeof (table_entry->au8CcId));
 				break;
 			case MPLSTENODEICCID:
 				memcpy (table_entry->au8IccId, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
@@ -1174,9 +1164,9 @@ mplsTeNodeIpMapTable_BTreeNodeCmp (
 	register mplsTeNodeIpMapEntry_t *pEntry2 = xBTree_entry (pNode2, mplsTeNodeIpMapEntry_t, oBTreeNode);
 	
 	return
-		(xBinCmp (pEntry1->au8GlobalId, pEntry2->au8GlobalId, pEntry1->u16GlobalId_len, pEntry2->u16GlobalId_len) == -1) ||
-		(xBinCmp (pEntry1->au8GlobalId, pEntry2->au8GlobalId, pEntry1->u16GlobalId_len, pEntry2->u16GlobalId_len) == 0 && pEntry1->u32NodeId < pEntry2->u32NodeId) ? -1:
-		(xBinCmp (pEntry1->au8GlobalId, pEntry2->au8GlobalId, pEntry1->u16GlobalId_len, pEntry2->u16GlobalId_len) == 0 && pEntry1->u32NodeId == pEntry2->u32NodeId) ? 0: 1;
+		(xBinCmp (pEntry1->au8GlobalId, pEntry2->au8GlobalId, sizeof (pEntry1->au8GlobalId), sizeof (pEntry2->au8GlobalId)) == -1) ||
+		(xBinCmp (pEntry1->au8GlobalId, pEntry2->au8GlobalId, sizeof (pEntry1->au8GlobalId), sizeof (pEntry2->au8GlobalId)) == 0 && pEntry1->u32NodeId < pEntry2->u32NodeId) ? -1:
+		(xBinCmp (pEntry1->au8GlobalId, pEntry2->au8GlobalId, sizeof (pEntry1->au8GlobalId), sizeof (pEntry2->au8GlobalId)) == 0 && pEntry1->u32NodeId == pEntry2->u32NodeId) ? 0: 1;
 }
 
 xBTree_t oMplsTeNodeIpMapTable_BTree = xBTree_initInline (&mplsTeNodeIpMapTable_BTreeNodeCmp);
@@ -1195,7 +1185,6 @@ mplsTeNodeIpMapTable_createEntry (
 	}
 	
 	memcpy (poEntry->au8GlobalId, pau8GlobalId, u16GlobalId_len);
-	poEntry->u16GlobalId_len = u16GlobalId_len;
 	poEntry->u32NodeId = u32NodeId;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oMplsTeNodeIpMapTable_BTree) != NULL)
 	{
@@ -1221,7 +1210,6 @@ mplsTeNodeIpMapTable_getByIndex (
 	}
 	
 	memcpy (poTmpEntry->au8GlobalId, pau8GlobalId, u16GlobalId_len);
-	poTmpEntry->u16GlobalId_len = u16GlobalId_len;
 	poTmpEntry->u32NodeId = u32NodeId;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oMplsTeNodeIpMapTable_BTree)) == NULL)
 	{
@@ -1247,7 +1235,6 @@ mplsTeNodeIpMapTable_getNextIndex (
 	}
 	
 	memcpy (poTmpEntry->au8GlobalId, pau8GlobalId, u16GlobalId_len);
-	poTmpEntry->u16GlobalId_len = u16GlobalId_len;
 	poTmpEntry->u32NodeId = u32NodeId;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oMplsTeNodeIpMapTable_BTree)) == NULL)
 	{
@@ -1298,7 +1285,7 @@ mplsTeNodeIpMapTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, mplsTeNodeIpMapEntry_t, oBTreeNode);
 	
-	snmp_set_var_value (idx, poEntry->au8GlobalId, poEntry->u16GlobalId_len);
+	snmp_set_var_value (idx, poEntry->au8GlobalId, sizeof (poEntry->au8GlobalId));
 	idx = idx->next_variable;
 	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32NodeId);
 	*my_data_context = (void*) poEntry;
@@ -1417,10 +1404,10 @@ mplsTeNodeIccMapTable_BTreeNodeCmp (
 	register mplsTeNodeIccMapEntry_t *pEntry2 = xBTree_entry (pNode2, mplsTeNodeIccMapEntry_t, oBTreeNode);
 	
 	return
-		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, pEntry1->u16CcId_len, pEntry2->u16CcId_len) == -1) ||
-		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, pEntry1->u16CcId_len, pEntry2->u16CcId_len) == 0 && xBinCmp (pEntry1->au8IccId, pEntry2->au8IccId, pEntry1->u16IccId_len, pEntry2->u16IccId_len) == -1) ||
-		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, pEntry1->u16CcId_len, pEntry2->u16CcId_len) == 0 && xBinCmp (pEntry1->au8IccId, pEntry2->au8IccId, pEntry1->u16IccId_len, pEntry2->u16IccId_len) == 0 && pEntry1->u32NodeId < pEntry2->u32NodeId) ? -1:
-		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, pEntry1->u16CcId_len, pEntry2->u16CcId_len) == 0 && xBinCmp (pEntry1->au8IccId, pEntry2->au8IccId, pEntry1->u16IccId_len, pEntry2->u16IccId_len) == 0 && pEntry1->u32NodeId == pEntry2->u32NodeId) ? 0: 1;
+		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, sizeof (pEntry1->au8CcId), sizeof (pEntry2->au8CcId)) == -1) ||
+		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, sizeof (pEntry1->au8CcId), sizeof (pEntry2->au8CcId)) == 0 && xBinCmp (pEntry1->au8IccId, pEntry2->au8IccId, pEntry1->u16IccId_len, pEntry2->u16IccId_len) == -1) ||
+		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, sizeof (pEntry1->au8CcId), sizeof (pEntry2->au8CcId)) == 0 && xBinCmp (pEntry1->au8IccId, pEntry2->au8IccId, pEntry1->u16IccId_len, pEntry2->u16IccId_len) == 0 && pEntry1->u32NodeId < pEntry2->u32NodeId) ? -1:
+		(xBinCmp (pEntry1->au8CcId, pEntry2->au8CcId, sizeof (pEntry1->au8CcId), sizeof (pEntry2->au8CcId)) == 0 && xBinCmp (pEntry1->au8IccId, pEntry2->au8IccId, pEntry1->u16IccId_len, pEntry2->u16IccId_len) == 0 && pEntry1->u32NodeId == pEntry2->u32NodeId) ? 0: 1;
 }
 
 xBTree_t oMplsTeNodeIccMapTable_BTree = xBTree_initInline (&mplsTeNodeIccMapTable_BTreeNodeCmp);
@@ -1440,7 +1427,6 @@ mplsTeNodeIccMapTable_createEntry (
 	}
 	
 	memcpy (poEntry->au8CcId, pau8CcId, u16CcId_len);
-	poEntry->u16CcId_len = u16CcId_len;
 	memcpy (poEntry->au8IccId, pau8IccId, u16IccId_len);
 	poEntry->u16IccId_len = u16IccId_len;
 	poEntry->u32NodeId = u32NodeId;
@@ -1469,7 +1455,6 @@ mplsTeNodeIccMapTable_getByIndex (
 	}
 	
 	memcpy (poTmpEntry->au8CcId, pau8CcId, u16CcId_len);
-	poTmpEntry->u16CcId_len = u16CcId_len;
 	memcpy (poTmpEntry->au8IccId, pau8IccId, u16IccId_len);
 	poTmpEntry->u16IccId_len = u16IccId_len;
 	poTmpEntry->u32NodeId = u32NodeId;
@@ -1498,7 +1483,6 @@ mplsTeNodeIccMapTable_getNextIndex (
 	}
 	
 	memcpy (poTmpEntry->au8CcId, pau8CcId, u16CcId_len);
-	poTmpEntry->u16CcId_len = u16CcId_len;
 	memcpy (poTmpEntry->au8IccId, pau8IccId, u16IccId_len);
 	poTmpEntry->u16IccId_len = u16IccId_len;
 	poTmpEntry->u32NodeId = u32NodeId;
@@ -1551,7 +1535,7 @@ mplsTeNodeIccMapTable_getNext (
 	}
 	poEntry = xBTree_entry (*my_loop_context, mplsTeNodeIccMapEntry_t, oBTreeNode);
 	
-	snmp_set_var_value (idx, poEntry->au8CcId, poEntry->u16CcId_len);
+	snmp_set_var_value (idx, poEntry->au8CcId, sizeof (poEntry->au8CcId));
 	idx = idx->next_variable;
 	snmp_set_var_value (idx, poEntry->au8IccId, poEntry->u16IccId_len);
 	idx = idx->next_variable;
