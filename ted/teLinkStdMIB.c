@@ -128,37 +128,7 @@ teLinkTable_BTreeNodeCmp (
 		(pEntry1->u32IfIndex == pEntry2->u32IfIndex) ? 0: 1;
 }
 
-static int8_t
-teLinkTable_AddrLocal_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register teLinkEntry_t *pEntry1 = xBTree_entry (pNode1, teLinkEntry_t, oAddrLocal_BTreeNode);
-	register teLinkEntry_t *pEntry2 = xBTree_entry (pNode2, teLinkEntry_t, oAddrLocal_BTreeNode);
-	
-	return
-		(pEntry1->oK.i32AddrType < pEntry2->oK.i32AddrType) ||
-		(pEntry1->oK.i32AddrType == pEntry2->oK.i32AddrType && xBinCmp (pEntry1->oK.au8LocalAddr, pEntry2->oK.au8LocalAddr, pEntry1->oK.u16LocalAddr_len, pEntry2->oK.u16LocalAddr_len) == -1) ||
-		(pEntry1->oK.i32AddrType == pEntry2->oK.i32AddrType && xBinCmp (pEntry1->oK.au8LocalAddr, pEntry2->oK.au8LocalAddr, pEntry1->oK.u16LocalAddr_len, pEntry2->oK.u16LocalAddr_len) == 0 && pEntry1->oK.u32LocalId < pEntry2->oK.u32LocalId) ? -1:
-		(pEntry1->oK.i32AddrType == pEntry2->oK.i32AddrType && xBinCmp (pEntry1->oK.au8LocalAddr, pEntry2->oK.au8LocalAddr, pEntry1->oK.u16LocalAddr_len, pEntry2->oK.u16LocalAddr_len) == 0 && pEntry1->oK.u32LocalId == pEntry2->oK.u32LocalId) ? 0: 1;
-}
-
-static int8_t
-teLinkTable_AddrRemote_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register teLinkEntry_t *pEntry1 = xBTree_entry (pNode1, teLinkEntry_t, oAddrRemote_BTreeNode);
-	register teLinkEntry_t *pEntry2 = xBTree_entry (pNode2, teLinkEntry_t, oAddrRemote_BTreeNode);
-	
-	return
-		(pEntry1->oK.i32AddrType < pEntry2->oK.i32AddrType) ||
-		(pEntry1->oK.i32AddrType == pEntry2->oK.i32AddrType && xBinCmp (pEntry1->oK.au8RemoteAddr, pEntry2->oK.au8RemoteAddr, pEntry1->oK.u16RemoteAddr_len, pEntry2->oK.u16RemoteAddr_len) == -1) ||
-		(pEntry1->oK.i32AddrType == pEntry2->oK.i32AddrType && xBinCmp (pEntry1->oK.au8RemoteAddr, pEntry2->oK.au8RemoteAddr, pEntry1->oK.u16RemoteAddr_len, pEntry2->oK.u16RemoteAddr_len) == 0 && pEntry1->oK.u32RemoteId < pEntry2->oK.u32RemoteId) ? -1:
-		(pEntry1->oK.i32AddrType == pEntry2->oK.i32AddrType && xBinCmp (pEntry1->oK.au8RemoteAddr, pEntry2->oK.au8RemoteAddr, pEntry1->oK.u16RemoteAddr_len, pEntry2->oK.u16RemoteAddr_len) == 0 && pEntry1->oK.u32RemoteId == pEntry2->oK.u32RemoteId) ? 0: 1;
-}
-
 xBTree_t oTeLinkTable_BTree = xBTree_initInline (&teLinkTable_BTreeNodeCmp);
-xBTree_t oTeLinkTable_AddrLocal_BTree = xBTree_initInline (&teLinkTable_AddrLocal_BTreeNodeCmp);
-xBTree_t oTeLinkTable_AddrRemote_BTree = xBTree_initInline (&teLinkTable_AddrRemote_BTreeNodeCmp);
 
 /* create a new row in the table */
 teLinkEntry_t *
@@ -231,62 +201,6 @@ teLinkTable_getNextIndex (
 	return xBTree_entry (poNode, teLinkEntry_t, oBTreeNode);
 }
 
-teLinkEntry_t *
-teLinkTable_AddrLocal_getNextIndex (
-	int32_t i32AddressType,
-	uint8_t *pau8LocalIpAddr, size_t u16LocalIpAddr_len,
-	uint32_t u32LocalId)
-{
-	register teLinkEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
-	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poTmpEntry->oK.i32AddrType = i32AddressType;
-	memcpy (poTmpEntry->oK.au8LocalAddr, pau8LocalIpAddr, u16LocalIpAddr_len);
-	poTmpEntry->oK.u16LocalAddr_len = u16LocalIpAddr_len;
-	poTmpEntry->oK.u32LocalId = u32LocalId;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oAddrLocal_BTreeNode, &oTeLinkTable_AddrLocal_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, teLinkEntry_t, oAddrLocal_BTreeNode);
-}
-
-teLinkEntry_t *
-teLinkTable_AddrRemote_getNextIndex (
-	int32_t i32AddressType,
-	uint8_t *pau8RemoteIpAddr, size_t u16RemoteIpAddr_len,
-	uint32_t u32RemoteId)
-{
-	register teLinkEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
-	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
-	{
-		return NULL;
-	}
-	
-	poTmpEntry->oK.i32AddrType = i32AddressType;
-	memcpy (poTmpEntry->oK.au8RemoteAddr, pau8RemoteIpAddr, u16RemoteIpAddr_len);
-	poTmpEntry->oK.u16RemoteAddr_len = u16RemoteIpAddr_len;
-	poTmpEntry->oK.u32RemoteId = u32RemoteId;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oAddrRemote_BTreeNode, &oTeLinkTable_AddrRemote_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, teLinkEntry_t, oAddrRemote_BTreeNode);
-}
-
 /* remove a row from the table */
 void
 teLinkTable_removeEntry (teLinkEntry_t *poEntry)
@@ -298,8 +212,6 @@ teLinkTable_removeEntry (teLinkEntry_t *poEntry)
 	}
 	
 	xBTree_nodeRemove (&poEntry->oBTreeNode, &oTeLinkTable_BTree);
-	xBTree_nodeRemove (&poEntry->oAddrLocal_BTreeNode, &oTeLinkTable_AddrLocal_BTree);
-	xBTree_nodeRemove (&poEntry->oAddrRemote_BTreeNode, &oTeLinkTable_AddrRemote_BTree);
 	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
