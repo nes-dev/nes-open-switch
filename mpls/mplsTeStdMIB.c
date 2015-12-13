@@ -3047,7 +3047,7 @@ mplsTunnelARHopTable_init (void)
 		ASN_UNSIGNED /* index: mplsTunnelARHopIndex */,
 		0);
 	table_info->min_column = MPLSTUNNELARHOPADDRTYPE;
-	table_info->max_column = MPLSTUNNELARHOPLSPID;
+	table_info->max_column = MPLSTUNNELARHOPADDRUNNUM;
 	
 	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
 	iinfo->get_first_data_point = &mplsTunnelARHopTable_getFirst;
@@ -3260,9 +3260,6 @@ mplsTunnelARHopTable_mapper (
 				break;
 			case MPLSTUNNELARHOPADDRUNNUM:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AddrUnnum, table_entry->u16AddrUnnum_len);
-				break;
-			case MPLSTUNNELARHOPLSPID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LspId, table_entry->u16LspId_len);
 				break;
 				
 			default:
@@ -3513,14 +3510,8 @@ mplsTunnelCHopTable_mapper (
 			case MPLSTUNNELCHOPIPPREFIXLEN:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32IpPrefixLen);
 				break;
-			case MPLSTUNNELCHOPASNUMBER:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AsNumber, table_entry->u16AsNumber_len);
-				break;
 			case MPLSTUNNELCHOPADDRUNNUM:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AddrUnnum, table_entry->u16AddrUnnum_len);
-				break;
-			case MPLSTUNNELCHOPLSPID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LspId, table_entry->u16LspId_len);
 				break;
 			case MPLSTUNNELCHOPTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
