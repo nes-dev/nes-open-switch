@@ -1047,8 +1047,8 @@ Netsnmp_Node_Handler mplsTunnelTable_mapper;
 #define MPLSTUNNELHOPPATHOPTIONINDEX 2
 #define MPLSTUNNELHOPINDEX 3
 #define MPLSTUNNELHOPADDRTYPE 4
-#define MPLSTUNNELHOPIPADDR 5
-#define MPLSTUNNELHOPIPPREFIXLEN 6
+#define MPLSTUNNELHOPADDRESS 5
+#define MPLSTUNNELHOPPREFIX 6
 #define MPLSTUNNELHOPADDRUNNUM 8
 #define MPLSTUNNELHOPTYPE 10
 #define MPLSTUNNELHOPINCLUDE 11
@@ -1100,11 +1100,11 @@ typedef struct mplsTunnelHopEntry_t
 	
 	/* Column values */
 	int32_t i32AddrType;
-	uint8_t au8IpAddr[32];
-	size_t u16IpAddr_len;	/* # of uint8_t elements */
-	uint32_t u32IpPrefixLen;
-	uint8_t au8AddrUnnum[4];
-	size_t u16AddrUnnum_len;	/* # of uint8_t elements */
+	uint8_t au8Address[32];
+	size_t u16Address_len;	/* # of uint8_t elements */
+	uint32_t u32Prefix;
+	uint8_t au8Unnum[4];
+	size_t u16Unnum_len;	/* # of uint8_t elements */
 	int32_t i32Type;
 	uint8_t u8Include;
 	uint8_t au8PathOptionName[255];
@@ -1149,7 +1149,7 @@ Netsnmp_Node_Handler mplsTunnelHopTable_mapper;
 #define MPLSTUNNELARHOPLISTINDEX 1
 #define MPLSTUNNELARHOPINDEX 2
 #define MPLSTUNNELARHOPADDRTYPE 3
-#define MPLSTUNNELARHOPIPADDR 4
+#define MPLSTUNNELARHOPADDRESS 4
 #define MPLSTUNNELARHOPADDRUNNUM 5
 
 enum
@@ -1172,10 +1172,10 @@ typedef struct mplsTunnelARHopEntry_t
 	
 	/* Column values */
 	int32_t i32AddrType;
-	uint8_t au8IpAddr[32];
-	size_t u16IpAddr_len;	/* # of uint8_t elements */
-	uint8_t au8AddrUnnum[4];
-	size_t u16AddrUnnum_len;	/* # of uint8_t elements */
+	uint8_t au8Address[32];
+	size_t u16Address_len;	/* # of uint8_t elements */
+	uint8_t au8Unnum[4];
+	size_t u16Unnum_len;	/* # of uint8_t elements */
 	
 	gmplsTunnelARHopEntry_t oG;
 	neMplsTunnelARHopEntry_t oNe;
@@ -1211,9 +1211,8 @@ Netsnmp_Node_Handler mplsTunnelARHopTable_mapper;
 #define MPLSTUNNELCHOPLISTINDEX 1
 #define MPLSTUNNELCHOPINDEX 2
 #define MPLSTUNNELCHOPADDRTYPE 3
-#define MPLSTUNNELCHOPIPADDR 4
-#define MPLSTUNNELCHOPIPPREFIXLEN 5
-#define MPLSTUNNELCHOPASNUMBER 6
+#define MPLSTUNNELCHOPADDRESS 4
+#define MPLSTUNNELCHOPPREFIX 5
 #define MPLSTUNNELCHOPADDRUNNUM 7
 #define MPLSTUNNELCHOPTYPE 9
 
@@ -1241,11 +1240,11 @@ typedef struct mplsTunnelCHopEntry_t
 	
 	/* Column values */
 	int32_t i32AddrType;
-	uint8_t au8IpAddr[32];
-	size_t u16IpAddr_len;	/* # of uint8_t elements */
-	uint32_t u32IpPrefixLen;
-	uint8_t au8AddrUnnum[4];
-	size_t u16AddrUnnum_len;	/* # of uint8_t elements */
+	uint8_t au8Address[32];
+	size_t u16Address_len;	/* # of uint8_t elements */
+	uint32_t u32Prefix;
+	uint8_t au8Unnum[4];
+	size_t u16Unnum_len;	/* # of uint8_t elements */
 	int32_t i32Type;
 	
 	gmplsTunnelCHopEntry_t oG;
