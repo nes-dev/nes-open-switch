@@ -68,7 +68,6 @@ typedef struct mplsTeScalars_t
 	uint32_t u32Configured;
 	uint32_t u32Active;
 	uint8_t au8TEDistProto[1];
-	size_t u16TEDistProto_len;	/* # of uint8_t elements */
 	uint32_t u32MaxHops;
 	uint32_t u32NotificationMaxRate;
 } mplsTeScalars_t;
@@ -783,28 +782,28 @@ enum
 typedef struct gmplsTunnelErrorEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
-	uint32_t u32Instance;
-	uint32_t u32IngressLSRId;
-	uint32_t u32EgressLSRId;
+// 	uint32_t u32Index;
+// 	uint32_t u32Instance;
+// 	uint32_t u32IngressLSRId;
+// 	uint32_t u32EgressLSRId;
 	
 	/* Column values */
 	int32_t i32LastErrorType;
 	uint32_t u32LastTime;
 	int32_t i32ReporterType;
-	uint8_t au8Reporter[255];
+	uint8_t au8Reporter[16];
 	size_t u16Reporter_len;	/* # of uint8_t elements */
 	uint32_t u32Code;
 	uint32_t u32Subcode;
-	uint8_t au8TLVs[65535];
+	uint8_t au8TLVs[0];
 	size_t u16TLVs_len;	/* # of uint8_t elements */
-	uint8_t au8HelpString[255];
+	uint8_t au8HelpString[32];
 	size_t u16HelpString_len;	/* # of uint8_t elements */
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } gmplsTunnelErrorEntry_t;
 
-extern xBTree_t oGmplsTunnelErrorTable_BTree;
+// extern xBTree_t oGmplsTunnelErrorTable_BTree;
 
 /* gmplsTunnelErrorTable table mapper */
 void gmplsTunnelErrorTable_init (void);
@@ -1100,14 +1099,13 @@ typedef struct mplsTunnelHopEntry_t
 	
 	/* Column values */
 	int32_t i32AddrType;
-	uint8_t au8Address[32];
+	uint8_t au8Address[20];
 	size_t u16Address_len;	/* # of uint8_t elements */
 	uint32_t u32Prefix;
 	uint8_t au8Unnum[4];
-	size_t u16Unnum_len;	/* # of uint8_t elements */
 	int32_t i32Type;
 	uint8_t u8Include;
-	uint8_t au8PathOptionName[255];
+	uint8_t au8PathOptionName[32];
 	size_t u16PathOptionName_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
@@ -1172,10 +1170,9 @@ typedef struct mplsTunnelARHopEntry_t
 	
 	/* Column values */
 	int32_t i32AddrType;
-	uint8_t au8Address[32];
+	uint8_t au8Address[20];
 	size_t u16Address_len;	/* # of uint8_t elements */
 	uint8_t au8Unnum[4];
-	size_t u16Unnum_len;	/* # of uint8_t elements */
 	
 	gmplsTunnelARHopEntry_t oG;
 	neMplsTunnelARHopEntry_t oNe;
@@ -1240,11 +1237,10 @@ typedef struct mplsTunnelCHopEntry_t
 	
 	/* Column values */
 	int32_t i32AddrType;
-	uint8_t au8Address[32];
+	uint8_t au8Address[20];
 	size_t u16Address_len;	/* # of uint8_t elements */
 	uint32_t u32Prefix;
 	uint8_t au8Unnum[4];
-	size_t u16Unnum_len;	/* # of uint8_t elements */
 	int32_t i32Type;
 	
 	gmplsTunnelCHopEntry_t oG;

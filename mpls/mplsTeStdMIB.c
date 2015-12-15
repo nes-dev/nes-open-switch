@@ -173,7 +173,7 @@ mplsTeScalars_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oMplsTeScalars.u32Active);
 				break;
 			case MPLSTUNNELTEDISTPROTO:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oMplsTeScalars.au8TEDistProto, oMplsTeScalars.u16TEDistProto_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) oMplsTeScalars.au8TEDistProto, sizeof (oMplsTeScalars.au8TEDistProto));
 				break;
 			case MPLSTUNNELMAXHOPS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, oMplsTeScalars.u32MaxHops);
@@ -1389,15 +1389,14 @@ mplsTunnelTable_mapper (
 				table_entry->i32HoldingPrio = *request->requestvb->val.integer;
 				break;
 			case MPLSTUNNELSESSIONATTRIBUTES:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8SessionAttributes))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8SessionAttributes))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8SessionAttributes, sizeof (table_entry->au8SessionAttributes));
+					memcpy (pvOldDdata, table_entry->au8SessionAttributes, sizeof (table_entry->au8SessionAttributes));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
@@ -1593,7 +1592,7 @@ mplsTunnelTable_mapper (
 				memcpy (&table_entry->i32HoldingPrio, pvOldDdata, sizeof (table_entry->i32HoldingPrio));
 				break;
 			case MPLSTUNNELSESSIONATTRIBUTES:
-				memcpy (table_entry->au8SessionAttributes, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->au8SessionAttributes, pvOldDdata, sizeof (table_entry->au8SessionAttributes));
 				break;
 			case MPLSTUNNELLOCALPROTECTINUSE:
 				memcpy (&table_entry->u8LocalProtectInUse, pvOldDdata, sizeof (table_entry->u8LocalProtectInUse));
@@ -1924,10 +1923,8 @@ mplsTunnelHopTable_mapper (
 			case MPLSTUNNELHOPPREFIX:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Prefix);
 				break;
-				break;
 			case MPLSTUNNELHOPADDRUNNUM:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Unnum, table_entry->u16Unnum_len);
-				break;
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Unnum, sizeof (table_entry->au8Unnum));
 				break;
 			case MPLSTUNNELHOPTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
@@ -2181,22 +2178,19 @@ mplsTunnelHopTable_mapper (
 				table_entry->u32Prefix = *request->requestvb->val.integer;
 				break;
 			case MPLSTUNNELHOPADDRUNNUM:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8Unnum))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Unnum))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16Unnum_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8Unnum, sizeof (table_entry->au8Unnum));
+					memcpy (pvOldDdata, table_entry->au8Unnum, sizeof (table_entry->au8Unnum));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8Unnum, 0, sizeof (table_entry->au8Unnum));
 				memcpy (table_entry->au8Unnum, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16Unnum_len = request->requestvb->val_len;
 				break;
 			case MPLSTUNNELHOPTYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32Type))) == NULL)
@@ -2308,8 +2302,7 @@ mplsTunnelHopTable_mapper (
 				memcpy (&table_entry->u32Prefix, pvOldDdata, sizeof (table_entry->u32Prefix));
 				break;
 			case MPLSTUNNELHOPADDRUNNUM:
-				memcpy (table_entry->au8Unnum, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16Unnum_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8Unnum, pvOldDdata, sizeof (table_entry->au8Unnum));
 				break;
 			case MPLSTUNNELHOPTYPE:
 				memcpy (&table_entry->i32Type, pvOldDdata, sizeof (table_entry->i32Type));
@@ -3259,7 +3252,7 @@ mplsTunnelARHopTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Address, table_entry->u16Address_len);
 				break;
 			case MPLSTUNNELARHOPADDRUNNUM:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Unnum, table_entry->u16Unnum_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Unnum, sizeof (table_entry->au8Unnum));
 				break;
 				
 			default:
@@ -3511,7 +3504,7 @@ mplsTunnelCHopTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32Prefix);
 				break;
 			case MPLSTUNNELCHOPADDRUNNUM:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Unnum, table_entry->u16Unnum_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Unnum, sizeof (table_entry->au8Unnum));
 				break;
 			case MPLSTUNNELCHOPTYPE:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Type);
@@ -4251,15 +4244,14 @@ gmplsTunnelTable_mapper (
 				table_entry->u8UnnumIf = *request->requestvb->val.integer;
 				break;
 			case GMPLSTUNNELATTRIBUTES:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8Attributes))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Attributes))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8Attributes, sizeof (table_entry->au8Attributes));
+					memcpy (pvOldDdata, table_entry->au8Attributes, sizeof (table_entry->au8Attributes));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
@@ -4295,15 +4287,14 @@ gmplsTunnelTable_mapper (
 				table_entry->i32SwitchingType = *request->requestvb->val.integer;
 				break;
 			case GMPLSTUNNELLINKPROTECTION:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8LinkProtection))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8LinkProtection))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8LinkProtection, sizeof (table_entry->au8LinkProtection));
+					memcpy (pvOldDdata, table_entry->au8LinkProtection, sizeof (table_entry->au8LinkProtection));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
@@ -4495,15 +4486,14 @@ gmplsTunnelTable_mapper (
 				table_entry->u16SendPathNotifyRecipient_len = request->requestvb->val_len;
 				break;
 			case GMPLSTUNNELADMINSTATUSFLAGS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8AdminStatusFlags))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8AdminStatusFlags))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8AdminStatusFlags, sizeof (table_entry->au8AdminStatusFlags));
+					memcpy (pvOldDdata, table_entry->au8AdminStatusFlags, sizeof (table_entry->au8AdminStatusFlags));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
@@ -4547,7 +4537,7 @@ gmplsTunnelTable_mapper (
 				}
 				else
 				{
-					memcpy (table_entry->au8Attributes, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+					memcpy (table_entry->au8Attributes, pvOldDdata, sizeof (table_entry->au8Attributes));
 				}
 				break;
 			case GMPLSTUNNELLSPENCODING:
@@ -4580,7 +4570,7 @@ gmplsTunnelTable_mapper (
 				}
 				else
 				{
-					memcpy (table_entry->au8LinkProtection, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+					memcpy (table_entry->au8LinkProtection, pvOldDdata, sizeof (table_entry->au8LinkProtection));
 				}
 				break;
 			case GMPLSTUNNELGPID:
@@ -4727,7 +4717,7 @@ gmplsTunnelTable_mapper (
 				}
 				else
 				{
-					memcpy (table_entry->au8AdminStatusFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+					memcpy (table_entry->au8AdminStatusFlags, pvOldDdata, sizeof (table_entry->au8AdminStatusFlags));
 				}
 				break;
 			}
