@@ -77,6 +77,16 @@ enum
 	xStorageType_readOnly_c = 5,
 };
 
+#define xOperStatus_isUp(_a)\
+(\
+	(_a) == xOperStatus_up_c || (_a) == xOperStatus_testing_c\
+)
+
+#define xRowStatus_isActive(_a)\
+(\
+	(_a) == xRowStatus_active_c || (_a) == xRowStatus_notReady_c\
+)
+
 typedef unsigned long xOid_t;
 
 typedef struct xObjectId_t

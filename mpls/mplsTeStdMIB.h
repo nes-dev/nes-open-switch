@@ -1029,6 +1029,8 @@ mplsTunnelEntry_t * mplsTunnelTable_createExt (
 bool mplsTunnelTable_removeExt (mplsTunnelEntry_t *poEntry);
 bool mplsTunnelTable_createHier (mplsTunnelEntry_t *poEntry);
 bool mplsTunnelTable_removeHier (mplsTunnelEntry_t *poEntry);
+bool mplsTunnelOperStatus_handler (
+	mplsTunnelEntry_t *poEntry, uint8_t u8OperStatus, bool bPropagate);
 bool mplsTunnelRowStatus_handler (
 	mplsTunnelEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC

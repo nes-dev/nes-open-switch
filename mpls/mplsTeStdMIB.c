@@ -23,6 +23,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include "mplsLsrStdMIB.h"
 #include "mplsTeStdMIB.h"
 #include "mplsTeExtStdMIB.h"
 #include "neMplsTeMIB.h"
@@ -774,6 +775,67 @@ mplsTunnelTable_removeHier (
 // mplsTunnelTable_removeHier_cleanup:
 	
 	return bRetCode;
+}
+
+bool
+mplsTunnelOperStatus_handler (
+	mplsTunnelEntry_t *poEntry, uint8_t u8OperStatus, bool bPropagate)
+{
+	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8OperStatus & xOperStatus_mask_c;
+	
+	if (!xRowStatus_isActive (poEntry->u8RowStatus))
+	{
+		goto mplsTunnelOperStatus_handler_success;
+	}
+	if (poEntry->i32OperStatus == u8RealStatus && !bPropagate)
+	{
+		goto mplsTunnelOperStatus_handler_success;
+	}
+	
+	switch (u8RealStatus)
+	{
+	case xOperStatus_up_c:
+	case xOperStatus_testing_c:
+	{
+		register uint8_t *pau8InIndex = NULL;
+		register size_t u16InIndex_len = 0;
+		register uint8_t *pau8OutIndex = NULL;
+		register size_t u16OutIndex_len = 0;
+		register mplsXCEntry_t *poXC = NULL;
+		
+		while (
+			(poXC = mplsXCTable_getNextIndex (poEntry->oK.au8XCIndex, poEntry->oK.u16XCIndex_len, pau8InIndex, u16InIndex_len, pau8OutIndex, u16OutIndex_len)) != NULL &&
+			xBinCmp (poXC->au8Index, poEntry->oK.au8XCIndex, poXC->u16Index_len, poEntry->oK.u16XCIndex_len) == 0)
+		{
+			pau8InIndex = poXC->au8InSegmentIndex;
+			u16InIndex_len = poXC->u16InSegmentIndex_len;
+			pau8OutIndex = poXC->au8OutSegmentIndex;
+			u16OutIndex_len = poXC->u16OutSegmentIndex_len;
+			
+			if (!xOperStatus_isUp (poEntry->i32OperStatus))
+			{
+				goto mplsTunnelOperStatus_handler_success;
+			}
+		}
+	}
+	case xOperStatus_down_c:
+		/*if (!mplsTunnelOperStatus_update (poEntry, u8RealStatus, bPropagate))
+		{
+			goto mplsTunnelOperStatus_handler_cleanup;
+		}*/
+		
+		poEntry->i32OperStatus = u8RealStatus;
+		break;
+	}
+	
+mplsTunnelOperStatus_handler_success:
+	
+	bRetCode = true;
+	
+// mplsTunnelOperStatus_handler_cleanup:
+	
+	return bRetCode || (u8OperStatus & xOperStatus_fromParent_c);
 }
 
 bool
