@@ -191,8 +191,8 @@ Netsnmp_Node_Handler mplsInSegmentPerfTable_mapper;
 typedef struct mplsOutSegmentPerfEntry_t
 {
 	/* Index values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
+// 	uint8_t au8Index[24];
+// 	size_t u16Index_len;	/* # of uint8_t elements */
 	
 	/* Column values */
 	uint32_t u32Octets;
@@ -202,10 +202,10 @@ typedef struct mplsOutSegmentPerfEntry_t
 	uint64_t u64HCOctets;
 	uint32_t u32DiscontinuityTime;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } mplsOutSegmentPerfEntry_t;
 
-extern xBTree_t oMplsOutSegmentPerfTable_BTree;
+// extern xBTree_t oMplsOutSegmentPerfTable_BTree;
 
 /* mplsOutSegmentPerfTable table mapper */
 void mplsOutSegmentPerfTable_init (void);
@@ -308,17 +308,16 @@ enum
 typedef struct gmplsInterfaceEntry_t
 {
 	/* Index values */
-	uint32_t u32Index;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8SignalingCaps[1];
-	size_t u16SignalingCaps_len;	/* # of uint8_t elements */
 	uint32_t u32RsvpHelloPeriod;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } gmplsInterfaceEntry_t;
 
-extern xBTree_t oGmplsInterfaceTable_BTree;
+// extern xBTree_t oGmplsInterfaceTable_BTree;
 
 /* gmplsInterfaceTable table mapper */
 void gmplsInterfaceTable_init (void);
@@ -398,17 +397,17 @@ enum
 typedef struct gmplsOutSegmentEntry_t
 {
 	/* Index values */
-	uint8_t au8Index[24];
-	size_t u16Index_len;	/* # of uint8_t elements */
+// 	uint8_t au8Index[24];
+// 	size_t u16Index_len;	/* # of uint8_t elements */
 	
 	/* Column values */
 	int32_t i32Direction;
 	uint32_t u32TTLDecrement;
 	
-	xBTree_Node_t oBTreeNode;
+// 	xBTree_Node_t oBTreeNode;
 } gmplsOutSegmentEntry_t;
 
-extern xBTree_t oGmplsOutSegmentTable_BTree;
+// extern xBTree_t oGmplsOutSegmentTable_BTree;
 
 /* gmplsOutSegmentTable table mapper */
 void gmplsOutSegmentTable_init (void);
@@ -460,7 +459,6 @@ typedef struct mplsInterfaceEntry_t
 	uint32_t u32TotalBandwidth;
 	uint32_t u32AvailableBandwidth;
 	uint8_t au8LabelParticipationType[1];
-	size_t u16LabelParticipationType_len;	/* # of uint8_t elements */
 	
 	mplsInterfacePerfEntry_t oPerf;
 	gmplsInterfaceEntry_t oG;
@@ -468,8 +466,8 @@ typedef struct mplsInterfaceEntry_t
 	int32_t i32Mtu;
 	uint8_t u8AdminStatus;
 	uint8_t u8OperStatus;
-	uint8_t au8AdminFlags[3];
-	uint8_t au8OperFlags[3];
+	uint8_t au8AdminFlags[4];
+	uint8_t au8OperFlags[4];
 	uint8_t au8Speed[8];
 	uint8_t u8RowStatus;
 	
@@ -599,7 +597,6 @@ typedef struct mplsInSegmentEntry_t
 	int32_t i32NPop;
 	int32_t i32AddrFamily;
 	uint8_t au8XCIndex[24];
-	size_t u16XCIndex_len;	/* # of uint8_t elements */
 	int32_t i32Owner;
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
@@ -709,10 +706,9 @@ typedef struct mplsOutSegmentEntry_t
 	uint32_t u32Interface;
 	uint8_t u8PushTopLabel;
 	int32_t i32NextHopAddrType;
-	uint8_t au8NextHopAddr[255];
+	uint8_t au8NextHopAddr[20];
 	size_t u16NextHopAddr_len;	/* # of uint8_t elements */
 	uint8_t au8XCIndex[24];
-	size_t u16XCIndex_len;	/* # of uint8_t elements */
 	int32_t i32Owner;
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;

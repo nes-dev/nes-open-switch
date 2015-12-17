@@ -407,6 +407,7 @@ mplsInterfaceTable_removeExt (mplsInterfaceEntry_t *poEntry)
 		goto mplsInterfaceTable_removeExt_cleanup;
 	}
 	mplsInterfaceTable_removeEntry (poEntry);
+	
 	bRetCode = true;
 	
 mplsInterfaceTable_removeExt_cleanup:
@@ -552,7 +553,7 @@ mplsInterfaceTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32AvailableBandwidth);
 				break;
 			case MPLSINTERFACELABELPARTICIPATIONTYPE:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LabelParticipationType, table_entry->u16LabelParticipationType_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8LabelParticipationType, sizeof (table_entry->au8LabelParticipationType));
 				break;
 				
 			default:
@@ -979,6 +980,7 @@ mplsInSegmentTable_removeExt (mplsInSegmentEntry_t *poEntry)
 		goto mplsInSegmentTable_removeExt_cleanup;
 	}
 	mplsInSegmentTable_removeEntry (poEntry);
+	
 	bRetCode = true;
 	
 mplsInSegmentTable_removeExt_cleanup:
@@ -1187,7 +1189,7 @@ mplsInSegmentTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32AddrFamily);
 				break;
 			case MPLSINSEGMENTXCINDEX:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8XCIndex, table_entry->u16XCIndex_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8XCIndex, sizeof (table_entry->au8XCIndex));
 				break;
 			case MPLSINSEGMENTOWNER:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Owner);
@@ -2073,7 +2075,7 @@ mplsOutSegmentTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8NextHopAddr, table_entry->u16NextHopAddr_len);
 				break;
 			case MPLSOUTSEGMENTXCINDEX:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8XCIndex, table_entry->u16XCIndex_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8XCIndex, sizeof (table_entry->au8XCIndex));
 				break;
 			case MPLSOUTSEGMENTOWNER:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Owner);
@@ -3910,7 +3912,7 @@ gmplsInterfaceTable_mapper (
 			switch (table_info->colnum)
 			{
 			case GMPLSINTERFACESIGNALINGCAPS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8SignalingCaps, table_entry->u16SignalingCaps_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8SignalingCaps, sizeof (table_entry->au8SignalingCaps));
 				break;
 			case GMPLSINTERFACERSVPHELLOPERIOD:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32RsvpHelloPeriod);
@@ -3999,22 +4001,19 @@ gmplsInterfaceTable_mapper (
 			switch (table_info->colnum)
 			{
 			case GMPLSINTERFACESIGNALINGCAPS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8SignalingCaps))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8SignalingCaps))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16SignalingCaps_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8SignalingCaps, sizeof (table_entry->au8SignalingCaps));
+					memcpy (pvOldDdata, table_entry->au8SignalingCaps, sizeof (table_entry->au8SignalingCaps));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8SignalingCaps, 0, sizeof (table_entry->au8SignalingCaps));
 				memcpy (table_entry->au8SignalingCaps, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16SignalingCaps_len = request->requestvb->val_len;
 				break;
 			case GMPLSINTERFACERSVPHELLOPERIOD:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32RsvpHelloPeriod))) == NULL)
@@ -4056,8 +4055,7 @@ gmplsInterfaceTable_mapper (
 				}
 				else
 				{
-					memcpy (table_entry->au8SignalingCaps, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16SignalingCaps_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+					memcpy (table_entry->au8SignalingCaps, pvOldDdata, sizeof (table_entry->au8SignalingCaps));
 				}
 				break;
 			case GMPLSINTERFACERSVPHELLOPERIOD:
@@ -4766,7 +4764,6 @@ mplsXCUp_trap (void)
 	extern oid mplsXCUp_oid[];
 	netsnmp_variable_list *var_list = NULL;
 	oid mplsXCOperStatus_oid[] = {1,3,6,1,2,1,10,166,2,1,10,1,10, /* insert index here */};
-//	oid mplsXCOperStatus_oid[] = {1,3,6,1,2,1,10,166,2,1,10,1,10, /* insert index here */};
 	
 	/*
 	 * Set the snmpTrapOid.0 value
@@ -4811,7 +4808,6 @@ mplsXCDown_trap (void)
 	extern oid mplsXCDown_oid[];
 	netsnmp_variable_list *var_list = NULL;
 	oid mplsXCOperStatus_oid[] = {1,3,6,1,2,1,10,166,2,1,10,1,10, /* insert index here */};
-//	oid mplsXCOperStatus_oid[] = {1,3,6,1,2,1,10,166,2,1,10,1,10, /* insert index here */};
 	
 	/*
 	 * Set the snmpTrapOid.0 value
