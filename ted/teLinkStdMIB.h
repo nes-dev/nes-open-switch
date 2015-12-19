@@ -132,7 +132,6 @@ typedef struct teLinkSwCapEntry_t
 	int32_t i32Type;
 	int32_t i32Encoding;
 	uint8_t au8MinLspBandwidth[8];
-	size_t u16MinLspBandwidth_len;	/* # of uint8_t elements */
 	uint8_t au8MaxLspBandwidthPrio[8][8];
 	uint32_t u32InterfaceMtu;
 	int32_t i32Indication;
@@ -266,7 +265,6 @@ typedef struct teLinkBandwidthEntry_t
 	
 	/* Column values */
 	uint8_t au8Unreserved[8];
-	size_t u16Unreserved_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
@@ -377,7 +375,6 @@ typedef struct componentLinkSwCapEntry_t
 	int32_t i32Type;
 	int32_t i32Encoding;
 	uint8_t au8MinLspBandwidth[8];
-	size_t u16MinLspBandwidth_len;	/* # of uint8_t elements */
 	uint8_t au8MaxLspBandwidthPrio[8][8];
 	uint32_t u32InterfaceMtu;
 	int32_t i32Indication;
@@ -587,7 +584,6 @@ typedef struct teLinkEntry_t
 	size_t u16RemoteIpAddr_len;	/* # of uint8_t elements */
 	uint32_t u32Metric;
 	uint8_t au8MaxResBandwidth[8];
-	size_t u16MaxResBandwidth_len;	/* # of uint8_t elements */
 	int32_t i32ProtectionType;
 	uint32_t u32WorkingPriority;
 	uint32_t u32ResourceClass;
