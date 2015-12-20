@@ -132,7 +132,7 @@ typedef struct teLinkSwCapEntry_t
 	int32_t i32Type;
 	int32_t i32Encoding;
 	uint8_t au8MinLspBandwidth[8];
-	uint8_t au8MaxLspBandwidthPrio[8][8];
+	uint8_t au8MaxLspBandwidth[8][8];
 	uint32_t u32InterfaceMtu;
 	int32_t i32Indication;
 	uint8_t u8RowStatus;

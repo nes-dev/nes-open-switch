@@ -1082,28 +1082,28 @@ teLinkSwCapTable_mapper (
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MinLspBandwidth, sizeof (table_entry->au8MinLspBandwidth));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO0:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio[0], sizeof (table_entry->au8MaxLspBandwidthPrio[0]));
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidth[0], sizeof (table_entry->au8MaxLspBandwidth[0]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO1:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio[1], sizeof (table_entry->au8MaxLspBandwidthPrio[1]));
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidth[1], sizeof (table_entry->au8MaxLspBandwidth[1]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO2:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio[2], sizeof (table_entry->au8MaxLspBandwidthPrio[2]));
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidth[2], sizeof (table_entry->au8MaxLspBandwidth[2]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO3:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio[3], sizeof (table_entry->au8MaxLspBandwidthPrio[3]));
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidth[3], sizeof (table_entry->au8MaxLspBandwidth[3]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO4:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio[4], sizeof (table_entry->au8MaxLspBandwidthPrio[4]));
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidth[4], sizeof (table_entry->au8MaxLspBandwidth[4]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO5:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio[5], sizeof (table_entry->au8MaxLspBandwidthPrio[5]));
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidth[5], sizeof (table_entry->au8MaxLspBandwidth[5]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO6:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio[6], sizeof (table_entry->au8MaxLspBandwidthPrio[6]));
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidth[6], sizeof (table_entry->au8MaxLspBandwidth[6]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO7:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidthPrio[7], sizeof (table_entry->au8MaxLspBandwidthPrio[7]));
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MaxLspBandwidth[7], sizeof (table_entry->au8MaxLspBandwidth[7]));
 				break;
 			case TELINKSWCAPINTERFACEMTU:
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32InterfaceMtu);
@@ -1161,7 +1161,7 @@ teLinkSwCapTable_mapper (
 				}
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO0:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio[0]));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidth[0]));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1169,7 +1169,7 @@ teLinkSwCapTable_mapper (
 				}
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO1:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio[1]));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidth[1]));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1177,7 +1177,7 @@ teLinkSwCapTable_mapper (
 				}
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO2:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio[2]));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidth[2]));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1185,7 +1185,7 @@ teLinkSwCapTable_mapper (
 				}
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO3:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio[3]));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidth[3]));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1193,7 +1193,7 @@ teLinkSwCapTable_mapper (
 				}
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO4:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio[4]));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidth[4]));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1201,7 +1201,7 @@ teLinkSwCapTable_mapper (
 				}
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO5:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio[5]));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidth[5]));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1209,7 +1209,7 @@ teLinkSwCapTable_mapper (
 				}
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO6:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio[6]));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidth[6]));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1217,7 +1217,7 @@ teLinkSwCapTable_mapper (
 				}
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO7:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidthPrio[7]));
+				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8MaxLspBandwidth[7]));
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1397,140 +1397,124 @@ teLinkSwCapTable_mapper (
 				memcpy (table_entry->au8MinLspBandwidth, request->requestvb->val.string, request->requestvb->val_len);
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO0:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio[0]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8MaxLspBandwidth[0]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = sizeof (table_entry->au8MaxLspBandwidthPrio[0]);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio[0], sizeof (table_entry->au8MaxLspBandwidthPrio[0]));
+					memcpy (pvOldDdata, table_entry->au8MaxLspBandwidth[0], sizeof (table_entry->au8MaxLspBandwidth[0]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8MaxLspBandwidthPrio[0], 0, sizeof (table_entry->au8MaxLspBandwidthPrio[0]));
-				memcpy (table_entry->au8MaxLspBandwidthPrio[0], request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->au8MaxLspBandwidth[0], 0, sizeof (table_entry->au8MaxLspBandwidth[0]));
+				memcpy (table_entry->au8MaxLspBandwidth[0], request->requestvb->val.string, request->requestvb->val_len);
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO1:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio[1]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8MaxLspBandwidth[1]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = sizeof (table_entry->au8MaxLspBandwidthPrio[1]);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio[1], sizeof (table_entry->au8MaxLspBandwidthPrio[1]));
+					memcpy (pvOldDdata, table_entry->au8MaxLspBandwidth[1], sizeof (table_entry->au8MaxLspBandwidth[1]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8MaxLspBandwidthPrio[1], 0, sizeof (table_entry->au8MaxLspBandwidthPrio[1]));
-				memcpy (table_entry->au8MaxLspBandwidthPrio[1], request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->au8MaxLspBandwidth[1], 0, sizeof (table_entry->au8MaxLspBandwidth[1]));
+				memcpy (table_entry->au8MaxLspBandwidth[1], request->requestvb->val.string, request->requestvb->val_len);
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO2:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio[2]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8MaxLspBandwidth[2]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = sizeof (table_entry->au8MaxLspBandwidthPrio[2]);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio[2], sizeof (table_entry->au8MaxLspBandwidthPrio[2]));
+					memcpy (pvOldDdata, table_entry->au8MaxLspBandwidth[2], sizeof (table_entry->au8MaxLspBandwidth[2]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8MaxLspBandwidthPrio[2], 0, sizeof (table_entry->au8MaxLspBandwidthPrio[2]));
-				memcpy (table_entry->au8MaxLspBandwidthPrio[2], request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->au8MaxLspBandwidth[2], 0, sizeof (table_entry->au8MaxLspBandwidth[2]));
+				memcpy (table_entry->au8MaxLspBandwidth[2], request->requestvb->val.string, request->requestvb->val_len);
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO3:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio[3]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8MaxLspBandwidth[3]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = sizeof (table_entry->au8MaxLspBandwidthPrio[3]);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio[3], sizeof (table_entry->au8MaxLspBandwidthPrio[3]));
+					memcpy (pvOldDdata, table_entry->au8MaxLspBandwidth[3], sizeof (table_entry->au8MaxLspBandwidth[3]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8MaxLspBandwidthPrio[3], 0, sizeof (table_entry->au8MaxLspBandwidthPrio[3]));
-				memcpy (table_entry->au8MaxLspBandwidthPrio[3], request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->au8MaxLspBandwidth[3], 0, sizeof (table_entry->au8MaxLspBandwidth[3]));
+				memcpy (table_entry->au8MaxLspBandwidth[3], request->requestvb->val.string, request->requestvb->val_len);
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO4:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio[4]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8MaxLspBandwidth[4]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = sizeof (table_entry->au8MaxLspBandwidthPrio[4]);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio[4], sizeof (table_entry->au8MaxLspBandwidthPrio[4]));
+					memcpy (pvOldDdata, table_entry->au8MaxLspBandwidth[4], sizeof (table_entry->au8MaxLspBandwidth[4]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8MaxLspBandwidthPrio[4], 0, sizeof (table_entry->au8MaxLspBandwidthPrio[4]));
-				memcpy (table_entry->au8MaxLspBandwidthPrio[4], request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->au8MaxLspBandwidth[4], 0, sizeof (table_entry->au8MaxLspBandwidth[4]));
+				memcpy (table_entry->au8MaxLspBandwidth[4], request->requestvb->val.string, request->requestvb->val_len);
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO5:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio[5]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8MaxLspBandwidth[5]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = sizeof (table_entry->au8MaxLspBandwidthPrio[5]);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio[5], sizeof (table_entry->au8MaxLspBandwidthPrio[5]));
+					memcpy (pvOldDdata, table_entry->au8MaxLspBandwidth[5], sizeof (table_entry->au8MaxLspBandwidth[5]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8MaxLspBandwidthPrio[5], 0, sizeof (table_entry->au8MaxLspBandwidthPrio[5]));
-				memcpy (table_entry->au8MaxLspBandwidthPrio[5], request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->au8MaxLspBandwidth[5], 0, sizeof (table_entry->au8MaxLspBandwidth[5]));
+				memcpy (table_entry->au8MaxLspBandwidth[5], request->requestvb->val.string, request->requestvb->val_len);
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO6:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio[6]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8MaxLspBandwidth[6]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = sizeof (table_entry->au8MaxLspBandwidthPrio[6]);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio[6], sizeof (table_entry->au8MaxLspBandwidthPrio[6]));
+					memcpy (pvOldDdata, table_entry->au8MaxLspBandwidth[6], sizeof (table_entry->au8MaxLspBandwidth[6]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8MaxLspBandwidthPrio[6], 0, sizeof (table_entry->au8MaxLspBandwidthPrio[6]));
-				memcpy (table_entry->au8MaxLspBandwidthPrio[6], request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->au8MaxLspBandwidth[6], 0, sizeof (table_entry->au8MaxLspBandwidth[6]));
+				memcpy (table_entry->au8MaxLspBandwidth[6], request->requestvb->val.string, request->requestvb->val_len);
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO7:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8MaxLspBandwidthPrio[7]))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8MaxLspBandwidth[7]))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = sizeof (table_entry->au8MaxLspBandwidthPrio[7]);
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8MaxLspBandwidthPrio[7], sizeof (table_entry->au8MaxLspBandwidthPrio[7]));
+					memcpy (pvOldDdata, table_entry->au8MaxLspBandwidth[7], sizeof (table_entry->au8MaxLspBandwidth[7]));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8MaxLspBandwidthPrio[7], 0, sizeof (table_entry->au8MaxLspBandwidthPrio[7]));
-				memcpy (table_entry->au8MaxLspBandwidthPrio[7], request->requestvb->val.string, request->requestvb->val_len);
+				memset (table_entry->au8MaxLspBandwidth[7], 0, sizeof (table_entry->au8MaxLspBandwidth[7]));
+				memcpy (table_entry->au8MaxLspBandwidth[7], request->requestvb->val.string, request->requestvb->val_len);
 				break;
 			case TELINKSWCAPINTERFACEMTU:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32InterfaceMtu))) == NULL)
@@ -1623,28 +1607,28 @@ teLinkSwCapTable_mapper (
 				memcpy (table_entry->au8MinLspBandwidth, pvOldDdata, sizeof (table_entry->au8MinLspBandwidth));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO0:
-				memcpy (table_entry->au8MaxLspBandwidthPrio[0], ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->au8MaxLspBandwidth[0], pvOldDdata, sizeof (table_entry->au8MaxLspBandwidth[0]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO1:
-				memcpy (table_entry->au8MaxLspBandwidthPrio[1], ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->au8MaxLspBandwidth[1], pvOldDdata, sizeof (table_entry->au8MaxLspBandwidth[1]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO2:
-				memcpy (table_entry->au8MaxLspBandwidthPrio[2], ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->au8MaxLspBandwidth[2], pvOldDdata, sizeof (table_entry->au8MaxLspBandwidth[2]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO3:
-				memcpy (table_entry->au8MaxLspBandwidthPrio[3], ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->au8MaxLspBandwidth[3], pvOldDdata, sizeof (table_entry->au8MaxLspBandwidth[3]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO4:
-				memcpy (table_entry->au8MaxLspBandwidthPrio[4], ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->au8MaxLspBandwidth[4], pvOldDdata, sizeof (table_entry->au8MaxLspBandwidth[4]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO5:
-				memcpy (table_entry->au8MaxLspBandwidthPrio[5], ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->au8MaxLspBandwidth[5], pvOldDdata, sizeof (table_entry->au8MaxLspBandwidth[5]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO6:
-				memcpy (table_entry->au8MaxLspBandwidthPrio[6], ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->au8MaxLspBandwidth[6], pvOldDdata, sizeof (table_entry->au8MaxLspBandwidth[6]));
 				break;
 			case TELINKSWCAPMAXLSPBANDWIDTHPRIO7:
-				memcpy (table_entry->au8MaxLspBandwidthPrio[7], ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
+				memcpy (table_entry->au8MaxLspBandwidth[7], pvOldDdata, sizeof (table_entry->au8MaxLspBandwidth[7]));
 				break;
 			case TELINKSWCAPINTERFACEMTU:
 				memcpy (&table_entry->u32InterfaceMtu, pvOldDdata, sizeof (table_entry->u32InterfaceMtu));
