@@ -77,6 +77,11 @@ enum
 	xStorageType_readOnly_c = 5,
 };
 
+#define xAdminStatus_isUp(_a)\
+(\
+	(_a) == xAdminStatus_up_c || (_a) == xAdminStatus_testing_c\
+)
+
 #define xOperStatus_isUp(_a)\
 (\
 	(_a) == xOperStatus_up_c || (_a) == xOperStatus_testing_c\

@@ -784,11 +784,11 @@ mplsTunnelOperStatus_handler (
 	register bool bRetCode = false;
 	register uint8_t u8RealStatus = u8OperStatus & xOperStatus_mask_c;
 	
-	if (!xRowStatus_isActive (poEntry->u8RowStatus))
+	if (poEntry->i32OperStatus == u8RealStatus && !bPropagate)
 	{
 		goto mplsTunnelOperStatus_handler_success;
 	}
-	if (poEntry->i32OperStatus == u8RealStatus && !bPropagate)
+	if (!xRowStatus_isActive (poEntry->u8RowStatus))
 	{
 		goto mplsTunnelOperStatus_handler_success;
 	}
@@ -798,25 +798,34 @@ mplsTunnelOperStatus_handler (
 	case xOperStatus_up_c:
 	case xOperStatus_testing_c:
 	{
-		register uint8_t *pau8InIndex = NULL;
-		register size_t u16InIndex_len = 0;
-		register uint8_t *pau8OutIndex = NULL;
-		register size_t u16OutIndex_len = 0;
+		if (!xAdminStatus_isUp (poEntry->i32AdminStatus))
+		{
+			goto mplsTunnelOperStatus_handler_success;
+		}
+		
+		register bool bXCReady = false;
+		register uint8_t *pau8InIndex = NULL, *pau8OutIndex = NULL;
+		register size_t u16InIndex_len = 0, u16OutIndex_len = 0;
 		register mplsXCEntry_t *poXC = NULL;
 		
 		while (
 			(poXC = mplsXCTable_getNextIndex (poEntry->oK.au8XCIndex, poEntry->oK.u16XCIndex_len, pau8InIndex, u16InIndex_len, pau8OutIndex, u16OutIndex_len)) != NULL &&
 			xBinCmp (poXC->au8Index, poEntry->oK.au8XCIndex, poXC->u16Index_len, poEntry->oK.u16XCIndex_len) == 0)
 		{
+			if (!(bXCReady = xOperStatus_isUp (poXC->i32OperStatus)))
+			{
+				break;
+			}
+			
 			pau8InIndex = poXC->au8InSegmentIndex;
 			u16InIndex_len = poXC->u16InSegmentIndex_len;
 			pau8OutIndex = poXC->au8OutSegmentIndex;
 			u16OutIndex_len = poXC->u16OutSegmentIndex_len;
-			
-			if (!xOperStatus_isUp (poEntry->i32OperStatus))
-			{
-				goto mplsTunnelOperStatus_handler_success;
-			}
+		}
+		
+		if (!bXCReady)
+		{
+			goto mplsTunnelOperStatus_handler_success;
 		}
 	}
 	case xOperStatus_down_c:
@@ -827,13 +836,16 @@ mplsTunnelOperStatus_handler (
 		
 		poEntry->i32OperStatus = u8RealStatus;
 		break;
+		
+	default:
+		goto mplsTunnelOperStatus_handler_cleanup;
 	}
 	
 mplsTunnelOperStatus_handler_success:
 	
 	bRetCode = true;
 	
-// mplsTunnelOperStatus_handler_cleanup:
+mplsTunnelOperStatus_handler_cleanup:
 	
 	return bRetCode || (u8OperStatus & xOperStatus_fromParent_c);
 }
