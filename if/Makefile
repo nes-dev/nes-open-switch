@@ -31,7 +31,7 @@ include ${MK_COMMON}
 
 CFLAGS +=
 
-SNMP_SRC := ifMIB.c
+SNMP_SRC := ifMIB.c neXcMIB.c
 MODULE_SRC := if_main.c ifUtils.c ${SNMP_SRC}
 
 $(call MODULE_DEP,${MODULE_SRC},${CFLAGS},${INCLUDES})

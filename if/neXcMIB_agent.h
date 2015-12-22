@@ -17,70 +17,25 @@
  *  License for the specific language governing permissions and limitations
  *  under the License.
  */
-//set ts=4 sw=4
 
-#ifndef __IF_MAIN_C__
-#	define __IF_MAIN_C__
+#ifndef __NEXCMIB_AGENT_H__
+#	define __NEXCMIB_AGENT_H__
 
-
-#include "ifMIB_agent.h"
-#include "neXcMIB_agent.h"
-
-#include "if_ext.h"
-#include "if_defines.h"
-#include "switch_ext.h"
-
-#include "lib/thread.h"
+#	ifdef __cplusplus
+extern "C" {
+#	endif
 
 
-static xThreadInfo_t oIfThread =
-{
-	.u32Index = XTHREAD_ID (ModuleId_if_c, 0),
-	.u8SchedPolicy = SCHED_RR,
-	.u8Priority = 1,
-	.poStart = &if_start,
-};
+
+/**
+ *	agent MIB function
+ */
+void neXcMIB_init (void);
 
 
-void *
-if_main (void *pvArgv)
-{
-	register void *pvRetCode = NULL;
-	register uint32_t u32ModuleOp = (uintptr_t) pvArgv;
-	
-	switch (u32ModuleOp)
-	{
-	default:
-		break;
-		
-	case ModuleOp_start_c:
-		ifMIB_init ();
-		neXcMIB_init ();
-		
-		if (xThread_create (&oIfThread) == NULL)
-		{
-			If_log (xLog_err_c, "xThread_create() failed\n");
-			goto if_main_cleanup;
-		}
-		break;
-	}
-	
-	pvRetCode = (void*) true;
-	
-if_main_cleanup:
-	
-	return pvRetCode;
+
+#	ifdef __cplusplus
 }
+#	endif
 
-void *
-if_start (void *pvArgv)
-{
-	while (1)
-	{
-		xThread_sleep (1);
-	}
-	return NULL;
-}
-
-
-#endif	// __IF_MAIN_C__
+#endif /* __NEXCMIB_AGENT_H__ */
