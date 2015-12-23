@@ -1682,6 +1682,7 @@ neTedNodeTable_createEntry (
 	}
 	
 	poEntry->i32Type = neTedNodeType_node_c;
+	poEntry->u32PhysicalIndex = 0;
 	poEntry->u32Area = 0;
 	
 	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeTedNodeTable_BTree);
@@ -1839,8 +1840,8 @@ neTedNodeTable_mapper (
 			case NETEDNODEADDRESS:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Address, table_entry->u16Address_len);
 				break;
-			case NETEDNODEDATAPATHID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8DataPathId, table_entry->u16DataPathId_len);
+			case NETEDNODEPHYSICALINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32PhysicalIndex);
 				break;
 			case NETEDNODEADMINFLAGS:
 				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdminFlags, table_entry->u16AdminFlags_len);
@@ -1894,8 +1895,8 @@ neTedNodeTable_mapper (
 					return SNMP_ERR_NOERROR;
 				}
 				break;
-			case NETEDNODEDATAPATHID:
-				ret = netsnmp_check_vb_type_and_max_size (request->requestvb, ASN_OCTET_STR, sizeof (table_entry->au8DataPathId));
+			case NETEDNODEPHYSICALINDEX:
+				ret = netsnmp_check_vb_type (requests->requestvb, ASN_UNSIGNED);
 				if (ret != SNMP_ERR_NOERROR)
 				{
 					netsnmp_set_request_error (reqinfo, request, ret);
@@ -1938,7 +1939,7 @@ neTedNodeTable_mapper (
 			case NETEDNODETYPE:
 			case NETEDNODEADDRTYPE:
 			case NETEDNODEADDRESS:
-			case NETEDNODEDATAPATHID:
+			case NETEDNODEPHYSICALINDEX:
 			case NETEDNODEADMINFLAGS:
 			case NETEDNODEAREA:
 				if (table_entry == NULL)
@@ -1989,7 +1990,7 @@ neTedNodeTable_mapper (
 			case NETEDNODETYPE:
 			case NETEDNODEADDRTYPE:
 			case NETEDNODEADDRESS:
-			case NETEDNODEDATAPATHID:
+			case NETEDNODEPHYSICALINDEX:
 			case NETEDNODEADMINFLAGS:
 			case NETEDNODEAREA:
 				neTedNodeTable_removeEntry (table_entry);
@@ -2054,23 +2055,19 @@ neTedNodeTable_mapper (
 				memcpy (table_entry->au8Address, request->requestvb->val.string, request->requestvb->val_len);
 				table_entry->u16Address_len = request->requestvb->val_len;
 				break;
-			case NETEDNODEDATAPATHID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8DataPathId))) == NULL)
+			case NETEDNODEPHYSICALINDEX:
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u32PhysicalIndex))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16DataPathId_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8DataPathId, sizeof (table_entry->au8DataPathId));
+					memcpy (pvOldDdata, &table_entry->u32PhysicalIndex, sizeof (table_entry->u32PhysicalIndex));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8DataPathId, 0, sizeof (table_entry->au8DataPathId));
-				memcpy (table_entry->au8DataPathId, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16DataPathId_len = request->requestvb->val_len;
+				table_entry->u32PhysicalIndex = *request->requestvb->val.integer;
 				break;
 			case NETEDNODEADMINFLAGS:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8AdminFlags))) == NULL)
@@ -2155,7 +2152,7 @@ neTedNodeTable_mapper (
 					table_entry->u16Address_len = ((xOctetString_t*) pvOldDdata)->u16Len;
 				}
 				break;
-			case NETEDNODEDATAPATHID:
+			case NETEDNODEPHYSICALINDEX:
 				if (pvOldDdata == table_entry)
 				{
 					neTedNodeTable_removeEntry (table_entry);
@@ -2163,8 +2160,7 @@ neTedNodeTable_mapper (
 				}
 				else
 				{
-					memcpy (table_entry->au8DataPathId, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-					table_entry->u16DataPathId_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+					memcpy (&table_entry->u32PhysicalIndex, pvOldDdata, sizeof (table_entry->u32PhysicalIndex));
 				}
 				break;
 			case NETEDNODEADMINFLAGS:

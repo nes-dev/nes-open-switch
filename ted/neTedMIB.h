@@ -212,7 +212,7 @@ Netsnmp_Node_Handler mplsTeNodeIccMapTable_mapper;
 #define NETEDNODETYPE 2
 #define NETEDNODEADDRTYPE 3
 #define NETEDNODEADDRESS 4
-#define NETEDNODEDATAPATHID 5
+#define NETEDNODEPHYSICALINDEX 5
 #define NETEDNODEADMINFLAGS 6
 #define NETEDNODEOPERFLAGS 7
 #define NETEDNODEAREA 8
@@ -255,8 +255,7 @@ typedef struct neTedNodeEntry_t
 	int32_t i32AddrType;
 	uint8_t au8Address[20];
 	size_t u16Address_len;	/* # of uint8_t elements */
-	uint8_t au8DataPathId[8];
-	size_t u16DataPathId_len;	/* # of uint8_t elements */
+	uint32_t u32PhysicalIndex;
 	uint8_t au8AdminFlags[1];
 	size_t u16AdminFlags_len;	/* # of uint8_t elements */
 	uint8_t au8OperFlags[1];
