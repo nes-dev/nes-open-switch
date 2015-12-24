@@ -1058,6 +1058,8 @@ typedef struct mplsTeNodeEntry_t
 	uint8_t u8StorageType;
 	uint8_t u8RowStatus;
 	
+	neTedNodeEntry_t oNe;
+	
 	xBTree_Node_t oBTreeNode;
 } mplsTeNodeEntry_t;
 

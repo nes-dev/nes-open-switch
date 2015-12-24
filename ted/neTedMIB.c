@@ -1648,44 +1648,24 @@ neTedNodeTable_init (void)
 	/* Initialise the contents of the table here */
 }
 
-static int8_t
-neTedNodeTable_BTreeNodeCmp (
-	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
-{
-	register neTedNodeEntry_t *pEntry1 = xBTree_entry (pNode1, neTedNodeEntry_t, oBTreeNode);
-	register neTedNodeEntry_t *pEntry2 = xBTree_entry (pNode2, neTedNodeEntry_t, oBTreeNode);
-	
-	return
-		(pEntry1->u32Index < pEntry2->u32Index) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
-}
-
-xBTree_t oNeTedNodeTable_BTree = xBTree_initInline (&neTedNodeTable_BTreeNodeCmp);
-
 /* create a new row in the table */
 neTedNodeEntry_t *
 neTedNodeTable_createEntry (
 	uint32_t u32Index)
 {
 	register neTedNodeEntry_t *poEntry = NULL;
+	register mplsTeNodeEntry_t *poNode = NULL;
 	
-	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	if ((poNode = mplsTeNodeTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
-	
-	poEntry->u32Index = u32Index;
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTedNodeTable_BTree) != NULL)
-	{
-		xBuffer_free (poEntry);
-		return NULL;
-	}
+	poEntry = &poNode->oNe;
 	
 	poEntry->i32Type = neTedNodeType_node_c;
 	poEntry->u32PhysicalIndex = 0;
 	poEntry->u32Area = 0;
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeTedNodeTable_BTree);
 	return poEntry;
 }
 
@@ -1693,60 +1673,34 @@ neTedNodeEntry_t *
 neTedNodeTable_getByIndex (
 	uint32_t u32Index)
 {
-	register neTedNodeEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsTeNodeEntry_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poNode = mplsTeNodeTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeTedNodeTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neTedNodeEntry_t, oBTreeNode);
+	return &poNode->oNe;
 }
 
 neTedNodeEntry_t *
 neTedNodeTable_getNextIndex (
 	uint32_t u32Index)
 {
-	register neTedNodeEntry_t *poTmpEntry = NULL;
-	register xBTree_Node_t *poNode = NULL;
+	register mplsTeNodeEntry_t *poNode = NULL;
 	
-	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	if ((poNode = mplsTeNodeTable_getNextIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
 	
-	poTmpEntry->u32Index = u32Index;
-	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeTedNodeTable_BTree)) == NULL)
-	{
-		xBuffer_free (poTmpEntry);
-		return NULL;
-	}
-	
-	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neTedNodeEntry_t, oBTreeNode);
+	return &poNode->oNe;
 }
 
 /* remove a row from the table */
 void
 neTedNodeTable_removeEntry (neTedNodeEntry_t *poEntry)
 {
-	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeTedNodeTable_BTree) == NULL)
-	{
-		return;    /* Nothing to remove */
-	}
-	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeTedNodeTable_BTree);
-	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
 	return;
 }
 
@@ -1756,7 +1710,7 @@ neTedNodeTable_getFirst (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	*my_loop_context = xBTree_nodeGetFirst (&oNeTedNodeTable_BTree);
+	*my_loop_context = xBTree_nodeGetFirst (&oMplsTeNodeTable_BTree);
 	return neTedNodeTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
 }
 
@@ -1765,18 +1719,18 @@ neTedNodeTable_getNext (
 	void **my_loop_context, void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neTedNodeEntry_t *poEntry = NULL;
+	mplsTeNodeEntry_t *poEntry = NULL;
 	netsnmp_variable_list *idx = put_index_data;
 	
 	if (*my_loop_context == NULL)
 	{
 		return NULL;
 	}
-	poEntry = xBTree_entry (*my_loop_context, neTedNodeEntry_t, oBTreeNode);
+	poEntry = xBTree_entry (*my_loop_context, mplsTeNodeEntry_t, oBTreeNode);
 	
-	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32Index);
-	*my_data_context = (void*) poEntry;
-	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeTedNodeTable_BTree);
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32LocalId);
+	*my_data_context = (void*) &poEntry->oNe;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oMplsTeNodeTable_BTree);
 	return put_index_data;
 }
 
@@ -1785,17 +1739,17 @@ neTedNodeTable_get (
 	void **my_data_context,
 	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
 {
-	neTedNodeEntry_t *poEntry = NULL;
+	mplsTeNodeEntry_t *poEntry = NULL;
 	register netsnmp_variable_list *idx1 = put_index_data;
 	
-	poEntry = neTedNodeTable_getByIndex (
+	poEntry = mplsTeNodeTable_getByIndex (
 		*idx1->val.integer);
 	if (poEntry == NULL)
 	{
 		return false;
 	}
 	
-	*my_data_context = (void*) poEntry;
+	*my_data_context = (void*) &poEntry->oNe;
 	return true;
 }
 
