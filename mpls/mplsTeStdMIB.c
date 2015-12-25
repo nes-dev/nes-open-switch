@@ -717,6 +717,12 @@ mplsTunnelTable_createHier (
 		{
 			goto mplsTunnelTable_createHier_cleanup;
 		}
+		
+		poEntry->i32Role =
+			poNodeHead->oNe.u32PhysicalIndex != 0 && poNodeTail->oNe.u32PhysicalIndex == 0 ? mplsTunnelRole_head_c:
+			poNodeHead->oNe.u32PhysicalIndex == 0 && poNodeTail->oNe.u32PhysicalIndex == 0 ? mplsTunnelRole_transit_c:
+			poNodeHead->oNe.u32PhysicalIndex == 0 && poNodeTail->oNe.u32PhysicalIndex != 0 ? mplsTunnelRole_tail_c:
+			poNodeHead->oNe.u32PhysicalIndex != 0 && poNodeTail->oNe.u32PhysicalIndex != 0 ? mplsTunnelRole_headTail_c: 0;
 	}
 	
 	if (mplsTunnelPerfTable_createEntry (poEntry->u32Index, poEntry->u32Instance, poEntry->u32IngressLSRId, poEntry->u32EgressLSRId) == NULL)
