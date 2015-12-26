@@ -37,7 +37,7 @@ extern "C" {
 #include <stdint.h>
 
 
-typedef bool (neIfTypeCreateHandler_t) (ifEntry_t *poIfEntry, uint8_t u8RowStatus);
+typedef bool (neIfTypeRowHandler_t) (ifEntry_t *poIfEntry, uint8_t u8RowStatus);
 typedef bool (neIfTypeEnableHandler_t) (ifEntry_t *poIfEntry, int32_t i32AdminStatus);
 typedef bool (neIfTypeStatusHandler_t) (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked);
 typedef bool (neIfTypeStatusModifier_t) (ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate);
@@ -58,7 +58,7 @@ typedef struct neIfTypeEntry_t
 	/* Index values */
 	int32_t i32Type;
 	
-	neIfTypeCreateHandler_t *pfCreateHandler;
+	neIfTypeRowHandler_t *pfCreateHandler;
 	neIfTypeEnableHandler_t *pfEnableHandler;
 	neIfTypeStatusHandler_t *pfStatusHandler;
 	neIfTypeStatusModifier_t *pfStatusModifier;
@@ -97,10 +97,27 @@ void neIfStatus_removeEntry (
 	
 typedef xBTree_t neIfStatus_list_t;
 #define neIfStatus_list_init() xBTree_initInline (&neIfStatus_BTreeNodeCmp)
+#define neIfStatus_list_count(_pList) (xBTree_count (_pList))
 bool neIfStatus_modify (
 	uint32_t u32IfIndex, int32_t i32Type,
 	int32_t i32OperStatus, bool bPropagate, bool bLocked);
 extern neIfTypeStatusHandler_t neIfStatus_change;
+
+inline bool
+neIfStatus_cleanup (neIfStatus_list_t *pIfStatusList)
+{
+	register xBTree_Node_t *pNode = NULL;
+	register xBTree_Node_t *pNextNode = NULL;
+	
+	xBTree_scanSafe (pNode, pNextNode, pIfStatusList)
+	{
+		register neIfStatusEntry_t *poEntry = xBTree_entry (pNode, neIfStatusEntry_t, oBTreeNode);
+		
+		neIfStatus_removeEntry (poEntry, pIfStatusList);
+	}
+	
+	return true;
+}
 
 extern neIfTypeEnableHandler_t neIfEnable_modify;
 extern neIfTypeStatusHandler_t neIfTypeStatusRx;

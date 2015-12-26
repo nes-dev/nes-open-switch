@@ -202,7 +202,8 @@ neIfEnable_modify (
 		goto neIfEnable_modify_cleanup;
 	}
 	
-	bRetCode = poIfTypeEntry->pfEnableHandler == NULL ? true: poIfTypeEntry->pfEnableHandler (poEntry, i32AdminStatus);
+	bRetCode = poIfTypeEntry->pfEnableHandler == NULL ?
+		neIfStatus_modify (poEntry->u32Index, poEntry->i32Type, xOperStatus_up_c, false, true): poIfTypeEntry->pfEnableHandler (poEntry, i32AdminStatus);
 	
 neIfEnable_modify_cleanup:
 	
@@ -234,20 +235,29 @@ neIfStatus_getHigherLayerStatus (
 }
 
 bool
-neIfStatus_modify (uint32_t u32IfIndex, int32_t i32Type, int32_t i32OperStatus, bool bPropagate, bool bLocked)
+neIfStatus_modify (
+	uint32_t u32IfIndex, int32_t i32Type, int32_t i32OperStatus, bool bPropagate, bool bLocked)
 {
-	neIfStatus_list_t oNeIfStatus_list = neIfStatus_list_init ();
+	register bool bRetCode = false;
+	neIfStatus_list_t oIfStatusList = neIfStatus_list_init ();
 	
-	if (neIfStatus_createEntry (i32Type, i32OperStatus, u32IfIndex, &oNeIfStatus_list) == NULL)
+	if (neIfStatus_createEntry (i32Type, i32OperStatus, u32IfIndex, &oIfStatusList) == NULL)
 	{
-		return false;
+		goto neIfStatus_modify_cleanup;
 	}
 	
-	return neIfStatus_change (&oNeIfStatus_list, i32Type, bPropagate, bLocked);
+	bRetCode = neIfStatus_change (&oIfStatusList, i32Type, bPropagate, bLocked);
+	
+neIfStatus_modify_cleanup:
+	
+	neIfStatus_cleanup (&oIfStatusList);
+	
+	return bRetCode;
 }
 
 bool
-neIfStatus_change (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked)
+neIfStatus_change (
+	neIfStatus_list_t *pIfStatusList, int32_t i32Type, bool bPropagate, bool bLocked)
 {
 	register bool bRetCode = false;
 	register xBTree_Node_t *pNode = NULL;
@@ -260,7 +270,7 @@ neIfStatus_change (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLo
 		goto neIfStatus_change_aligned;
 	}
 	
-	xBTree_scanSafe (pNode, pNextNode, pIfTree)
+	xBTree_scanSafe (pNode, pNextNode, pIfStatusList)
 	{
 		register neIfStatusEntry_t *poEntry = xBTree_entry (pNode, neIfStatusEntry_t, oBTreeNode);
 		
@@ -280,7 +290,7 @@ neIfStatus_change (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLo
 		
 		if ((poIfEntry = ifTable_getByIndex (poEntry->u32Index)) == NULL)
 		{
-			xBTree_nodeRemove (&poEntry->oBTreeNode, pIfTree);
+			xBTree_nodeRemove (&poEntry->oBTreeNode, pIfStatusList);
 			xBuffer_free (poEntry);
 			continue;
 		}
@@ -290,26 +300,17 @@ neIfStatus_change (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLo
 		ifEntry_unLock (poIfEntry);
 		
 		i32Type = poEntry->i32Type;
-		xBTree_nodeUpdate (&poEntry->oBTreeNode, pIfTree);
+		xBTree_nodeUpdate (&poEntry->oBTreeNode, pIfStatusList);
 	}
 	
 	
 neIfStatus_change_aligned:
 	
-	bRetCode = neIfTypeStatusRx (pIfTree, i32Type, bPropagate, bLocked);
-	
+	bRetCode = neIfTypeStatusRx (pIfStatusList, i32Type, bPropagate, bLocked);
 	
 neIfStatus_change_cleanup:
 	
 	bLocked ? true: ifTable_unLock ();
-	
-	xBTree_scanSafe (pNode, pNextNode, pIfTree)
-	{
-		register neIfStatusEntry_t *poEntry = xBTree_entry (pNode, neIfStatusEntry_t, oBTreeNode);
-		
-		xBTree_nodeRemove (&poEntry->oBTreeNode, pIfTree);
-		xBuffer_free (poEntry);
-	}
 	
 	return bRetCode;
 }
