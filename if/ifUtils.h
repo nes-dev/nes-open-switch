@@ -38,9 +38,9 @@ extern "C" {
 
 
 typedef bool (neIfTypeRowHandler_t) (ifEntry_t *poIfEntry, uint8_t u8RowStatus);
-typedef bool (neIfTypeEnableHandler_t) (ifEntry_t *poIfEntry, int32_t i32AdminStatus);
+typedef bool (neIfTypeEnableHandler_t) (ifEntry_t *poIfEntry, uint8_t u8AdminStatus);
 typedef bool (neIfTypeStatusHandler_t) (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked);
-typedef bool (neIfTypeStatusModifier_t) (ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate);
+typedef bool (neIfTypeStatusModifier_t) (ifEntry_t *poIfEntry, uint8_t u8OperStatus, bool bPropagate);
 typedef bool (neIfTypeStackHandler_t) (ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry, uint8_t u8Action, bool bLocked);
 
 enum
@@ -77,7 +77,7 @@ bool neIfTypeTable_removeExt (neIfTypeEntry_t *poEntry);
 typedef struct neIfStatusEntry_t
 {
 	int32_t i32Type;
-	int32_t i32OperStatus;
+	uint8_t u8OperStatus;
 	uint32_t u32Index;
 	
 	xBTree_Node_t oBTreeNode;
@@ -88,7 +88,7 @@ extern int8_t neIfStatus_BTreeNodeCmp (
 	
 neIfStatusEntry_t * neIfStatus_createEntry (
 	int32_t i32Type,
-	int32_t i32OperStatus,
+	uint8_t u8OperStatus,
 	uint32_t u32Index,
 	xBTree_t *pIfStatus_BTree);
 void neIfStatus_removeEntry (
@@ -100,7 +100,7 @@ typedef xBTree_t neIfStatus_list_t;
 #define neIfStatus_list_count(_pList) (xBTree_count (_pList))
 bool neIfStatus_modify (
 	uint32_t u32IfIndex, int32_t i32Type,
-	int32_t i32OperStatus, bool bPropagate, bool bLocked);
+	uint8_t u8OperStatus, bool bPropagate, bool bLocked);
 extern neIfTypeStatusHandler_t neIfStatus_change;
 
 inline bool
