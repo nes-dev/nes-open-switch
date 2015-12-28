@@ -71,7 +71,7 @@ neIfTypeTable_createExt (
 	
 	poEntry->i32Type = i32Type;
 	
-	poEntry->pfCreateHandler = NULL;
+	poEntry->pfRowHandler = NULL;
 	poEntry->pfEnableHandler = NULL;
 	poEntry->pfStatusHandler = &neIfTypeStatusRx;
 	poEntry->pfStatusModifier = NULL;
@@ -202,8 +202,8 @@ neIfEnable_modify (
 		goto neIfEnable_modify_cleanup;
 	}
 	
-	bRetCode = poIfTypeEntry->pfEnableHandler == NULL ?
-		neIfStatus_modify (poEntry->u32Index, poEntry->i32Type, xOperStatus_up_c, false, true): poIfTypeEntry->pfEnableHandler (poEntry, u8AdminStatus);
+	bRetCode = poIfTypeEntry->pfEnableHandler == NULL && u8AdminStatus == xAdminStatus_up_c ?
+		neIfStatus_modify (poEntry->u32Index, poEntry->i32Type, u8AdminStatus, false, true): xCallback_tryExec (poIfTypeEntry->pfEnableHandler, poEntry, u8AdminStatus);
 	
 neIfEnable_modify_cleanup:
 	
@@ -331,10 +331,11 @@ neIfTypeStatusRx (
 	ifStack_rdLock ();
 	
 	
-	if ((poIfTypeEntry = neIfTypeTable_getByIndex (i32Type)) != NULL)
+	if ((poIfTypeEntry = neIfTypeTable_getByIndex (i32Type)) == NULL)
 	{
-		pfStatusModifier = poIfTypeEntry->pfStatusModifier;
+		goto neIfTypeStatusRx_cleanup;
 	}
+	pfStatusModifier = poIfTypeEntry->pfStatusModifier;
 	
 	xBTree_scanSafe (pNode, pNextNode, pIfTree)
 	{
@@ -426,6 +427,8 @@ neIfTypeStatusRx (
 	}
 	
 	
+neIfTypeStatusRx_cleanup:
+	
 	ifStack_unLock ();
 	bLocked ? true: ifTable_unLock ();
 	
@@ -456,8 +459,7 @@ neIfTypeStatusModifier (
 		poEntry->i32AdminStatus == xAdminStatus_up_c &&
 		(bPropagate || poEntry->i32OperStatus != u8OperStatus))
 	{
-		if (pfStatusModifier != NULL &&
-			!pfStatusModifier (poEntry, u8OperStatus, bPropagate))
+		if (!xCallback_tryExec (pfStatusModifier, poEntry, u8OperStatus, bPropagate))
 		{
 			goto neIfTypeStatusModifier_unlock;
 		}
@@ -488,7 +490,7 @@ neIfRowStatus_update (
 		goto neIfRowStatus_update_cleanup;
 	}
 	
-	bRetCode = poIfTypeEntry->pfCreateHandler == NULL ? true: poIfTypeEntry->pfCreateHandler (poEntry, u8RowStatus);
+	bRetCode = xCallback_tryExec (poIfTypeEntry->pfRowHandler, poEntry, u8RowStatus);
 	
 neIfRowStatus_update_cleanup:
 	

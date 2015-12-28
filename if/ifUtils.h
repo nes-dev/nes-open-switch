@@ -30,7 +30,6 @@ extern "C" {
 
 #include "ifMIB.h"
 
-#include "lib/list.h"
 #include "lib/binaryTree.h"
 
 #include <stdbool.h>
@@ -58,7 +57,7 @@ typedef struct neIfTypeEntry_t
 	/* Index values */
 	int32_t i32Type;
 	
-	neIfTypeRowHandler_t *pfCreateHandler;
+	neIfTypeRowHandler_t *pfRowHandler;
 	neIfTypeEnableHandler_t *pfEnableHandler;
 	neIfTypeStatusHandler_t *pfStatusHandler;
 	neIfTypeStatusModifier_t *pfStatusModifier;
