@@ -717,19 +717,19 @@ ifAdminStatus_handler (
 	case xAdminStatus_up_c:
 		poEntry->i32AdminStatus = u8RealStatus;
 		
-		if (!neIfEnable_modify (poEntry, u8RealStatus))
+		if (!ifEnable_modify (poEntry, u8RealStatus))
 		{
 			goto ifAdminStatus_handler_cleanup;
 		}
 		break;
 		
 	case xAdminStatus_down_c:
-		if (!neIfStatus_modify (poEntry->u32Index, poEntry->i32Type, xOperStatus_down_c, false, true))
+		if (!ifStatus_modify (poEntry->u32Index, poEntry->i32Type, xOperStatus_down_c, false, true))
 		{
 			goto ifAdminStatus_handler_cleanup;
 		}
 		
-		if (!neIfEnable_modify (poEntry, u8RealStatus))
+		if (!ifEnable_modify (poEntry, u8RealStatus))
 		{
 			goto ifAdminStatus_handler_cleanup;
 		}
@@ -738,12 +738,12 @@ ifAdminStatus_handler (
 		break;
 		
 	case xAdminStatus_testing_c:
-		if (!neIfStatus_modify (poEntry->u32Index, poEntry->i32Type, xOperStatus_testing_c, false, true))
+		if (!ifStatus_modify (poEntry->u32Index, poEntry->i32Type, xOperStatus_testing_c, false, true))
 		{
 			goto ifAdminStatus_handler_cleanup;
 		}
 		
-		if (!neIfEnable_modify (poEntry, u8RealStatus))
+		if (!ifEnable_modify (poEntry, u8RealStatus))
 		{
 			goto ifAdminStatus_handler_cleanup;
 		}

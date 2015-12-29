@@ -36,96 +36,96 @@ extern "C" {
 #include <stdint.h>
 
 
-typedef bool (neIfTypeRowHandler_t) (ifEntry_t *poIfEntry, uint8_t u8RowStatus);
-typedef bool (neIfTypeEnableHandler_t) (ifEntry_t *poIfEntry, uint8_t u8AdminStatus);
-typedef bool (neIfTypeStatusHandler_t) (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked);
-typedef bool (neIfTypeStatusModifier_t) (ifEntry_t *poIfEntry, uint8_t u8OperStatus, bool bPropagate);
-typedef bool (neIfTypeStackHandler_t) (ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry, uint8_t u8Action, bool bLocked);
+typedef bool (ifType_rowHandler_t)      (ifEntry_t *poIfEntry, uint8_t u8RowStatus);
+typedef bool (ifType_enableHandler_t)   (ifEntry_t *poIfEntry, uint8_t u8AdminStatus);
+typedef bool (ifType_statusHandler_t)   (xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked);
+typedef bool (ifType_statusModifier_t)  (ifEntry_t *poIfEntry, uint8_t u8OperStatus, bool bPropagate);
+typedef bool (ifType_stackHandler_t)    (ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry, uint8_t u8Action, bool bLocked);
 
 enum
 {
-	neIfTypeStack_actionLowerIf_c           = 0x01,
-	neIfTypeStack_actionHigherIf_c          = 0x02,
-	neIfTypeStack_actionPreProcess_c        = 0x04,
-	neIfTypeStack_actionPostProcess_c       = 0x08,
-	neIfTypeStack_actionAdd_c               = 0x10,
-	neIfTypeStack_actionRemove_c            = 0x20,
+	ifTypeStack_actionLowerIf_c             = 0x01,
+	ifTypeStack_actionHigherIf_c            = 0x02,
+	ifTypeStack_actionPreProcess_c          = 0x04,
+	ifTypeStack_actionPostProcess_c         = 0x08,
+	ifTypeStack_actionAdd_c                 = 0x10,
+	ifTypeStack_actionRemove_c              = 0x20,
 };
 
-typedef struct neIfTypeEntry_t
+typedef struct ifTypeEntry_t
 {
 	/* Index values */
 	int32_t i32Type;
 	
-	neIfTypeRowHandler_t *pfRowHandler;
-	neIfTypeEnableHandler_t *pfEnableHandler;
-	neIfTypeStatusHandler_t *pfStatusHandler;
-	neIfTypeStatusModifier_t *pfStatusModifier;
-	neIfTypeStackHandler_t *pfStackHandler;
+	ifType_rowHandler_t        *pfRowHandler;
+	ifType_enableHandler_t     *pfEnableHandler;
+	ifType_statusHandler_t     *pfStatusHandler;
+	ifType_statusModifier_t    *pfStatusModifier;
+	ifType_stackHandler_t      *pfStackHandler;
 	
 	xBTree_Node_t oBTreeNode;
-} neIfTypeEntry_t;
+} ifTypeEntry_t;
 
-neIfTypeEntry_t * neIfTypeTable_getByIndex (
+ifTypeEntry_t * ifTypeTable_getByIndex (
 	int32_t i32Type);
-neIfTypeEntry_t * neIfTypeTable_createExt (
+ifTypeEntry_t * ifTypeTable_createExt (
 	int32_t i32Type);
-bool neIfTypeTable_removeExt (neIfTypeEntry_t *poEntry);
+bool ifTypeTable_removeExt (ifTypeEntry_t *poEntry);
 
 
-typedef struct neIfStatusEntry_t
+typedef struct ifStatusEntry_t
 {
 	int32_t i32Type;
 	uint8_t u8OperStatus;
 	uint32_t u32Index;
 	
 	xBTree_Node_t oBTreeNode;
-} neIfStatusEntry_t;
+} ifStatusEntry_t;
 
-extern int8_t neIfStatus_BTreeNodeCmp (
+extern int8_t ifStatus_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree);
 	
-neIfStatusEntry_t * neIfStatus_createEntry (
+ifStatusEntry_t * ifStatus_createEntry (
 	int32_t i32Type,
 	uint8_t u8OperStatus,
 	uint32_t u32Index,
 	xBTree_t *pIfStatus_BTree);
-void neIfStatus_removeEntry (
-	neIfStatusEntry_t *poEntry,
+void ifStatus_removeEntry (
+	ifStatusEntry_t *poEntry,
 	xBTree_t *pIfStatus_BTree);
 	
-typedef xBTree_t neIfStatus_list_t;
-#define neIfStatus_list_init() xBTree_initInline (&neIfStatus_BTreeNodeCmp)
-#define neIfStatus_list_count(_pList) (xBTree_count (_pList))
-bool neIfStatus_modify (
+typedef xBTree_t ifStatus_List_t;
+#define ifStatus_List_init() xBTree_initInline (&ifStatus_BTreeNodeCmp)
+#define ifStatus_List_count(_pList) (xBTree_count (_pList))
+bool ifStatus_modify (
 	uint32_t u32IfIndex, int32_t i32Type,
 	uint8_t u8OperStatus, bool bPropagate, bool bLocked);
-extern neIfTypeStatusHandler_t neIfStatus_change;
+extern ifType_statusHandler_t ifStatus_change;
 
 inline bool
-neIfStatus_cleanup (neIfStatus_list_t *pIfStatusList)
+ifStatus_cleanup (ifStatus_List_t *pIfStatusList)
 {
 	register xBTree_Node_t *pNode = NULL;
 	register xBTree_Node_t *pNextNode = NULL;
 	
 	xBTree_scanSafe (pNode, pNextNode, pIfStatusList)
 	{
-		register neIfStatusEntry_t *poEntry = xBTree_entry (pNode, neIfStatusEntry_t, oBTreeNode);
+		register ifStatusEntry_t *poEntry = xBTree_entry (pNode, ifStatusEntry_t, oBTreeNode);
 		
-		neIfStatus_removeEntry (poEntry, pIfStatusList);
+		ifStatus_removeEntry (poEntry, pIfStatusList);
 	}
 	
 	return true;
 }
 
-extern neIfTypeEnableHandler_t neIfEnable_modify;
-extern neIfTypeStatusHandler_t neIfTypeStatusRx;
+extern ifType_enableHandler_t ifEnable_modify;
+extern ifType_statusHandler_t ifType_statusRx;
 
 bool
 	neIfRowStatus_update (
 		ifEntry_t *poEntry, uint8_t u8RowStatus);
 
-extern neIfTypeStackHandler_t neIfTypeStackModify;
+extern ifType_stackHandler_t ifType_stackModify;
 
 
 

@@ -38,31 +38,31 @@
 
 static bool
 	neIfTypeStatusModifier (
-		ifEntry_t *poEntry, neIfTypeStatusModifier_t *pfStatusModifier,
+		ifEntry_t *poEntry, ifType_statusModifier_t *pfStatusModifier,
 		uint8_t u8OperStatus, bool bPropagate);
 static inline int32_t
-	neIfStatus_getHigherLayerStatus (uint8_t u8OperStatus);
+	ifStatus_getHigherLayerStatus (uint8_t u8OperStatus);
 
 
 static int8_t
-neIfTypeTable_BTreeNodeCmp (
+ifTypeTable_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register neIfTypeEntry_t *pEntry1 = xBTree_entry (pNode1, neIfTypeEntry_t, oBTreeNode);
-	register neIfTypeEntry_t *pEntry2 = xBTree_entry (pNode2, neIfTypeEntry_t, oBTreeNode);
+	register ifTypeEntry_t *pEntry1 = xBTree_entry (pNode1, ifTypeEntry_t, oBTreeNode);
+	register ifTypeEntry_t *pEntry2 = xBTree_entry (pNode2, ifTypeEntry_t, oBTreeNode);
 	
 	return
 		(pEntry1->i32Type < pEntry2->i32Type) ? -1:
 		(pEntry1->i32Type == pEntry2->i32Type) ? 0: 1;
 }
 
-static xBTree_t oNeIfTypeTable_BTree = xBTree_initInline (&neIfTypeTable_BTreeNodeCmp);
+static xBTree_t oIfTypeTable_BTree = xBTree_initInline (&ifTypeTable_BTreeNodeCmp);
 
-neIfTypeEntry_t *
-neIfTypeTable_createExt (
+ifTypeEntry_t *
+ifTypeTable_createExt (
 	int32_t i32Type)
 {
-	register neIfTypeEntry_t *poEntry = NULL;
+	register ifTypeEntry_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
@@ -73,25 +73,25 @@ neIfTypeTable_createExt (
 	
 	poEntry->pfRowHandler = NULL;
 	poEntry->pfEnableHandler = NULL;
-	poEntry->pfStatusHandler = &neIfTypeStatusRx;
+	poEntry->pfStatusHandler = &ifType_statusRx;
 	poEntry->pfStatusModifier = NULL;
 	poEntry->pfStackHandler = NULL;
 	
-	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeIfTypeTable_BTree) != NULL)
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIfTypeTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
 		return NULL;
 	}
 	
-	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeIfTypeTable_BTree);
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oIfTypeTable_BTree);
 	return poEntry;
 }
 
-neIfTypeEntry_t *
-neIfTypeTable_getByIndex (
+ifTypeEntry_t *
+ifTypeTable_getByIndex (
 	int32_t i32Type)
 {
-	register neIfTypeEntry_t *poTmpEntry = NULL;
+	register ifTypeEntry_t *poTmpEntry = NULL;
 	register xBTree_Node_t *poNode = NULL;
 	
 	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
@@ -100,44 +100,44 @@ neIfTypeTable_getByIndex (
 	}
 	
 	poTmpEntry->i32Type = i32Type;
-	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeIfTypeTable_BTree)) == NULL)
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIfTypeTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
 		return NULL;
 	}
 	
 	xBuffer_free (poTmpEntry);
-	return xBTree_entry (poNode, neIfTypeEntry_t, oBTreeNode);
+	return xBTree_entry (poNode, ifTypeEntry_t, oBTreeNode);
 }
 
 bool
-neIfTypeTable_removeExt (neIfTypeEntry_t *poEntry)
+ifTypeTable_removeExt (ifTypeEntry_t *poEntry)
 {
 	register bool bRetCode = false;
 	
 	if (poEntry == NULL ||
-		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeIfTypeTable_BTree) == NULL)
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oIfTypeTable_BTree) == NULL)
 	{
-		goto neIfTypeTable_removeExt_cleanup;
+		goto ifTypeTable_removeExt_cleanup;
 	}
 	
-	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeIfTypeTable_BTree);
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oIfTypeTable_BTree);
 	xBuffer_free (poEntry);
 	
 	bRetCode = true;
 	
-neIfTypeTable_removeExt_cleanup:
+ifTypeTable_removeExt_cleanup:
 	
 	return bRetCode;
 }
 
 
 int8_t
-neIfStatus_BTreeNodeCmp (
+ifStatus_BTreeNodeCmp (
 	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
 {
-	register neIfStatusEntry_t *pEntry1 = xBTree_entry (pNode1, neIfStatusEntry_t, oBTreeNode);
-	register neIfStatusEntry_t *pEntry2 = xBTree_entry (pNode2, neIfStatusEntry_t, oBTreeNode);
+	register ifStatusEntry_t *pEntry1 = xBTree_entry (pNode1, ifStatusEntry_t, oBTreeNode);
+	register ifStatusEntry_t *pEntry2 = xBTree_entry (pNode2, ifStatusEntry_t, oBTreeNode);
 	
 	return
 		(pEntry1->i32Type < pEntry2->i32Type) ||
@@ -146,14 +146,14 @@ neIfStatus_BTreeNodeCmp (
 		(pEntry1->i32Type == pEntry2->i32Type && pEntry1->u8OperStatus == pEntry2->u8OperStatus && pEntry1->u32Index == pEntry2->u32Index) ? 0: 1;
 }
 
-neIfStatusEntry_t *
-neIfStatus_createEntry (
+ifStatusEntry_t *
+ifStatus_createEntry (
 	int32_t i32Type,
 	uint8_t u8OperStatus,
 	uint32_t u32Index,
 	xBTree_t *pIfStatus_BTree)
 {
-	register neIfStatusEntry_t *poEntry = NULL;
+	register ifStatusEntry_t *poEntry = NULL;
 	
 	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
 	{
@@ -174,8 +174,8 @@ neIfStatus_createEntry (
 }
 
 void
-neIfStatus_removeEntry (
-	neIfStatusEntry_t *poEntry,
+ifStatus_removeEntry (
+	ifStatusEntry_t *poEntry,
 	xBTree_t *pIfStatus_BTree)
 {
 	if (poEntry == NULL ||
@@ -191,27 +191,27 @@ neIfStatus_removeEntry (
 
 
 bool
-neIfEnable_modify (
+ifEnable_modify (
 	ifEntry_t *poEntry, uint8_t u8AdminStatus)
 {
 	register bool bRetCode = false;
-	register neIfTypeEntry_t *poIfTypeEntry = NULL;
+	register ifTypeEntry_t *poIfTypeEntry = NULL;
 	
-	if ((poIfTypeEntry = neIfTypeTable_getByIndex (poEntry->i32Type)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_getByIndex (poEntry->i32Type)) == NULL)
 	{
-		goto neIfEnable_modify_cleanup;
+		goto ifEnable_modify_cleanup;
 	}
 	
 	bRetCode = poIfTypeEntry->pfEnableHandler == NULL && u8AdminStatus == xAdminStatus_up_c ?
-		neIfStatus_modify (poEntry->u32Index, poEntry->i32Type, u8AdminStatus, false, true): xCallback_tryExec (poIfTypeEntry->pfEnableHandler, poEntry, u8AdminStatus);
-	
-neIfEnable_modify_cleanup:
+		ifStatus_modify (poEntry->u32Index, poEntry->i32Type, u8AdminStatus, false, true): xCallback_tryExec (poIfTypeEntry->pfEnableHandler, poEntry, u8AdminStatus);
+		
+ifEnable_modify_cleanup:
 	
 	return bRetCode;
 }
 
 int32_t
-neIfStatus_getHigherLayerStatus (
+ifStatus_getHigherLayerStatus (
 	uint8_t u8OperStatus)
 {
 	register int32_t i32HigherOperStatus = u8OperStatus;
@@ -235,29 +235,29 @@ neIfStatus_getHigherLayerStatus (
 }
 
 bool
-neIfStatus_modify (
+ifStatus_modify (
 	uint32_t u32IfIndex, int32_t i32Type, uint8_t u8OperStatus, bool bPropagate, bool bLocked)
 {
 	register bool bRetCode = false;
-	neIfStatus_list_t oIfStatusList = neIfStatus_list_init ();
+	ifStatus_List_t oIfStatusList = ifStatus_List_init ();
 	
-	if (neIfStatus_createEntry (i32Type, u8OperStatus, u32IfIndex, &oIfStatusList) == NULL)
+	if (ifStatus_createEntry (i32Type, u8OperStatus, u32IfIndex, &oIfStatusList) == NULL)
 	{
-		goto neIfStatus_modify_cleanup;
+		goto ifStatus_modify_cleanup;
 	}
 	
-	bRetCode = neIfStatus_change (&oIfStatusList, i32Type, bPropagate, bLocked);
+	bRetCode = ifStatus_change (&oIfStatusList, i32Type, bPropagate, bLocked);
 	
-neIfStatus_modify_cleanup:
+ifStatus_modify_cleanup:
 	
-	neIfStatus_cleanup (&oIfStatusList);
+	ifStatus_cleanup (&oIfStatusList);
 	
 	return bRetCode;
 }
 
 bool
-neIfStatus_change (
-	neIfStatus_list_t *pIfStatusList, int32_t i32Type, bool bPropagate, bool bLocked)
+ifStatus_change (
+	ifStatus_List_t *pIfStatusList, int32_t i32Type, bool bPropagate, bool bLocked)
 {
 	register bool bRetCode = false;
 	register xBTree_Node_t *pNode = NULL;
@@ -267,12 +267,12 @@ neIfStatus_change (
 	
 	if (i32Type != 0)
 	{
-		goto neIfStatus_change_aligned;
+		goto ifStatus_change_aligned;
 	}
 	
 	xBTree_scanSafe (pNode, pNextNode, pIfStatusList)
 	{
-		register neIfStatusEntry_t *poEntry = xBTree_entry (pNode, neIfStatusEntry_t, oBTreeNode);
+		register ifStatusEntry_t *poEntry = xBTree_entry (pNode, ifStatusEntry_t, oBTreeNode);
 		
 		if (poEntry->i32Type != 0 && i32Type != 0)
 		{
@@ -282,7 +282,7 @@ neIfStatus_change (
 			}
 			else if (i32Type != poEntry->i32Type)
 			{
-				goto neIfStatus_change_cleanup;
+				goto ifStatus_change_cleanup;
 			}
 		}
 		
@@ -304,11 +304,11 @@ neIfStatus_change (
 	}
 	
 	
-neIfStatus_change_aligned:
+ifStatus_change_aligned:
 	
-	bRetCode = neIfTypeStatusRx (pIfStatusList, i32Type, bPropagate, bLocked);
+	bRetCode = ifType_statusRx (pIfStatusList, i32Type, bPropagate, bLocked);
 	
-neIfStatus_change_cleanup:
+ifStatus_change_cleanup:
 	
 	bLocked ? true: ifTable_unLock ();
 	
@@ -316,24 +316,24 @@ neIfStatus_change_cleanup:
 }
 
 bool
-neIfTypeStatusRx (
+ifType_statusRx (
 	xBTree_t *pIfTree, int32_t i32Type, bool bPropagate, bool bLocked)
 {
 	bool retCode = true;
-	register neIfTypeEntry_t *poIfTypeEntry = NULL;
-	register neIfTypeStatusModifier_t *pfStatusModifier = NULL;
+	register ifTypeEntry_t *poIfTypeEntry = NULL;
+	register ifType_statusModifier_t *pfStatusModifier = NULL;
 	register xBTree_Node_t *pNode = NULL;
 	register xBTree_Node_t *pNextNode = NULL;
-	xBTree_t oUpperIfTree = xBTree_initInline (&neIfStatus_BTreeNodeCmp);
-	xBTree_t oTmpIfTree = xBTree_initInline (&neIfStatus_BTreeNodeCmp);
+	xBTree_t oUpperIfTree = xBTree_initInline (&ifStatus_BTreeNodeCmp);
+	xBTree_t oTmpIfTree = xBTree_initInline (&ifStatus_BTreeNodeCmp);
 	
 	bLocked ? true: ifTable_rdLock ();
 	ifStack_rdLock ();
 	
 	
-	if ((poIfTypeEntry = neIfTypeTable_getByIndex (i32Type)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_getByIndex (i32Type)) == NULL)
 	{
-		goto neIfTypeStatusRx_cleanup;
+		goto ifType_statusRx_cleanup;
 	}
 	pfStatusModifier = poIfTypeEntry->pfStatusModifier;
 	
@@ -342,7 +342,7 @@ neIfTypeStatusRx (
 		register uint32_t u32Index = 0;
 		register uint8_t u8OperStatus = 0;
 		register ifEntry_t *poIfEntry = NULL;
-		register neIfStatusEntry_t *poEntry = xBTree_entry (pNode, neIfStatusEntry_t, oBTreeNode);
+		register ifStatusEntry_t *poEntry = xBTree_entry (pNode, ifStatusEntry_t, oBTreeNode);
 		
 		u32Index = poEntry->u32Index;
 		u8OperStatus = poEntry->u8OperStatus;
@@ -358,7 +358,7 @@ neIfTypeStatusRx (
 		}
 		
 		register uint32_t u32UpperIfIndex = 0;
-		register int32_t i32UpperIfStatus = neIfStatus_getHigherLayerStatus (u8OperStatus);
+		register int32_t i32UpperIfStatus = ifStatus_getHigherLayerStatus (u8OperStatus);
 		register ifStackEntry_t *poIfStackEntry = NULL;
 		
 		while (
@@ -379,7 +379,7 @@ neIfTypeStatusRx (
 			i32UpperIfType = poIfEntry->i32Type;
 			ifEntry_unLock (poIfEntry);
 			
-			if (neIfStatus_createEntry (i32UpperIfType, i32UpperIfStatus, u32UpperIfIndex, &oUpperIfTree) == NULL)
+			if (ifStatus_createEntry (i32UpperIfType, i32UpperIfStatus, u32UpperIfIndex, &oUpperIfTree) == NULL)
 			{
 				retCode = false;
 				continue;
@@ -391,20 +391,20 @@ neIfTypeStatusRx (
 	i32Type = 0;
 	xBTree_scanSafe (pNode, pNextNode, &oUpperIfTree)
 	{
-		register neIfStatusEntry_t *poEntry = xBTree_entry (pNode, neIfStatusEntry_t, oBTreeNode);
+		register ifStatusEntry_t *poEntry = xBTree_entry (pNode, ifStatusEntry_t, oBTreeNode);
 		
 		if (i32Type != 0 && i32Type != poEntry->i32Type)
 		{
-			register neIfTypeStatusHandler_t *pfStatusHandler = &neIfTypeStatusRx;
+			register ifType_statusHandler_t *pfStatusHandler = &ifType_statusRx;
 			
-			if ((poIfTypeEntry = neIfTypeTable_getByIndex (i32Type)) != NULL &&
+			if ((poIfTypeEntry = ifTypeTable_getByIndex (i32Type)) != NULL &&
 				poIfTypeEntry->pfStatusHandler != NULL)
 			{
 				pfStatusHandler = poIfTypeEntry->pfStatusHandler;
 			}
 			
 			pfStatusHandler (&oTmpIfTree, i32Type, false, bLocked);
-			xBTree_init (&oTmpIfTree, &neIfStatus_BTreeNodeCmp);
+			xBTree_init (&oTmpIfTree, &ifStatus_BTreeNodeCmp);
 		}
 		
 		i32Type = poEntry->i32Type;
@@ -414,20 +414,20 @@ neIfTypeStatusRx (
 	
 	if (xBTree_count (&oTmpIfTree) != 0)
 	{
-		register neIfTypeStatusHandler_t *pfStatusHandler = &neIfTypeStatusRx;
+		register ifType_statusHandler_t *pfStatusHandler = &ifType_statusRx;
 		
-		if ((poIfTypeEntry = neIfTypeTable_getByIndex (i32Type)) != NULL &&
+		if ((poIfTypeEntry = ifTypeTable_getByIndex (i32Type)) != NULL &&
 			poIfTypeEntry->pfStatusHandler != NULL)
 		{
 			pfStatusHandler = poIfTypeEntry->pfStatusHandler;
 		}
 		
 		pfStatusHandler (&oTmpIfTree, i32Type, false, bLocked);
-		xBTree_init (&oTmpIfTree, &neIfStatus_BTreeNodeCmp);
+		xBTree_init (&oTmpIfTree, &ifStatus_BTreeNodeCmp);
 	}
 	
 	
-neIfTypeStatusRx_cleanup:
+ifType_statusRx_cleanup:
 	
 	ifStack_unLock ();
 	bLocked ? true: ifTable_unLock ();
@@ -437,7 +437,7 @@ neIfTypeStatusRx_cleanup:
 
 bool
 neIfTypeStatusModifier (
-	ifEntry_t *poEntry, neIfTypeStatusModifier_t *pfStatusModifier,
+	ifEntry_t *poEntry, ifType_statusModifier_t *pfStatusModifier,
 	uint8_t u8OperStatus, bool bPropagate)
 {
 	register bool bStatusModified = false;
@@ -483,9 +483,9 @@ neIfRowStatus_update (
 	ifEntry_t *poEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
-	register neIfTypeEntry_t *poIfTypeEntry = NULL;
+	register ifTypeEntry_t *poIfTypeEntry = NULL;
 	
-	if ((poIfTypeEntry = neIfTypeTable_getByIndex (poEntry->i32Type)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_getByIndex (poEntry->i32Type)) == NULL)
 	{
 		goto neIfRowStatus_update_cleanup;
 	}
@@ -498,7 +498,7 @@ neIfRowStatus_update_cleanup:
 }
 
 bool
-neIfTypeStackModify (
+ifType_stackModify (
 	ifEntry_t *poHigherEntry, ifEntry_t *poLowerEntry,
 	uint8_t u8Action, bool bLocked)
 {
@@ -516,63 +516,63 @@ neIfTypeStackModify (
 	}
 	
 	
-	register neIfTypeEntry_t *poHigherIfTypeEntry = NULL;
-	register neIfTypeEntry_t *poLowerIfTypeEntry = NULL;
+	register ifTypeEntry_t *poHigherIfTypeEntry = NULL;
+	register ifTypeEntry_t *poLowerIfTypeEntry = NULL;
 	
-	if ((poHigherIfTypeEntry = neIfTypeTable_getByIndex (poHigherEntry->i32Type)) == NULL)
+	if ((poHigherIfTypeEntry = ifTypeTable_getByIndex (poHigherEntry->i32Type)) == NULL)
 	{
-		goto neIfTypeStackModify_cleanup;
+		goto ifType_stackModify_cleanup;
 	}
 	poLowerIfTypeEntry =
-		poHigherEntry->i32Type == poHigherEntry->i32Type ? poHigherIfTypeEntry: neIfTypeTable_getByIndex (poLowerEntry->i32Type);
+		poHigherEntry->i32Type == poHigherEntry->i32Type ? poHigherIfTypeEntry: ifTypeTable_getByIndex (poLowerEntry->i32Type);
 	if (poLowerIfTypeEntry == NULL)
 	{
-		goto neIfTypeStackModify_cleanup;
+		goto ifType_stackModify_cleanup;
 	}
 	
 	
-	switch (u8Action & (neIfTypeStack_actionAdd_c | neIfTypeStack_actionRemove_c))
+	switch (u8Action & (ifTypeStack_actionAdd_c | ifTypeStack_actionRemove_c))
 	{
-	case neIfTypeStack_actionAdd_c:
-		u8Action |= neIfTypeStack_actionPreProcess_c;
-		if (!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionLowerIf_c, true) ||
-			!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionHigherIf_c, true))
+	case ifTypeStack_actionAdd_c:
+		u8Action |= ifTypeStack_actionPreProcess_c;
+		if (!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | ifTypeStack_actionLowerIf_c, true) ||
+			!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | ifTypeStack_actionHigherIf_c, true))
 		{
-			goto neIfTypeStackModify_cleanup;
+			goto ifType_stackModify_cleanup;
 		}
 		
-		u8Action ^= neIfTypeStack_actionPreProcess_c;
-		u8Action |= neIfTypeStack_actionPostProcess_c;
-		if (!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionLowerIf_c, true) ||
-			!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionHigherIf_c, true))
+		u8Action ^= ifTypeStack_actionPreProcess_c;
+		u8Action |= ifTypeStack_actionPostProcess_c;
+		if (!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | ifTypeStack_actionLowerIf_c, true) ||
+			!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | ifTypeStack_actionHigherIf_c, true))
 		{
-			goto neIfTypeStackModify_cleanup;
+			goto ifType_stackModify_cleanup;
 		}
 		
 		bRetCode = true;
 		break;
 		
-	case neIfTypeStack_actionRemove_c:
-		u8Action |= neIfTypeStack_actionPreProcess_c;
-		if (!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionHigherIf_c, true) ||
-			!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionLowerIf_c, true))
+	case ifTypeStack_actionRemove_c:
+		u8Action |= ifTypeStack_actionPreProcess_c;
+		if (!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | ifTypeStack_actionHigherIf_c, true) ||
+			!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | ifTypeStack_actionLowerIf_c, true))
 		{
-			goto neIfTypeStackModify_cleanup;
+			goto ifType_stackModify_cleanup;
 		}
 		
-		u8Action ^= neIfTypeStack_actionPreProcess_c;
-		u8Action |= neIfTypeStack_actionPostProcess_c;
-		if (!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionHigherIf_c, true) ||
-			!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | neIfTypeStack_actionLowerIf_c, true))
+		u8Action ^= ifTypeStack_actionPreProcess_c;
+		u8Action |= ifTypeStack_actionPostProcess_c;
+		if (!xCallback_tryExec (poHigherIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | ifTypeStack_actionHigherIf_c, true) ||
+			!xCallback_tryExec (poLowerIfTypeEntry->pfStackHandler, poHigherEntry, poLowerEntry, u8Action | ifTypeStack_actionLowerIf_c, true))
 		{
-			goto neIfTypeStackModify_cleanup;
+			goto ifType_stackModify_cleanup;
 		}
 		
 		bRetCode = true;
 		break;
 	}
 	
-neIfTypeStackModify_cleanup:
+ifType_stackModify_cleanup:
 	
 	if (!bLocked)
 	{
