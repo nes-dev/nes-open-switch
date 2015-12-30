@@ -46,64 +46,64 @@
 #include <stdarg.h>
 
 
-static neIfTypeEnableHandler_t ieee8021If_ethernetEnableModify;
-static neIfTypeStatusModifier_t ieee8021If_ethernetStatusModify;
-static neIfTypeStackHandler_t ieee8021If_ethernetStackModify;
+static ifType_enableHandler_t ieee8021EthernetIf_enableHandler;
+static ifType_statusModifier_t ieee8021EthernetIf_statusModify;
+static ifType_stackHandler_t ieee8021EthernetIf_stackHandler;
 
-static neIfTypeStackHandler_t ieee8021If_l2vlanStackModify;
+static ifType_stackHandler_t ieee8021L2vlanIf_stackHandler;
 
-static neIfTypeEnableHandler_t ieee8021If_bridgeEnableModify;
-static neIfTypeStatusModifier_t ieee8021If_bridgeStatusModify;
-static neIfTypeStackHandler_t ieee8021If_bridgeStackModify;
+static ifType_enableHandler_t ieee8021BridgeIf_enableModify;
+static ifType_statusModifier_t ieee8021BridgeIf_statusModify;
+static ifType_stackHandler_t ieee8021BridgeIf_stackModify;
 
-static neIfTypeEnableHandler_t ieee8021If_ilanEnableModify;
-static neIfTypeStatusModifier_t ieee8021If_ilanStatusModify;
-static neIfTypeStackHandler_t ieee8021If_ilanStackModify;
+static ifType_enableHandler_t ieee8021IlanIf_enableModify;
+static ifType_statusModifier_t ieee8021IlanIf_statusModify;
+static ifType_stackHandler_t ieee8021IlanIf_stackModify;
 
 
 bool ethernetUtilsInit (void)
 {
 	register bool bRetCode = false;
-	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
+	ifTypeEntry_t *poIfTypeEntry = NULL;
 	
 	ifTable_wrLock ();
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_ethernetCsmacd_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_ethernetCsmacd_c)) == NULL)
 	{
 		goto ethernetUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfEnableHandler = ieee8021If_ethernetEnableModify;
-	poNeIfTypeEntry->pfStatusModifier = ieee8021If_ethernetStatusModify;
-	poNeIfTypeEntry->pfStackHandler = ieee8021If_ethernetStackModify;
+	poIfTypeEntry->pfEnableHandler = ieee8021EthernetIf_enableHandler;
+	poIfTypeEntry->pfStatusModifier = ieee8021EthernetIf_statusModify;
+	poIfTypeEntry->pfStackHandler = ieee8021EthernetIf_stackHandler;
 	
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_l2vlan_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_l2vlan_c)) == NULL)
 	{
 		goto ethernetUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfStackHandler = ieee8021If_l2vlanStackModify;
+	poIfTypeEntry->pfStackHandler = ieee8021L2vlanIf_stackHandler;
 	
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_bridge_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_bridge_c)) == NULL)
 	{
 		goto ethernetUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfEnableHandler = ieee8021If_bridgeEnableModify;
-	poNeIfTypeEntry->pfStatusModifier = ieee8021If_bridgeStatusModify;
-	poNeIfTypeEntry->pfStackHandler = ieee8021If_bridgeStackModify;
+	poIfTypeEntry->pfEnableHandler = ieee8021BridgeIf_enableModify;
+	poIfTypeEntry->pfStatusModifier = ieee8021BridgeIf_statusModify;
+	poIfTypeEntry->pfStackHandler = ieee8021BridgeIf_stackModify;
 	
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_ilan_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_ilan_c)) == NULL)
 	{
 		goto ethernetUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfEnableHandler = ieee8021If_ilanEnableModify;
-	poNeIfTypeEntry->pfStatusModifier = ieee8021If_ilanStatusModify;
-	poNeIfTypeEntry->pfStackHandler = ieee8021If_ilanStackModify;
+	poIfTypeEntry->pfEnableHandler = ieee8021IlanIf_enableModify;
+	poIfTypeEntry->pfStatusModifier = ieee8021IlanIf_statusModify;
+	poIfTypeEntry->pfStackHandler = ieee8021IlanIf_stackModify;
 	
 	bRetCode = true;
 	
@@ -115,46 +115,46 @@ ethernetUtilsInit_cleanup:
 
 
 bool
-ieee8021If_ethernetEnableModify (
-	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
+ieee8021EthernetIf_enableHandler (
+	ifEntry_t *poIfEntry, uint8_t u8AdminStatus)
 {
 	register bool bRetCode = false;
 	
 	if (!halEthernet_ifConfigure (poIfEntry, halEthernet_ifAdminState_c))
 	{
-		goto ieee8021If_ethernetEnableModify_cleanup;
+		goto ieee8021EthernetIf_enableHandler_cleanup;
 	}
 	
 	bRetCode = true;
 	
-ieee8021If_ethernetEnableModify_cleanup:
+ieee8021EthernetIf_enableHandler_cleanup:
 	
 	return bRetCode;
 }
 
 bool
-ieee8021If_ethernetStatusModify (
-	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+ieee8021EthernetIf_statusModify (
+	ifEntry_t *poIfEntry, uint8_t u8OperStatus, bool bPropagate)
 {
 	register bool bRetCode = false;
 	
 	/* TODO */
 	
 	if (xBitmap_getBit (poIfEntry->oNe.au8AdminFlags, neIfAdminFlags_lag_c) &&
-		!lag_aggPortStatusModify (poIfEntry, i32OperStatus, bPropagate))
+		!lagAggPort_statusModify (poIfEntry, u8OperStatus, bPropagate))
 	{
-		goto ieee8021If_ethernetStatusModify_cleanup;
+		goto ieee8021EthernetIf_statusModify_cleanup;
 	}
 	
 	bRetCode = true;
 	
-ieee8021If_ethernetStatusModify_cleanup:
+ieee8021EthernetIf_statusModify_cleanup:
 	
 	return bRetCode;
 }
 
 bool
-ieee8021If_ethernetStackModify (
+ieee8021EthernetIf_stackHandler (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
@@ -162,7 +162,7 @@ ieee8021If_ethernetStackModify (
 }
 
 bool
-ieee8021If_l2vlanStackModify (
+ieee8021L2vlanIf_stackHandler (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
@@ -170,21 +170,21 @@ ieee8021If_l2vlanStackModify (
 }
 
 bool
-ieee8021If_bridgeEnableModify (
-	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
+ieee8021BridgeIf_enableModify (
+	ifEntry_t *poIfEntry, uint8_t u8AdminStatus)
 {
 	return false;
 }
 
 bool
-ieee8021If_bridgeStatusModify (
-	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+ieee8021BridgeIf_statusModify (
+	ifEntry_t *poIfEntry, uint8_t u8OperStatus, bool bPropagate)
 {
 	return false;
 }
 
 bool
-ieee8021If_bridgeStackModify (
+ieee8021BridgeIf_stackModify (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
@@ -192,21 +192,21 @@ ieee8021If_bridgeStackModify (
 }
 
 bool
-ieee8021If_ilanEnableModify (
-	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
+ieee8021IlanIf_enableModify (
+	ifEntry_t *poIfEntry, uint8_t u8AdminStatus)
 {
 	return false;
 }
 
 bool
-ieee8021If_ilanStatusModify (
-	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+ieee8021IlanIf_statusModify (
+	ifEntry_t *poIfEntry, uint8_t u8OperStatus, bool bPropagate)
 {
 	return false;
 }
 
 bool
-ieee8021If_ilanStackModify (
+ieee8021IlanIf_stackModify (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
