@@ -40,26 +40,26 @@
 #include <stdint.h>
 
 
-static neIfTypeEnableHandler_t bridge_pipEnableModify;
-static neIfTypeStatusModifier_t bridge_pipStatusModify;
-static neIfTypeStackHandler_t bridge_pipStackModify;
+static ifType_enableHandler_t ieee8021BridgePip_enableHandler;
+static ifType_statusModifier_t ieee8021BridgePip_statusModify;
+static ifType_stackHandler_t ieee8021BridgePip_stackHandler;
 
 
 bool bridgeUtilsInit (void)
 {
 	register bool bRetCode = false;
-	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
+	ifTypeEntry_t *poIfTypeEntry = NULL;
 	
 	ifTable_wrLock ();
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_pip_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_pip_c)) == NULL)
 	{
 		goto bridgeUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfEnableHandler = bridge_pipEnableModify;
-	poNeIfTypeEntry->pfStatusModifier = bridge_pipStatusModify;
-	poNeIfTypeEntry->pfStackHandler = bridge_pipStackModify;
+	poIfTypeEntry->pfEnableHandler = ieee8021BridgePip_enableHandler;
+	poIfTypeEntry->pfStatusModifier = ieee8021BridgePip_statusModify;
+	poIfTypeEntry->pfStackHandler = ieee8021BridgePip_stackHandler;
 	
 	bRetCode = true;
 	
@@ -71,21 +71,21 @@ bridgeUtilsInit_cleanup:
 
 
 bool
-bridge_pipEnableModify (
-	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
+ieee8021BridgePip_enableHandler (
+	ifEntry_t *poIfEntry, uint8_t u8AdminStatus)
 {
 	return false;
 }
 
 bool
-bridge_pipStatusModify (
-	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+ieee8021BridgePip_statusModify (
+	ifEntry_t *poIfEntry, uint8_t u8OperStatus, bool bPropagate)
 {
 	return false;
 }
 
 bool
-bridge_pipStackModify (
+ieee8021BridgePip_stackHandler (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
