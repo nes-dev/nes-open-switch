@@ -206,28 +206,28 @@ neEntPortRowStatus_update (
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			
-			if (!neIfStatus_modify (poEntry->oK.u32IfIndex, 0, xOperStatus_notPresent_c, true, false))
+			if (!ifStatus_modify (poEntry->oK.u32IfIndex, 0, xOperStatus_notPresent_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			break;
 			
 		case xRowStatus_notInService_c:
-			if (!neIfStatus_modify (poEntry->u32IfIndex, 0, xOperStatus_down_c, true, false))
+			if (!ifStatus_modify (poEntry->u32IfIndex, 0, xOperStatus_down_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			break;
 			
 		case xRowStatus_notReady_c:
-			if (!neIfStatus_modify (poEntry->u32IfIndex, 0, xOperStatus_lowerLayerDown_c, true, false))
+			if (!ifStatus_modify (poEntry->u32IfIndex, 0, xOperStatus_lowerLayerDown_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
 			break;
 			
 		case xRowStatus_destroy_c:
-			if (!neIfStatus_modify (poEntry->u32IfIndex, 0, xOperStatus_notPresent_c, true, false))
+			if (!ifStatus_modify (poEntry->u32IfIndex, 0, xOperStatus_notPresent_c, true, false))
 			{
 				goto neEntPortRowStatus_update_cleanup;
 			}
