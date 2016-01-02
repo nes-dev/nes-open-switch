@@ -38,28 +38,28 @@
 #include <stdint.h>
 
 
-static neIfTypeEnableHandler_t lag_aggEnableModify;
-static neIfTypeStatusModifier_t lag_aggStatusModify;
-static neIfTypeStackHandler_t lag_aggStackModify;
+static ifType_enableHandler_t lagAgg_enableModify;
+static ifType_statusModifier_t lagAgg_statusModify;
+static ifType_stackHandler_t lagAgg_stackModify;
 
-neIfTypeStatusModifier_t lag_aggPortStatusModify;
+ifType_statusModifier_t lagAggPort_statusModify;
 
 
 bool lagUtilsInit (void)
 {
 	register bool bRetCode = false;
-	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
+	ifTypeEntry_t *poIfTypeEntry = NULL;
 	
 	ifTable_wrLock ();
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_ieee8023adLag_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_ieee8023adLag_c)) == NULL)
 	{
 		goto lagUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfEnableHandler = lag_aggEnableModify;
-	poNeIfTypeEntry->pfStatusModifier = lag_aggStatusModify;
-	poNeIfTypeEntry->pfStackHandler = lag_aggStackModify;
+	poIfTypeEntry->pfEnableHandler = lagAgg_enableModify;
+	poIfTypeEntry->pfStatusModifier = lagAgg_statusModify;
+	poIfTypeEntry->pfStackHandler = lagAgg_stackModify;
 	
 	bRetCode = true;
 	
@@ -70,21 +70,21 @@ lagUtilsInit_cleanup:
 }
 
 bool
-lag_aggEnableModify (
-	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
+lagAgg_enableModify (
+	ifEntry_t *poIfEntry, uint8_t u8AdminStatus)
 {
 	return false;
 }
 
 bool
-lag_aggStatusModify (
-	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+lagAgg_statusModify (
+	ifEntry_t *poIfEntry, uint8_t u8OperStatus, bool bPropagate)
 {
 	return false;
 }
 
 bool
-lag_aggStackModify (
+lagAgg_stackModify (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
@@ -92,8 +92,8 @@ lag_aggStackModify (
 }
 
 bool
-lag_aggPortStatusModify (
-	ifEntry_t *poIfEntry, int32_t i32OperStatus, bool bPropagate)
+lagAggPort_statusModify (
+	ifEntry_t *poIfEntry, uint8_t u8OperStatus, bool bPropagate)
 {
 	register bool bRetCode = false;
 	register dot3adAggPortEntry_t *poAggPort = NULL;
@@ -102,21 +102,21 @@ lag_aggPortStatusModify (
 	
 	if ((poAggPort = dot3adAggPortTable_getByIndex (poIfEntry->u32Index)) == NULL)
 	{
-		goto lag_aggPortStatusModify_cleanup;
+		goto lagAggPort_statusModify_cleanup;
 	}
 	
-	register bool bForce = poAggPort->u8OperStatus == i32OperStatus && bPropagate;
+	register bool bForce = poAggPort->u8OperStatus == u8OperStatus && bPropagate;
 	
-	poAggPort->u8OperStatus = i32OperStatus;
+	poAggPort->u8OperStatus = u8OperStatus;
 	
 	if (!dot3adAggPortLacp_stateUpdate (poAggPort, bForce))
 	{
-		goto lag_aggPortStatusModify_cleanup;
+		goto lagAggPort_statusModify_cleanup;
 	}
 	
 	bRetCode = true;
 	
-lag_aggPortStatusModify_cleanup:
+lagAggPort_statusModify_cleanup:
 	
 	dot3adAgg_unLock ();
 	return bRetCode;
@@ -149,7 +149,7 @@ neAggRowStatus_update (
 	switch (u8RowStatus)
 	{
 	case xRowStatus_active_c:
-		if (!neIfStatus_modify (poEntry->u32Index, 0, xOperStatus_notPresent_c, true, false))
+		if (!ifStatus_modify (poEntry->u32Index, 0, xOperStatus_notPresent_c, true, false))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
@@ -163,7 +163,7 @@ neAggRowStatus_update (
 		break;
 		
 	case xRowStatus_notInService_c:
-		if (!neIfStatus_modify (poEntry->u32Index, 0, xOperStatus_down_c, true, false))
+		if (!ifStatus_modify (poEntry->u32Index, 0, xOperStatus_down_c, true, false))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
@@ -177,7 +177,7 @@ neAggRowStatus_update (
 		break;
 		
 	case xRowStatus_destroy_c:
-		if (!neIfStatus_modify (poEntry->u32Index, 0, xOperStatus_notPresent_c, true, false))
+		if (!ifStatus_modify (poEntry->u32Index, 0, xOperStatus_notPresent_c, true, false))
 		{
 			goto neAggRowStatus_update_cleanup;
 		}
