@@ -32,24 +32,22 @@
 #include <stdint.h>
 
 
-static bool teLinkTable_stackModify (
-	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
-	uint8_t u8Action, bool isLocked);
+static ifType_stackHandler_t teLinkTable_stackHandler;
 
 
 bool tedUtilsInit (void)
 {
 	register bool bRetCode = false;
-	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
+	ifTypeEntry_t *poIfTypeEntry = NULL;
 	
 	ifTable_wrLock ();
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_teLink_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_teLink_c)) == NULL)
 	{
 		goto tedUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfStackHandler = teLinkTable_stackModify;
+	poIfTypeEntry->pfStackHandler = teLinkTable_stackHandler;
 	
 	bRetCode = true;
 	
@@ -60,7 +58,7 @@ tedUtilsInit_cleanup:
 }
 
 bool
-teLinkTable_stackModify (
+teLinkTable_stackHandler (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
