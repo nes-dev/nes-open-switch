@@ -9,7 +9,7 @@
 
 <a href="https://google.com/+NES-Dev?rel=author" rel="author"></a>
 <a href="https://google.com/+NES-Open-Switch?rel=publisher" rel="publisher"></a>
-Copyright (c) 2008-2015</br>
+Copyright (c) 2008-2016</br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NES Repo &lt;nes.repo@gmail.com&gt;, NES Dev &lt;nes.open.switch@gmail.com&gt;
 
 NES Open Switch
