@@ -36,33 +36,30 @@
 #include <stdint.h>
 
 
-static bool
-	inetIfTable_stackModify (
-		ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
-		uint8_t u8Action, bool isLocked);
+static ifType_stackHandler_t inetIfTable_stackHandler;
 
 
 bool inetUtilsInit (void)
 {
 	register bool bRetCode = false;
-	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
+	ifTypeEntry_t *poIfTypeEntry = NULL;
 	
 	ifTable_wrLock ();
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_ip_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_ip_c)) == NULL)
 	{
 		goto inetUtilsInit_unlock;
 	}
 	
-	poNeIfTypeEntry->pfStackHandler = inetIfTable_stackModify;
+	poIfTypeEntry->pfStackHandler = inetIfTable_stackHandler;
 	
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_ipForward_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_ipForward_c)) == NULL)
 	{
 		goto inetUtilsInit_unlock;
 	}
 	
-	poNeIfTypeEntry->pfStackHandler = inetIfTable_stackModify;
+	poIfTypeEntry->pfStackHandler = inetIfTable_stackHandler;
 	
 	bRetCode = true;
 	
@@ -73,7 +70,7 @@ inetUtilsInit_unlock:
 }
 
 bool
-inetIfTable_stackModify (
+inetIfTable_stackHandler (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {

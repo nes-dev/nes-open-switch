@@ -37,7 +37,7 @@ extern "C" {
 extern void *lag_main (void *pvArgv);
 extern void *lag_start (void *pvArgv);
 
-extern neIfTypeStatusModifier_t lag_aggPortStatusModify;
+extern ifType_statusModifier_t lagAggPort_statusModify;
 
 
 
