@@ -33,36 +33,36 @@
 #include <stdint.h>
 
 
-static neIfTypeCreateHandler_t mplsInterfaceRowStatus_handler;
-static neIfTypeEnableHandler_t mplsInterfaceAdminStatus_handler;
-static neIfTypeStackHandler_t mplsInterfaceTable_stackHandler;
+static ifType_rowHandler_t mplsInterface_rowHandler;
+static ifType_enableHandler_t mplsInterface_enableHandler;
+static ifType_stackHandler_t mplsInterface_stackHandler;
 
-static neIfTypeStackHandler_t mplsTunnelTable_stackModify;
+static ifType_stackHandler_t mplsTunnelIf_stackHandler;
 
 
 bool mplsUtilsInit (void)
 {
 	register bool bRetCode = false;
-	neIfTypeEntry_t *poNeIfTypeEntry = NULL;
+	ifTypeEntry_t *poIfTypeEntry = NULL;
 	
 	ifTable_wrLock ();
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_mpls_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_mpls_c)) == NULL)
 	{
 		goto mplsUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfCreateHandler = mplsInterfaceRowStatus_handler;
-	poNeIfTypeEntry->pfEnableHandler = mplsInterfaceAdminStatus_handler;
-	poNeIfTypeEntry->pfStackHandler = mplsInterfaceTable_stackHandler;
+	poIfTypeEntry->pfRowHandler = mplsInterface_rowHandler;
+	poIfTypeEntry->pfEnableHandler = mplsInterface_enableHandler;
+	poIfTypeEntry->pfStackHandler = mplsInterface_stackHandler;
 	
 	
-	if ((poNeIfTypeEntry = neIfTypeTable_createExt (ifType_mplsTunnel_c)) == NULL)
+	if ((poIfTypeEntry = ifTypeTable_createExt (ifType_mplsTunnel_c)) == NULL)
 	{
 		goto mplsUtilsInit_cleanup;
 	}
 	
-	poNeIfTypeEntry->pfStackHandler = mplsTunnelTable_stackModify;
+	poIfTypeEntry->pfStackHandler = mplsTunnelIf_stackHandler;
 	
 	bRetCode = true;
 	
@@ -80,7 +80,7 @@ static bool
 
 
 bool
-mplsInterfaceRowStatus_handler (
+mplsInterface_rowHandler (
 	ifEntry_t *poIfEntry, uint8_t u8RowStatus)
 {
 	register bool bRetCode = false;
@@ -90,11 +90,11 @@ mplsInterfaceRowStatus_handler (
 	
 	if ((poEntry == NULL) ^ (u8RowStatus == xRowStatus_createAndWait_c))
 	{
-		goto mplsInterfaceRowStatus_handler_cleanup;
+		goto mplsInterface_rowHandler_cleanup;
 	}
 	if (poEntry != NULL && poEntry->u8RowStatus == u8RowStatus)
 	{
-		goto mplsInterfaceRowStatus_handler_success;
+		goto mplsInterface_rowHandler_success;
 	}
 	
 	switch (u8RowStatus)
@@ -102,7 +102,7 @@ mplsInterfaceRowStatus_handler (
 	case xRowStatus_active_c:
 		if (!mplsInterfaceRowStatus_update (poIfEntry, poEntry, u8RowStatus))
 		{
-			goto mplsInterfaceRowStatus_handler_cleanup;
+			goto mplsInterface_rowHandler_cleanup;
 		}
 		
 		poEntry->u8RowStatus = u8RowStatus;
@@ -111,7 +111,7 @@ mplsInterfaceRowStatus_handler (
 	case xRowStatus_notInService_c:
 		if (!mplsInterfaceRowStatus_update (poIfEntry, poEntry, u8RowStatus))
 		{
-			goto mplsInterfaceRowStatus_handler_cleanup;
+			goto mplsInterface_rowHandler_cleanup;
 		}
 		
 		poEntry->u8RowStatus = u8RowStatus;
@@ -120,13 +120,13 @@ mplsInterfaceRowStatus_handler (
 	case xRowStatus_createAndWait_c:
 		if (poEntry != NULL || (poEntry = mplsInterfaceTable_createExt (poIfEntry->u32Index)) == NULL)
 		{
-			goto mplsInterfaceRowStatus_handler_cleanup;
+			goto mplsInterface_rowHandler_cleanup;
 		}
 		
 	case xRowStatus_destroy_c:
 		if (!mplsInterfaceRowStatus_update (poIfEntry, poEntry, u8RowStatus))
 		{
-			goto mplsInterfaceRowStatus_handler_cleanup;
+			goto mplsInterface_rowHandler_cleanup;
 		}
 		
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
@@ -135,34 +135,34 @@ mplsInterfaceRowStatus_handler (
 		{
 			if (!mplsInterfaceTable_removeExt (poEntry))
 			{
-				goto mplsInterfaceRowStatus_handler_cleanup;
+				goto mplsInterface_rowHandler_cleanup;
 			}
 		}
 		break;
 	}
 	
-mplsInterfaceRowStatus_handler_success:
+mplsInterface_rowHandler_success:
 	
 	bRetCode = true;
 	
-mplsInterfaceRowStatus_handler_cleanup:
+mplsInterface_rowHandler_cleanup:
 	
 	return bRetCode;
 }
 
 bool
-mplsInterfaceAdminStatus_handler (
-	ifEntry_t *poIfEntry, int32_t i32AdminStatus)
+mplsInterface_enableHandler (
+	ifEntry_t *poIfEntry, uint8_t u8AdminStatus)
 {
 	register bool bRetCode = false;
 	register mplsInterfaceEntry_t *poEntry = NULL;
 	
 	if ((poEntry = mplsInterfaceTable_getByIndex (poIfEntry->u32Index)) == NULL)
 	{
-		goto mplsInterfaceAdminStatus_handler_cleanup;
+		goto mplsInterface_enableHandler_cleanup;
 	}
 	
-	poEntry->u8AdminStatus = i32AdminStatus;
+	poEntry->u8AdminStatus = u8AdminStatus;
 	poEntry->i32Mtu = poIfEntry->i32Mtu;
 	memcpy (poEntry->au8AdminFlags, poIfEntry->oNe.au8AdminFlags, sizeof (poEntry->au8AdminFlags));
 	memcpy (poEntry->au8OperFlags, poIfEntry->oNe.au8OperFlags, sizeof (poEntry->au8OperFlags));
@@ -170,13 +170,13 @@ mplsInterfaceAdminStatus_handler (
 	
 	bRetCode = true;
 	
-mplsInterfaceAdminStatus_handler_cleanup:
+mplsInterface_enableHandler_cleanup:
 	
 	return bRetCode;
 }
 
 bool
-mplsInterfaceTable_stackHandler (
+mplsInterface_stackHandler (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
@@ -185,7 +185,7 @@ mplsInterfaceTable_stackHandler (
 
 
 bool
-mplsTunnelTable_stackModify (
+mplsTunnelIf_stackHandler (
 	ifEntry_t *poHigherIfEntry, ifEntry_t *poLowerIfEntry,
 	uint8_t u8Action, bool isLocked)
 {
