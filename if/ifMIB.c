@@ -141,7 +141,7 @@ interfaces_mapper (
 			switch (request->requestvb->name[OID_LENGTH (interfaces_oid)])
 			{
 			case IFNUMBER:
-				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oInterfaces.i32IfNumber);
+				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, oInterfaces.i32Number);
 				break;
 				
 			default:
@@ -368,7 +368,7 @@ ifTable_createExt (
 		goto ifTable_createExt_cleanup;
 	}
 	
-	oInterfaces.i32IfNumber++;
+	oInterfaces.i32Number++;
 	oIfMIBObjects.u32TableLastChange = xTime_centiTime (xTime_typeMono_c);
 	
 ifTable_createExt_cleanup:
@@ -388,7 +388,7 @@ ifTable_removeExt (ifEntry_t *poEntry)
 	ifTable_removeEntry (poEntry);
 	bRetCode = true;
 	
-	oInterfaces.i32IfNumber--;
+	oInterfaces.i32Number--;
 	oIfMIBObjects.u32TableLastChange = xTime_centiTime (xTime_typeMono_c);
 	
 ifTable_removeExt_cleanup:
@@ -457,7 +457,7 @@ ifTable_createHier (
 			poIfRcvAddressEntry->u32Index == poEntry->u32Index)
 		{
 			memcpy (au8Address, poIfRcvAddressEntry->au8Address, sizeof (au8Address));
-			u16Address_len = poIfRcvAddressEntry->u16Address_len;
+			u16Address_len = sizeof (poIfRcvAddressEntry->au8Address);
 			
 			ifRcvAddressTable_removeEntry (poIfRcvAddressEntry);
 		}
@@ -858,7 +858,7 @@ ifTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_GAUGE, table_entry->u32Speed);
 				break;
 			case IFPHYSADDRESS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PhysAddress, table_entry->u16PhysAddress_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PhysAddress, sizeof (table_entry->au8PhysAddress));
 				break;
 			case IFADMINSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32AdminStatus);
@@ -2119,8 +2119,8 @@ ifRcvAddressTable_BTreeNodeCmp (
 	
 	return
 		(pEntry1->u32Index < pEntry2->u32Index) ||
-		(pEntry1->u32Index == pEntry2->u32Index && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == -1) ? -1:
-		(pEntry1->u32Index == pEntry2->u32Index && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, pEntry1->u16Address_len, pEntry2->u16Address_len) == 0) ? 0: 1;
+		(pEntry1->u32Index == pEntry2->u32Index && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, sizeof (pEntry1->au8Address), sizeof (pEntry2->au8Address)) == -1) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index && xBinCmp (pEntry1->au8Address, pEntry2->au8Address, sizeof (pEntry1->au8Address), sizeof (pEntry2->au8Address)) == 0) ? 0: 1;
 }
 
 xBTree_t oIfRcvAddressTable_BTree = xBTree_initInline (&ifRcvAddressTable_BTreeNodeCmp);
@@ -2140,7 +2140,6 @@ ifRcvAddressTable_createEntry (
 	
 	poEntry->u32Index = u32Index;
 	memcpy (poEntry->au8Address, pau8Address, u16Address_len);
-	poEntry->u16Address_len = u16Address_len;
 	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oIfRcvAddressTable_BTree) != NULL)
 	{
 		xBuffer_free (poEntry);
@@ -2169,7 +2168,6 @@ ifRcvAddressTable_getByIndex (
 	
 	poTmpEntry->u32Index = u32Index;
 	memcpy (poTmpEntry->au8Address, pau8Address, u16Address_len);
-	poTmpEntry->u16Address_len = u16Address_len;
 	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oIfRcvAddressTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -2195,7 +2193,6 @@ ifRcvAddressTable_getNextIndex (
 	
 	poTmpEntry->u32Index = u32Index;
 	memcpy (poTmpEntry->au8Address, pau8Address, u16Address_len);
-	poTmpEntry->u16Address_len = u16Address_len;
 	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oIfRcvAddressTable_BTree)) == NULL)
 	{
 		xBuffer_free (poTmpEntry);
@@ -2316,7 +2313,7 @@ ifRcvAddressTable_getNext (
 	
 	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
 	idx = idx->next_variable;
-	snmp_set_var_value (idx, poEntry->au8Address, poEntry->u16Address_len);
+	snmp_set_var_value (idx, poEntry->au8Address, sizeof (poEntry->au8Address));
 	*my_data_context = (void*) poEntry;
 	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oIfRcvAddressTable_BTree);
 	return put_index_data;
@@ -2655,12 +2652,12 @@ neIfTable_init (void)
 /* create a new row in the table */
 neIfEntry_t *
 neIfTable_createEntry (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	register neIfEntry_t *poEntry = NULL;
 	register ifEntry_t *poIfEntry = NULL;
 	
-	if ((poIfEntry = ifTable_createExt (u32IfIndex)) == NULL)
+	if ((poIfEntry = ifTable_createExt (u32Index)) == NULL)
 	{
 		return NULL;
 	}
@@ -2678,11 +2675,11 @@ neIfTable_createEntry (
 
 neIfEntry_t *
 neIfTable_getByIndex (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	register ifEntry_t *poIfEntry = NULL;
 	
-	if ((poIfEntry = ifTable_getByIndex (u32IfIndex)) == NULL)
+	if ((poIfEntry = ifTable_getByIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
@@ -2692,11 +2689,11 @@ neIfTable_getByIndex (
 
 neIfEntry_t *
 neIfTable_getNextIndex (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	register ifEntry_t *poIfEntry = NULL;
 	
-	if ((poIfEntry = ifTable_getNextIndex (u32IfIndex)) == NULL)
+	if ((poIfEntry = ifTable_getNextIndex (u32Index)) == NULL)
 	{
 		return NULL;
 	}
@@ -2719,12 +2716,12 @@ neIfTable_removeEntry (neIfEntry_t *poEntry)
 
 neIfEntry_t *
 neIfTable_createExt (
-	uint32_t u32IfIndex)
+	uint32_t u32Index)
 {
 	neIfEntry_t *poEntry = NULL;
 	
 	poEntry = neIfTable_createEntry (
-		u32IfIndex);
+		u32Index);
 	if (poEntry == NULL)
 	{
 		goto neIfTable_createExt_cleanup;
@@ -2975,16 +2972,16 @@ neIfTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32Mtu);
 				break;
 			case NEIFSPEED:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Speed, table_entry->u16Speed_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Speed, sizeof (table_entry->au8Speed));
 				break;
 			case NEIFPHYSADDRESS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PhysAddress, table_entry->u16PhysAddress_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PhysAddress, sizeof (table_entry->au8PhysAddress));
 				break;
 			case NEIFADMINFLAGS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdminFlags, table_entry->u16AdminFlags_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8AdminFlags, sizeof (table_entry->au8AdminFlags));
 				break;
 			case NEIFOPERFLAGS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8OperFlags, table_entry->u16OperFlags_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8OperFlags, sizeof (table_entry->au8OperFlags));
 				break;
 			case NEIFROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -3265,58 +3262,49 @@ neIfTable_mapper (
 				table_entry->i32Mtu = *request->requestvb->val.integer;
 				break;
 			case NEIFSPEED:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8Speed))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Speed))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16Speed_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8Speed, sizeof (table_entry->au8Speed));
+					memcpy (pvOldDdata, table_entry->au8Speed, sizeof (table_entry->au8Speed));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8Speed, 0, sizeof (table_entry->au8Speed));
 				memcpy (table_entry->au8Speed, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16Speed_len = request->requestvb->val_len;
 				break;
 			case NEIFPHYSADDRESS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8PhysAddress))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8PhysAddress))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16PhysAddress_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8PhysAddress, sizeof (table_entry->au8PhysAddress));
+					memcpy (pvOldDdata, table_entry->au8PhysAddress, sizeof (table_entry->au8PhysAddress));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8PhysAddress, 0, sizeof (table_entry->au8PhysAddress));
 				memcpy (table_entry->au8PhysAddress, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16PhysAddress_len = request->requestvb->val_len;
 				break;
 			case NEIFADMINFLAGS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8AdminFlags))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8AdminFlags))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16AdminFlags_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8AdminFlags, sizeof (table_entry->au8AdminFlags));
+					memcpy (pvOldDdata, table_entry->au8AdminFlags, sizeof (table_entry->au8AdminFlags));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8AdminFlags, 0, sizeof (table_entry->au8AdminFlags));
 				memcpy (table_entry->au8AdminFlags, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16AdminFlags_len = request->requestvb->val_len;
 				break;
 			case NEIFSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
@@ -3391,16 +3379,13 @@ neIfTable_mapper (
 				memcpy (&table_entry->i32Mtu, pvOldDdata, sizeof (table_entry->i32Mtu));
 				break;
 			case NEIFSPEED:
-				memcpy (table_entry->au8Speed, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16Speed_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8Speed, pvOldDdata, sizeof (table_entry->au8Speed));
 				break;
 			case NEIFPHYSADDRESS:
-				memcpy (table_entry->au8PhysAddress, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16PhysAddress_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8PhysAddress, pvOldDdata, sizeof (table_entry->au8PhysAddress));
 				break;
 			case NEIFADMINFLAGS:
-				memcpy (table_entry->au8AdminFlags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16AdminFlags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8AdminFlags, pvOldDdata, sizeof (table_entry->au8AdminFlags));
 				break;
 			case NEIFROWSTATUS:
 				switch (*request->requestvb->val.integer)

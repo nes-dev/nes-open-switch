@@ -28,7 +28,6 @@ extern "C" {
 
 
 #include "lib/lib.h"
-#include "lib/ieee802.h"
 #include "lib/binaryTree.h"
 #include "lib/sync.h"
 #include "lib/snmp.h"
@@ -53,7 +52,7 @@ void ifMIB_init (void);
 
 typedef struct interfaces_t
 {
-	int32_t i32IfNumber;
+	int32_t i32Number;
 	
 	xRwLock_t oIfLock;
 	xRwLock_t oStackLock;
@@ -283,8 +282,7 @@ typedef struct ifRcvAddressEntry_t
 {
 	/* Index values */
 	uint32_t u32Index;
-	uint8_t au8Address[IeeeEui64_size_c];
-	size_t u16Address_len;	/* # of uint8_t elements */
+	uint8_t au8Address[6];
 	
 	/* Column values */
 	uint8_t u8Status;
@@ -689,7 +687,7 @@ enum
 typedef struct neIfEntry_t
 {
 	/* Index values */
-// 	uint32_t u32IfIndex;
+// 	uint32_t u32Index;
 	
 	/* Column values */
 	uint8_t au8Name[32];
@@ -699,13 +697,9 @@ typedef struct neIfEntry_t
 	int32_t i32Type;
 	int32_t i32Mtu;
 	uint8_t au8Speed[8];
-	size_t u16Speed_len;	/* # of uint8_t elements */
-	uint8_t au8PhysAddress[8];
-	size_t u16PhysAddress_len;	/* # of uint8_t elements */
-	uint8_t au8AdminFlags[3];
-	size_t u16AdminFlags_len;	/* # of uint8_t elements */
-	uint8_t au8OperFlags[3];
-	size_t u16OperFlags_len;	/* # of uint8_t elements */
+	uint8_t au8PhysAddress[6];
+	uint8_t au8AdminFlags[4];
+	uint8_t au8OperFlags[4];
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
@@ -719,11 +713,11 @@ typedef struct neIfEntry_t
 /* neIfTable table mapper */
 void neIfTable_init (void);
 neIfEntry_t * neIfTable_createEntry (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 neIfEntry_t * neIfTable_getByIndex (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 neIfEntry_t * neIfTable_getNextIndex (
-	uint32_t u32IfIndex);
+	uint32_t u32Index);
 void neIfTable_removeEntry (neIfEntry_t *poEntry);
 neIfEntry_t * neIfTable_createExt (
 	uint32_t u32IfIndex);
@@ -1067,8 +1061,7 @@ typedef struct ifEntry_t
 	int32_t i32Type;
 	int32_t i32Mtu;
 	uint32_t u32Speed;
-	uint8_t au8PhysAddress[8];
-	size_t u16PhysAddress_len;	/* # of uint8_t elements */
+	uint8_t au8PhysAddress[6];
 	int32_t i32AdminStatus;
 	int32_t i32OperStatus;
 	uint32_t u32LastChange;
