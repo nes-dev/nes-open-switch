@@ -30,6 +30,7 @@
 
 #include "lib/number.h"
 #include "lib/bitmap.h"
+#include "lib/freeRange.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
 #include "lib/sync.h"
@@ -258,6 +259,7 @@ ifTable_BTreeNodeCmp (
 }
 
 xBTree_t oIfTable_BTree = xBTree_initInline (&ifTable_BTreeNodeCmp);
+static xFreeRange_t oIfIndex_FreeRange = xFreeRange_initInline ();
 
 /* create a new row in the table */
 ifEntry_t *
@@ -590,7 +592,8 @@ ifTable_createReference (
 	{
 		register neIfEntry_t *poNeIfEntry = NULL;
 		
-		if (u32IfIndex == ifIndex_zero_c)
+		if (u32IfIndex == ifIndex_zero_c &&
+			!xFreeRange_getFreeIndex (&oIfIndex_FreeRange, false, 0, 0, &u32IfIndex))
 		{
 			goto ifTable_createReference_ifUnlock;
 		}
@@ -2647,6 +2650,7 @@ neIfTable_init (void)
 	netsnmp_register_table_iterator (reg, iinfo);
 	
 	/* Initialise the contents of the table here */
+	xFreeRange_createRange (&oIfIndex_FreeRange, ifIndex_start_c, ifIndex_end_c);
 }
 
 /* create a new row in the table */
@@ -2766,10 +2770,16 @@ neIfTable_createHier (
 	neIfEntry_t *poEntry)
 {
 	register bool bRetCode = false;
+	register ifEntry_t *poIfEntry = ifTable_getByNeEntry (poEntry);
+	
+	if (!xFreeRange_allocateIndex (&oIfIndex_FreeRange, poIfEntry->u32Index))
+	{
+		goto neIfTable_createHier_cleanup;
+	}
 	
 	bRetCode = true;
 	
-// neIfTable_createHier_cleanup:
+neIfTable_createHier_cleanup:
 	
 	!bRetCode ? neIfTable_removeHier (poEntry): false;
 	return bRetCode;
@@ -2780,10 +2790,16 @@ neIfTable_removeHier (
 	neIfEntry_t *poEntry)
 {
 	register bool bRetCode = false;
+	register ifEntry_t *poIfEntry = ifTable_getByNeEntry (poEntry);
+	
+	if (!xFreeRange_removeIndex (&oIfIndex_FreeRange, poIfEntry->u32Index))
+	{
+		goto neIfTable_removeHier_cleanup;
+	}
 	
 	bRetCode = true;
 	
-// neIfTable_removeHier_cleanup:
+neIfTable_removeHier_cleanup:
 	
 	return bRetCode;
 }

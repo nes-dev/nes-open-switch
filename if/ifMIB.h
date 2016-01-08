@@ -759,6 +759,8 @@ Netsnmp_Node_Handler neIfTable_mapper;
 enum
 {
 	ifIndex_zero_c = 0,
+	ifIndex_start_c = 1,
+	ifIndex_end_c = 0xFFFFFFFF,
 	
 	/* enums for column ifType */
 	ifType_other_c = 1,
@@ -1085,6 +1087,7 @@ typedef struct ifEntry_t
 } ifEntry_t;
 
 extern xBTree_t oIfTable_BTree;
+// extern xFreeRange_t oIfIndex_FreeRange;
 
 #define ifEntry_rdLock(poEntry) (xRwLock_rdLock (&(poEntry)->oLock))
 #define ifEntry_wrLock(poEntry) (xRwLock_wrLock (&(poEntry)->oLock))
