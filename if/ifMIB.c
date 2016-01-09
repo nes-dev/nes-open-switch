@@ -624,7 +624,7 @@ ifTable_createReference_ifUnlock:
 	
 	if (bReference)
 	{
-		poEntry->u32NumReferences++;
+		ifNumReferences_increment (poEntry);
 	}
 	if (bActivate && !neIfRowStatus_handler (&poEntry->oNe, xRowStatus_active_c))
 	{
@@ -666,9 +666,9 @@ ifTable_removeReference (
 	{
 		goto ifTable_removeReference_cleanup;
 	}
-	if (bReference && poEntry->u32NumReferences > 0)
+	if (bReference)
 	{
-		poEntry->u32NumReferences--;
+		ifNumReferences_decrement (poEntry);
 	}
 	if (bCreate && poEntry->u32NumReferences == 0)
 	{
@@ -2249,7 +2249,7 @@ ifRcvAddressTable_createRegister (
 	}
 	poEntry->u8Status = xRowStatus_active_c;
 	
-	poEntry->u32NumReferences++;
+	ifRcvAddressNumReferences_increment (poEntry);
 	bRetCode = true;
 	
 ifRcvAddressTable_createRegister_cleanup:
@@ -2273,10 +2273,7 @@ ifRcvAddressTable_removeRegister (
 		goto ifRcvAddressTable_removeRegister_cleanup;
 	}
 	
-	if (poEntry->u32NumReferences > 0)
-	{
-		poEntry->u32NumReferences--;
-	}
+	ifRcvAddressNumReferences_decrement (poEntry);
 	if (poEntry->u32NumReferences == 0)
 	{
 		ifRcvAddressTable_removeEntry (poEntry);
@@ -2749,14 +2746,18 @@ neIfTable_removeExt (neIfEntry_t *poEntry)
 	register bool bRetCode = false;
 	register ifEntry_t *poIfEntry = ifTable_getByNeEntry (poEntry);
 	
+	if (poIfEntry->u32NumReferences > 0)
+	{
+		goto neIfTable_removeExt_success;
+	}
+	
 	if (!neIfTable_removeHier (poEntry))
 	{
 		goto neIfTable_removeExt_cleanup;
 	}
-	if (poIfEntry->u32NumReferences == 0)
-	{
-		neIfTable_removeEntry (poEntry);
-	}
+	neIfTable_removeEntry (poEntry);
+	
+neIfTable_removeExt_success:
 	
 	bRetCode = true;
 	

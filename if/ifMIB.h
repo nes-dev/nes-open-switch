@@ -313,6 +313,8 @@ bool ifRcvAddressTable_createRegister (
 bool ifRcvAddressTable_removeRegister (
 	uint32_t u32Index,
 	uint8_t *pau8Address, size_t u16Address_len);
+#define ifRcvAddressNumReferences_increment(_poEntry) ((_poEntry)->u32NumReferences++)
+#define ifRcvAddressNumReferences_decrement(_poEntry) ((_poEntry)->u32NumReferences > 0 ? (_poEntry)->u32NumReferences--: 0)
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ifRcvAddressTable_getFirst;
 Netsnmp_Next_Data_Point ifRcvAddressTable_getNext;
@@ -1124,6 +1126,8 @@ bool ifTable_removeReference (
 bool ifAdminStatus_handler (
 	ifEntry_t *poEntry,
 	int32_t i32AdminStatus, bool bForce);
+#define ifNumReferences_increment(_poEntry) ((_poEntry)->u32NumReferences++)
+#define ifNumReferences_decrement(_poEntry) ((_poEntry)->u32NumReferences > 0 ? (_poEntry)->u32NumReferences--: 0)
 #ifdef SNMP_SRC
 Netsnmp_First_Data_Point ifTable_getFirst;
 Netsnmp_Next_Data_Point ifTable_getNext;
