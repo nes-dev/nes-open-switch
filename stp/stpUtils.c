@@ -27,6 +27,7 @@
 #include "ieee8021SpanningTreeMib.h"
 #include "if/ifMIB.h"
 
+#include "lib/ieee802.h"
 #include "lib/time.h"
 
 #include <stdbool.h>

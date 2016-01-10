@@ -29,6 +29,7 @@
 
 #include "system_ext.h"
 
+#include "lib/ieee802.h"
 #include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/buffer.h"
