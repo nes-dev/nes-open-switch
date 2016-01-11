@@ -324,7 +324,6 @@ typedef struct neAggEntry_t
 	int32_t i32GroupType;
 	uint32_t u32GroupIndex;
 	uint8_t au8BandwidthMax[8];
-	size_t u16BandwidthMax_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
@@ -516,15 +515,12 @@ typedef struct dot3adAggEntry_t
 	
 	/* Column values */
 	uint8_t au8MACAddress[6];
-	size_t u16MACAddress_len;	/* # of uint8_t elements */
 	int32_t i32ActorSystemPriority;
 	uint8_t au8ActorSystemID[6];
-	size_t u16ActorSystemID_len;	/* # of uint8_t elements */
 	uint8_t u8AggregateOrIndividual;
 	int32_t i32ActorAdminKey;
 	int32_t i32ActorOperKey;
 	uint8_t au8PartnerSystemID[6];
-	size_t u16PartnerSystemID_len;	/* # of uint8_t elements */
 	int32_t i32PartnerSystemPriority;
 	int32_t i32PartnerOperKey;
 	int32_t i32CollectorMaxDelay;

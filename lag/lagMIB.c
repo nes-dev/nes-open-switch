@@ -546,13 +546,13 @@ dot3adAggTable_mapper (
 			switch (table_info->colnum)
 			{
 			case DOT3ADAGGMACADDRESS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MACAddress, table_entry->u16MACAddress_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8MACAddress, sizeof (table_entry->au8MACAddress));
 				break;
 			case DOT3ADAGGACTORSYSTEMPRIORITY:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ActorSystemPriority);
 				break;
 			case DOT3ADAGGACTORSYSTEMID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ActorSystemID, table_entry->u16ActorSystemID_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ActorSystemID, sizeof (table_entry->au8ActorSystemID));
 				break;
 			case DOT3ADAGGAGGREGATEORINDIVIDUAL:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8AggregateOrIndividual);
@@ -564,7 +564,7 @@ dot3adAggTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ActorOperKey);
 				break;
 			case DOT3ADAGGPARTNERSYSTEMID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerSystemID, table_entry->u16PartnerSystemID_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerSystemID, sizeof (table_entry->au8PartnerSystemID));
 				break;
 			case DOT3ADAGGPARTNERSYSTEMPRIORITY:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PartnerSystemPriority);
@@ -2781,7 +2781,7 @@ neAggTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32GroupIndex);
 				break;
 			case NEAGGBANDWIDTHMAX:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8BandwidthMax, table_entry->u16BandwidthMax_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8BandwidthMax, sizeof (table_entry->au8BandwidthMax));
 				break;
 			case NEAGGROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -2990,22 +2990,19 @@ neAggTable_mapper (
 				table_entry->u32GroupIndex = *request->requestvb->val.integer;
 				break;
 			case NEAGGBANDWIDTHMAX:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8BandwidthMax))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8BandwidthMax))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16BandwidthMax_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8BandwidthMax, sizeof (table_entry->au8BandwidthMax));
+					memcpy (pvOldDdata, table_entry->au8BandwidthMax, sizeof (table_entry->au8BandwidthMax));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8BandwidthMax, 0, sizeof (table_entry->au8BandwidthMax));
 				memcpy (table_entry->au8BandwidthMax, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16BandwidthMax_len = request->requestvb->val_len;
 				break;
 			case NEAGGSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
@@ -3072,8 +3069,7 @@ neAggTable_mapper (
 				memcpy (&table_entry->u32GroupIndex, pvOldDdata, sizeof (table_entry->u32GroupIndex));
 				break;
 			case NEAGGBANDWIDTHMAX:
-				memcpy (table_entry->au8BandwidthMax, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16BandwidthMax_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8BandwidthMax, pvOldDdata, sizeof (table_entry->au8BandwidthMax));
 				break;
 			case NEAGGROWSTATUS:
 				switch (*request->requestvb->val.integer)
