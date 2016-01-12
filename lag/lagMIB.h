@@ -259,7 +259,6 @@ typedef struct dot3adAggPortXEntry_t
 	
 	/* Column values */
 	uint8_t au8ProtocolDA[6];
-	size_t u16ProtocolDA_len;	/* # of uint8_t elements */
 	
 // 	xBTree_Node_t oBTreeNode;
 } dot3adAggPortXEntry_t;
@@ -446,7 +445,6 @@ typedef struct neAggPortEntry_t
 	int32_t i32GroupType;
 	uint32_t u32GroupIndex;
 	uint8_t au8Flags[1];
-	size_t u16Flags_len;	/* # of uint8_t elements */
 	uint8_t u8RowStatus;
 	uint8_t u8StorageType;
 	
@@ -680,15 +678,12 @@ typedef struct dot3adAggPortEntry_t
 	/* Column values */
 	int32_t i32ActorSystemPriority;
 	uint8_t au8ActorSystemID[6];
-	size_t u16ActorSystemID_len;	/* # of uint8_t elements */
 	int32_t i32ActorAdminKey;
 	int32_t i32ActorOperKey;
 	int32_t i32PartnerAdminSystemPriority;
 	int32_t i32PartnerOperSystemPriority;
 	uint8_t au8PartnerAdminSystemID[6];
-	size_t u16PartnerAdminSystemID_len;	/* # of uint8_t elements */
 	uint8_t au8PartnerOperSystemID[6];
-	size_t u16PartnerOperSystemID_len;	/* # of uint8_t elements */
 	int32_t i32PartnerAdminKey;
 	int32_t i32PartnerOperKey;
 	uint32_t u32SelectedAggID;
@@ -700,13 +695,9 @@ typedef struct dot3adAggPortEntry_t
 	int32_t i32PartnerAdminPortPriority;
 	int32_t i32PartnerOperPortPriority;
 	uint8_t au8ActorAdminState[1];
-	size_t u16ActorAdminState_len;	/* # of uint8_t elements */
 	uint8_t au8ActorOperState[1];
-	size_t u16ActorOperState_len;	/* # of uint8_t elements */
 	uint8_t au8PartnerAdminState[1];
-	size_t u16PartnerAdminState_len;	/* # of uint8_t elements */
 	uint8_t au8PartnerOperState[1];
-	size_t u16PartnerOperState_len;	/* # of uint8_t elements */
 	uint8_t u8AggregateOrIndividual;
 	
 	neAggPortEntry_t oNe;
@@ -768,16 +759,13 @@ inline void
 	poEntry->i32ActorOperKey = 0;
 	poEntry->i32PartnerOperSystemPriority = 0;
 	memset (poEntry->au8PartnerOperSystemID, 0, sizeof (poEntry->au8PartnerOperSystemID));
-	poEntry->u16PartnerOperSystemID_len = 0;
 	poEntry->i32PartnerOperKey = 0;
 	poEntry->u32SelectedAggID = 0;
 	poEntry->u32AttachedAggID = 0;
 	poEntry->i32PartnerOperPort = 0;
 	poEntry->i32PartnerOperPortPriority = 0;
 	memset (poEntry->au8ActorOperState, 0, sizeof (poEntry->au8ActorOperState));
-	poEntry->u16ActorOperState_len = 0;
 	memset (poEntry->au8PartnerOperState, 0, sizeof (poEntry->au8PartnerOperState));
-	poEntry->u16PartnerOperState_len = 0;
 	
 	memset (&poEntry->oStats, 0, sizeof (poEntry->oStats));
 	memset (&poEntry->oDebug, 0, sizeof (poEntry->oDebug));

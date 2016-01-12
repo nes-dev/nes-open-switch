@@ -1339,7 +1339,7 @@ dot3adAggPortTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ActorSystemPriority);
 				break;
 			case DOT3ADAGGPORTACTORSYSTEMID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ActorSystemID, table_entry->u16ActorSystemID_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ActorSystemID, sizeof (table_entry->au8ActorSystemID));
 				break;
 			case DOT3ADAGGPORTACTORADMINKEY:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32ActorAdminKey);
@@ -1354,10 +1354,10 @@ dot3adAggPortTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PartnerOperSystemPriority);
 				break;
 			case DOT3ADAGGPORTPARTNERADMINSYSTEMID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerAdminSystemID, table_entry->u16PartnerAdminSystemID_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerAdminSystemID, sizeof (table_entry->au8PartnerAdminSystemID));
 				break;
 			case DOT3ADAGGPORTPARTNEROPERSYSTEMID:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerOperSystemID, table_entry->u16PartnerOperSystemID_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerOperSystemID, sizeof (table_entry->au8PartnerOperSystemID));
 				break;
 			case DOT3ADAGGPORTPARTNERADMINKEY:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PartnerAdminKey);
@@ -1390,16 +1390,16 @@ dot3adAggPortTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->i32PartnerOperPortPriority);
 				break;
 			case DOT3ADAGGPORTACTORADMINSTATE:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ActorAdminState, table_entry->u16ActorAdminState_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ActorAdminState, sizeof (table_entry->au8ActorAdminState));
 				break;
 			case DOT3ADAGGPORTACTOROPERSTATE:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ActorOperState, table_entry->u16ActorOperState_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ActorOperState, sizeof (table_entry->au8ActorOperState));
 				break;
 			case DOT3ADAGGPORTPARTNERADMINSTATE:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerAdminState, table_entry->u16PartnerAdminState_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerAdminState, sizeof (table_entry->au8PartnerAdminState));
 				break;
 			case DOT3ADAGGPORTPARTNEROPERSTATE:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerOperState, table_entry->u16PartnerOperState_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8PartnerOperState, sizeof (table_entry->au8PartnerOperState));
 				break;
 			case DOT3ADAGGPORTAGGREGATEORINDIVIDUAL:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8AggregateOrIndividual);
@@ -1622,22 +1622,19 @@ dot3adAggPortTable_mapper (
 				table_entry->i32PartnerAdminSystemPriority = *request->requestvb->val.integer;
 				break;
 			case DOT3ADAGGPORTPARTNERADMINSYSTEMID:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8PartnerAdminSystemID))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8PartnerAdminSystemID))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16PartnerAdminSystemID_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8PartnerAdminSystemID, sizeof (table_entry->au8PartnerAdminSystemID));
+					memcpy (pvOldDdata, table_entry->au8PartnerAdminSystemID, sizeof (table_entry->au8PartnerAdminSystemID));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8PartnerAdminSystemID, 0, sizeof (table_entry->au8PartnerAdminSystemID));
 				memcpy (table_entry->au8PartnerAdminSystemID, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16PartnerAdminSystemID_len = request->requestvb->val_len;
 				break;
 			case DOT3ADAGGPORTPARTNERADMINKEY:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->i32PartnerAdminKey))) == NULL)
@@ -1696,40 +1693,34 @@ dot3adAggPortTable_mapper (
 				table_entry->i32PartnerAdminPortPriority = *request->requestvb->val.integer;
 				break;
 			case DOT3ADAGGPORTACTORADMINSTATE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8ActorAdminState))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8ActorAdminState))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ActorAdminState_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8ActorAdminState, sizeof (table_entry->au8ActorAdminState));
+					memcpy (pvOldDdata, table_entry->au8ActorAdminState, sizeof (table_entry->au8ActorAdminState));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8ActorAdminState, 0, sizeof (table_entry->au8ActorAdminState));
 				memcpy (table_entry->au8ActorAdminState, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16ActorAdminState_len = request->requestvb->val_len;
 				break;
 			case DOT3ADAGGPORTPARTNERADMINSTATE:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8PartnerAdminState))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8PartnerAdminState))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16PartnerAdminState_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8PartnerAdminState, sizeof (table_entry->au8PartnerAdminState));
+					memcpy (pvOldDdata, table_entry->au8PartnerAdminState, sizeof (table_entry->au8PartnerAdminState));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8PartnerAdminState, 0, sizeof (table_entry->au8PartnerAdminState));
 				memcpy (table_entry->au8PartnerAdminState, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16PartnerAdminState_len = request->requestvb->val_len;
 				break;
 			}
 		}
@@ -1761,8 +1752,7 @@ dot3adAggPortTable_mapper (
 				memcpy (&table_entry->i32PartnerAdminSystemPriority, pvOldDdata, sizeof (table_entry->i32PartnerAdminSystemPriority));
 				break;
 			case DOT3ADAGGPORTPARTNERADMINSYSTEMID:
-				memcpy (table_entry->au8PartnerAdminSystemID, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16PartnerAdminSystemID_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8PartnerAdminSystemID, pvOldDdata, sizeof (table_entry->au8PartnerAdminSystemID));
 				break;
 			case DOT3ADAGGPORTPARTNERADMINKEY:
 				memcpy (&table_entry->i32PartnerAdminKey, pvOldDdata, sizeof (table_entry->i32PartnerAdminKey));
@@ -1777,12 +1767,10 @@ dot3adAggPortTable_mapper (
 				memcpy (&table_entry->i32PartnerAdminPortPriority, pvOldDdata, sizeof (table_entry->i32PartnerAdminPortPriority));
 				break;
 			case DOT3ADAGGPORTACTORADMINSTATE:
-				memcpy (table_entry->au8ActorAdminState, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16ActorAdminState_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8ActorAdminState, pvOldDdata, sizeof (table_entry->au8ActorAdminState));
 				break;
 			case DOT3ADAGGPORTPARTNERADMINSTATE:
-				memcpy (table_entry->au8PartnerAdminState, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16PartnerAdminState_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8PartnerAdminState, pvOldDdata, sizeof (table_entry->au8PartnerAdminState));
 				break;
 			}
 		}
@@ -2384,7 +2372,7 @@ dot3adAggPortXTable_mapper (
 			switch (table_info->colnum)
 			{
 			case DOT3ADAGGPORTPROTOCOLDA:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ProtocolDA, table_entry->u16ProtocolDA_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8ProtocolDA, sizeof (table_entry->au8ProtocolDA));
 				break;
 				
 			default:
@@ -2463,22 +2451,19 @@ dot3adAggPortXTable_mapper (
 			switch (table_info->colnum)
 			{
 			case DOT3ADAGGPORTPROTOCOLDA:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8ProtocolDA))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8ProtocolDA))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16ProtocolDA_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8ProtocolDA, sizeof (table_entry->au8ProtocolDA));
+					memcpy (pvOldDdata, table_entry->au8ProtocolDA, sizeof (table_entry->au8ProtocolDA));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8ProtocolDA, 0, sizeof (table_entry->au8ProtocolDA));
 				memcpy (table_entry->au8ProtocolDA, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16ProtocolDA_len = request->requestvb->val_len;
 				break;
 			}
 		}
@@ -2499,8 +2484,7 @@ dot3adAggPortXTable_mapper (
 			switch (table_info->colnum)
 			{
 			case DOT3ADAGGPORTPROTOCOLDA:
-				memcpy (table_entry->au8ProtocolDA, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16ProtocolDA_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8ProtocolDA, pvOldDdata, sizeof (table_entry->au8ProtocolDA));
 				break;
 			}
 		}
@@ -3611,7 +3595,7 @@ neAggPortTable_mapper (
 				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32GroupIndex);
 				break;
 			case NEAGGPORTFLAGS:
-				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Flags, table_entry->u16Flags_len);
+				snmp_set_var_typed_value (request->requestvb, ASN_OCTET_STR, (u_char*) table_entry->au8Flags, sizeof (table_entry->au8Flags));
 				break;
 			case NEAGGPORTROWSTATUS:
 				snmp_set_var_typed_integer (request->requestvb, ASN_INTEGER, table_entry->u8RowStatus);
@@ -3820,22 +3804,19 @@ neAggPortTable_mapper (
 				table_entry->u32GroupIndex = *request->requestvb->val.integer;
 				break;
 			case NEAGGPORTFLAGS:
-				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (xOctetString_t) + sizeof (table_entry->au8Flags))) == NULL)
+				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->au8Flags))) == NULL)
 				{
 					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_RESOURCEUNAVAILABLE);
 					return SNMP_ERR_NOERROR;
 				}
 				else if (pvOldDdata != table_entry)
 				{
-					((xOctetString_t*) pvOldDdata)->pData = pvOldDdata + sizeof (xOctetString_t);
-					((xOctetString_t*) pvOldDdata)->u16Len = table_entry->u16Flags_len;
-					memcpy (((xOctetString_t*) pvOldDdata)->pData, table_entry->au8Flags, sizeof (table_entry->au8Flags));
+					memcpy (pvOldDdata, table_entry->au8Flags, sizeof (table_entry->au8Flags));
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
 				memset (table_entry->au8Flags, 0, sizeof (table_entry->au8Flags));
 				memcpy (table_entry->au8Flags, request->requestvb->val.string, request->requestvb->val_len);
-				table_entry->u16Flags_len = request->requestvb->val_len;
 				break;
 			case NEAGGPORTSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)
@@ -3902,8 +3883,7 @@ neAggPortTable_mapper (
 				memcpy (&table_entry->u32GroupIndex, pvOldDdata, sizeof (table_entry->u32GroupIndex));
 				break;
 			case NEAGGPORTFLAGS:
-				memcpy (table_entry->au8Flags, ((xOctetString_t*) pvOldDdata)->pData, ((xOctetString_t*) pvOldDdata)->u16Len);
-				table_entry->u16Flags_len = ((xOctetString_t*) pvOldDdata)->u16Len;
+				memcpy (table_entry->au8Flags, pvOldDdata, sizeof (table_entry->au8Flags));
 				break;
 			case NEAGGPORTROWSTATUS:
 				switch (*request->requestvb->val.integer)

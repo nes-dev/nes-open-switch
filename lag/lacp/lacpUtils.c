@@ -138,7 +138,7 @@ dot3adAggPortLacpStatus_update (
 		
 		if (xBitmap_getBit (poEntry->oNe.au8Flags, neAggPortFlags_lacp_c))
 		{
-			if (!ifRcvAddressTable_createRegister (poEntry->u32Index, poEntry->oX.au8ProtocolDA, poEntry->oX.u16ProtocolDA_len))
+			if (!ifRcvAddressTable_createRegister (poEntry->u32Index, poEntry->oX.au8ProtocolDA, sizeof (poEntry->oX.au8ProtocolDA)))
 			{
 				goto dot3adAggPortLacpStatus_update_cleanup;
 			}
@@ -158,7 +158,7 @@ dot3adAggPortLacpStatus_update (
 		{
 			/* TODO */
 			
-			if (!ifRcvAddressTable_removeRegister (poEntry->u32Index, poEntry->oX.au8ProtocolDA, poEntry->oX.u16ProtocolDA_len))
+			if (!ifRcvAddressTable_removeRegister (poEntry->u32Index, poEntry->oX.au8ProtocolDA, sizeof (poEntry->oX.au8ProtocolDA)))
 			{
 				goto dot3adAggPortLacpStatus_update_cleanup;
 			}
