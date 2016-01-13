@@ -1774,12 +1774,76 @@ ifStackTable_removeHier (
 
 bool
 ifStackStatus_handler (
-	ifStackEntry_t *poEntry,
-	uint8_t u8Status)
+	ifStackEntry_t *poEntry, uint8_t u8Status)
 {
-	oIfMIBObjects.u32StackLastChange = xTime_centiTime (xTime_typeMono_c);
+	register bool bRetCode = false;
+	register uint8_t u8RealStatus = u8Status & xRowStatus_mask_c;
+	register ifEntry_t *poHigherIfEntry = NULL;
+	register ifEntry_t *poLowerIfEntry = NULL;
 	
-	return false;
+	if (poEntry->u32HigherLayer == 0 || poEntry->u32LowerLayer == 0)
+	{
+		goto ifStackStatus_handler_cleanup;
+	}
+	if ((poHigherIfEntry = ifTable_getByIndex (poEntry->u32HigherLayer)) == NULL ||
+		(poLowerIfEntry = ifTable_getByIndex (poEntry->u32LowerLayer)) == NULL)
+	{
+		goto ifStackStatus_handler_cleanup;
+	}
+	
+	if (poEntry->u8Status == u8RealStatus)
+	{
+		goto ifStackStatus_handler_success;
+	}
+	
+	switch (u8RealStatus)
+	{
+	default:
+		goto ifStackStatus_handler_cleanup;
+		
+	case xRowStatus_active_c:
+	case xRowStatus_createAndGo_c:
+		if (poEntry->u8Status == xRowStatus_active_c)
+		{
+			goto ifStackStatus_handler_success;
+		}
+		
+		if (!ifTypeStackModify (poHigherIfEntry, poLowerIfEntry, neIfTypeStack_actionAdd_c, false))
+		{
+			goto ifStackStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		poEntry->u8Status = xRowStatus_active_c;
+		break;
+		
+	case xRowStatus_destroy_c:
+	case xRowStatus_notInService_c:
+		if (poEntry->u8Status == xRowStatus_notInService_c)
+		{
+			goto ifStackStatus_handler_success;
+		}
+		
+		if (!ifTypeStackModify (poHigherIfEntry, poLowerIfEntry, neIfTypeStack_actionRemove_c, false))
+		{
+			goto ifStackStatus_handler_cleanup;
+		}
+		
+		/* TODO */
+		
+	case xRowStatus_createAndWait_c:
+		poEntry->u8Status = xRowStatus_notInService_c;
+		break;
+	}
+	
+ifStackStatus_handler_success:
+	
+	oIfMIBObjects.u32StackLastChange = xTime_centiTime (xTime_typeMono_c);
+	bRetCode = true;
+	
+ifStackStatus_handler_cleanup:
+	
+	return bRetCode;
 }
 
 /* example iterator hook routines - using 'getNext' to do most of the work */
