@@ -405,8 +405,7 @@ ifTable_createHier (
 	register bool bRetCode = false;
 	register bool bStackLocked = false;
 	
-	if (ifXTable_getByIndex (poEntry->u32Index) == NULL &&
-		ifXTable_createEntry (poEntry->u32Index) == NULL)
+	if (ifXTable_createEntry (poEntry->u32Index) == NULL)
 	{
 		goto ifTable_createHier_cleanup;
 	}
@@ -521,14 +520,7 @@ ifTable_removeHier (
 	ifStack_unLock ();
 	bStackLocked = false;
 	
-	{
-		register ifXEntry_t *poIfXEntry = NULL;
-		
-		if ((poIfXEntry = ifXTable_getByIndex (poEntry->u32Index)) != NULL)
-		{
-			ifXTable_removeEntry (poIfXEntry);
-		}
-	}
+	ifXTable_removeEntry (&poEntry->oX);
 	
 	bStackLocked ? ifStack_unLock (): false;
 	return true;
@@ -1808,7 +1800,7 @@ ifStackStatus_handler (
 			goto ifStackStatus_handler_success;
 		}
 		
-		if (!ifTypeStackModify (poHigherIfEntry, poLowerIfEntry, neIfTypeStack_actionAdd_c, false))
+		if (!ifType_stackModify (poHigherIfEntry, poLowerIfEntry, ifTypeStack_actionAdd_c, false))
 		{
 			goto ifStackStatus_handler_cleanup;
 		}
@@ -1824,7 +1816,7 @@ ifStackStatus_handler (
 			goto ifStackStatus_handler_success;
 		}
 		
-		if (!ifTypeStackModify (poHigherIfEntry, poLowerIfEntry, neIfTypeStack_actionRemove_c, false))
+		if (!ifType_stackModify (poHigherIfEntry, poLowerIfEntry, ifTypeStack_actionRemove_c, false))
 		{
 			goto ifStackStatus_handler_cleanup;
 		}
