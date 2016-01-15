@@ -122,6 +122,9 @@ extern ifType_enableHandler_t ifEnable_modify;
 extern ifType_statusHandler_t ifType_statusRx;
 
 bool
+	ifAdminStatus_update (
+		ifEntry_t *poEntry, uint8_t u8AdminStatus, bool bPropagate);
+bool
 	neIfRowStatus_update (
 		ifEntry_t *poEntry, uint8_t u8RowStatus);
 

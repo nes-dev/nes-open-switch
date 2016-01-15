@@ -479,6 +479,42 @@ neIfTypeStatusModifier_unlock:
 }
 
 bool
+ifAdminStatus_update (
+	ifEntry_t *poEntry, uint8_t u8AdminStatus, bool bPropagate)
+{
+	register bool bRetCode = false;
+	
+	switch (u8AdminStatus)
+	{
+	case xAdminStatus_up_c:
+		if (!ifEnable_modify (poEntry, u8AdminStatus))
+		{
+			goto ifAdminStatus_update_cleanup;
+		}
+		break;
+		
+	case xAdminStatus_down_c:
+	case xAdminStatus_testing_c:
+		if (!ifStatus_modify (poEntry->u32Index, poEntry->i32Type, u8AdminStatus, false, true))
+		{
+			goto ifAdminStatus_update_cleanup;
+		}
+		
+		if (!ifEnable_modify (poEntry, u8AdminStatus))
+		{
+			goto ifAdminStatus_update_cleanup;
+		}
+		break;
+	}
+	
+	bRetCode = true;
+	
+ifAdminStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
 neIfRowStatus_update (
 	ifEntry_t *poEntry, uint8_t u8RowStatus)
 {
