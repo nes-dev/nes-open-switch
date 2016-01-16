@@ -690,36 +690,34 @@ ifTable_removeReference_cleanup:
 bool
 ifAdminStatus_handler (
 	ifEntry_t *poEntry,
-	int32_t i32AdminStatus, bool bForce)
+	int32_t i32AdminStatus, bool bPropagate)
 {
 	register bool bRetCode = false;
 	register uint8_t u8RealStatus = i32AdminStatus & xAdminStatus_mask_c;
 	
-	if (poEntry->i32AdminStatus == u8RealStatus && !bForce)
+	if (poEntry->i32AdminStatus == u8RealStatus && !bPropagate)
 	{
 		goto ifAdminStatus_handler_success;
 	}
-	if (poEntry->oNe.u8RowStatus != xRowStatus_active_c && poEntry->oNe.u8RowStatus != xRowStatus_notReady_c &&
-		(i32AdminStatus & ~xAdminStatus_mask_c))
+	if (!xRowStatus_isActive (poEntry->oNe.u8RowStatus) && (i32AdminStatus & ~xAdminStatus_mask_c))
 	{
 		poEntry->i32AdminStatus = i32AdminStatus;
 		goto ifAdminStatus_handler_success;
 	}
-	
 	
 	switch (u8RealStatus)
 	{
 	case xAdminStatus_up_c:
 		poEntry->i32AdminStatus = u8RealStatus;
 		
-		if (!ifAdminStatus_update (poEntry, u8RealStatus, bForce))
+		if (!ifAdminStatus_update (poEntry, u8RealStatus, bPropagate))
 		{
 			goto ifAdminStatus_handler_cleanup;
 		}
 		break;
 		
 	case xAdminStatus_down_c:
-		if (!ifAdminStatus_update (poEntry, u8RealStatus, bForce))
+		if (!ifAdminStatus_update (poEntry, u8RealStatus, bPropagate))
 		{
 			goto ifAdminStatus_handler_cleanup;
 		}
@@ -728,7 +726,7 @@ ifAdminStatus_handler (
 		break;
 		
 	case xAdminStatus_testing_c:
-		if (!ifAdminStatus_update (poEntry, u8RealStatus, bForce))
+		if (!ifAdminStatus_update (poEntry, u8RealStatus, bPropagate))
 		{
 			goto ifAdminStatus_handler_cleanup;
 		}
@@ -2283,7 +2281,7 @@ ifRcvAddressTable_createRegister (
 	
 	ifTable_rdLock ();
 	
-	if (ifTable_getByIndex (u32Index) != NULL)
+	if (ifTable_getByIndex (u32Index) == NULL)
 	{
 		goto ifRcvAddressTable_createRegister_cleanup;
 	}

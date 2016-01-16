@@ -1125,7 +1125,7 @@ bool ifTable_removeReference (
 	bool bCreate, bool bReference, bool bActivate);
 bool ifAdminStatus_handler (
 	ifEntry_t *poEntry,
-	int32_t i32AdminStatus, bool bForce);
+	int32_t i32AdminStatus, bool bPropagate);
 #define ifNumReferences_increment(_poEntry) ((_poEntry)->u32NumReferences++)
 #define ifNumReferences_decrement(_poEntry) ((_poEntry)->u32NumReferences > 0 ? (_poEntry)->u32NumReferences--: 0)
 #ifdef SNMP_SRC
