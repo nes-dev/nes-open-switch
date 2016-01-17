@@ -737,6 +737,47 @@ Netsnmp_Node_Handler neIfTable_mapper;
 
 
 /**
+ *	table neIfEntTable definitions
+ */
+#define NEIFENTPHYSICALINDEX 1
+#define NEIFENTCHASSISINDEX 2
+
+/* table neIfEntTable row entry data structure */
+typedef struct neIfEntEntry_t
+{
+	/* Index values */
+	uint32_t u32Index;
+	uint32_t u32PhysicalIndex;
+	
+	/* Column values */
+	uint32_t u32ChassisIndex;
+	
+	xBTree_Node_t oBTreeNode;
+} neIfEntEntry_t;
+
+extern xBTree_t oNeIfEntTable_BTree;
+
+/* neIfEntTable table mapper */
+void neIfEntTable_init (void);
+neIfEntEntry_t * neIfEntTable_createEntry (
+	uint32_t u32Index,
+	uint32_t u32PhysicalIndex);
+neIfEntEntry_t * neIfEntTable_getByIndex (
+	uint32_t u32Index,
+	uint32_t u32PhysicalIndex);
+neIfEntEntry_t * neIfEntTable_getNextIndex (
+	uint32_t u32Index,
+	uint32_t u32PhysicalIndex);
+void neIfEntTable_removeEntry (neIfEntEntry_t *poEntry);
+#ifdef SNMP_SRC
+Netsnmp_First_Data_Point neIfEntTable_getFirst;
+Netsnmp_Next_Data_Point neIfEntTable_getNext;
+Netsnmp_Get_Data_Point neIfEntTable_get;
+Netsnmp_Node_Handler neIfEntTable_mapper;
+#endif	/* SNMP_SRC */
+
+
+/**
  *	table ifTable definitions
  */
 #define IFINDEX 1

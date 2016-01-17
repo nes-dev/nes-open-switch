@@ -55,6 +55,7 @@ static oid ifXTable_oid[] = {1,3,6,1,2,1,31,1,1};
 static oid ifStackTable_oid[] = {1,3,6,1,2,1,31,1,2};
 static oid ifRcvAddressTable_oid[] = {1,3,6,1,2,1,31,1,4};
 static oid neIfTable_oid[] = {1,3,6,1,4,1,36969,61,1,1};
+static oid neIfEntTable_oid[] = {1,3,6,1,4,1,36969,61,1,2};
 
 static oid snmptrap_oid[] = {1,3,6,1,6,3,1,1,4,1,0};
 
@@ -105,6 +106,7 @@ ifMIB_init (void)
 	ifStackTable_init ();
 	ifRcvAddressTable_init ();
 	neIfTable_init ();
+	neIfEntTable_init ();
 	
 	/* register ifMIB modules */
 	sysORTable_createRegister ("interfaces", interfaces_oid, OID_LENGTH (interfaces_oid));
@@ -3489,6 +3491,245 @@ neIfTable_mapper (
 			}
 		}
 		break;
+	}
+	
+	return SNMP_ERR_NOERROR;
+}
+
+/** initialize neIfEntTable table mapper **/
+void
+neIfEntTable_init (void)
+{
+	extern oid neIfEntTable_oid[];
+	netsnmp_handler_registration *reg;
+	netsnmp_iterator_info *iinfo;
+	netsnmp_table_registration_info *table_info;
+	
+	reg = netsnmp_create_handler_registration (
+		"neIfEntTable", &neIfEntTable_mapper,
+		neIfEntTable_oid, OID_LENGTH (neIfEntTable_oid),
+		HANDLER_CAN_RONLY
+		);
+		
+	table_info = xBuffer_cAlloc (sizeof (netsnmp_table_registration_info));
+	netsnmp_table_helper_add_indexes (table_info,
+		ASN_INTEGER /* index: ifIndex */,
+		ASN_UNSIGNED /* index: neIfEntPhysicalIndex */,
+		0);
+	table_info->min_column = NEIFENTCHASSISINDEX;
+	table_info->max_column = NEIFENTCHASSISINDEX;
+	
+	iinfo = xBuffer_cAlloc (sizeof (netsnmp_iterator_info));
+	iinfo->get_first_data_point = &neIfEntTable_getFirst;
+	iinfo->get_next_data_point = &neIfEntTable_getNext;
+	iinfo->get_data_point = &neIfEntTable_get;
+	iinfo->table_reginfo = table_info;
+	iinfo->flags |= NETSNMP_ITERATOR_FLAG_SORTED;
+	
+	netsnmp_register_table_iterator (reg, iinfo);
+	
+	/* Initialise the contents of the table here */
+}
+
+static int8_t
+neIfEntTable_BTreeNodeCmp (
+	xBTree_Node_t *pNode1, xBTree_Node_t *pNode2, xBTree_t *pBTree)
+{
+	register neIfEntEntry_t *pEntry1 = xBTree_entry (pNode1, neIfEntEntry_t, oBTreeNode);
+	register neIfEntEntry_t *pEntry2 = xBTree_entry (pNode2, neIfEntEntry_t, oBTreeNode);
+	
+	return
+		(pEntry1->u32Index < pEntry2->u32Index) ||
+		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32PhysicalIndex < pEntry2->u32PhysicalIndex) ? -1:
+		(pEntry1->u32Index == pEntry2->u32Index && pEntry1->u32PhysicalIndex == pEntry2->u32PhysicalIndex) ? 0: 1;
+}
+
+xBTree_t oNeIfEntTable_BTree = xBTree_initInline (&neIfEntTable_BTreeNodeCmp);
+
+/* create a new row in the table */
+neIfEntEntry_t *
+neIfEntTable_createEntry (
+	uint32_t u32Index,
+	uint32_t u32PhysicalIndex)
+{
+	register neIfEntEntry_t *poEntry = NULL;
+	
+	if ((poEntry = xBuffer_cAlloc (sizeof (*poEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poEntry->u32Index = u32Index;
+	poEntry->u32PhysicalIndex = u32PhysicalIndex;
+	if (xBTree_nodeFind (&poEntry->oBTreeNode, &oNeIfEntTable_BTree) != NULL)
+	{
+		xBuffer_free (poEntry);
+		return NULL;
+	}
+	
+	xBTree_nodeAdd (&poEntry->oBTreeNode, &oNeIfEntTable_BTree);
+	return poEntry;
+}
+
+neIfEntEntry_t *
+neIfEntTable_getByIndex (
+	uint32_t u32Index,
+	uint32_t u32PhysicalIndex)
+{
+	register neIfEntEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Index = u32Index;
+	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
+	if ((poNode = xBTree_nodeFind (&poTmpEntry->oBTreeNode, &oNeIfEntTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neIfEntEntry_t, oBTreeNode);
+}
+
+neIfEntEntry_t *
+neIfEntTable_getNextIndex (
+	uint32_t u32Index,
+	uint32_t u32PhysicalIndex)
+{
+	register neIfEntEntry_t *poTmpEntry = NULL;
+	register xBTree_Node_t *poNode = NULL;
+	
+	if ((poTmpEntry = xBuffer_cAlloc (sizeof (*poTmpEntry))) == NULL)
+	{
+		return NULL;
+	}
+	
+	poTmpEntry->u32Index = u32Index;
+	poTmpEntry->u32PhysicalIndex = u32PhysicalIndex;
+	if ((poNode = xBTree_nodeFindNext (&poTmpEntry->oBTreeNode, &oNeIfEntTable_BTree)) == NULL)
+	{
+		xBuffer_free (poTmpEntry);
+		return NULL;
+	}
+	
+	xBuffer_free (poTmpEntry);
+	return xBTree_entry (poNode, neIfEntEntry_t, oBTreeNode);
+}
+
+/* remove a row from the table */
+void
+neIfEntTable_removeEntry (neIfEntEntry_t *poEntry)
+{
+	if (poEntry == NULL ||
+		xBTree_nodeFind (&poEntry->oBTreeNode, &oNeIfEntTable_BTree) == NULL)
+	{
+		return;    /* Nothing to remove */
+	}
+	
+	xBTree_nodeRemove (&poEntry->oBTreeNode, &oNeIfEntTable_BTree);
+	xBuffer_free (poEntry);   /* XXX - release any other internal resources */
+	return;
+}
+
+/* example iterator hook routines - using 'getNext' to do most of the work */
+netsnmp_variable_list *
+neIfEntTable_getFirst (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	*my_loop_context = xBTree_nodeGetFirst (&oNeIfEntTable_BTree);
+	return neIfEntTable_getNext (my_loop_context, my_data_context, put_index_data, mydata);
+}
+
+netsnmp_variable_list *
+neIfEntTable_getNext (
+	void **my_loop_context, void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neIfEntEntry_t *poEntry = NULL;
+	netsnmp_variable_list *idx = put_index_data;
+	
+	if (*my_loop_context == NULL)
+	{
+		return NULL;
+	}
+	poEntry = xBTree_entry (*my_loop_context, neIfEntEntry_t, oBTreeNode);
+	
+	snmp_set_var_typed_integer (idx, ASN_INTEGER, poEntry->u32Index);
+	idx = idx->next_variable;
+	snmp_set_var_typed_integer (idx, ASN_UNSIGNED, poEntry->u32PhysicalIndex);
+	*my_data_context = (void*) poEntry;
+	*my_loop_context = (void*) xBTree_nodeGetNext (&poEntry->oBTreeNode, &oNeIfEntTable_BTree);
+	return put_index_data;
+}
+
+bool
+neIfEntTable_get (
+	void **my_data_context,
+	netsnmp_variable_list *put_index_data, netsnmp_iterator_info *mydata)
+{
+	neIfEntEntry_t *poEntry = NULL;
+	register netsnmp_variable_list *idx1 = put_index_data;
+	register netsnmp_variable_list *idx2 = idx1->next_variable;
+	
+	poEntry = neIfEntTable_getByIndex (
+		*idx1->val.integer,
+		*idx2->val.integer);
+	if (poEntry == NULL)
+	{
+		return false;
+	}
+	
+	*my_data_context = (void*) poEntry;
+	return true;
+}
+
+/* neIfEntTable table mapper */
+int
+neIfEntTable_mapper (
+	netsnmp_mib_handler *handler,
+	netsnmp_handler_registration *reginfo,
+	netsnmp_agent_request_info *reqinfo,
+	netsnmp_request_info *requests)
+{
+	netsnmp_request_info *request;
+	netsnmp_table_request_info *table_info;
+	neIfEntEntry_t *table_entry;
+	
+	switch (reqinfo->mode)
+	{
+	/*
+	 * Read-support (also covers GetNext requests)
+	 */
+	case MODE_GET:
+		for (request = requests; request != NULL; request = request->next)
+		{
+			table_entry = (neIfEntEntry_t*) netsnmp_extract_iterator_context (request);
+			table_info = netsnmp_extract_table_info (request);
+			if (table_entry == NULL)
+			{
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHINSTANCE);
+				continue;
+			}
+			
+			switch (table_info->colnum)
+			{
+			case NEIFENTCHASSISINDEX:
+				snmp_set_var_typed_integer (request->requestvb, ASN_UNSIGNED, table_entry->u32ChassisIndex);
+				break;
+				
+			default:
+				netsnmp_set_request_error (reqinfo, request, SNMP_NOSUCHOBJECT);
+				break;
+			}
+		}
+		break;
+		
 	}
 	
 	return SNMP_ERR_NOERROR;
