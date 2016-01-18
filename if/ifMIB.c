@@ -28,7 +28,6 @@
 
 #include "system_ext.h"
 
-#include "lib/number.h"
 #include "lib/bitmap.h"
 #include "lib/freeRange.h"
 #include "lib/binaryTree.h"
@@ -2867,21 +2866,6 @@ neIfRowStatus_handler (
 	switch (u8RealStatus)
 	{
 	case xRowStatus_active_c:
-		if (poEntry->i32Type == 0 ||
-			(poIfEntry->i32Type != 0 && poEntry->i32Type != poIfEntry->i32Type))
-		{
-			goto neIfRowStatus_handler_cleanup;
-		}
-		
-		poIfEntry->i32Type = poEntry->i32Type;
-		poIfEntry->i32Mtu = poEntry->i32Mtu;
-		poIfEntry->u32Speed = 0;
-		xNumber_toUint32 (poEntry->au8Speed, sizeof (poEntry->au8Speed), 4, 7, &poIfEntry->u32Speed);
-		poIfEntry->oX.u32HighSpeed = 0;
-		xNumber_toUint32 (poEntry->au8Speed, sizeof (poEntry->au8Speed), 0, 3, &poIfEntry->oX.u32HighSpeed);
-		
-		/* TODO */
-		
 		if (!neIfRowStatus_update (poIfEntry, u8RealStatus))
 		{
 			goto neIfRowStatus_handler_cleanup;
@@ -2906,7 +2890,6 @@ neIfRowStatus_handler (
 			goto neIfRowStatus_handler_cleanup;
 		}
 		
-		/* TODO */
 		poEntry->u8RowStatus = u8RealStatus;
 		break;
 		
@@ -2925,7 +2908,6 @@ neIfRowStatus_handler (
 			goto neIfRowStatus_handler_cleanup;
 		}
 		
-		/* TODO */
 		poEntry->u8RowStatus = xRowStatus_notInService_c;
 		break;
 	}

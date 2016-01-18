@@ -28,6 +28,7 @@
 #include "ifMIB.h"
 
 #include "lib/lib.h"
+#include "lib/number.h"
 #include "lib/binaryTree.h"
 #include "lib/sync.h"
 #include "lib/buffer.h"
@@ -525,6 +526,27 @@ neIfRowStatus_update (
 	{
 		goto neIfRowStatus_update_cleanup;
 	}
+	
+	switch (u8RowStatus)
+	{
+	case xRowStatus_active_c:
+		if (poEntry->oNe.i32Type == 0 ||
+			(poEntry->i32Type != 0 && poEntry->oNe.i32Type != poEntry->i32Type))
+		{
+			goto neIfRowStatus_update_cleanup;
+		}
+		
+		poEntry->i32Type = poEntry->oNe.i32Type;
+		poEntry->i32Mtu = poEntry->oNe.i32Mtu;
+		poEntry->u32Speed = 0;
+		xNumber_toUint32 (poEntry->oNe.au8Speed, sizeof (poEntry->oNe.au8Speed), 4, 7, &poEntry->u32Speed);
+		poEntry->oX.u32HighSpeed = 0;
+		xNumber_toUint32 (poEntry->oNe.au8Speed, sizeof (poEntry->oNe.au8Speed), 0, 3, &poEntry->oX.u32HighSpeed);
+		
+		/* TODO */
+	}
+	
+	/* TODO */
 	
 	bRetCode = xCallback_tryExec (poIfTypeEntry->pfRowHandler, poEntry, u8RowStatus);
 	
