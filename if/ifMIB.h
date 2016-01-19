@@ -726,6 +726,9 @@ neIfEntry_t * neIfTable_createExt (
 bool neIfTable_removeExt (neIfEntry_t *poEntry);
 bool neIfTable_createHier (neIfEntry_t *poEntry);
 bool neIfTable_removeHier (neIfEntry_t *poEntry);
+bool neIfAdminFlags_handler (
+	neIfEntry_t *poEntry,
+	uint8_t *pu8AdminFlags, bool bPropagate);
 bool neIfRowStatus_handler (
 	neIfEntry_t *poEntry, uint8_t u8RowStatus);
 #ifdef SNMP_SRC

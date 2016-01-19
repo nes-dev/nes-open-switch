@@ -2851,6 +2851,26 @@ neIfTable_removeHier_cleanup:
 }
 
 bool
+neIfAdminFlags_handler (
+	neIfEntry_t *poEntry, uint8_t *pu8AdminFlags, bool bPropagate)
+{
+	register bool bRetCode = false;
+	
+	if (memcmp (poEntry->au8AdminFlags, pu8AdminFlags, sizeof (poEntry->au8AdminFlags)) == 0 && !bPropagate)
+	{
+		goto neIfAdminFlags_handler_success;
+	}
+	
+	!bPropagate ? memcpy (poEntry->au8AdminFlags, pu8AdminFlags, sizeof (poEntry->au8AdminFlags)): false;
+	
+neIfAdminFlags_handler_success:
+	
+	bRetCode = true;
+	
+	return bRetCode;
+}
+
+bool
 neIfRowStatus_handler (
 	neIfEntry_t *poEntry, uint8_t u8RowStatus)
 {
