@@ -2855,10 +2855,16 @@ neIfAdminFlags_handler (
 	neIfEntry_t *poEntry, uint8_t *pu8AdminFlags, bool bPropagate)
 {
 	register bool bRetCode = false;
+	register ifEntry_t *poIfEntry = ifTable_getByNeEntry (poEntry);
 	
 	if (memcmp (poEntry->au8AdminFlags, pu8AdminFlags, sizeof (poEntry->au8AdminFlags)) == 0 && !bPropagate)
 	{
 		goto neIfAdminFlags_handler_success;
+	}
+	
+	if (!neIfAdminFlags_update (poIfEntry, pu8AdminFlags))
+	{
+		goto neIfAdminFlags_handler_cleanup;
 	}
 	
 	!bPropagate ? memcpy (poEntry->au8AdminFlags, pu8AdminFlags, sizeof (poEntry->au8AdminFlags)): false;
@@ -2866,6 +2872,8 @@ neIfAdminFlags_handler (
 neIfAdminFlags_handler_success:
 	
 	bRetCode = true;
+	
+neIfAdminFlags_handler_cleanup:
 	
 	return bRetCode;
 }
@@ -3368,8 +3376,11 @@ neIfTable_mapper (
 					netsnmp_request_add_list_data (request, netsnmp_create_data_list (ROLLBACK_BUFFER, pvOldDdata, &xBuffer_free));
 				}
 				
-				memset (table_entry->au8AdminFlags, 0, sizeof (table_entry->au8AdminFlags));
-				memcpy (table_entry->au8AdminFlags, request->requestvb->val.string, request->requestvb->val_len);
+				if (!neIfAdminFlags_handler (table_entry, request->requestvb->val.string, false))
+				{
+					netsnmp_set_request_error (reqinfo, request, SNMP_ERR_INCONSISTENTVALUE);
+					return SNMP_ERR_NOERROR;
+				}
 				break;
 			case NEIFSTORAGETYPE:
 				if (pvOldDdata == NULL && (pvOldDdata = xBuffer_cAlloc (sizeof (table_entry->u8StorageType))) == NULL)

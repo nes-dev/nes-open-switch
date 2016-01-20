@@ -640,6 +640,8 @@ enum
 	neIfAdminFlags_mplsFwd_c = 23,
 	neIfAdminFlags_ipFwd_c = 24,
 	neIfAdminFlags_te_c = 25,
+	neIfAdminFlags_count_c,
+	neIfAdminFlags_min_c = neIfAdminFlags_speed10Mbps_c,
 
 	/* enums for column neIfOperFlags */
 	neIfOperFlags_speed10Mbps_c = 0,
@@ -668,6 +670,7 @@ enum
 	neIfOperFlags_mplsFwd_c = 23,
 	neIfOperFlags_ipFwd_c = 24,
 	neIfOperFlags_te_c = 25,
+	neIfOperFlags_count_c,
 
 	/* enums for column neIfRowStatus */
 	neIfRowStatus_active_c = 1,

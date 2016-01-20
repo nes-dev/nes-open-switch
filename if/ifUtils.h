@@ -125,6 +125,9 @@ bool
 	ifAdminStatus_update (
 		ifEntry_t *poEntry, uint8_t u8AdminStatus, bool bPropagate);
 bool
+	neIfAdminFlags_update (
+		ifEntry_t *poEntry, uint8_t *pu8AdminFlags);
+bool
 	neIfRowStatus_update (
 		ifEntry_t *poEntry, uint8_t u8RowStatus);
 

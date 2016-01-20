@@ -29,6 +29,7 @@
 
 #include "lib/lib.h"
 #include "lib/number.h"
+#include "lib/bitmap.h"
 #include "lib/binaryTree.h"
 #include "lib/sync.h"
 #include "lib/buffer.h"
@@ -511,6 +512,66 @@ ifAdminStatus_update (
 	bRetCode = true;
 	
 ifAdminStatus_update_cleanup:
+	
+	return bRetCode;
+}
+
+bool
+neIfAdminFlags_update (
+	ifEntry_t *poEntry, uint8_t *pu8AdminFlags)
+{
+	register bool bRetCode = false;
+	
+	register uint8_t u8BitIndex = neIfAdminFlags_min_c;
+	
+	do
+	{
+		uint8_t u8BitNew = xBitmap_getBitRev (pu8AdminFlags, u8BitIndex);
+		uint8_t u8BitOld = xBitmap_getBitRev (poEntry->oNe.au8AdminFlags, u8BitIndex);
+		
+		if (u8BitOld == u8BitNew)
+		{
+			continue;
+		}
+		
+		switch (u8BitIndex)
+		{
+		case neIfAdminFlags_speed10Mbps_c:
+		case neIfAdminFlags_speed100Mbps_c:
+		case neIfAdminFlags_speed1Gbps_c:
+		case neIfAdminFlags_speed10Gbps_c:
+		case neIfAdminFlags_speed40Gbps_c:
+		case neIfAdminFlags_speed100Gbps_c:
+		case neIfAdminFlags_speed1Tbps_c:
+		case neIfAdminFlags_speedOther_c:
+		case neIfAdminFlags_copper_c:
+		case neIfAdminFlags_fiber_c:
+		case neIfAdminFlags_autoNeg_c:
+		case neIfAdminFlags_pause_c:
+		case neIfAdminFlags_pauseAsym_c:
+		case neIfAdminFlags_fullDuplex_c:
+		case neIfAdminFlags_halfDuplex_c:
+		case neIfAdminFlags_oam_c:
+		case neIfAdminFlags_xCat_c:
+		case neIfAdminFlags_xCatVc_c:
+		case neIfAdminFlags_lag_c:
+		case neIfAdminFlags_macLearn_c:
+		case neIfAdminFlags_macFwd_c:
+		case neIfAdminFlags_vlanFwd_c:
+		case neIfAdminFlags_pbbFwd_c:
+		case neIfAdminFlags_mplsFwd_c:
+		case neIfAdminFlags_ipFwd_c:
+		case neIfAdminFlags_te_c:
+			break;
+			
+		default:
+			break;
+		}
+	} while (++u8BitIndex < neIfAdminFlags_count_c);
+	
+	/* TODO */
+	
+	bRetCode = true;
 	
 	return bRetCode;
 }
